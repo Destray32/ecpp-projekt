@@ -25,7 +25,8 @@ export default function HomePage() {
                     <h1 class="text-2xl font-bold">ECPP</h1>
                     <span>{imie + '  ' + data}</span> {/* imie i data */}
                 </header>
-                <nav class="bg-blue-400 p-4">
+                <nav class="bg-primary p-4">
+                    <div class="bg-white w-full h-[0.5px] my-4"></div>
                     <div class="space-y-2">
                         <div class="bg-blue-300 p-2 rounded cursor-pointer hover:bg-blue-200 transition">Pracownik</div>
                         <div class="bg-blue-300 p-2 rounded cursor-pointer hover:bg-blue-200 transition">Podział</div>
