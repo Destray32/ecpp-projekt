@@ -1,0 +1,43 @@
+import React, { useState, useEffect } from 'react';
+import moment from 'moment';
+
+import GorneMenu from '../Components/GorneMenu';
+
+export default function HomePage() {
+    const [data, setData] = useState([]);
+    const [imie, setImie] = useState('placeholder');
+
+    useEffect(() => { // useEffect ze względu na to żeby tata się zmieniała w razie potrzeby
+        // moment.locale('pl'); // nie wiem jeszcze czy potrzebna jest data polska czy szwedzka
+
+        const timer = setInterval(() => {
+            setData(moment().format('DD/MM/YYYY'));
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, []);
+
+    return (
+        <>
+            {/* to jest głowny layout w gridzie */}
+            <div className='grid grid-cols-[250px_1fr] grid-rows-[auto_1fr] min-h-screen'>
+                <header class="col-span-2 bg-primary text-white p-4 flex justify-between items-center">
+                    <h1 class="text-2xl font-bold">ECPP</h1>
+                    <span>{imie + '  ' + data}</span> {/* imie i data */}
+                </header>
+                <nav class="bg-blue-400 p-4">
+                    <div class="space-y-2">
+                        <div class="bg-blue-300 p-2 rounded cursor-pointer hover:bg-blue-200 transition">Pracownik</div>
+                        <div class="bg-blue-300 p-2 rounded cursor-pointer hover:bg-blue-200 transition">Podział</div>
+                        <div class="bg-blue-300 p-2 rounded cursor-pointer hover:bg-blue-200 transition">Logowanie</div>
+                        <div class="bg-blue-300 p-2 rounded cursor-pointer hover:bg-blue-200 transition">Wyloguj</div>
+                    </div>
+                </nav>
+                <main class=""> {/* to jest główna treść, ten biały box na stronie */}
+                    <GorneMenu />
+
+                </main>
+            </div>
+        </>
+    )
+}
