@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import moment from 'moment';
 
 import GorneMenu from '../Components/GorneMenu';
+import ButtonLewy from '../Components/ButtonLeweMenu';
 
 export default function HomePage() {
     const [data, setData] = useState([]);
@@ -28,10 +29,10 @@ export default function HomePage() {
                 <nav class="bg-primary p-4">
                     <div class="bg-white w-full h-[0.5px] my-4"></div>
                     <div class="space-y-2">
-                        <div class="bg-blue-300 p-2 rounded cursor-pointer hover:bg-blue-200 transition">Pracownik</div>
-                        <div class="bg-blue-300 p-2 rounded cursor-pointer hover:bg-blue-200 transition">Podział</div>
-                        <div class="bg-blue-300 p-2 rounded cursor-pointer hover:bg-blue-200 transition">Logowanie</div>
-                        <div class="bg-blue-300 p-2 rounded cursor-pointer hover:bg-blue-200 transition">Wyloguj</div>
+                        <ButtonLewy nazwa='Pracownik' />
+                        <ButtonLewy nazwa='Podział' />
+                        <ButtonLewy nazwa='Logowanie' />
+                        <ButtonLewy nazwa='Wyloguj' />
                     </div>
                 </nav>
                 <main class=""> {/* to jest główna treść, ten biały box na stronie */}
