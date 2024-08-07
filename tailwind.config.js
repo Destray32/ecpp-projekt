@@ -8,6 +8,7 @@ module.exports = {
       colors: {
         'primary': '#608ede',
         'szary': '#cac4d0',
+        'hover-szary': '#b3aabb',
       },
     },
   },

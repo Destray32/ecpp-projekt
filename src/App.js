@@ -4,18 +4,18 @@ import './App.css';
 
 import LoginPage from './pages/Login';
 import HomePage from './pages/Home';
-import PodzialPage from './pages/Podzial';
-import PracownikPage from './pages/Pracownik';
-import LogowaniePage from './pages/Logowanie';
-import CzasPage from './pages/ZakladkaCzas/czaspracy';
-import CzasPracyPage from './pages/ZakladkaCzas/czaspracy';
-import AdministracjaPage from './pages/ZakladkaCzas/administracja';
-import TydzienPage from './pages/ZakladkaCzas/tydzien';
-import RaportyPage from './pages/ZakladkaCzas/raporty';
-import SprawdzSamochodPage from './pages/ZakladkaCzas/sprawdzsamochod';
-import ProjektyPage from './pages/ZakladkaCzas/ZakladkaAdministracja/Projekty';
-import UrlopyPage from './pages/ZakladkaCzas/ZakladkaAdministracja/Urlopy';
-import PojazdyPage from './pages/ZakladkaCzas/ZakladkaAdministracja/Pojazdy';
+import PracownikPage from './pages/Pracownik/Pracownik';
+import PodzialPage from './pages/Pracownik/Podzial';
+import LogowaniePage from './pages/Pracownik/Logowanie';
+import CzasPage from './pages/Czas/CzasPracy';
+import AdministracjaPage from './pages/Czas/Administracja';
+import ProjektyPage from './pages/Czas/Projekty';
+import UrlopyPage from './pages/Czas/Urlopy';
+import PojazdyPage from './pages/Czas/Pojazdy';
+import TydzienPage from './pages/Czas/Tydzien';
+import RaportyPage from './pages/Czas/Raporty';
+import PlanTygodniaPage from './pages/PlanTygodnia/PlanTygodnia';
+import ZaplanujTydzienPage from './pages/PlanTygodnia/ZaplanujTydzien';
 
 function App() {
   return (
@@ -26,15 +26,15 @@ function App() {
           <Route path="pracownik" element={<PracownikPage />} />
           <Route path="podzial" element={<PodzialPage />} />
           <Route path="logowanie" element={<LogowaniePage />} />
-
-        </Route>
-        <Route path="/czas" element={<CzasPage />} >
-          <Route path="/czas" element={<CzasPracyPage />} />
+          <Route path="czas" element={<CzasPage />} />
           <Route path="administracja" element={<AdministracjaPage />} />
+          <Route path="projekty" element={<ProjektyPage />} />
+          <Route path="urlopy" element={<UrlopyPage />} />
+          <Route path="pojazdy" element={<PojazdyPage />} />
           <Route path="tydzien" element={<TydzienPage />} />
           <Route path="raporty" element={<RaportyPage />} />
-          <Route path="sprawdzsamochod" element={<SprawdzSamochodPage />} />
-          
+          <Route path="plan" element={<PlanTygodniaPage />} />
+          <Route path="zaplanuj" element={<ZaplanujTydzienPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

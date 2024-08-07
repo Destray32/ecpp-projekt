@@ -8,6 +8,7 @@ import ButtonLewy from '../Components/ButtonLeweMenu';
 export default function HomePage() {
     const [data, setData] = useState([]);
     const [imie, setImie] = useState('placeholder');
+    const [menu, setMenu] = useState('Pracownik');
 
     useEffect(() => { // useEffect ze względu na to żeby tata się zmieniała w razie potrzeby
         // moment.locale('pl'); // nie wiem jeszcze czy potrzebna jest data polska czy szwedzka
@@ -30,15 +31,37 @@ export default function HomePage() {
                 <nav class="bg-primary p-4">
                     <div class="bg-white w-full h-[0.5px] my-4"></div>
                     <div class="space-y-2">
-                        <ButtonLewy link={"pracownik"} nazwa='Pracownik' />
-                        <ButtonLewy link={"podzial"} nazwa='Podział' />
-                        <ButtonLewy link={"logowanie"} nazwa='Logowanie' />
-                        <ButtonLewy link={"administracja"} nazwa='Administracja' />
-                        <ButtonLewy nazwa='Wyloguj' />
+                        {menu === "Pracownik" && (
+                            <>
+                                <ButtonLewy link="pracownik" nazwa='Pracownik' />
+                                <ButtonLewy link="podzial" nazwa='Podział' />
+                                <ButtonLewy link="logowanie" nazwa='Logowanie' />
+                                <ButtonLewy nazwa='Wyloguj' />
+                            </>
+                        )}
+                        {menu === "Czas" && (
+                            <>
+                                <ButtonLewy link="czas" nazwa='Czas' />
+                                <ButtonLewy link="administracja" nazwa='Administracja' />
+                                <ButtonLewy link="projekty" nazwa='Projekty' />
+                                <ButtonLewy link="urlopy" nazwa='Urlopy' />
+                                <ButtonLewy link="pojazdy" nazwa='Pojazdy' />
+                                <ButtonLewy link="tydzien" nazwa='Tydzien' />
+                                <ButtonLewy link="raporty" nazwa='Raporty' />
+                                <ButtonLewy nazwa='Wyloguj' />
+                            </>
+                        )}
+                        {menu === "PlanTygodnia" && (
+                            <>
+                                <ButtonLewy link="plan" nazwa='Plan Tygodnia' />
+                                <ButtonLewy link="zaplanuj" nazwa='Zaplanuj Tydzień' />
+                                <ButtonLewy nazwa='Wyloguj' />
+                            </>
+                        )}
                     </div>
                 </nav>
                 <main class=""> {/* to jest główna treść, ten biały box na stronie */}
-                    <GorneMenu />
+                    <GorneMenu setMenu={setMenu}/>
                     <Outlet />
                 </main>
             </div>

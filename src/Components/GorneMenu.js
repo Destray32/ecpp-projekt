@@ -9,16 +9,16 @@ import { Link } from 'react-router-dom';
  * )
  */
 
-export default function GorneMenu() {
+export default function GorneMenu({ setMenu }) {
     return (
-        <div className='bg-szary flex justify-around items-center p-4'>
-            <Link to="/home/pracownik" className='cursor-pointer text-gray-700 hover:text-black'>
+        <div className='bg-szary flex justify-center items-center'>
+            <Link to="/home/pracownik" className='cursor-pointer w-full h-14 flex justify-center items-center hover:bg-hover-szary text-gray-700 hover:text-black' onClick={() => setMenu('Pracownik')}>
                 Pracownik
             </Link>
-            <Link to="/czas" className='cursor-pointer text-gray-700 hover:text-black'>
+            <Link to="/home/czas" className='cursor-pointer w-full h-14 flex justify-center items-center hover:bg-hover-szary text-gray-700 hover:text-black' onClick={() => setMenu('Czas')}>
                 Czas
             </Link>
-            <Link to="/plan" className='cursor-pointer text-gray-700 hover:text-black'>
+            <Link to="/home/plan" className='cursor-pointer w-full h-14 flex justify-center items-center hover:bg-hover-szary text-gray-700 hover:text-black' onClick={() => setMenu('PlanTygodnia')}>
                 Plan tygodnia "V"
             </Link>
         </div>
