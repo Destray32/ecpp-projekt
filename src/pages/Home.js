@@ -30,9 +30,9 @@ export default function HomePage() {
                 <nav class="bg-primary p-4">
                     <div class="bg-white w-full h-[0.5px] my-4"></div>
                     <div class="space-y-2">
-                        <Link to="pracownik"><ButtonLewy nazwa='Pracownik' /></Link>
-                        <Link to="podzial"><ButtonLewy nazwa='Podział' /></Link>
-                        <Link to="logowanie"><ButtonLewy nazwa='Logowanie' /></Link>
+                        <ButtonLewy link={"pracownik"} nazwa='Pracownik' />
+                        <ButtonLewy link={"podzial"} nazwa='Podział' />
+                        <ButtonLewy link={"logowanie"} nazwa='Logowanie' />
                         <ButtonLewy nazwa='Wyloguj' />
                     </div>
                 </nav>
