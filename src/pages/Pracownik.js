@@ -60,12 +60,14 @@ export default function PracownikPage() {
         <div>
             <div className="w-full md:w-auto h-full m-2 p-3 bg-amber-100 outline outline-1 outline-gray-500 flex flex-row items-center space-x-4">
                 <div className="w-3/4 h-72 flex flex-col space-y-2 items-start">
-                    <div className="w-full h-2/6 p-2 bg-slate-300">
-                        <p>Szukaj pracownika</p>
-                        <Button label="Zmień swoje dane" className="bg-white outline outline-1 outline-gray-500 p-2" />
-                        <Button label="Dodaj pracownika" className="bg-white outline outline-1 outline-gray-500 p-2" />
-                        <Button label="Drukuj listę" className="bg-white outline outline-1 outline-gray-500 p-2" />
+                <div className="w-full h-2/6">
+                    <div className="w-full flex flex-row items-center p-4">
+                            <p>Szukaj pracownika</p>
+                            <Button label="Zmień swoje dane" className="bg-white outline outline-1 outline-gray-500 p-2 mx-2" />
+                            <Button label="Dodaj pracownika" className="bg-white outline outline-1 outline-gray-500 p-2 mx-2" />
+                            <Button label="Drukuj listę" className="bg-white outline outline-1 outline-gray-500 p-2 mx-2" />
                     </div>
+                </div>
                     <div className="w-full h-3/6 outline outline-1">
                         <form className="w-full flex flex-col space-y-1">
                             placeholder
@@ -77,7 +79,7 @@ export default function PracownikPage() {
                 </div>
                 <div className="w-1/4 h-full p-3 outline outline-1 flex justify-center items-start">
                     <form className="w-full flex flex-col space-y-1">
-                        <Dropdown value={state} onChange={(e) => setState(e.value)} options={["Aktywne","Niekatywne"]} optionLabel="name" editable placeholder="Stan"
+                        <Dropdown value={state} onChange={(e) => setState(e.value)} options={["Aktywne","Niekatywne"]} optionLabel="name" editable placeholder="Status"
                             autoComplete="off" className="w-full p-2" showClear/>
                         <div className="flex flex-col justify-content-center space-y-1">
                             <div className="flex flex-row items-center">

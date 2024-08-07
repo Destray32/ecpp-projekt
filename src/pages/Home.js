@@ -33,6 +33,7 @@ export default function HomePage() {
                         <ButtonLewy link={"pracownik"} nazwa='Pracownik' />
                         <ButtonLewy link={"podzial"} nazwa='Podział' />
                         <ButtonLewy link={"logowanie"} nazwa='Logowanie' />
+                        <ButtonLewy link={"administracja"} nazwa='Administracja' />
                         <ButtonLewy nazwa='Wyloguj' />
                     </div>
                 </nav>
