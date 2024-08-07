@@ -1,9 +1,148 @@
-import React from "react";
+import React, { useState } from "react";
+import { Dropdown } from "primereact/dropdown";
+import { Checkbox } from 'primereact/checkbox';
+import { Button } from 'primereact/button';
 
 export default function PracownikPage() {
+
+    const [state, setState] = useState(null);
+    const [company, setCompany] = useState([]);
+
+    const sampleData = [
+        {
+            name: "Jan",
+            surname: "Kowalski",
+            pesel: "12345678901",
+            vacationGroup: 1,
+            company: "Hejmej Plat",
+            phone1: "123456789",
+            phone2: "123456789",
+            email: "test@wp.pl",
+            manager: "Jan Kowalski"
+        },
+        {
+            name: "Jan",
+            surname: "Kowalski",
+            pesel: "12345678901",
+            vacationGroup: 1,
+            company: "Hejmej Plat",
+            phone1: "123456789",
+            phone2: "123456789",
+            email: "test@wp.pl",
+            manager: "Jan Kowalski"
+        },
+        {
+            name: "Jan",
+            surname: "Kowalski",
+            pesel: "12345678901",
+            vacationGroup: 1,
+            company: "Hejmej Plat",
+            phone1: "123456789",
+            phone2: "123456789",
+            email: "test@wp.pl",
+            manager: "Jan Kowalski"
+        }
+    ];
+    
+    const onCompanyChange = (e) => {
+        let _company = [...company];
+
+        if(e.checked)
+            _company.push(e.value);
+        else
+            _company.splice(_company.indexOf(e.value), 1);
+
+        setCompany(_company);
+        //console.log(_company);
+    }
+
     return (
         <div>
-            <h1>Pracownik</h1>
+            <div className="w-full md:w-auto h-full m-2 p-3 bg-amber-100 outline outline-1 outline-gray-500 flex flex-row items-center space-x-4">
+                <div className="w-3/4 h-72 flex flex-col space-y-2 items-start">
+                    <div className="w-full h-2/6 p-2 bg-slate-300">
+                        <p>Szukaj pracownika</p>
+                        <Button label="Zmień swoje dane" className="bg-white outline outline-1 outline-gray-500 p-2" />
+                        <Button label="Dodaj pracownika" className="bg-white outline outline-1 outline-gray-500 p-2" />
+                        <Button label="Drukuj listę" className="bg-white outline outline-1 outline-gray-500 p-2" />
+                    </div>
+                    <div className="w-full h-3/6 outline outline-1">
+                        <form className="w-full flex flex-col space-y-1">
+                            placeholder
+                        </form>
+                    </div>
+                    <div className="w-full h-1/6 flex justify-start items-center p-2 bg-slate-300">
+                        <p>Wszystko</p>
+                    </div>
+                </div>
+                <div className="w-1/4 h-full p-3 outline outline-1 flex justify-center items-start">
+                    <form className="w-full flex flex-col space-y-1">
+                        <Dropdown value={state} onChange={(e) => setState(e.value)} options={["Aktywne","Niekatywne"]} optionLabel="name" editable placeholder="Stan"
+                            autoComplete="off" className="w-full p-2" showClear/>
+                        <div className="flex flex-col justify-content-center space-y-1">
+                            <div className="flex flex-row items-center">
+                                <Checkbox inputId="cb1" value="cb1" onChange={onCompanyChange} checked={company.indexOf('cb1') !== -1} />
+                                <label htmlFor="cb1"> Hejmej Plat</label>
+                            </div>
+                            <div className="flex flex-row items-center">
+                                <Checkbox inputId="cb2" value="cb2" onChange={onCompanyChange} checked={company.indexOf('cb2') !== -1} />
+                                <label htmlFor="cb2"> Midebygg</label>
+                            </div>
+                            <div className="flex flex-row items-center">
+                                <Checkbox inputId="cb3" value="cb3" onChange={onCompanyChange} checked={company.indexOf('cb3') !== -1} />
+                                <label htmlFor="cb3"> PC Group Sp. z o o.</label>
+                            </div>
+                            <div className="flex flex-row items-center">
+                                <Checkbox inputId="cb4" value="cb4" onChange={onCompanyChange} checked={company.indexOf('cb4') !== -1} />
+                                <label htmlFor="cb4"> PC Husbyggen</label>
+                            </div>
+                            <div className="flex flex-row items-center">
+                                <Checkbox inputId="cb5" value="cb5" onChange={onCompanyChange} checked={company.indexOf('cb5') !== -1} />
+                                <label htmlFor="cb5"> Polbygg</label>
+                            </div>
+                            <div className="flex flex-row items-center">
+                                <Checkbox inputId="cb6" value="cb6" onChange={onCompanyChange} checked={company.indexOf('cb6') !== -1} />
+                                <label htmlFor="cb6"> Zwolnieni</label>
+                            </div>
+                            <Button label="Filtruj" className="w-full bg-white outline outline-1 outline-gray-500 p-2" />
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div className="w-full md:w-auto bg-gray-300 h-full m-2 outline outline-1 outline-gray-500">
+                <table className="w-full">
+                    <thead className="bg-blue-700 text-white">
+                        <tr>
+                            <th className="border-r">Imię</th>
+                            <th className="border-r">Nazwisko</th>
+                            <th className="border-r">Pesel</th>
+                            <th className="border-r">Grupa urlopowa</th>
+                            <th className="border-r">Firma</th>
+                            <th className="border-r">Telefon</th>
+                            <th className="border-r">Telefon</th>
+                            <th className="border-r">E-mail</th>
+                            <th className="border-r">Kierownik</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody className="text-center">
+                        {sampleData.map((item) => (
+                            <tr className="border-b even:bg-gray-200 odd:bg-gray-300">
+                                <td className="border-r">{item.name}</td>
+                                <td className="border-r">{item.surname}</td>
+                                <td className="border-r">{item.pesel}</td>
+                                <td className="border-r">{item.vacationGroup}</td>
+                                <td className="border-r">{item.company}</td>
+                                <td className="border-r">{item.phone1}</td>
+                                <td className="border-r">{item.phone2}</td>
+                                <td className="border-r">{item.email}</td>
+                                <td className="border-r">{item.manager}</td>
+                                <Button label="Usuń" className="bg-blue-700 text-white p-1 m-0.5" />
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
         </div>
     )
 }
