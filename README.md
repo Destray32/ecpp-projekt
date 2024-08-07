@@ -1,4 +1,4 @@
 # ECPP
 
-Strona gowna jest pod routem /home
+Strona glowna jest pod routem /home
 
