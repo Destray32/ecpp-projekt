@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Dropdown } from 'primereact/dropdown';
 import { Password } from 'primereact/password';
+import { Button } from 'primereact/button';
 
 import "primereact/resources/themes/lara-light-cyan/theme.css";
 
@@ -31,10 +32,14 @@ export default function LoginPage() {
                         <Dropdown value={db} onChange={(e) => setDb(e.value)} options={avaibleDbs} optionLabel="name"
                             editable placeholder="Baza" autoComplete='off' className="w-full md:w-14rem p-4" />
                     </div>
-                    {/* <div className="card flex-col drop-shadow-lg">
+                    <div className="card flex flex-col drop-shadow-lg">
+                        {/* i have no clue why toggleMask={true} rozwala input, do poprawy albo wywalenia */}
                         <Password value={password} onChange={(e) => setPassword(e.target.value)} autoComplete='off'
-                            inputClassName='w-[65rem]' feedback={false} />
-                    </div> */}
+                            className='w-full' inputClassName='w-full md:w-14rem p-4' feedback={false} placeholder='Hasło' />
+                    </div>
+                    <div className='card flex justify-center'>
+                        <Button label='Zaloguj' className='p-4 w-14rem bg-blue-400' />
+                    </div>
                 </form>
             </div>
         </body>

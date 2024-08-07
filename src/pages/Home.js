@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Outlet, Link } from 'react-router-dom';
 import moment from 'moment';
 
 import GorneMenu from '../Components/GorneMenu';
@@ -29,15 +30,15 @@ export default function HomePage() {
                 <nav class="bg-primary p-4">
                     <div class="bg-white w-full h-[0.5px] my-4"></div>
                     <div class="space-y-2">
-                        <ButtonLewy nazwa='Pracownik' />
-                        <ButtonLewy nazwa='Podział' />
-                        <ButtonLewy nazwa='Logowanie' />
+                        <Link to="pracownik"><ButtonLewy nazwa='Pracownik' /></Link>
+                        <Link to="podzial"><ButtonLewy nazwa='Podział' /></Link>
+                        <Link to="logowanie"><ButtonLewy nazwa='Logowanie' /></Link>
                         <ButtonLewy nazwa='Wyloguj' />
                     </div>
                 </nav>
                 <main class=""> {/* to jest główna treść, ten biały box na stronie */}
                     <GorneMenu />
-
+                    <Outlet />
                 </main>
             </div>
         </>
