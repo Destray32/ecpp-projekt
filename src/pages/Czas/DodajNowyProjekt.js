@@ -30,7 +30,7 @@ export default function TydzienPage() {
 
     return (
         <div>
-            <div className="w-auto h-auto bg-blue-600 outline outline-1 outline-black flex flex-row items-center space-x-4 m-2 p-3 text-white">
+            <div className="w-auto h-auto bg-blue-700 outline outline-1 outline-black flex flex-row items-center space-x-4 m-2 p-3 text-white">
                 <p>Dodaj nowy projekt</p>
             </div>
             <AmberBox>
