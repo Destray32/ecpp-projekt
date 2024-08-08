@@ -5,6 +5,7 @@ import { DatePicker } from 'antd';
 
 import TydzienInput from "../../Components/TydzienInput";
 import PracownikData from "../../data/PlanTygodniaData";
+import AmberBox from "../../Components/AmberBox";
 
 import "primereact/resources/themes/lara-light-cyan/theme.css";
 
@@ -13,14 +14,15 @@ const { RangePicker } = DatePicker;
 export default function PlanTygodniaPage() {
     const [availableGroups, setAvailableGroups] = useState(['wszyscy', 'inne']);
     const [group, setGroup] = useState('wszyscy');
+    const [grupaPrzenies, setGrupaPrzenies] = useState('');
     const [selectedWeek, setSelectedWeek] = useState(1); // selected week ustawiany w TydzienInput
     const [dateRange, setDateRange] = useState([null, null]);
     const [selectedRowIds, setSelectedRowIds] = useState([]); // stan do pierwszej kolumny z checkboxami
     // stany do śledzenia zaznaczonych checkboxów w kolumnach M1-M5
-    const [selectedM1, setSelectedM1] = useState([]); 
-    const [selectedM2, setSelectedM2] = useState([]); 
-    const [selectedM3, setSelectedM3] = useState([]); 
-    const [selectedM4, setSelectedM4] = useState([]); 
+    const [selectedM1, setSelectedM1] = useState([]);
+    const [selectedM2, setSelectedM2] = useState([]);
+    const [selectedM3, setSelectedM3] = useState([]);
+    const [selectedM4, setSelectedM4] = useState([]);
     const [selectedM5, setSelectedM5] = useState([]);
 
 
@@ -28,15 +30,15 @@ export default function PlanTygodniaPage() {
     //     console.log(group);
     // }, [group]);
 
-    //// podglad stanu zaznaczonych checkboxów
-    // useEffect(() => {
-    //     console.log('Selected rows:', selectedRowIds);
-    //     console.log('Selected M1:', selectedM1);
-    //     console.log('Selected M2:', selectedM2);
-    //     console.log('Selected M3:', selectedM3);
-    //     console.log('Selected M4:', selectedM4);
-    //     console.log('Selected M5:', selectedM5);
-    // }, [selectedRowIds, selectedM1, selectedM2, selectedM3, selectedM4, selectedM5]);
+    // podglad stanu zaznaczonych checkboxów
+    useEffect(() => {
+        console.log('Selected rows:', selectedRowIds);
+        console.log('Selected M1:', selectedM1);
+        console.log('Selected M2:', selectedM2);
+        console.log('Selected M3:', selectedM3);
+        console.log('Selected M4:', selectedM4);
+        console.log('Selected M5:', selectedM5);
+    }, [selectedRowIds, selectedM1, selectedM2, selectedM3, selectedM4, selectedM5]);
 
     useEffect(() => {
         console.log(selectedWeek);
@@ -48,6 +50,14 @@ export default function PlanTygodniaPage() {
 
     const handleDrukuj = () => {
         console.log('Drukuj');
+    }
+
+    const handleUsunZaznaczone = () => {
+        console.log('Usun zaznaczone');
+    }
+
+    const handleSkopiuj = () => {
+        console.log('Skopiuj');
     }
 
     const handlePickerChange = (dates, dateStrings) => {
@@ -64,6 +74,38 @@ export default function PlanTygodniaPage() {
                 return [...prevSelectedRows, rowIndex];
             }
         });
+    };
+
+    const handleSelectAll = (columnIndex) => {
+        switch (columnIndex) {
+            case 4:
+                setSelectedM1(prevSelectedM1 =>
+                    prevSelectedM1.length === PracownikData.sampleData.length ? [] : PracownikData.sampleData.map((_, i) => i)
+                );
+                break;
+            case 5:
+                setSelectedM2(prevSelectedM2 =>
+                    prevSelectedM2.length === PracownikData.sampleData.length ? [] : PracownikData.sampleData.map((_, i) => i)
+                );
+                break;
+            case 6:
+                setSelectedM3(prevSelectedM3 =>
+                    prevSelectedM3.length === PracownikData.sampleData.length ? [] : PracownikData.sampleData.map((_, i) => i)
+                );
+                break;
+            case 7:
+                setSelectedM4(prevSelectedM4 =>
+                    prevSelectedM4.length === PracownikData.sampleData.length ? [] : PracownikData.sampleData.map((_, i) => i)
+                );
+                break;
+            case 8:
+                setSelectedM5(prevSelectedM5 =>
+                    prevSelectedM5.length === PracownikData.sampleData.length ? [] : PracownikData.sampleData.map((_, i) => i)
+                );
+                break;
+            default:
+                break;
+        }
     };
 
     // funkcja do obsługi zmiany stanu checkboxa w kolumnach M1-M5
@@ -123,7 +165,7 @@ export default function PlanTygodniaPage() {
     return (
         <main>
             <div className="w-auto h-auto m-2 p-3 bg-amber-100 outline outline-1
-         outline-gray-500 flex flex-row items-center space-x-4">
+            outline-gray-500 flex flex-row items-center space-x-4">
                 <div className="w-3/4 h-72 flex flex-col space-y-2 items-start">
                     <div className="h-full">
                         <div className="h-full flex flex-col justify-around">
@@ -162,13 +204,12 @@ export default function PlanTygodniaPage() {
                                     <th className="border-r">Nazwisko</th>
                                     <th className="border-r">Imię</th>
                                     <th className="border-r">Grupa</th>
-                                    <th className="border-r">M1</th>
-                                    <th className="border-r">M2</th>
-                                    <th className="border-r">M3</th>
-                                    <th className="border-r">M4</th>
-                                    <th className="border-r">M5</th>
+                                    <th className="border-r" onClick={() => handleSelectAll(4)}>M1</th>
+                                    <th className="border-r" onClick={() => handleSelectAll(5)}>M2</th>
+                                    <th className="border-r" onClick={() => handleSelectAll(6)}>M3</th>
+                                    <th className="border-r" onClick={() => handleSelectAll(7)}>M4</th>
+                                    <th className="border-r" onClick={() => handleSelectAll(8)}>M5</th>
                                     <th className="border-r">Opis</th>
-                                    
                                 </tr>
                             </thead>
                             <tbody className="text-center">
@@ -226,8 +267,33 @@ export default function PlanTygodniaPage() {
                         </table>
                     </div>
                 </div>
-                <div id="prawa" class="flex flex-col gap-5">
 
+
+
+                <div id="prawa" class="flex flex-col gap-5">
+                    <AmberBox>
+                        <div className="mx-auto flex flex-col justify-between items-center p-4 ">
+                            <p>Przenieś zaznaczone do</p>
+                            <Dropdown value={grupaPrzenies} onChange={(e) => setGrupaPrzenies(e.value)}
+                                options={availableGroups} optionLabel="name"
+                                editable placeholder="" autoComplete='off'
+                                className="ml-4 md:w-14rem p-4" />
+                        </div>
+                    </AmberBox>
+                    <AmberBox>
+                        <div className="mx-auto flex flex-col justify-between items-center p-4 ">
+                            <p>Skasuj zaznaczone</p>
+                            <Button label="Usuń" className="bg-white w-[9rem] h-[3rem]"
+                                text raised onClick={handleUsunZaznaczone} />
+                        </div>
+                    </AmberBox>
+                    <AmberBox>
+                        <div className="mx-auto flex flex-col justify-between items-center p-4 ">
+                            <p>Skopiuj pracowników z poprzedniego tygodnia</p>
+                            <Button label="Skopiuj" className="bg-white w-[9rem] h-[3rem]"
+                                text raised onClick={handleSkopiuj} />
+                        </div>
+                    </AmberBox>
                 </div>
             </div>
         </main>
