@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dropdown } from "primereact/dropdown";
 import { Checkbox } from 'primereact/checkbox';
 import { Button } from 'primereact/button';
@@ -8,6 +8,10 @@ import { FloatLabel } from 'primereact/floatlabel';
 import DaneBox from '../../Components/DaneBox';
 
 export default function ZmienDanePage() {
+    const [endDateClicked, setEndDateClicked] = useState(false);
+    const [startDateClicked, setStartDateClicked] = useState(false);
+    const [brithdayClicked, setBrithdayClicked] = useState(false);
+
     return (
         <div>
             <div className='w-full flex flex-row justify-center items-center space-x-1 pr-2'>
@@ -22,8 +26,13 @@ export default function ZmienDanePage() {
                             <label htmlFor="name">Imię</label>
                         </FloatLabel>
                         <FloatLabel>
-                            <InputText id="brithday" type="date" />
-                            <label htmlFor="brithday">Data urodzenia</label>
+                            <InputText
+                            style={{ width: '14rem',  }}
+                                onFocus={() => setBrithdayClicked(true)} // na focusie true i wtedy przesuwam label w osi y. przy innych datach to samo
+                                onBlur={() => setBrithdayClicked(false)} 
+                            id="brithday" type="date" />
+                            <label className={(brithdayClicked ? '' : 'translate-y-5')}
+                            htmlFor="brithday">Data urodzenia</label>
                         </FloatLabel>
                         <FloatLabel>
                             <InputText id="pesel" type="text" />
@@ -109,14 +118,30 @@ export default function ZmienDanePage() {
                         </FloatLabel>
                     </div>
                     <div className='flex flex-col items-center space-y-8'>
-                        <FloatLabel>
-                            <InputText id="startDate" type="date" />
-                            <label htmlFor="startDate">Data rozpoczęcia</label>
-                        </FloatLabel>
-                        <FloatLabel>
-                            <InputText id="endDate" type="date" />
-                            <label htmlFor="endDate">Data zakończenia</label>
-                        </FloatLabel>
+                        <div className=' flex flex-col gap-14'>
+                            <FloatLabel>
+                                <InputText
+                                style={{ width: '20rem',  }}
+
+                                className='w-full'
+                                    onFocus={() => setStartDateClicked(true)}
+                                    onBlur={() => setStartDateClicked(false)}
+                                    id="startDate" type="date" />
+                                <label
+                                    className={(startDateClicked ? '' : 'translate-y-5')}
+                                    htmlFor="startDate">Data rozpoczęcia</label>
+                            </FloatLabel>
+                            <FloatLabel>
+                                <InputText
+                                    style={{ width: '20rem',  }}
+                                    onFocus={() => setEndDateClicked(true)}
+                                    onBlur={() => setEndDateClicked(false)}
+                                    id="endDate" type="date" />
+                                <label className={endDateClicked ? '' : 'translate-y-5'}
+                                    htmlFor="endDate">Data zakończenia</label>
+                            </FloatLabel>
+                        </div>
+
                         <FloatLabel>
                             <InputText id="paycheckCode" type="text" />
                             <label htmlFor="paycheckCode">Kod wynagrodzenia</label>
