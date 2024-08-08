@@ -41,7 +41,7 @@ export default function HomePage() {
                         )}
                         {menu === "Czas" && (
                             <>
-                                <ButtonLewy link="czas" nazwa='Czas' />
+                                <ButtonLewy link="czas" nazwa='Czas Pracy' />
                                 <ButtonLewy link="administracja" nazwa='Administracja' />
                                 <ButtonLewy link="projekty" nazwa='Projekty' />
                                 <ButtonLewy link="urlopy" nazwa='Urlopy' />
