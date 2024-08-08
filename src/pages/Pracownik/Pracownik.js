@@ -2,11 +2,21 @@ import React, { useState } from "react";
 import { Dropdown } from "primereact/dropdown";
 import { Checkbox } from 'primereact/checkbox';
 import { Button } from 'primereact/button';
+import { InputText } from 'primereact/inputtext';
+import { SelectButton } from 'primereact/selectbutton';
 
 export default function PracownikPage() {
 
-    const [state, setState] = useState(null);
+    const [state, setState] = useState("Aktywne");
+    const [title, setTitle] = useState(null);
+    const [name, setName] = useState(null);
+    const [surname, setSurname] = useState(null);
+    const [manager, setManager] = useState(null);
     const [company, setCompany] = useState([]);
+    const [searchField, setSearchField] = useState("Wszystko");
+    const [keyword, setKeyword] = useState(null);
+    const [vacationGroup, setVacationGroup] = useState(null);
+    const [letter, setLetter] = useState({name: "Wszystko"});
 
     const sampleData = [
         {
@@ -60,27 +70,44 @@ export default function PracownikPage() {
         <div>
             <div className="w-full md:w-auto h-full m-2 p-3 bg-amber-100 outline outline-1 outline-gray-500 flex flex-row items-center space-x-4">
                 <div className="w-3/4 h-72 flex flex-col space-y-2 items-start">
-                <div className="w-full h-2/6">
-                    <div className="w-full flex flex-row items-center p-4">
-                            <p>Szukaj pracownika</p>
-                            <Button label="Zmień swoje dane" className="bg-white outline outline-1 outline-gray-500 p-2 mx-2" />
-                            <Button label="Dodaj pracownika" className="bg-white outline outline-1 outline-gray-500 p-2 mx-2" />
-                            <Button label="Drukuj listę" className="bg-white outline outline-1 outline-gray-500 p-2 mx-2" />
+                    <div className="w-full h-2/6">
+                        <div className="w-full flex flex-row items-center p-4">
+                                <p>Szukaj pracownika</p>
+                                <Button label="Zmień swoje dane" className="bg-white outline outline-1 outline-gray-500 p-2 mx-2" />
+                                <Button label="Dodaj pracownika" className="bg-white outline outline-1 outline-gray-500 p-2 mx-2" />
+                                <Button label="Drukuj listę" className="bg-white outline outline-1 outline-gray-500 p-2 mx-2" />
+                        </div>
                     </div>
-                </div>
-                    <div className="w-full h-3/6 outline outline-1">
-                        <form className="w-full flex flex-col space-y-1">
-                            placeholder
+                    <div className="w-full h-4/6 outline outline-1">
+                        <form className="w-full h-full flex flex-col space-y-2 p-2">
+                            <div className="w-full h-1/2 flex flex-row items-center space-x-2">
+                                <Dropdown value={title} onChange={(e) => setTitle(e.value)} options={["Tytul 1","Tytul 2"]} optionLabel="name" editable placeholder="Tytuł"
+                                    autoComplete="off" className="w-3/12 p-2" filter showClear/>
+                                <InputText value={name} onChange={(e) => setName(e.target.value)} placeholder="Imię" className="w-3/12 p-2" />
+                                <InputText value={surname} onChange={(e) => setSurname(e.target.value)} placeholder="Nazwisko" className="w-3/12 p-2" />
+                                <Dropdown value={manager} onChange={(e) => setManager(e.value)} options={["Kierownik 1","Kierownik 2"]} optionLabel="name" editable placeholder="Kierownik"
+                                    autoComplete="off" className="w-3/12 p-2" filter showClear/>
+                            </div>
+                            <div className="w-full h-1/2 flex flex-row items-center space-x-2">
+                                <Dropdown value={searchField} onChange={(e) => setSearchField(e.value)} options={["Wszystko","Imię","Nazwisko","Pesel","Grupa urlopowa","Firma","Telefon","E-mail","Kierownik"]} optionLabel="name" editable placeholder="Pole wyszukiwania"
+                                    autoComplete="off" className="w-3/12 p-2" filter />
+                                <InputText value={keyword} onChange={(e) => setKeyword(e.target.value)} placeholder="Słowo kluczowe" className="w-3/12 p-2" />
+                                <Dropdown value={vacationGroup} onChange={(e) => setVacationGroup(e.value)} options={["Grupa 1","Grupa 2"]} optionLabel="name" editable placeholder="Grupa urlopowa"
+                                    autoComplete="off" className="w-3/12 p-2" filter showClear/>
+                                <Button label="Szukaj" className="w-3/12 bg-white outline outline-1 outline-gray-500 p-2" />
+                            </div>
                         </form>
                     </div>
-                    <div className="w-full h-1/6 flex justify-start items-center p-2 bg-slate-300">
-                        <p>Wszystko</p>
+                    <div className="w-full h-1/6 flex flex-row items-center">
+                        <SelectButton value={letter} onChange={(e) => setLetter(e.value)} optionLabel="name" 
+                            options={[{name: "Wszystko"},{name: "A"},{name: "B"},{name: "C"},{name: "D"},{name: "E"},{name: "F"},{name: "G"},{name: "H"},{name: "I"},{name: "J"},{name: "K"},{name: "L"},{name: "M"},{name: "N"},{name: "O"},{name: "P"},{name: "R"},{name: "S"},{name: "T"},{name: "U"},{name: "W"},{name: "Z"}]}
+                            className="w-full flex items-center justify-start text-xs" />
                     </div>
                 </div>
                 <div className="w-1/4 h-full p-3 outline outline-1 flex justify-center items-start">
                     <form className="w-full flex flex-col space-y-1">
                         <Dropdown value={state} onChange={(e) => setState(e.value)} options={["Aktywne","Niekatywne"]} optionLabel="name" editable placeholder="Status"
-                            autoComplete="off" className="w-full p-2" showClear/>
+                            autoComplete="off" className="w-full p-2" />
                         <div className="flex flex-col justify-content-center space-y-1">
                             <div className="flex flex-row items-center">
                                 <Checkbox inputId="cb1" value="cb1" onChange={onCompanyChange} checked={company.indexOf('cb1') !== -1} />
