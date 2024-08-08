@@ -4,6 +4,7 @@ import { Checkbox } from 'primereact/checkbox';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
 import { SelectButton } from 'primereact/selectbutton';
+import { Link } from "react-router-dom";
 
 export default function PracownikPage() {
 
@@ -72,10 +73,14 @@ export default function PracownikPage() {
                 <div className="w-3/4 h-72 flex flex-col space-y-2 items-start">
                     <div className="w-full h-2/6">
                         <div className="w-full flex flex-row items-center p-4">
-                                <p>Szukaj pracownika</p>
+                            <p>Szukaj pracownika</p>
+                            <Link to="/home/zmien-dane">
                                 <Button label="Zmień swoje dane" className="bg-white outline outline-1 outline-gray-500 p-2 mx-2" />
+                            </Link>
+                            <Link to="/home/dodaj-pracownika">
                                 <Button label="Dodaj pracownika" className="bg-white outline outline-1 outline-gray-500 p-2 mx-2" />
-                                <Button label="Drukuj listę" className="bg-white outline outline-1 outline-gray-500 p-2 mx-2" />
+                            </Link>
+                            <Button label="Drukuj listę" className="bg-white outline outline-1 outline-gray-500 p-2 mx-2" />
                         </div>
                     </div>
                     <div className="w-full h-4/6 outline outline-1">
