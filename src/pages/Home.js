@@ -24,13 +24,13 @@ export default function HomePage() {
         <>
             {/* to jest głowny layout w gridzie */}
             <div className='grid grid-cols-[250px_1fr] grid-rows-[auto_1fr] min-h-screen'>
-                <header class="col-span-2 bg-primary text-white p-4 flex justify-between items-center">
-                    <h1 class="text-2xl font-bold">ECPP</h1>
+                <header className="col-span-2 bg-primary text-white p-4 flex justify-between items-center">
+                    <h1 className="text-2xl font-bold">ECPP</h1>
                     <span>{imie + '  ' + data}</span> {/* imie i data */}
                 </header>
-                <nav class="bg-primary p-4">
-                    <div class="bg-white w-full h-[0.5px] my-4"></div>
-                    <div class="space-y-2">
+                <nav className="bg-primary p-4">
+                    <div className="bg-white w-full h-[0.5px] my-4"></div>
+                    <div className="space-y-2">
                         {menu === "Pracownik" && (
                             <>
                                 <ButtonLewy link="pracownik" nazwa='Pracownik' />
@@ -60,7 +60,7 @@ export default function HomePage() {
                         )}
                     </div>
                 </nav>
-                <main class=""> {/* to jest główna treść, ten biały box na stronie */}
+                <main className=""> {/* to jest główna treść, ten biały box na stronie */}
                     <GorneMenu setMenu={setMenu}/>
                     <Outlet />
                 </main>

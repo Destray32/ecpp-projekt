@@ -9,18 +9,19 @@ import { Link } from "react-router-dom";
 export default function PracownikPage() {
 
     const [state, setState] = useState("Aktywne");
-    const [title, setTitle] = useState(null);
-    const [name, setName] = useState(null);
-    const [surname, setSurname] = useState(null);
-    const [manager, setManager] = useState(null);
+    const [title, setTitle] = useState("");
+    const [name, setName] = useState("");
+    const [surname, setSurname] = useState("");
+    const [manager, setManager] = useState("");
     const [company, setCompany] = useState([]);
     const [searchField, setSearchField] = useState("Wszystko");
-    const [keyword, setKeyword] = useState(null);
+    const [keyword, setKeyword] = useState("");
     const [vacationGroup, setVacationGroup] = useState(null);
     const [letter, setLetter] = useState({name: "Wszystko"});
 
     const sampleData = [
         {
+            id: 1,
             name: "Jan",
             surname: "Kowalski",
             pesel: "12345678901",
@@ -32,6 +33,7 @@ export default function PracownikPage() {
             manager: "Jan Kowalski"
         },
         {
+            id: 2,
             name: "Jan",
             surname: "Kowalski",
             pesel: "12345678901",
@@ -43,6 +45,7 @@ export default function PracownikPage() {
             manager: "Jan Kowalski"
         },
         {
+            id: 3,
             name: "Jan",
             surname: "Kowalski",
             pesel: "12345678901",
@@ -161,7 +164,7 @@ export default function PracownikPage() {
                     </thead>
                     <tbody className="text-center">
                         {sampleData.map((item) => (
-                            <tr className="border-b even:bg-gray-200 odd:bg-gray-300">
+                            <tr key={item.id} className="border-b even:bg-gray-200 odd:bg-gray-300">
                                 <td className="border-r">{item.name}</td>
                                 <td className="border-r">{item.surname}</td>
                                 <td className="border-r">{item.pesel}</td>
@@ -171,7 +174,7 @@ export default function PracownikPage() {
                                 <td className="border-r">{item.phone2}</td>
                                 <td className="border-r">{item.email}</td>
                                 <td className="border-r">{item.manager}</td>
-                                <Button label="Usuń" className="bg-blue-700 text-white p-1 m-0.5" />
+                                <td><Button label="Usuń" className="bg-blue-700 text-white p-1 m-0.5" /></td>
                             </tr>
                         ))}
                     </tbody>
