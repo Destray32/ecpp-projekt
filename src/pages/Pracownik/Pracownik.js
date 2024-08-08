@@ -71,7 +71,7 @@ export default function PracownikPage() {
     }
 
     return (
-        <div>
+        <div >
             <div className="w-full md:w-auto h-full m-2 p-3 bg-amber-100 outline outline-1 outline-gray-500 flex flex-row items-center space-x-4">
                 <div className="w-3/4 h-72 flex flex-col space-y-2 items-start">
                     <div className="w-full h-2/6">

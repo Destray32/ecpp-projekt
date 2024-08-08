@@ -18,6 +18,9 @@ import TydzienPage from './pages/Czas/Tydzien';
 import RaportyPage from './pages/Czas/Raporty';
 import PlanTygodniaPage from './pages/PlanTygodnia/PlanTygodnia';
 import ZaplanujTydzienPage from './pages/PlanTygodnia/ZaplanujTydzien';
+import NowyProjektPage from './pages/Czas/DodajNowy';
+import NowaGrupaPage from './pages/Czas/NowaGrupa';
+import GrupyProjektowPage from './pages/Czas/GrupyProjektow';
 
 function App() {
   return (
@@ -39,6 +42,9 @@ function App() {
           <Route path="raporty" element={<RaportyPage />} />
           <Route path="plan" element={<PlanTygodniaPage />} />
           <Route path="zaplanuj" element={<ZaplanujTydzienPage />} />
+          <Route path="grupy-projektow" element={<GrupyProjektowPage />} />
+          <Route path="nowy-projekt" element={<NowyProjektPage />} />
+          <Route path="nowa-grupa" element={<NowaGrupaPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import { format, startOfWeek, addWeeks, subWeeks, getWeek, addDays, differenceInHours, getDay} from 'date-fns';
+import { format, startOfWeek, addWeeks, subWeeks, addDays, differenceInHours, getWeek, getDay } from 'date-fns';
+import { pl } from 'date-fns/locale';
 import 'primeicons/primeicons.css';
 import { Dropdown } from "primereact/dropdown";
 import { Button } from 'primereact/button';
-import { pl } from 'date-fns/locale';
 
 
 export default function CzasPracyPage() {
@@ -13,6 +13,7 @@ export default function CzasPracyPage() {
     const [Zleceniodawca, setZleceniodawca] = useState(null);
     const [Projekty, setProjekty] = useState(null);
     const [hours, setHours] = useState({});
+    const [date, setDate] = useState(new Date());
 
     const formatWeek = (date) => {
         const start = format(startOfWeek(date, { weekStartsOn: 1 }), 'dd.MM.yyyy');
@@ -56,6 +57,12 @@ export default function CzasPracyPage() {
         setCurrentDate(addWeeks(currentDate, 1));
     };
 
+    const onDateChange = (e) => {
+        const selectedDate = e.value;
+        setCurrentDate(startOfWeek(selectedDate, { weekStartsOn: 1 }));
+        setDate(selectedDate); // Optionally update the calendar date
+    };
+
     return (
         <div>
             <div className="w-full md:w-auto h-full m-2 p-3 bg-amber-100 outline outline-1 outline-gray-500 flex flex-col space-y-4">
@@ -78,56 +85,56 @@ export default function CzasPracyPage() {
                     </div>
                 </div>
             </div>
-            <div className=" bg-amber-100 outline outline-1 outline-gray-500 space-y-4 m-2 p-3">
-            <div className="grid grid-cols-7 gap-4 text-center font-bold">
-                {daysOfWeek.map((day, i) => (
-                    <div key={i} className="col-span-1">
-                        <p>{format(day, 'EEEE', { locale: pl })}</p>
-                        <p>{format(day, 'dd.MM.yyyy')}</p>
-                    </div>
-                ))}
-            </div>
-            
-            <div className="grid grid-cols-7 gap-4 mt-4 text-center">
-                {daysOfWeek.map((day, i) => (
-                    <div key={i} className="col-span-1">
-                        <input 
-                            type="time" 
-                            value={hours[format(day, 'yyyy-MM-dd')]?.start || ""}
-                            onChange={(e) => handleTimeChange(format(day, 'yyyy-MM-dd'), 'start', e.target.value)}
-                            disabled={getDay(day) === 0}
-                            className="w-full p-2 border border-gray-300 rounded"
-                        />
-                    </div>
-                ))}
-            </div>
-            
-            <div className="grid grid-cols-7 gap-4 mt-2 text-center">
-                {daysOfWeek.map((day, i) => (
-                    <div key={i} className="col-span-1">
-                        <input 
-                            type="time" 
-                            value={hours[format(day, 'yyyy-MM-dd')]?.end || ""}
-                            onChange={(e) => handleTimeChange(format(day, 'yyyy-MM-dd'), 'end', e.target.value)}
-                            disabled={getDay(day) === 0}
-                            className="w-full p-2 border border-gray-300 rounded"
-                        />
-                    </div>
-                ))}
-            </div>
+            <div className="bg-amber-100 outline outline-1 outline-gray-500 space-y-4 m-2 p-3">
+                <div className="grid grid-cols-7 gap-4 text-center font-bold">
+                    {daysOfWeek.map((day, i) => (
+                        <div key={i} className="col-span-1">
+                            <p>{format(day, 'EEEE', { locale: pl })}</p>
+                            <p>{format(day, 'dd.MM.yyyy')}</p>
+                        </div>
+                    ))}
+                </div>
+                
+                <div className="grid grid-cols-7 gap-4 mt-4 text-center">
+                    {daysOfWeek.map((day, i) => (
+                        <div key={i} className="col-span-1">
+                            <input 
+                                type="time" 
+                                value={hours[format(day, 'yyyy-MM-dd')]?.start || ""}
+                                onChange={(e) => handleTimeChange(format(day, 'yyyy-MM-dd'), 'start', e.target.value)}
+                                disabled={getDay(day) === 0}
+                                className="w-full p-2 border border-gray-300 rounded"
+                            />
+                        </div>
+                    ))}
+                </div>
+                
+                <div className="grid grid-cols-7 gap-4 mt-2 text-center">
+                    {daysOfWeek.map((day, i) => (
+                        <div key={i} className="col-span-1">
+                            <input 
+                                type="time" 
+                                value={hours[format(day, 'yyyy-MM-dd')]?.end || ""}
+                                onChange={(e) => handleTimeChange(format(day, 'yyyy-MM-dd'), 'end', e.target.value)}
+                                disabled={getDay(day) === 0}
+                                className="w-full p-2 border border-gray-300 rounded"
+                            />
+                        </div>
+                    ))}
+                </div>
 
-            <div className="grid grid-cols-7 gap-4 mt-4 text-center font-bold">
-                {daysOfWeek.map((day, i) => (
-                    <div key={i} className="col-span-1">
-                        <p>{calculateDailyTotal(format(day, 'yyyy-MM-dd')) || 0} godz.</p>
-                    </div>
-                ))}
-            </div>
+                <div className="grid grid-cols-7 gap-4 mt-4 text-center font-bold">
+                    {daysOfWeek.map((day, i) => (
+                        <div key={i} className="col-span-1">
+                            <p>{calculateDailyTotal(format(day, 'yyyy-MM-dd')) || 0} godz.</p>
+                        </div>
+                    ))}
+                </div>
 
-            <div className="text-right mt-6 font-bold">
-                <p>Razem: {calculateWeeklyTotal()} godz.</p>
+                <div className="text-right mt-6 font-bold">
+                    <p>Razem: {calculateWeeklyTotal()} godz.</p>
+                </div>
             </div>
-        </div>
             <div className="w-full md:w-auto h-full m-2 p-3 bg-amber-100 outline outline-1 outline-gray-500 flex flex-col space-y-4">
                 <div className="w-full h-2/5 flex flex-col space-y-2 items-start">
                     <div className="w-full h-2/6">
@@ -163,8 +170,8 @@ export default function CzasPracyPage() {
                         </div>
                     </div>
                 </div>
-                </div>
-                <div className="w-full md:w-auto h-full m-2 p-3 bg-amber-100 outline outline-1 outline-gray-500 flex flex-col space-y-4">
+            </div>
+            <div className="w-full md:w-auto h-full m-2 p-3 bg-amber-100 outline outline-1 outline-gray-500 flex flex-col space-y-4">
                 <div className="w-full h-2/5 flex flex-col space-y-2 items-start">
                     <div className="w-full h-2/6">
                         <div className="w-full flex flex-row items-center p-4 justify-between">
@@ -180,7 +187,6 @@ export default function CzasPracyPage() {
                     </div>
                 </div>
             </div>
-
         </div>
     );
 }
