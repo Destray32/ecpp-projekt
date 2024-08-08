@@ -97,9 +97,9 @@ export default function DodajPracownikaPage() {
                                 <InputText invalid={formData.name === ''} id="name" type="text" onChange={handleChange} />
                                 <label htmlFor="name">Imię</label>
                             </FloatLabel>
-                            <div className='flex flex-col items-center'>
+                            <div className='flex flex-col items-center space-y-2'>
                                 <label htmlFor="brithday">Data urodzenia</label>
-                                <InputText invalid={formData.brithday === ''} id="brithday" type="date" onChange={handleChange} />
+                                <InputText style={{width: '14rem'}} invalid={formData.brithday === ''} id="brithday" type="date" onChange={handleChange} />
                             </div>
                             <FloatLabel>
                                 <InputText id="pesel" type="text" onChange={handleChange} />
@@ -150,7 +150,7 @@ export default function DodajPracownikaPage() {
                         </div>
                     </DaneBox>
                     <DaneBox name='Informacje o firmie'>
-                        <div className='flex flex-col items-center space-y-8'>
+                        <div className='flex flex-col items-center space-y-8 py-4'>
                             <FloatLabel>
                                 <InputText invalid={formData.company === ''} id="company" type="text" onChange={handleChange} />
                                 <label htmlFor="company">Firma</label>
@@ -187,11 +187,11 @@ export default function DodajPracownikaPage() {
                         <div className='flex flex-col items-center space-y-8'>
                             <div className='flex flex-col items-center space-y-3.5'>
                                 <label htmlFor="startDate">Data rozpoczęcia</label>
-                                <InputText invalid={formData.startDate === ''} id="startDate" type="date" onChange={handleChange} />
+                                <InputText style={{width: '14rem'}} invalid={formData.startDate === ''} id="startDate" type="date" onChange={handleChange} />
                             </div>
                             <div className='flex flex-col items-center space-y-3'>
                                 <label htmlFor="endDate">Data zakończenia</label>
-                                <InputText id="endDate" type="date" onChange={handleChange} />
+                                <InputText style={{width: '14rem'}} id="endDate" type="date" onChange={handleChange} />
                             </div>
                             <FloatLabel>
                                 <InputText id="paycheckCode" type="text" onChange={handleChange} />
