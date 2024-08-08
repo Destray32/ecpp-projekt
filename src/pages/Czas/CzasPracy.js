@@ -159,7 +159,7 @@ export default function CzasPracyPage() {
                                     showClear
                                 />
                             </div>
-                            <Button label="Dodaj" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2" />
+                            <Button label="Dodaj" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 center translate-y-3" />
                         </div>
                     </div>
                 </div>

@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Dropdown } from "primereact/dropdown";
 import { Button } from "primereact/button";
 import { DatePicker } from 'antd';
+import { format, startOfWeek, addWeeks, subWeeks, getWeek, addDays, differenceInHours, getDay } from 'date-fns';
 
-import TydzienInput from "../../Components/TydzienInput";
 import PracownikData from "../../data/PlanTygodniaData";
 import AmberBox from "../../Components/AmberBox";
 
@@ -15,9 +15,9 @@ export default function PlanTygodniaPage() {
     const [availableGroups, setAvailableGroups] = useState(['wszyscy', 'inne']);
     const [group, setGroup] = useState('wszyscy');
     const [grupaPrzenies, setGrupaPrzenies] = useState('');
-    const [selectedWeek, setSelectedWeek] = useState(1); // selected week ustawiany w TydzienInput
     const [dateRange, setDateRange] = useState([null, null]);
     const [selectedRowIds, setSelectedRowIds] = useState([]); // stan do pierwszej kolumny z checkboxami
+    const [currentDate, setCurrentDate] = useState(new Date());
     // stany do śledzenia zaznaczonych checkboxów w kolumnach M1-M5
     const [selectedM1, setSelectedM1] = useState([]);
     const [selectedM2, setSelectedM2] = useState([]);
@@ -25,6 +25,23 @@ export default function PlanTygodniaPage() {
     const [selectedM4, setSelectedM4] = useState([]);
     const [selectedM5, setSelectedM5] = useState([]);
 
+    const getWeekNumber = (date) => {
+        return getWeek(date, { weekStartsOn: 1 });
+    };
+
+    const previousWeek = () => {
+        setCurrentDate(subWeeks(currentDate, 1));
+    };
+
+    const nextWeek = () => {
+        setCurrentDate(addWeeks(currentDate, 1));
+    };
+
+    const formatWeek = (date) => {
+        const start = format(startOfWeek(date, { weekStartsOn: 1 }), 'dd.MM.yyyy');
+        const end = format(addWeeks(startOfWeek(date, { weekStartsOn: 1 }), 1), 'dd.MM.yyyy');
+        return `${start} - ${end}`;
+    };
 
     // useEffect(() => {
     //     console.log(group);
@@ -41,8 +58,8 @@ export default function PlanTygodniaPage() {
     }, [selectedRowIds, selectedM1, selectedM2, selectedM3, selectedM4, selectedM5]);
 
     useEffect(() => {
-        console.log(selectedWeek);
-    }, [selectedWeek]);
+        console.log(currentDate);
+    }, [currentDate]);
 
     const handleDrukujGrupe = () => {
         console.log('Drukuj grupe');
@@ -60,10 +77,6 @@ export default function PlanTygodniaPage() {
         console.log('Skopiuj');
     }
 
-    const handlePickerChange = (dates, dateStrings) => {
-        // console.log('od: ', dateStrings[0], ', do: ', dateStrings[1]);
-        setDateRange([dateStrings[0], dateStrings[1]]);
-    };
 
     // funkcja do obsługi zmiany stanu checkboxa w pierwszej kolumnie
     const handleRowCheckboxChange = (rowIndex) => {
@@ -170,8 +183,11 @@ export default function PlanTygodniaPage() {
                     <div className="h-full">
                         <div className="h-full flex flex-col justify-around">
                             <div className="flex flex-row gap-32 items-center">
-                                <TydzienInput setSelectedWeek={setSelectedWeek} />
-                                <RangePicker onChange={handlePickerChange} />
+                                <div className="flex items-center space-x-2">
+                                    <Button label="Poprzedni" icon="pi pi-arrow-left" className="p-button-outlined" onClick={previousWeek} />
+                                    <p className="text-lg font-bold">Tydzień {getWeekNumber(currentDate)} : {formatWeek(currentDate)}</p>
+                                    <Button label="Następny" icon="pi pi-arrow-right" iconPos="right" className="p-button-outlined" onClick={nextWeek} />
+                                </div>
                                 <span>{(dateRange[0] && dateRange[1]) && (dateRange[0] + '  -  ' + dateRange[1])}</span>
                             </div>
                             <div>
@@ -270,7 +286,7 @@ export default function PlanTygodniaPage() {
 
 
 
-                <div id="prawa" class="flex flex-col gap-5">
+                <div id="prawa" class="flex flex-col gap-5 mr-2">
                     <AmberBox>
                         <div className="mx-auto flex flex-col justify-between items-center p-4 ">
                             <p>Przenieś zaznaczone do</p>
