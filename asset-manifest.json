@@ -1,22 +1,22 @@
 {
   "files": {
-    "main.css": "/Destray32/ecpp-projekt/static/css/main.dd2372f6.css",
-    "main.js": "/Destray32/ecpp-projekt/static/js/main.c2477969.js",
-    "static/js/453.77675824.chunk.js": "/Destray32/ecpp-projekt/static/js/453.77675824.chunk.js",
-    "static/media/InterVariable-Italic.woff2": "/Destray32/ecpp-projekt/static/media/InterVariable-Italic.e295f70fe3e2df296c7b.woff2",
-    "static/media/InterVariable.woff2": "/Destray32/ecpp-projekt/static/media/InterVariable.a0e477f2f1f9d2376fde.woff2",
-    "static/media/primeicons.svg": "/Destray32/ecpp-projekt/static/media/primeicons.6ed59f962963a4a73af2.svg",
-    "static/media/primeicons.eot": "/Destray32/ecpp-projekt/static/media/primeicons.ff0c4cd79b2ffca2de54.eot",
-    "static/media/primeicons.woff": "/Destray32/ecpp-projekt/static/media/primeicons.8931fda1930c3bd21e96.woff",
-    "static/media/primeicons.ttf": "/Destray32/ecpp-projekt/static/media/primeicons.a5c2a53d1ff7a9ff5933.ttf",
-    "static/media/primeicons.woff2": "/Destray32/ecpp-projekt/static/media/primeicons.024b32cc7bf399b1a847.woff2",
-    "index.html": "/Destray32/ecpp-projekt/index.html",
-    "main.dd2372f6.css.map": "/Destray32/ecpp-projekt/static/css/main.dd2372f6.css.map",
-    "main.c2477969.js.map": "/Destray32/ecpp-projekt/static/js/main.c2477969.js.map",
-    "453.77675824.chunk.js.map": "/Destray32/ecpp-projekt/static/js/453.77675824.chunk.js.map"
+    "main.css": "/ecpp-projekt/static/css/main.fa791243.css",
+    "main.js": "/ecpp-projekt/static/js/main.34d93157.js",
+    "static/js/453.77675824.chunk.js": "/ecpp-projekt/static/js/453.77675824.chunk.js",
+    "static/media/InterVariable-Italic.woff2": "/ecpp-projekt/static/media/InterVariable-Italic.e295f70fe3e2df296c7b.woff2",
+    "static/media/InterVariable.woff2": "/ecpp-projekt/static/media/InterVariable.a0e477f2f1f9d2376fde.woff2",
+    "static/media/primeicons.svg": "/ecpp-projekt/static/media/primeicons.6ed59f962963a4a73af2.svg",
+    "static/media/primeicons.eot": "/ecpp-projekt/static/media/primeicons.ff0c4cd79b2ffca2de54.eot",
+    "static/media/primeicons.woff": "/ecpp-projekt/static/media/primeicons.8931fda1930c3bd21e96.woff",
+    "static/media/primeicons.ttf": "/ecpp-projekt/static/media/primeicons.a5c2a53d1ff7a9ff5933.ttf",
+    "static/media/primeicons.woff2": "/ecpp-projekt/static/media/primeicons.024b32cc7bf399b1a847.woff2",
+    "index.html": "/ecpp-projekt/index.html",
+    "main.fa791243.css.map": "/ecpp-projekt/static/css/main.fa791243.css.map",
+    "main.34d93157.js.map": "/ecpp-projekt/static/js/main.34d93157.js.map",
+    "453.77675824.chunk.js.map": "/ecpp-projekt/static/js/453.77675824.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.dd2372f6.css",
-    "static/js/main.c2477969.js"
+    "static/css/main.fa791243.css",
+    "static/js/main.34d93157.js"
   ]
 }
