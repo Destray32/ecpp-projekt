@@ -9,6 +9,7 @@ export default function HomePage() {
     const [data, setData] = useState([]);
     const [imie, setImie] = useState('placeholder');
     const [menu, setMenu] = useState('Pracownik');
+    const [showSubMenu, setShowSubMenu] = useState(false);
 
     useEffect(() => { // useEffect ze względu na to żeby tata się zmieniała w razie potrzeby
         // moment.locale('pl'); // nie wiem jeszcze czy potrzebna jest data polska czy szwedzka
@@ -19,6 +20,10 @@ export default function HomePage() {
 
         return () => clearInterval(timer);
     }, []);
+
+    const toggleSubMenu = () => {
+        setShowSubMenu(prevState => !prevState);
+    };
 
     return (
         <>
@@ -42,10 +47,14 @@ export default function HomePage() {
                         {menu === "Czas" && (
                             <>
                                 <ButtonLewy link="czas" nazwa='Czas Pracy' />
-                                <ButtonLewy link="administracja" nazwa='Administracja' />
-                                <ButtonLewy link="projekty" nazwa='Projekty' />
-                                <ButtonLewy link="urlopy" nazwa='Urlopy' />
-                                <ButtonLewy link="pojazdy" nazwa='Pojazdy' />
+                                <ButtonLewy nazwa='Administracja' onClick={toggleSubMenu} />
+                                    {showSubMenu && (
+                                        <div className='ml-5 space-y-2'>
+                                            <ButtonLewy  link="projekty" nazwa='Projekty' />
+                                            <ButtonLewy link="urlopy" nazwa='Urlopy' />
+                                            <ButtonLewy link="pojazdy" nazwa='Pojazdy' />
+                                        </div>
+                                    )}
                                 <ButtonLewy link="tydzien" nazwa='Tydzien' />
                                 <ButtonLewy link="raporty" nazwa='Raporty' />
                                 <ButtonLewy nazwa='Wyloguj' />

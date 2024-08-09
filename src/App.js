@@ -10,7 +10,6 @@ import DodajPracownikaPage from './pages/Pracownik/DodajPracownika';
 import PodzialPage from './pages/Pracownik/Podzial';
 import LogowaniePage from './pages/Pracownik/Logowanie';
 import CzasPage from './pages/Czas/CzasPracy';
-import AdministracjaPage from './pages/Czas/Administracja';
 import ProjektyPage from './pages/Czas/Projekty';
 import UrlopyPage from './pages/Czas/Urlopy';
 import PojazdyPage from './pages/Czas/Pojazdy';
@@ -35,7 +34,6 @@ function App() {
           <Route path="podzial" element={<PodzialPage />} />
           <Route path="logowanie" element={<LogowaniePage />} />
           <Route path="czas" element={<CzasPage />} />
-          <Route path="administracja" element={<AdministracjaPage />} />
           <Route path="projekty" element={<ProjektyPage />} />
           <Route path="urlopy" element={<UrlopyPage />} />
           <Route path="pojazdy" element={<PojazdyPage />} />
