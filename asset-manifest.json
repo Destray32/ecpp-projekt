@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/Destray32/ecpp-projekt/static/css/main.dd2372f6.css",
-    "main.js": "/Destray32/ecpp-projekt/static/js/main.74af663c.js",
+    "main.js": "/Destray32/ecpp-projekt/static/js/main.c2477969.js",
     "static/js/453.77675824.chunk.js": "/Destray32/ecpp-projekt/static/js/453.77675824.chunk.js",
     "static/media/InterVariable-Italic.woff2": "/Destray32/ecpp-projekt/static/media/InterVariable-Italic.e295f70fe3e2df296c7b.woff2",
     "static/media/InterVariable.woff2": "/Destray32/ecpp-projekt/static/media/InterVariable.a0e477f2f1f9d2376fde.woff2",
@@ -12,11 +12,11 @@
     "static/media/primeicons.woff2": "/Destray32/ecpp-projekt/static/media/primeicons.024b32cc7bf399b1a847.woff2",
     "index.html": "/Destray32/ecpp-projekt/index.html",
     "main.dd2372f6.css.map": "/Destray32/ecpp-projekt/static/css/main.dd2372f6.css.map",
-    "main.74af663c.js.map": "/Destray32/ecpp-projekt/static/js/main.74af663c.js.map",
+    "main.c2477969.js.map": "/Destray32/ecpp-projekt/static/js/main.c2477969.js.map",
     "453.77675824.chunk.js.map": "/Destray32/ecpp-projekt/static/js/453.77675824.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.dd2372f6.css",
-    "static/js/main.74af663c.js"
+    "static/js/main.c2477969.js"
   ]
 }
