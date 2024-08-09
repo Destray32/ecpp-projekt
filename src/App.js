@@ -22,6 +22,7 @@ import NowaGrupaPage from './pages/Czas/NowaGrupa';
 import GrupyProjektowPage from './pages/Czas/GrupyProjektow';
 import NowyPojazdPage from './pages/Czas/NowyPojazd';
 import SprawdzSamochodPage from './pages/Czas/SprawdzSamochod';
+import OgloszeniaPage from './pages/Ogloszenia';
 
 function App() {
   return (
@@ -47,6 +48,7 @@ function App() {
           <Route path="nowa-grupa" element={<NowaGrupaPage />} />
           <Route path="nowy-pojazd" element={<NowyPojazdPage />} />
           <Route path="sprawdzsamochod" element={<SprawdzSamochodPage />} />
+          <Route path="ogloszenia" element={<OgloszeniaPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

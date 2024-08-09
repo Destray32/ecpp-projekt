@@ -5,7 +5,8 @@ import { FloatLabel } from 'primereact/floatlabel';
 import { Button } from 'primereact/button';
 import { Checkbox } from 'primereact/checkbox';
 
-export default function TydzienPage() {
+export default function NowaGrupaPage() {
+    const [planTygV, setPlanTygV] = React.useState(false);
 
     const handleSave = () => {
         console.log('Saving data...');
@@ -38,7 +39,7 @@ export default function TydzienPage() {
                     </FloatLabel>
 
                     <label htmlFor="stawka">Plan tygodnia "V"?
-                    <Checkbox inputId="PlanTygV" className="mr-2 ml-2" checked={false} />
+                    <Checkbox inputId="PlanTygV" className="mr-2 ml-2" checked={planTygV} onChange={(e) => setPlanTygV(e.checked)} />
                     </label>
                     
                     <div className="flex space-x-4 mt-8">

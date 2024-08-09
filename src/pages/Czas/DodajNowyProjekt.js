@@ -5,7 +5,7 @@ import { FloatLabel } from 'primereact/floatlabel';
 import { Dropdown } from 'primereact/dropdown';
 import { Button } from 'primereact/button';
 
-export default function TydzienPage() {
+export default function DodajNowyProjektPage() {
     const [firma, setFirma] = React.useState(null);
     const [zleceniodawca, setZleceniodawca] = React.useState(null);
 

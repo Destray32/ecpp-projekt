@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Link, Outlet } from 'react-router-dom';
 import moment from 'moment';
+import { Button, Badge } from 'antd';
 
 import GorneMenu from '../Components/GorneMenu';
 import ButtonLewy from '../Components/ButtonLeweMenu';
@@ -31,7 +32,16 @@ export default function HomePage() {
             <div className='grid grid-cols-[250px_1fr] grid-rows-[auto_1fr] min-h-screen'>
                 <header className="col-span-2 bg-primary text-white p-4 flex justify-between items-center">
                     <h1 className="text-2xl font-bold">ECPP</h1>
-                    <span>{imie + '  ' + data}</span> {/* imie i data */}
+                    <div className="flex items-center">
+                        <span className="mr-4">{imie + ' ' + data}</span> {/* imie i data */}
+                        <Link to="/home/ogloszenia" className='mr-4'>
+                            <Badge count={5} >
+                                <Button type="primary" size="large">
+                                    Ogłoszenia
+                                </Button>
+                            </Badge>
+                        </Link>
+                    </div>
                 </header>
                 <nav className="bg-primary p-4">
                     <div className="bg-white w-full h-[0.5px] my-4"></div>

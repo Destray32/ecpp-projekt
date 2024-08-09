@@ -4,29 +4,30 @@ import { Button } from 'primereact/button';
 import { Link } from "react-router-dom";
 import { Checkbox } from 'primereact/checkbox';
 
-const sampleData = [
-    {
-        id: 1,
-        Nrrejestracyjny: "BJO042",
-        Marka: "Volvo",
-        Uwagi: "Brak",
-    },
-    {
-        id: 2,
-        Nrrejestracyjny: "BJO042",
-        Marka: "Volvo",
-        Uwagi: "Brak",
-    },
-    {
-        id: 3,
-        Nrrejestracyjny: "BJO042",
-        Marka: "Volvo",
-        Uwagi: "Brak",
-    }
-];
-
 export default function PojazdyPage() {
     const [selectedItems, setSelectedItems] = React.useState([]);
+
+    const sampleData = [
+        {
+            id: 1,
+            Nrrejestracyjny: "BJO042",
+            Marka: "Volvo",
+            Uwagi: "Brak",
+        },
+        {
+            id: 2,
+            Nrrejestracyjny: "BJO042",
+            Marka: "Volvo",
+            Uwagi: "Brak",
+        },
+        {
+            id: 3,
+            Nrrejestracyjny: "BJO042",
+            Marka: "Volvo",
+            Uwagi: "Brak",
+        }
+    ];
+
     const handleCheckboxChange = (id) => {
         setSelectedItems(prevState =>
             prevState.includes(id)
@@ -34,6 +35,7 @@ export default function PojazdyPage() {
                 : [...prevState, id]
         );
     };
+    
     return (
         <div>
         <AmberBox>

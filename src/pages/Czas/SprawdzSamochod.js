@@ -4,34 +4,35 @@ import { Button } from 'primereact/button';
 import { Checkbox } from 'primereact/checkbox';
 import { Dropdown } from 'primereact/dropdown';
 
-const sampleData = [
-    {
-        id: 1,
-        data: "2021-10-01",
-        dane: "Marek Zając",
-        projekt: "NCW",
-        godziny: "8"
-    },
-    {
-        id: 2,
-        data: "2021-10-01",
-        dane: "Marek Zając",
-        projekt: "NCW",
-        godziny: "8"
-    },
-    {
-        id: 3,
-        data: "2021-10-01",
-        dane: "Marek Zając",
-        projekt: "NCW",
-        godziny: "8"
-    }
-];
-
-export default function RaportyPage() {
+export default function SprawdzSamochodPage() {
     const [Pojazd, setPojazd] = React.useState(null);
     const [ignoreDates, setIgnoreDates] = React.useState(false);
     const [selectedItems, setSelectedItems] = React.useState([]);
+
+    const sampleData = [
+        {
+            id: 1,
+            data: "2021-10-01",
+            dane: "Marek Zając",
+            projekt: "NCW",
+            godziny: "8"
+        },
+        {
+            id: 2,
+            data: "2021-10-01",
+            dane: "Marek Zając",
+            projekt: "NCW",
+            godziny: "8"
+        },
+        {
+            id: 3,
+            data: "2021-10-01",
+            dane: "Marek Zając",
+            projekt: "NCW",
+            godziny: "8"
+        }
+    ];
+
     const handleCheckboxChange = (id) => {
         setSelectedItems(prevState =>
             prevState.includes(id)

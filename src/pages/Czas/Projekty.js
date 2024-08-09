@@ -6,30 +6,31 @@ import { Button } from 'primereact/button';
 import { Link } from "react-router-dom";
 import { Checkbox } from 'primereact/checkbox';
 
-const sampleData = [
-    {
-        id: 1,
-        Nazwa: "Projekt 1",
-        kodprojektu: "2021-10-01",
-        statusprojektu: "2021-10-10",
-    },
-    {
-        id: 2,
-        Nazwa: "Projekt 1",
-        kodprojektu: "2021-10-01",
-        statusprojektu: "2021-10-10",
-    },
-    {
-        id: 3,
-        Nazwa: "Projekt 1",
-        kodprojektu: "2021-10-01",
-        statusprojektu: "2021-10-10",
-    }
-];
-
 export default function ProjektyPage() {
     const [Filtr, setFiltr] = useState(null);
     const [selectedItems, setSelectedItems] = React.useState([]);
+
+    const sampleData = [
+        {
+            id: 1,
+            Nazwa: "Projekt 1",
+            kodprojektu: "2021-10-01",
+            statusprojektu: "2021-10-10",
+        },
+        {
+            id: 2,
+            Nazwa: "Projekt 1",
+            kodprojektu: "2021-10-01",
+            statusprojektu: "2021-10-10",
+        },
+        {
+            id: 3,
+            Nazwa: "Projekt 1",
+            kodprojektu: "2021-10-01",
+            statusprojektu: "2021-10-10",
+        }
+    ];
+
     const handleCheckboxChange = (id) => {
         setSelectedItems(prevState =>
             prevState.includes(id)
@@ -37,6 +38,7 @@ export default function ProjektyPage() {
                 : [...prevState, id]
         );
     };
+
     return (
         <div>
             <AmberBox>
@@ -67,40 +69,39 @@ export default function ProjektyPage() {
                 </div>
             </AmberBox>
             <div className="w-full md:w-auto bg-gray-300 h-full m-2 outline outline-1 outline-gray-500">
-            <table className="w-full">
-                <thead className="bg-blue-700 text-white">
-                    <tr>
-                        <th></th>
-                        <th className="border-r">Nr</th>
-                        <th className="border-r">Nazwa projektu</th>
-                        <th className="border-r">Kod projektu</th>
-                        <th className="border-r">Status projektu</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody className="text-center">
-                    {sampleData.map((item) => (
-                        <tr key={item.id} className="border-b even:bg-gray-200 odd:bg-gray-300">
-                            <td className="border-r">
-                                <Checkbox 
-                                    inputId={`cb-${item.id}`}
-                                    checked={selectedItems.includes(item.id)}
-                                    onChange={() => handleCheckboxChange(item.id)}
-                                />
-                            </td>
-                            <td className="border-r">{item.id}</td>
-                            <td className="border-r">{item.Nazwa}</td>
-                            <td className="border-r">{item.kodprojektu}</td>
-                            <td className="border-r">{item.statusprojektu}</td>
-                            <td>
-                                <Button label="Usuń" className="bg-blue-700 text-white p-1 m-0.5" />
-                            </td>
+                <table className="w-full">
+                    <thead className="bg-blue-700 text-white">
+                        <tr>
+                            <th></th>
+                            <th className="border-r">Nr</th>
+                            <th className="border-r">Nazwa projektu</th>
+                            <th className="border-r">Kod projektu</th>
+                            <th className="border-r">Status projektu</th>
+                            <th></th>
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody className="text-center">
+                        {sampleData.map((item) => (
+                            <tr key={item.id} className="border-b even:bg-gray-200 odd:bg-gray-300">
+                                <td className="border-r">
+                                    <Checkbox 
+                                        inputId={`cb-${item.id}`}
+                                        checked={selectedItems.includes(item.id)}
+                                        onChange={() => handleCheckboxChange(item.id)}
+                                    />
+                                </td>
+                                <td className="border-r">{item.id}</td>
+                                <td className="border-r">{item.Nazwa}</td>
+                                <td className="border-r">{item.kodprojektu}</td>
+                                <td className="border-r">{item.statusprojektu}</td>
+                                <td>
+                                    <Button label="Usuń" className="bg-blue-700 text-white p-1 m-0.5" />
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
         </div>
-        </div>
-        
     )
 }

@@ -9,10 +9,10 @@ import { Link } from "react-router-dom";
 export default function PracownikPage() {
 
     const [state, setState] = useState("Aktywne");
-    const [title, setTitle] = useState("");
+    const [title, setTitle] = useState(null);
     const [name, setName] = useState("");
     const [surname, setSurname] = useState("");
-    const [manager, setManager] = useState("");
+    const [manager, setManager] = useState(null);
     const [company, setCompany] = useState([]);
     const [searchField, setSearchField] = useState("Wszystko");
     const [keyword, setKeyword] = useState("");

@@ -3,34 +3,34 @@ import { Button } from 'primereact/button';
 import AmberBox from '../../Components/AmberBox';
 import { Checkbox } from 'primereact/checkbox';
 
-const sampleData = [
-    {
-        id: 1,
-        name: "Marek Zając",
-        grupaurlopowa: "NCC",
-        status1: "Otwarty",
-        status2: "Zamknięty"
-    },
-    {
-        id: 2,
-        name: "Marek Zając",
-        grupaurlopowa: "NCC",
-        status1: "Otwarty",
-        status2: "Zamknięty"
-    },
-    {
-        id: 3,
-        name: "Marek Zając",
-        grupaurlopowa: "NCC",
-        status1: "Otwarty",
-        status2: "Zamknięty"
-    }
-];
-
-const WeekPicker = () => {
+export default function TydzienPage() {
     const [selectedWeek, setSelectedWeek] = useState('');
     const [weekRange, setWeekRange] = useState({ start: '', end: '' });
     const [selectedItems, setSelectedItems] = useState([]);
+
+    const sampleData = [
+        {
+            id: 1,
+            name: "Marek Zając",
+            grupaurlopowa: "NCC",
+            status1: "Otwarty",
+            status2: "Zamknięty"
+        },
+        {
+            id: 2,
+            name: "Marek Zając",
+            grupaurlopowa: "NCC",
+            status1: "Otwarty",
+            status2: "Zamknięty"
+        },
+        {
+            id: 3,
+            name: "Marek Zając",
+            grupaurlopowa: "NCC",
+            status1: "Otwarty",
+            status2: "Zamknięty"
+        }
+    ];
 
     const handleCheckboxChange = (id) => {
         setSelectedItems(prevState =>
@@ -131,5 +131,3 @@ const WeekPicker = () => {
         </div>
     );
 };
-
-export default WeekPicker;

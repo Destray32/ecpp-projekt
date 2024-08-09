@@ -4,28 +4,30 @@ import { Button } from 'primereact/button';
 import { Checkbox } from 'primereact/checkbox';
 import { Link } from "react-router-dom";
 
-const sampleData = [
-    {
-        id: 1,
-        Zleceniodawca: "NCW",
-        Cennik: "2021-10-01",
-        Stawka: "2021-10-10",
-    },
-    {
-        id: 2,
-        Zleceniodawca: "NCW",
-        Cennik: "2021-10-01",
-        Stawka: "2021-10-10",
-    },
-    {
-        id: 3,
-        Zleceniodawca: "NCW",
-        Cennik: "2021-10-01",
-        Stawka: "2021-10-10",
-    }
-];
-export default function TydzienPage() {
+export default function GrupyProjektowPage() {
     const [selectedItems, setSelectedItems] = React.useState([]);
+
+    const sampleData = [
+        {
+            id: 1,
+            Zleceniodawca: "NCW",
+            Cennik: "2021-10-01",
+            Stawka: "2021-10-10",
+        },
+        {
+            id: 2,
+            Zleceniodawca: "NCW",
+            Cennik: "2021-10-01",
+            Stawka: "2021-10-10",
+        },
+        {
+            id: 3,
+            Zleceniodawca: "NCW",
+            Cennik: "2021-10-01",
+            Stawka: "2021-10-10",
+        }
+    ];
+    
     const handleCheckboxChange = (id) => {
         setSelectedItems(prevState =>
             prevState.includes(id)

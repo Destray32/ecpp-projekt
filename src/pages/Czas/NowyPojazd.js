@@ -5,7 +5,7 @@ import { FloatLabel } from 'primereact/floatlabel';
 import { Button } from 'primereact/button';
 import { Checkbox } from 'primereact/checkbox';
 
-export default function TydzienPage() {
+export default function NowyPojazdPage() {
 
     const handleSave = () => {
         console.log('Saving data...');
