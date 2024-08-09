@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AmberBox from "../../Components/AmberBox";
 import { Dropdown } from 'primereact/dropdown';
 import { Button } from 'primereact/button';
 import 'react-calendar/dist/Calendar.css';
 import { InputText } from 'primereact/inputtext';
 import { Checkbox } from 'primereact/checkbox';
+import userEvent from "@testing-library/user-event";
 
 export default function UrlopyPage() {
     const [urlopOd, setUrlopOd] = useState(null);
@@ -18,9 +19,9 @@ export default function UrlopyPage() {
         { id: 2, name: "NCW" },
         { id: 3, name: "NCC" },
         { id: 4, name: "Skanska" },
-        { id: 5, name: "Pogab" },
-        { id: 5, name: "Pogab" },
-        { id: 5, name: "Pogab" },
+        { id: 5, name: "Pogab1" },
+        { id: 6, name: "Pogab2" },
+        { id: 7, name: "Pogab3" },
     ];
     const sampleData = [
         {
@@ -56,6 +57,11 @@ export default function UrlopyPage() {
                 : [...prevState, id]
         );
     };
+
+    // sprawdza stan zaznaczonych checkboxow i ich id
+    useEffect(() => { // sprawdz komentarze ponizej
+        console.log(selectedItems);
+    }, [selectedItems]);
 
     return (
         <div>
@@ -130,10 +136,10 @@ export default function UrlopyPage() {
                     </div> 
                 </div>
                 <div className="flex flex-wrap">
-                    {sampleData2.map((item) => (
+                    {sampleData2.map((item, i) => (
                         <div key={item.id} className="flex items-center mr-4 mb-2">
                             <Checkbox 
-                                inputId={`czasgrupy-${item.id}`}
+                                inputId={`czasgrupy-${item.id}`} 
                                 checked={selectedItems.includes(item.id)}
                                 onChange={() => handleCheckboxChange(item.id)}
                             />
@@ -159,10 +165,12 @@ export default function UrlopyPage() {
                         {sampleData.map((item) => (
                             <tr key={item.id} className="border-b even:bg-gray-200 odd:bg-gray-300">
                                 <td className="border-r">
-                                    <Checkbox 
-                                        inputId={`cb-${item.id}`}
-                                        checked={selectedItems.includes(item.id)}
-                                        onChange={() => handleCheckboxChange(item.id)}
+                                    <Checkbox
+                                        inputId={`cb-${item.id}`} // możesz to robić w ten sposób, poprzedzając item.id czym więcej.
+                                                                // unikniesz kolizji z innymi id które masz w "selectedItems".
+                                                                // zobacz se konsole i useEffect żeby sprawdzić co sie pojawia po zaznaczaniu
+                                        checked={selectedItems.includes(`cb-${item.id}`)}
+                                        onChange={() => handleCheckboxChange(`cb-${item.id}`)}
                                     />
                                 </td>
                                 <td className="border-r">{item.name}</td>
