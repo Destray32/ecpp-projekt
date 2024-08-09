@@ -47,16 +47,12 @@ export default function HomePage() {
                         {menu === "Czas" && (
                             <>
                                 <ButtonLewy link="czas" nazwa='Czas Pracy' />
-                                <ButtonLewy nazwa='Administracja' onClick={toggleSubMenu} />
-                                    {showSubMenu && (
-                                        <div className='ml-5 space-y-2'>
-                                            <ButtonLewy  link="projekty" nazwa='Projekty' />
-                                            <ButtonLewy link="urlopy" nazwa='Urlopy' />
-                                            <ButtonLewy link="pojazdy" nazwa='Pojazdy' />
-                                        </div>
-                                    )}
+                                <ButtonLewy link="projekty" nazwa='Projekty' />
+                                <ButtonLewy link="urlopy" nazwa='Urlopy' />
+                                <ButtonLewy link="pojazdy" nazwa='Pojazdy' />
                                 <ButtonLewy link="tydzien" nazwa='Tydzien' />
                                 <ButtonLewy link="raporty" nazwa='Raporty' />
+                                <ButtonLewy link="sprawdzsamochod" nazwa='Sprawdź samochód' />
                                 <ButtonLewy nazwa='Wyloguj' />
                             </>
                         )}
