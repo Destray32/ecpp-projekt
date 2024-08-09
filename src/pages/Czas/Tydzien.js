@@ -8,11 +8,6 @@ export default function TydzienPage() {
     const [weekRange, setWeekRange] = useState({ start: '', end: '' });
     const [selectedItems, setSelectedItems] = useState([]);
 
-export default function TydzienPage() {
-    const [selectedWeek, setSelectedWeek] = useState('');
-    const [weekRange, setWeekRange] = useState({ start: '', end: '' });
-    const [selectedItems, setSelectedItems] = useState([]);
-
 const sampleData = [
     {
         id: 1,
@@ -36,11 +31,6 @@ const sampleData = [
         status2: "Zamknięty"
     }
 ];
-
-const WeekPicker = () => {
-    const [selectedWeek, setSelectedWeek] = useState('');
-    const [weekRange, setWeekRange] = useState({ start: '', end: '' });
-    const [selectedItems, setSelectedItems] = useState([]);
 
     const handleCheckboxChange = (id) => {
         setSelectedItems(prevState =>
@@ -112,35 +102,35 @@ const WeekPicker = () => {
                 </div>
             </AmberBox>
             <div className="w-full md:w-auto bg-gray-300 h-full m-2 outline outline-1 outline-gray-500">
-                        <table className="w-full">
-                            <thead className="bg-blue-700 text-white">
-                                <tr>
-                                    <th></th>
-                                    <th className="border-r">Imię i nazwisko</th>
-                                    <th className="border-r">Grupa urlopowa</th>
-                                    <th className="border-r">Status</th>
-                                    <th className="border-r">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody className="text-center">
-                                {sampleData.map((item) => (
-                                    <tr key={item.id} className="border-b even:bg-gray-200 odd:bg-gray-300">
-                                        <td className="border-r">
-                                            <Checkbox 
-                                                inputId={`cb-${item.id}`}
-                                                checked={selectedItems.includes(item.id)}
-                                                onChange={() => handleCheckboxChange(item.id)}
-                                            />
-                                        </td>
-                                        <td className="border-r">{item.name}</td>
-                                        <td className="border-r">{item.grupaurlopowa}</td>
-                                        <td className="border-r text-green-600">{item.status1}</td>
-                                        <td className="border-r text-red-600">{item.status2}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                <table className="w-full">
+                    <thead className="bg-blue-700 text-white">
+                        <tr>
+                            <th></th>
+                            <th className="border-r">Imię i nazwisko</th>
+                            <th className="border-r">Grupa urlopowa</th>
+                            <th className="border-r">Status</th>
+                            <th className="border-r">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody className="text-center">
+                        {sampleData.map((item) => (
+                            <tr key={item.id} className="border-b even:bg-gray-200 odd:bg-gray-300">
+                                <td className="border-r">
+                                    <Checkbox 
+                                        inputId={`cb-${item.id}`}
+                                        checked={selectedItems.includes(item.id)}
+                                        onChange={() => handleCheckboxChange(item.id)}
+                                    />
+                                </td>
+                                <td className="border-r">{item.name}</td>
+                                <td className="border-r">{item.grupaurlopowa}</td>
+                                <td className="border-r text-green-600">{item.status1}</td>
+                                <td className="border-r text-red-600">{item.status2}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
         </div>
     );
 };
