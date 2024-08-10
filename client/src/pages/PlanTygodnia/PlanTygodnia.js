@@ -53,9 +53,6 @@ export default function PlanTygodniaPage() {
         console.log('Selected M5:', selectedM5);
     }, [selectedRowIds, selectedM1, selectedM2, selectedM3, selectedM4, selectedM5]);
 
-    useEffect(() => {
-        console.log(currentDate);
-    }, [currentDate]);
 
     const handleDrukujGrupe = () => {
         console.log('Drukuj grupe');
@@ -66,11 +63,39 @@ export default function PlanTygodniaPage() {
     }
 
     const handleUsunZaznaczone = () => {
-        console.log('Usun zaznaczone');
+        Axios.delete('http://localhost:5000/api/plan', {
+            data: {
+                id: selectedRowIds
+            }
+        })
+            .then(res => {
+                console.log(res.data);
+            })
+            .catch(err => console.error(err));
     }
 
+    const handlePrzeniesZaznaczone = () => {
+        console.log(selectedRowIds);
+        console.log(grupaPrzenies);
+        Axios.put('http://localhost:5000/api/plan', {
+            id: selectedRowIds,
+            grupa: grupaPrzenies.name
+        })
+            .then(res => {
+                console.log(res.data);
+            })
+            .catch(err => console.error(err));
+    }
+
+
     const handleSkopiuj = () => {
-        console.log('Skopiuj');
+        // na razie podmienia dane na pracowników z poprzedniego tygodnia, ale może trzeba ich tylko dodac?
+        Axios.get('http://localhost:5000/api/plan?previous=true')
+            .then(res => {
+                console.log(res.data);
+                setPracownikData(res.data);
+            })
+            .catch(err => console.error(err));
     }
 
     useEffect(() => {
@@ -85,7 +110,7 @@ export default function PlanTygodniaPage() {
         // pobieranie danych pracowników z serwera
         Axios.get('http://localhost:5000/api/plan')
             .then(res => {
-                console.log(res.data);
+                //console.log(res.data);
                 setPracownikData(res.data);
             })
             .catch(err => console.error(err));
@@ -308,6 +333,8 @@ export default function PlanTygodniaPage() {
                                 options={availableGroups} optionLabel="name"
                                 editable placeholder="" autoComplete='off'
                                 className="ml-4 md:w-14rem p-4" />
+                            <Button label="Przenieś" className="bg-white w-[9rem] h-[3rem] mt-4"
+                                text raised onClick={handlePrzeniesZaznaczone} />
                         </div>
                     </AmberBox>
                     <AmberBox>

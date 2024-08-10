@@ -6,7 +6,11 @@ const cors = require('cors');
 // api importy z folderu api
 const PlanTygodniaPlan = require('./api/PlanTygodnia/plantygodnia.plan');
 const DostepneGrupy = require('./api/Grupy/grupy.dostepnegrupy');
+const PrzeniesWpisPlan = require('./api/PlanTygodnia/plantygodnia.przenies');
+const UsunWpisPlan = require('./api/PlanTygodnia/plantygodnia.usun');
+const PracownicyPoprzedniTydz = require('./api/PlanTygodnia/plantygodnia.pracPoprzedni');
 app.use(cors());
+app.use(express.json());
 
 
 app.get('/api/employees', (req, res) => {
@@ -25,13 +29,25 @@ app.get('/api/employees', (req, res) => {
 }
 );
 
-app.get('/api/plan', (req, res) => {
-    PlanTygodniaPlan(req, res);
-});
+app.route('/api/plan')
+    .get((req, res) => {
+        if (req.query.previous) {
+            PracownicyPoprzedniTydz(req, res); 
+        } else {
+            PlanTygodniaPlan(req, res); 
+        }
+    })
+    .put((req, res) => {
+        PrzeniesWpisPlan(req, res); 
+    })
+    .delete((req, res) => {
+        UsunWpisPlan(req, res); 
+    });
 
 app.get('/api/grupy', (req, res) => {
     DostepneGrupy(req, res);
 });
+
 
 app.listen(port, () => {
     console.log(`Server listening at http://localhost:${port}`);
