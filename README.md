@@ -1,5 +1,8 @@
 # ECPP
 
+Start serwera: npm start
+Start klienta: npm start
+
 Strona glowna jest pod routem /home
 
 ## Must have
