@@ -17,6 +17,9 @@ const DostepneGrupy = require('./api/Grupy/grupy.dostepnegrupy');
 const PrzeniesWpisPlan = require('./api/PlanTygodnia/plantygodnia.przenies');
 const UsunWpisPlan = require('./api/PlanTygodnia/plantygodnia.usun');
 const PracownicyPoprzedniTydz = require('./api/PlanTygodnia/plantygodnia.pracPoprzedni');
+const DodajZaplanuj = require('./api/PlanTygodnia/plantygodnia.zaplanuj.dodajPlan');
+const GetPlany = require('./api/PlanTygodnia/plantygodnia.zaplanuj.getPlany');
+const UsunPlan = require('./api/PlanTygodnia/plantygodnia.zaplanuj.usunPlan');
 app.use(cors());
 app.use(express.json());
 
@@ -59,9 +62,27 @@ app.route('/api/plan')
         UsunWpisPlan(req, res); 
     });
 
+app.route('/api/plan/zaplanuj')
+    .get((req, res) => {
+        GetPlany(req, res);
+    })
+    .post((req, res) => {
+        DodajZaplanuj(req, res);
+    })
+    .delete((req, res) => {
+        UsunPlan(req, res);
+    });
+
+
 app.get('/api/grupy', (req, res) => {
     DostepneGrupy(req, res);
 });
+
+app.get('/api/grupy', (req, res) => {
+    DostepneGrupy(req, res);
+});
+
+
 
 app.listen(port, () => {
     console.log(`Server listening at http://localhost:${port}`);
