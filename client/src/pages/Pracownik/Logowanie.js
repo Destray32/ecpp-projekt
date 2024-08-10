@@ -1,23 +1,19 @@
 import React, { useState, useEffect } from "react";
-
-import PracLogowanieData from "../../data/PracLogowanieData";
+import axios from "axios";
 
 export default function LogowaniePage() {
-    const [name, setName] = useState("");
-    const [surname, setSurname] = useState("");
-    const [computer, setComputer] = useState("");
-    const [version, setVersion] = useState("");
-    const [date, setDate] = useState("");
-    const [time, setTime] = useState("");
+    const [logData, setLogData] = useState([]);
 
-    // na przyszlosc pobieranie danych z API
     useEffect(() => {
-        // fetch("https://api.example.com/data")
-        //     .then((response) => response.json())
-        //     .then((data) => {
-        //         console.log(data);
-        //     });
-    }, []);
+        axios.get("http://localhost:5000/api/logi")
+            .then((response) => {
+                setLogData(response.data);
+            })
+            .catch((error) => {
+                console.log(error);
+            });
+    }
+    , []);
 
     return (
         <main>
@@ -35,7 +31,7 @@ export default function LogowaniePage() {
                             </tr>
                         </thead>
                         <tbody className="text-center">
-                            {PracLogowanieData.sampleData.map((item, i) => (
+                            {logData.map((item, i) => (
                                 <tr key={i} className="border-b even:bg-gray-200 odd:bg-gray-300">
                                     <td className="border-r">{item.name}</td>
                                     <td className="border-r">{item.surname}</td>

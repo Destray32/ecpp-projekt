@@ -11,6 +11,7 @@ const MojeDane = require('./api/Pracownik/pracownik.mojedane');
 const DodajPracownika = require('./api/Pracownik/pracownik.dodaj');
 const PobierzPracownika = require('./api/Pracownik/pracownik.pobierzpracownika');
 const EdytujPracownika = require('./api/Pracownik/pracownik.edytujpracownika');
+const PobierzLogi = require('./api/Pracownik/pracownik.logowanie');
 
 const PlanTygodniaPlan = require('./api/PlanTygodnia/plantygodnia.plan');
 const DostepneGrupy = require('./api/Grupy/grupy.dostepnegrupy');
@@ -44,6 +45,11 @@ app.route('/api/pracownik/:id')
 
 app.get('/api/mojedane', (req, res) => {
     MojeDane(req, res);
+}
+);
+
+app.get('/api/logi', (req, res) => {
+    PobierzLogi(req, res);
 }
 );
 
