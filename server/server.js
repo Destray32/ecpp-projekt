@@ -5,18 +5,18 @@ const port = 5000;
 const cors = require('cors');
 
 // api importy z folderu api
-const ListaPracownikow = require('./api/Pracownik/pracownik.lista');
-const UsunPracownika = require('./api/Pracownik/pracownik.usun');
-const MojeDane = require('./api/Pracownik/pracownik.mojedane');
-const DodajPracownika = require('./api/Pracownik/pracownik.dodaj');
-const PobierzPracownika = require('./api/Pracownik/pracownik.pobierzpracownika');
-const EdytujPracownika = require('./api/Pracownik/pracownik.edytujpracownika');
+const ListaPracownikow = require('./api/Pracownik/Pracownik/pracownik.lista');
+const UsunPracownika = require('./api/Pracownik/Pracownik/pracownik.usun');
+const MojeDane = require('./api/Pracownik/Pracownik/pracownik.mojedane');
+const DodajPracownika = require('./api/Pracownik/Pracownik/pracownik.dodaj');
+const PobierzPracownika = require('./api/Pracownik/Pracownik/pracownik.pobierzpracownika');
+const EdytujPracownika = require('./api/Pracownik/Pracownik/pracownik.edytujpracownika');
 const PobierzLogi = require('./api/Pracownik/pracownik.logowanie');
 
-const ZapiszCzasPracy = require('./api/Czas/czas.czaspracy.zapisz');
-const PobierzCzasPracy = require('./api/Czas/czas.czaspracy.pobierz');
-const ZamknijTydzien = require('./api/Czas/czas.czaspracy.zamknij');
-const OtworzTydzien = require('./api/Czas/czas.czaspracy.otworz');
+const ZapiszCzasPracy = require('./api/Czas/CzasPracy/czas.czaspracy.zapisz');
+const PobierzCzasPracy = require('./api/Czas/CzasPracy/czas.czaspracy.pobierz');
+const ZamknijTydzien = require('./api/Czas/CzasPracy/czas.czaspracy.zamknij');
+const OtworzTydzien = require('./api/Czas/CzasPracy/czas.czaspracy.otworz');
 
 const PlanTygodniaPlan = require('./api/PlanTygodnia/plantygodnia.plan.planTygodnia');
 const DostepneGrupy = require('./api/Grupy/grupy.dostepnegrupy');
