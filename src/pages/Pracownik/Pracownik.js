@@ -9,7 +9,6 @@ import { Link } from "react-router-dom";
 export default function PracownikPage() {
 
     const [state, setState] = useState("Aktywne");
-    const [title, setTitle] = useState(null);
     const [name, setName] = useState("");
     const [surname, setSurname] = useState("");
     const [manager, setManager] = useState(null);
@@ -89,8 +88,6 @@ export default function PracownikPage() {
                     <div className="w-full h-4/6 outline outline-1">
                         <form className="w-full h-full flex flex-col space-y-2 p-2">
                             <div className="w-full h-1/2 flex flex-row items-center space-x-2">
-                                <Dropdown value={title} onChange={(e) => setTitle(e.value)} options={["Tytul 1","Tytul 2"]} optionLabel="name" editable placeholder="Tytuł"
-                                    autoComplete="off" className="w-3/12 p-2" filter showClear/>
                                 <InputText value={name} onChange={(e) => setName(e.target.value)} placeholder="Imię" className="w-3/12 p-2" />
                                 <InputText value={surname} onChange={(e) => setSurname(e.target.value)} placeholder="Nazwisko" className="w-3/12 p-2" />
                                 <Dropdown value={manager} onChange={(e) => setManager(e.value)} options={["Kierownik 1","Kierownik 2"]} optionLabel="name" editable placeholder="Kierownik"

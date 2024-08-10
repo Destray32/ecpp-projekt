@@ -48,14 +48,6 @@ export default function CzasPracyPage() {
         return getWeek(date, { weekStartsOn: 1 });
     };
 
-    const previousWeek = () => {
-        setCurrentDate(subWeeks(currentDate, 1));
-    };
-
-    const nextWeek = () => {
-        setCurrentDate(addWeeks(currentDate, 1));
-    };
-
     const onDateChange = (e) => {
         const selectedDate = e.value;
         setCurrentDate(startOfWeek(selectedDate, { weekStartsOn: 1 }));
@@ -69,9 +61,7 @@ export default function CzasPracyPage() {
                     <div className="w-full h-2/6">
                         <div className="w-full flex flex-row items-center p-4 justify-between">
                             <div className="flex items-center space-x-2">
-                                <Button label="Poprzedni" icon="pi pi-arrow-left" className="p-button-outlined" onClick={previousWeek} />
                                 <p className="text-lg font-bold">Tydzień {getWeekNumber(currentDate)} : {formatWeek(currentDate)}</p>
-                                <Button label="Następny" icon="pi pi-arrow-right" iconPos="right" className="p-button-outlined" onClick={nextWeek} />
                             </div>
                             <p>Otwarty/Zamknięty</p>
                             <Dropdown value={Pracownik} onChange={(e) => setPracownik(e.value)} options={["Kierownik 1", "Kierownik 2"]} editable placeholder="Pracownik"

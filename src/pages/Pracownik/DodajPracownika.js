@@ -148,42 +148,6 @@ export default function DodajPracownikaPage() {
                                 <label htmlFor="NIP">NIP</label>
                             </FloatLabel>
                         </div>
-                    </DaneBox>
-                    <DaneBox name='Informacje o firmie'>
-                        <div className='flex flex-col items-center space-y-8 py-4'>
-                            <FloatLabel>
-                                <InputText invalid={formData.company === ''} id="company" type="text" onChange={handleChange} />
-                                <label htmlFor="company">Firma</label>
-                            </FloatLabel>
-                            <FloatLabel>
-                                <InputText id="hiredAs" type="text" onChange={handleChange} />
-                                <label htmlFor="hiredAs">Zatrudniony jako</label>
-                            </FloatLabel>
-                            <FloatLabel>
-                                <InputText invalid={formData.manager === ''} id="manager" type="text" onChange={handleChange} />
-                                <label htmlFor="manager">Kierownik</label>
-                            </FloatLabel>
-                            <FloatLabel>
-                                <InputText id="nr" type="text" onChange={handleChange} />
-                                <label htmlFor="nr">Nr</label>
-                            </FloatLabel>
-                            <FloatLabel>
-                                <InputText id="paycheck" type="text" onChange={handleChange} />
-                                <label htmlFor="paycheck">Wynagrodzenie</label>
-                            </FloatLabel>
-                            <FloatLabel>
-                                <InputText id="tillVacation" type="text" onChange={handleChange} />
-                                <label htmlFor="tillVacation">Liczba dni do urlopu</label>
-                            </FloatLabel>
-                            <FloatLabel>
-                                <InputText id="tax" type="text" onChange={handleChange} />
-                                <label htmlFor="tax">Obowiązek podatku</label>
-                            </FloatLabel>
-                            <FloatLabel>
-                                <InputText id="typ" type="text" onChange={handleChange} />
-                                <label htmlFor="typ">Typ</label>
-                            </FloatLabel>
-                        </div>
                         <div className='flex flex-col items-center space-y-8'>
                             <div className='flex flex-col items-center space-y-3.5'>
                                 <label htmlFor="startDate">Data rozpoczęcia</label>
