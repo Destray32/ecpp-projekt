@@ -1,20 +1,55 @@
-import React from "react";
+import React, {useState, useEffect} from "react";
 import AmberBox from "../../Components/AmberBox";
 import { InputText } from 'primereact/inputtext';
 import { FloatLabel } from 'primereact/floatlabel';
 import { Button } from 'primereact/button';
 import { Checkbox } from 'primereact/checkbox';
+import Axios from "axios";
 
 export default function NowaGrupaPage() {
     const [planTygV, setPlanTygV] = React.useState(false);
+    const [form, setForm] = React.useState({
+        zleceniodawca: '',
+        cennik: '',
+        stawka: '',
+        czyPlanTygV: planTygV
+    });
 
     const handleSave = () => {
         console.log('Saving data...');
+
+        Axios.post('http://localhost:5000/api/czas/grupa', {
+            zleceniodawca: form.zleceniodawca,
+            cennik: form.cennik,
+            stawka: form.stawka,
+            czyPlanTygV: planTygV
+        })
+            .then(res => {
+                console.log(res.data);
+            })
+            .catch(err => {
+                console.error(err);
+            });
     };
 
     const handleCancel = () => {
         console.log('Action canceled.');
     };
+
+    const handleZleceniodawca = (e) => {
+        setForm({ ...form, zleceniodawca: e.target.value });
+    }
+    const handleCennik = (e) => {
+        setForm({ ...form, cennik: e.target.value });
+    }
+    const handleStawka = (e) => {
+        setForm({ ...form, stawka: e.target.value });
+    }
+    const handlePlanTygV = (e) => {
+        const checked = e.checked;
+        setPlanTygV(checked);
+        setForm({ ...form, czyPlanTygV: checked });
+    }
 
     return (
         <div>
@@ -24,22 +59,22 @@ export default function NowaGrupaPage() {
             <AmberBox>
                 <div className="flex flex-col items-center space-y-8 p-4 w-full">
                     <FloatLabel className="w-full md:w-6/12 lg:w-4/12">
-                        <InputText id="zleceniodawca" type="text" className="w-full" />
+                        <InputText onChange={handleZleceniodawca} id="zleceniodawca" type="text" className="w-full" />
                         <label htmlFor="zleceniodawca">Zleceniodawca</label>
                     </FloatLabel>
                     
                     <FloatLabel className="w-full md:w-6/12 lg:w-4/12">
-                        <InputText id="cennik" type="text" className="w-full" />
+                        <InputText onChange={handleCennik} id="cennik" type="text" className="w-full" />
                         <label htmlFor="cennik">Cennik</label>
                     </FloatLabel>
                     
                     <FloatLabel className="w-full md:w-6/12 lg:w-4/12">
-                        <InputText id="stawka" type="text" className="w-full" />
+                        <InputText onChange={handleStawka} id="stawka" type="text" className="w-full" />
                         <label htmlFor="stawka">Stawka/km</label>
                     </FloatLabel>
 
                     <label htmlFor="stawka">Plan tygodnia "V"?
-                    <Checkbox inputId="PlanTygV" className="mr-2 ml-2" checked={planTygV} onChange={(e) => setPlanTygV(e.checked)} />
+                    <Checkbox inputId="PlanTygV" className="mr-2 ml-2" checked={planTygV} onChange={handlePlanTygV} />
                     </label>
                     
                     <div className="flex space-x-4 mt-8">

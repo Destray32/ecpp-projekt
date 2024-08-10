@@ -46,7 +46,7 @@ export default function ZaplanujTydzienPage() {
     };
 
     const handleZaplanuj = () => {
-        Axios.post('http://localhost:5000/api/plan/zaplanuj', {
+        Axios.post('http://localhost:5000/api/planTygodnia/zaplanuj', {
             dataOd: format(startOfWeek(currentDate, { weekStartsOn: 1 }), 'dd.MM.yyyy'),
             dataDo: format(addWeeks(startOfWeek(currentDate, { weekStartsOn: 1 }), 1), 'dd.MM.yyyy'),
             nazwisko: naziwsko,
@@ -67,7 +67,7 @@ export default function ZaplanujTydzienPage() {
 
     const handleUsun = (index) => {
         console.log('Usun', index);
-        Axios.delete(`http://localhost:5000/api/plan/zaplanuj?id=${index}`)
+        Axios.delete(`http://localhost:5000/api/planTygodnia/zaplanuj?id=${index}`)
             .then((response) => {
                 console.log(response.data);
             });
@@ -85,7 +85,7 @@ export default function ZaplanujTydzienPage() {
 
     useEffect(() => {
         // pobieranie planow w danym tygodniu
-        Axios.get(`http://localhost:5000/api/plan/zaplanuj?from=${format(startOfWeek(currentDate, { weekStartsOn: 1 }), 'dd.MM.yyyy')}&to=${format(addWeeks(startOfWeek(currentDate, { weekStartsOn: 1 }), 1), 'dd.MM.yyyy')}`)
+        Axios.get(`http://localhost:5000/api/planTygodnia/zaplanuj?from=${format(startOfWeek(currentDate, { weekStartsOn: 1 }), 'dd.MM.yyyy')}&to=${format(addWeeks(startOfWeek(currentDate, { weekStartsOn: 1 }), 1), 'dd.MM.yyyy')}`)
             .then((response) => {
                 console.log(response.data);
                 setPlany(response.data);
