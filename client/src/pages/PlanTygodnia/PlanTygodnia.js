@@ -15,7 +15,7 @@ export default function PlanTygodniaPage() {
     const [availableGroups, setAvailableGroups] = useState([]);
     const [group, setGroup] = useState('');
     const [grupaPrzenies, setGrupaPrzenies] = useState('');
-    const [dateRange, setDateRange] = useState([null, null]);
+    const [pracownikData, setPracownikData] = useState([]);
     const [selectedRowIds, setSelectedRowIds] = useState([]); // stan do pierwszej kolumny z checkboxami
     const [currentDate, setCurrentDate] = useState(new Date());
     // stany do śledzenia zaznaczonych checkboxów w kolumnach M1-M5
@@ -77,8 +77,16 @@ export default function PlanTygodniaPage() {
         // pobieranie dostępnych grup z serwera
         Axios.get('http://localhost:5000/api/grupy')
             .then(res => {
-                console.log(res.data);
+                //console.log(res.data);
                 setAvailableGroups(res.data);
+            })
+            .catch(err => console.error(err));
+
+        // pobieranie danych pracowników z serwera
+        Axios.get('http://localhost:5000/api/plan')
+            .then(res => {
+                console.log(res.data);
+                setPracownikData(res.data);
             })
             .catch(err => console.error(err));
     }, []);
@@ -195,7 +203,6 @@ export default function PlanTygodniaPage() {
                                     <p className="text-lg font-bold">Tydzień {getWeekNumber(currentDate)} : {formatWeek(currentDate)}</p>
                                     <Button label="Następny" icon="pi pi-arrow-right" iconPos="right" className="p-button-outlined" onClick={nextWeek} />
                                 </div>
-                                <span>{(dateRange[0] && dateRange[1]) && (dateRange[0] + '  -  ' + dateRange[1])}</span>
                             </div>
                             <div>
                                 <span>Grupa</span>
@@ -236,7 +243,7 @@ export default function PlanTygodniaPage() {
                                 </tr>
                             </thead>
                             <tbody className="text-center">
-                                {PracownikData.sampleData.map((item, i) => (
+                                {pracownikData.map((item, i) => (
                                     <tr key={i} className="border-b even:bg-gray-200 odd:bg-gray-300">
                                         <td className="border-r">
                                             <input
@@ -283,7 +290,7 @@ export default function PlanTygodniaPage() {
                                                 onChange={() => handleColumnCheckboxChange(8, i)}
                                             />
                                         </td>
-                                        <td className="border-r">{item.opis}</td>
+                                        <td className="border-r">{item.description}</td>
                                     </tr>
                                 ))}
                             </tbody>
