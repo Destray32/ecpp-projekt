@@ -55,15 +55,20 @@ export default function PlanTygodniaPage() {
 
 
     const handleDrukujGrupe = () => {
-        console.log('Drukuj grupe');
+        Axios.get(`http://localhost:5000/api/planTygodnia/drukuj?group=${group.name}`)
+            .then(res => {
+                console.log(res.data);
+            })
+            .catch(err => console.error(err));
     }
 
     const handleDrukuj = () => {
+        // logika drukowania na frontendzie
         console.log('Drukuj');
     }
 
     const handleUsunZaznaczone = () => {
-        Axios.delete('http://localhost:5000/api/plan', {
+        Axios.delete('http://localhost:5000/api/planTygodnia', {
             data: {
                 id: selectedRowIds
             }
@@ -77,7 +82,7 @@ export default function PlanTygodniaPage() {
     const handlePrzeniesZaznaczone = () => {
         console.log(selectedRowIds);
         console.log(grupaPrzenies);
-        Axios.put('http://localhost:5000/api/plan', {
+        Axios.put('http://localhost:5000/api/planTygodnia', {
             id: selectedRowIds,
             grupa: grupaPrzenies.name
         })
@@ -90,7 +95,7 @@ export default function PlanTygodniaPage() {
 
     const handleSkopiuj = () => {
         // na razie podmienia dane na pracowników z poprzedniego tygodnia, ale może trzeba ich tylko dodac?
-        Axios.get('http://localhost:5000/api/plan?previous=true')
+        Axios.get('http://localhost:5000/api/planTygodnia?previous=true')
             .then(res => {
                 console.log(res.data);
                 setPracownikData(res.data);
@@ -108,7 +113,7 @@ export default function PlanTygodniaPage() {
             .catch(err => console.error(err));
 
         // pobieranie danych pracowników z serwera
-        Axios.get('http://localhost:5000/api/plan')
+        Axios.get('http://localhost:5000/api/planTygodnia')
             .then(res => {
                 //console.log(res.data);
                 setPracownikData(res.data);

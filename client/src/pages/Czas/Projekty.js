@@ -1,35 +1,18 @@
 import React from "react";
 import AmberBox from "../../Components/AmberBox";
 import { Dropdown } from 'primereact/dropdown';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from 'primereact/button';
 import { Link } from "react-router-dom";
 import { Checkbox } from 'primereact/checkbox';
+import Axios from "axios";
 
 export default function ProjektyPage() {
     const [Filtr, setFiltr] = useState(null);
     const [selectedItems, setSelectedItems] = React.useState([]);
-
-    const sampleData = [
-        {
-            id: 1,
-            Nazwa: "Projekt 1",
-            kodprojektu: "2021-10-01",
-            statusprojektu: "2021-10-10",
-        },
-        {
-            id: 2,
-            Nazwa: "Projekt 1",
-            kodprojektu: "2021-10-01",
-            statusprojektu: "2021-10-10",
-        },
-        {
-            id: 3,
-            Nazwa: "Projekt 1",
-            kodprojektu: "2021-10-01",
-            statusprojektu: "2021-10-10",
-        }
-    ];
+    const [selectedItemsNr, setSelectedItemsNr] = React.useState([]);
+    const [availableGroups, setAvailableGroups] = useState([]);
+    const [data, setData] = useState([]);
 
     const handleCheckboxChange = (id) => {
         setSelectedItems(prevState =>
@@ -39,32 +22,109 @@ export default function ProjektyPage() {
         );
     };
 
+    useEffect(() => {
+        console.log(selectedItems);
+    }, [selectedItems]);
+
+    const handleDelete = (id) => {
+        Axios.delete(`http://localhost:5000/api/czas/usun?id=${id}`)
+            .then((response) => {
+                console.log(response.data);
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+    };
+
+    const handleSzukaj = () => {
+        Axios.get(`http://localhost:5000/api/czas/szukaj?group=${Filtr}`)
+            .then((response) => {
+                console.log(response.data);
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+    };
+
+    const handlePrzeniesAktyw = () => {
+        Axios.put("http://localhost:5000/api/czas/przeniesAkt", {
+            ids: selectedItems.map((id) => id)
+        })
+            .then((response) => {
+                console.log(response.data);
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+    };
+
+    const handlePrzeniesNieaktyw = () => {
+        Axios.put("http://localhost:5000/api/czas/przeniesNieakt", {
+            ids: selectedItems.map((id) => id)
+        })
+            .then((response) => {
+                console.log(response.data);
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+    };
+
+    const handleGrupyProjektow = () => {
+
+    };
+
+    const handleNowyProjekt = () => {
+
+    };
+
+    useEffect(() => {
+        // pobieranie danych o projektach z serwera
+        Axios.get("http://localhost:5000/api/czas/projekty")
+            .then((response) => {
+                setData(response.data);
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+
+        // pobieranie dostępnych grup z serwera
+        Axios.get("http://localhost:5000/api/grupy")
+            .then((response) => {
+                const groupNames = response.data.map(group => group.name);
+                setAvailableGroups(groupNames);
+                }) 
+            .catch((error) => {
+                console.error(error);
+            });
+    }, []);
+
     return (
         <div>
             <AmberBox>
                 <div className="w-full h-2/5 flex flex-col space-y-2 items-start">
                     <div className="w-full h-2/6">
                         <div className="w-full flex flex-row items-center p-4">
-                    <p className="mr-6">Filtr</p>
-                    <Dropdown value={Filtr} onChange={(e) => setFiltr(e.value)} options={["Wszystko", "Aktywne","Nieaktywne"]} editable placeholder="Filtrowanie"
+                            <p className="mr-6">Filtr</p>
+                            <Dropdown value={Filtr} onChange={(e) => setFiltr(e.value)} options={availableGroups} editable placeholder="Filtrowanie"
                                 autoComplete="off"
-                                className="w-3/12 p-2" 
-                                filter 
+                                className="w-3/12 p-2"
+                                filter
                                 showClear
                             />
-                    <Button label="Szukaj" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-32" />
-                    <div>
-                        <Button label="Przenieś do aktywnych" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2" />
-                        <Button label="Przenieś do nieaktywnych" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2" />
-                    </div>
-                    <Link to="/home/grupy-projektow">
-                    <Button label="Grupy projektów" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2" />
-                    </Link>
-                    <Link to="/home/nowy-projekt">
-                    <Button label="Dodaj nowy" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2" />
-                    </Link>
+                            <Button onClick={handleSzukaj} label="Szukaj" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-32" />
+                            <div>
+                                <Button onClick={handlePrzeniesAktyw} label="Przenieś do aktywnych" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2" />
+                                <Button onClick={handlePrzeniesNieaktyw} label="Przenieś do nieaktywnych" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2" />
+                            </div>
+                            <Link to="/home/grupy-projektow">
+                                <Button onClick={handleGrupyProjektow} label="Grupy projektów" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2" />
+                            </Link>
+                            <Link to="/home/nowy-projekt">
+                                <Button onClick={handleNowyProjekt} label="Dodaj nowy" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2" />
+                            </Link>
 
-                    </div>
+                        </div>
                     </div>
                 </div>
             </AmberBox>
@@ -81,10 +141,10 @@ export default function ProjektyPage() {
                         </tr>
                     </thead>
                     <tbody className="text-center">
-                        {sampleData.map((item) => (
+                        {data.map((item) => (
                             <tr key={item.id} className="border-b even:bg-gray-200 odd:bg-gray-300">
                                 <td className="border-r">
-                                    <Checkbox 
+                                    <Checkbox
                                         inputId={`cb-${item.id}`}
                                         checked={selectedItems.includes(item.id)}
                                         onChange={() => handleCheckboxChange(item.id)}
@@ -95,7 +155,10 @@ export default function ProjektyPage() {
                                 <td className="border-r">{item.kodprojektu}</td>
                                 <td className="border-r">{item.statusprojektu}</td>
                                 <td>
-                                    <Button label="Usuń" className="bg-blue-700 text-white p-1 m-0.5" />
+                                    <Button
+                                        onClick={() => handleDelete(item.id)}
+                                        label="Usuń"
+                                        className="bg-blue-700 text-white p-1 m-0.5" />
                                 </td>
                             </tr>
                         ))}
