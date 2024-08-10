@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Dropdown } from "primereact/dropdown";
 import { Checkbox } from 'primereact/checkbox';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
 import { SelectButton } from 'primereact/selectbutton';
 import { Link } from "react-router-dom";
+import axios from "axios";
 
 export default function PracownikPage() {
 
@@ -56,6 +57,16 @@ export default function PracownikPage() {
             manager: "Jan Kowalski"
         }
     ];
+
+    useEffect(() => {
+        axios.get("http://localhost:5000/api/employees")
+            .then((response) => {
+                console.log(response.data);
+            })
+            .catch((error) => {
+                console.log(error);
+            });
+    }, []);
     
     const onCompanyChange = (e) => {
         let _company = [...company];
