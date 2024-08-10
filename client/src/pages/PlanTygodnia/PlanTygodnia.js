@@ -3,17 +3,17 @@ import { Dropdown } from "primereact/dropdown";
 import { Button } from "primereact/button";
 import { DatePicker } from 'antd';
 import { format, startOfWeek, addWeeks, subWeeks, getWeek, addDays, differenceInHours, getDay } from 'date-fns';
+import Axios from "axios";
 
 import PracownikData from "../../data/PlanTygodniaData";
 import AmberBox from "../../Components/AmberBox";
 
 import "primereact/resources/themes/lara-light-cyan/theme.css";
 
-const { RangePicker } = DatePicker;
 
 export default function PlanTygodniaPage() {
-    const [availableGroups, setAvailableGroups] = useState(['wszyscy', 'inne']);
-    const [group, setGroup] = useState('wszyscy');
+    const [availableGroups, setAvailableGroups] = useState([]);
+    const [group, setGroup] = useState('');
     const [grupaPrzenies, setGrupaPrzenies] = useState('');
     const [dateRange, setDateRange] = useState([null, null]);
     const [selectedRowIds, setSelectedRowIds] = useState([]); // stan do pierwszej kolumny z checkboxami
@@ -42,10 +42,6 @@ export default function PlanTygodniaPage() {
         const end = format(addWeeks(startOfWeek(date, { weekStartsOn: 1 }), 1), 'dd.MM.yyyy');
         return `${start} - ${end}`;
     };
-
-    // useEffect(() => {
-    //     console.log(group);
-    // }, [group]);
 
     // podglad stanu zaznaczonych checkboxów
     useEffect(() => {
@@ -76,6 +72,17 @@ export default function PlanTygodniaPage() {
     const handleSkopiuj = () => {
         console.log('Skopiuj');
     }
+
+    useEffect(() => {
+        // pobieranie dostępnych grup z serwera
+        Axios.get('http://localhost:5000/api/grupy')
+            .then(res => {
+                console.log(res.data);
+                setAvailableGroups(res.data);
+            })
+            .catch(err => console.error(err));
+    }, []);
+
 
 
     // funkcja do obsługi zmiany stanu checkboxa w pierwszej kolumnie
