@@ -3,19 +3,19 @@ import { Dropdown } from "primereact/dropdown";
 import { Button } from "primereact/button";
 import { DatePicker } from 'antd';
 import { format, startOfWeek, addWeeks, subWeeks, getWeek, addDays, differenceInHours, getDay } from 'date-fns';
+import Axios from "axios";
 
 import PracownikData from "../../data/PlanTygodniaData";
 import AmberBox from "../../Components/AmberBox";
 
 import "primereact/resources/themes/lara-light-cyan/theme.css";
 
-const { RangePicker } = DatePicker;
 
 export default function PlanTygodniaPage() {
-    const [availableGroups, setAvailableGroups] = useState(['wszyscy', 'inne']);
-    const [group, setGroup] = useState('wszyscy');
+    const [availableGroups, setAvailableGroups] = useState([]);
+    const [group, setGroup] = useState('');
     const [grupaPrzenies, setGrupaPrzenies] = useState('');
-    const [dateRange, setDateRange] = useState([null, null]);
+    const [pracownikData, setPracownikData] = useState([]);
     const [selectedRowIds, setSelectedRowIds] = useState([]); // stan do pierwszej kolumny z checkboxami
     const [currentDate, setCurrentDate] = useState(new Date());
     // stany do śledzenia zaznaczonych checkboxów w kolumnach M1-M5
@@ -43,10 +43,6 @@ export default function PlanTygodniaPage() {
         return `${start} - ${end}`;
     };
 
-    // useEffect(() => {
-    //     console.log(group);
-    // }, [group]);
-
     // podglad stanu zaznaczonych checkboxów
     useEffect(() => {
         console.log('Selected rows:', selectedRowIds);
@@ -57,9 +53,6 @@ export default function PlanTygodniaPage() {
         console.log('Selected M5:', selectedM5);
     }, [selectedRowIds, selectedM1, selectedM2, selectedM3, selectedM4, selectedM5]);
 
-    useEffect(() => {
-        console.log(currentDate);
-    }, [currentDate]);
 
     const handleDrukujGrupe = () => {
         console.log('Drukuj grupe');
@@ -70,12 +63,59 @@ export default function PlanTygodniaPage() {
     }
 
     const handleUsunZaznaczone = () => {
-        console.log('Usun zaznaczone');
+        Axios.delete('http://localhost:5000/api/plan', {
+            data: {
+                id: selectedRowIds
+            }
+        })
+            .then(res => {
+                console.log(res.data);
+            })
+            .catch(err => console.error(err));
     }
 
-    const handleSkopiuj = () => {
-        console.log('Skopiuj');
+    const handlePrzeniesZaznaczone = () => {
+        console.log(selectedRowIds);
+        console.log(grupaPrzenies);
+        Axios.put('http://localhost:5000/api/plan', {
+            id: selectedRowIds,
+            grupa: grupaPrzenies.name
+        })
+            .then(res => {
+                console.log(res.data);
+            })
+            .catch(err => console.error(err));
     }
+
+
+    const handleSkopiuj = () => {
+        // na razie podmienia dane na pracowników z poprzedniego tygodnia, ale może trzeba ich tylko dodac?
+        Axios.get('http://localhost:5000/api/plan?previous=true')
+            .then(res => {
+                console.log(res.data);
+                setPracownikData(res.data);
+            })
+            .catch(err => console.error(err));
+    }
+
+    useEffect(() => {
+        // pobieranie dostępnych grup z serwera
+        Axios.get('http://localhost:5000/api/grupy')
+            .then(res => {
+                //console.log(res.data);
+                setAvailableGroups(res.data);
+            })
+            .catch(err => console.error(err));
+
+        // pobieranie danych pracowników z serwera
+        Axios.get('http://localhost:5000/api/plan')
+            .then(res => {
+                //console.log(res.data);
+                setPracownikData(res.data);
+            })
+            .catch(err => console.error(err));
+    }, []);
+
 
 
     // funkcja do obsługi zmiany stanu checkboxa w pierwszej kolumnie
@@ -188,7 +228,6 @@ export default function PlanTygodniaPage() {
                                     <p className="text-lg font-bold">Tydzień {getWeekNumber(currentDate)} : {formatWeek(currentDate)}</p>
                                     <Button label="Następny" icon="pi pi-arrow-right" iconPos="right" className="p-button-outlined" onClick={nextWeek} />
                                 </div>
-                                <span>{(dateRange[0] && dateRange[1]) && (dateRange[0] + '  -  ' + dateRange[1])}</span>
                             </div>
                             <div>
                                 <span>Grupa</span>
@@ -229,7 +268,7 @@ export default function PlanTygodniaPage() {
                                 </tr>
                             </thead>
                             <tbody className="text-center">
-                                {PracownikData.sampleData.map((item, i) => (
+                                {pracownikData.map((item, i) => (
                                     <tr key={i} className="border-b even:bg-gray-200 odd:bg-gray-300">
                                         <td className="border-r">
                                             <input
@@ -276,7 +315,7 @@ export default function PlanTygodniaPage() {
                                                 onChange={() => handleColumnCheckboxChange(8, i)}
                                             />
                                         </td>
-                                        <td className="border-r">{item.opis}</td>
+                                        <td className="border-r">{item.description}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -294,6 +333,8 @@ export default function PlanTygodniaPage() {
                                 options={availableGroups} optionLabel="name"
                                 editable placeholder="" autoComplete='off'
                                 className="ml-4 md:w-14rem p-4" />
+                            <Button label="Przenieś" className="bg-white w-[9rem] h-[3rem] mt-4"
+                                text raised onClick={handlePrzeniesZaznaczone} />
                         </div>
                     </AmberBox>
                     <AmberBox>
