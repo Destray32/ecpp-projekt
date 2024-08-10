@@ -1,9 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Dropdown } from "primereact/dropdown";
-import { Checkbox } from 'primereact/checkbox';
 import { Button } from 'primereact/button';
-import { InputText } from 'primereact/inputtext';
-import { SelectButton } from 'primereact/selectbutton';
 import { Table, Input, Space } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import Highlighter from 'react-highlight-words';
@@ -11,19 +7,20 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 
 export default function PracownikPage() {
-    const [state, setState] = useState("Aktywne");
-    const [name, setName] = useState("");
-    const [surname, setSurname] = useState("");
-    const [manager, setManager] = useState(null);
-    const [company, setCompany] = useState([]);
-    const [searchField, setSearchField] = useState("Wszystko");
-    const [keyword, setKeyword] = useState("");
-    const [vacationGroup, setVacationGroup] = useState(null);
-    const [letter, setLetter] = useState({name: "Wszystko"});
     const [tableData, setTableData] = useState([]);
     const [searchText, setSearchText] = useState('');
     const [searchedColumn, setSearchedColumn] = useState('');
     const searchInput = useRef(null);
+
+    const handleDelete = (id) => {
+        axios.delete(`http://localhost:5000/api/employees/${id}`)
+            .then((response) => {
+                console.log(response);
+            })
+            .catch((error) => {
+                console.log(error);
+            });
+    }
 
     const handleSearch = (selectedKeys, confirm, dataIndex) => {
         confirm();
@@ -70,7 +67,7 @@ export default function PracownikPage() {
           record[dataIndex]
             ? record[dataIndex].toString().toLowerCase().includes(value.toLowerCase())
             : '',
-        onFilterDropdownVisibleChange: visible => {
+        onFilterDropdownOpenChange: visible => {
           if (visible) {
             setTimeout(() => searchInput.current.select());
           }
@@ -173,8 +170,8 @@ export default function PracownikPage() {
             key: 'action',
             render: (text, record) => (
                 <span>
-                    <a href="#">Edytuj</a>
-                    <a href="#">Usuń</a>
+                    <Link to={`/home/edytuj-pracownika/${record.id}`}><Button className="bg-blue-500 text-white p-1 mx-1">Edytuj</Button></Link>
+                    <Button onClick={() => handleDelete(record.id)} className="bg-red-500 text-white p-1 mx-1">Usuń</Button>
                 </span>
             ),
         },
@@ -190,18 +187,6 @@ export default function PracownikPage() {
             });
     }
     , []);
-    
-    const onCompanyChange = (e) => {
-        let _company = [...company];
-
-        if(e.checked)
-            _company.push(e.value);
-        else
-            _company.splice(_company.indexOf(e.value), 1);
-
-        setCompany(_company);
-        //console.log(_company);
-    }
 
     return (
         <div >
@@ -222,7 +207,7 @@ export default function PracownikPage() {
                 </div>
             </div>
             <div className="w-full h-[41rem] md:w-auto bg-gray-300 m-2 outline outline-1 outline-gray-500">
-                <Table columns={columns} dataSource={tableData} />
+                <Table columns={columns} dataSource={tableData} rowKey="id" />
             </div>
         </div>
     )

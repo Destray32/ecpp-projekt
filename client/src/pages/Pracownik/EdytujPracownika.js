@@ -1,16 +1,55 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import { Form, DatePicker, Input, Checkbox, Radio, Select, ConfigProvider, Button } from 'antd';
 import plPL from 'antd/lib/locale/pl_PL';
 import axios from 'axios';
+import dayjs from 'dayjs';
 
 import DaneBox from '../../Components/DaneBox';
 
-export default function DodajPracownikaPage() {
+export default function EdytujPracownikaPage() {
     const [form] = Form.useForm();
+    const { id } = useParams();
+
+    useEffect(() => {
+        axios.get(`http://localhost:5000/api/editEmployee/${id}`)
+            .then(res => {
+                console.log(res.data);
+                form.setFieldsValue({
+                    surename: res.data.surename,
+                    name: res.data.name,
+                    brithday: dayjs(res.data.brithday, 'DD.MM.YYYY'),
+                    pesel: res.data.pesel,
+                    street: res.data.street,
+                    zip: res.data.zip,
+                    city: res.data.city,
+                    country: res.data.country,
+                    phone1: res.data.phone1,
+                    phone2: res.data.phone2,
+                    email: res.data.email,
+                    relative1: res.data.relative1,
+                    relative2: res.data.relative2,
+                    NIP: res.data.NIP,
+                    startDate: dayjs(res.data.startDate, 'DD.MM.YYYY'),
+                    endDate: res.data.endDate ? dayjs(res.data.endDate, 'DD.MM.YYYY') : null,
+                    paycheckCode: res.data.paycheckCode,
+                    vehicle: res.data.vehicle,
+                    weeklyPlan: res.data.weeklyPlan,
+                    printVacation: res.data.printVacation,
+                    login: res.data.login,
+                    active: res.data.active,
+                    role: res.data.role,
+                    newPassword: res.data.newPassword,
+                    confirmPassword: res.data.confirmPassword,
+                });
+            })
+            .catch(err => {
+                console.log(err);
+            });
+    }, [id]);
 
     const handleSubmit = (values) => {
-        axios.post('http://localhost:5000/api/addEmployee', values)
+        axios.put(`http://localhost:5000/api/editEmployee/${id}`, values)
             .then(res => {
                 console.log(res);
             })
@@ -37,7 +76,7 @@ export default function DodajPracownikaPage() {
           },
         },
     };
-
+    
     return (
         <div>
             <ConfigProvider locale={plPL}>
@@ -147,10 +186,10 @@ export default function DodajPracownikaPage() {
                         </DaneBox>
                         <DaneBox name="Hasło">
                             <div className="h-48 flex flex-col justify-center">
-                                <Form.Item label="Nowe hasło" name="newPassword" rules={[{ required: true, message: 'Wprowadź nowe hasło' }]}>
+                                <Form.Item label="Nowe hasło" name="newPassword">
                                     <Input.Password />
                                 </Form.Item>
-                                <Form.Item label="Potwierdź hasło" name="confirmPassword" rules={[{ required: true, message: 'Potwierdź hasło' }]}>
+                                <Form.Item label="Potwierdź hasło" name="confirmPassword">
                                     <Input.Password />
                                 </Form.Item>
                             </div>

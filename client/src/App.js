@@ -7,6 +7,7 @@ import HomePage from './pages/Home';
 import PracownikPage from './pages/Pracownik/Pracownik';
 import ZmienDanePage from './pages/Pracownik/ZmienDane';
 import DodajPracownikaPage from './pages/Pracownik/DodajPracownika';
+import EdytujPracownikaPage from './pages/Pracownik/EdytujPracownika';
 import PodzialPage from './pages/Pracownik/Podzial';
 import LogowaniePage from './pages/Pracownik/Logowanie';
 import CzasPage from './pages/Czas/CzasPracy';
@@ -33,6 +34,7 @@ function App() {
           <Route path="pracownik" element={<PracownikPage />} />
           <Route path="zmien-dane" element={<ZmienDanePage />} />
           <Route path="dodaj-pracownika" element={<DodajPracownikaPage />} />
+          <Route path="edytuj-pracownika/:id" element={<EdytujPracownikaPage />} />
           <Route path="podzial" element={<PodzialPage />} />
           <Route path="logowanie" element={<LogowaniePage />} />
           <Route path="czas" element={<CzasPage />} />

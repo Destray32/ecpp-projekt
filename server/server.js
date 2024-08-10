@@ -1,5 +1,6 @@
 const express = require('express');
 const app = express();
+app.use(express.json());
 const port = 5000;
 const cors = require('cors');
 
@@ -18,6 +19,85 @@ app.get('/api/employees', (req, res) => {
         { id: 5, name: "Jan", surname: "Kowalski", pesel: "12345678901", vacationGroup: 1, company: "Hejmej Plat",
             phone1: "123456789",  phone2: "123456789", email: "test@p.pl", manager: "Jan Kowalski" },
     ]);
+}
+);
+
+app.delete('/api/employees/:id', (req, res) => {
+    res.json({ status: "ok" });
+}
+);
+
+app.get('/api/myData', (req, res) => {
+    res.json({
+        surename: "Kowalski",
+        name: "Jan",
+        brithday: "01.01.1990",
+        pesel: "12345678901",
+        street: "Kwiatowa 1",
+        zip: "00-000",
+        city: "Warszawa",
+        country: "Polska",
+        phone1: "123456789",
+        phone2: "123456789",
+        email: "test@wp.pl",
+        relative1: "Maria Kowalska",
+        relative2: "Jan Kowalski",
+        NIP: "1234567890",
+        startDate: "01.01.2010",
+        endDate: "",
+        paycheckCode: "123 456 789",
+        vehicle: 1,
+        weeklyPlan: true,
+        printVacation: true,
+        login: "jkowalski",
+        active: true,
+        role: 1,
+        newPassword: "",
+        confirmPassword: "",
+    });
+}
+);
+
+app.post('/api/addEmployee', (req, res) => {
+    console.log(req.body);
+    res.json({ status: "ok" });
+}
+);
+
+app.get('/api/editEmployee/:id', (req, res) => {
+    res.json({
+        surename: "Kowalski",
+        name: "Jan",
+        brithday: "01.01.1990",
+        pesel: "12345678901",
+        street: "Kwiatowa 1",
+        zip: "00-000",
+        city: "Warszawa",
+        country: "Polska",
+        phone1: "123456789",
+        phone2: "123456789",
+        email: "test@wp.pl",
+        relative1: "Maria Kowalska",
+        relative2: "Jan Kowalski",
+        NIP: "1234567890",
+        startDate: "01.01.2010",
+        endDate: "",
+        paycheckCode: "123 456 789",
+        vehicle: 1,
+        weeklyPlan: true,
+        printVacation: true,
+        login: "jkowalski",
+        active: true,
+        role: 1,
+        newPassword: "",
+        confirmPassword: "",
+    });
+}
+);
+
+app.put('/api/editEmployee/:id', (req, res) => {
+    console.log(req.body);
+    res.json({ status: "ok" });
 }
 );
 
