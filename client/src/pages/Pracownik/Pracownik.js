@@ -5,6 +5,8 @@ import { SearchOutlined } from '@ant-design/icons';
 import Highlighter from 'react-highlight-words';
 import { Link } from "react-router-dom";
 import axios from "axios";
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 export default function PracownikPage() {
     const [tableData, setTableData] = useState([]);
@@ -188,8 +190,35 @@ export default function PracownikPage() {
     }
     , []);
 
+    const printPDF = () => {
+        const doc = new jsPDF('landscape');
+
+        doc.setFontSize(18);
+        doc.text('Lista Pracowników', 14, 12);
+
+        doc.autoTable({
+            head: [
+                ['Imię', 'Nazwisko', 'Pesel', 'Grupa urlopowa', 'Firma', 'Telefon 1', 'Telefon 2', 'E-mail', 'Kierownik']
+            ],
+            body: tableData.map(employee => [
+                employee.name,
+                employee.surname,
+                employee.pesel,
+                employee.vacationGroup,
+                employee.company,
+                employee.phone1,
+                employee.phone2,
+                employee.email,
+                employee.manager
+            ]),
+            margin: { top: 20 },
+            tableWidth: 'auto',
+        });
+        doc.save('lista-pracownikow.pdf');
+    };
+
     return (
-        <div >
+        <div>
             <div className="w-full md:w-auto h-full m-2 p-3 bg-amber-100 outline outline-1 outline-gray-500 flex flex-row items-center space-x-4">
                 <div className="flex flex-col space-y-2 items-start">
                     <div className="w-full h-2/6">
@@ -201,7 +230,7 @@ export default function PracownikPage() {
                             <Link to="/home/dodaj-pracownika">
                                 <Button label="Dodaj pracownika" className="bg-white outline outline-1 outline-gray-500 p-2 mx-2" />
                             </Link>
-                            <Button label="Drukuj listę" className="bg-white outline outline-1 outline-gray-500 p-2 mx-2" />
+                            <Button onClick={printPDF} label="Drukuj listę" className="bg-white outline outline-1 outline-gray-500 p-2 mx-2" />
                         </div>
                     </div>
                 </div>
@@ -210,5 +239,5 @@ export default function PracownikPage() {
                 <Table columns={columns} dataSource={tableData} rowKey="id" />
             </div>
         </div>
-    )
+    );
 }
