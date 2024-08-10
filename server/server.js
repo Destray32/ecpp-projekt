@@ -11,6 +11,7 @@ const MojeDane = require('./api/Pracownik/pracownik.mojedane');
 const DodajPracownika = require('./api/Pracownik/pracownik.dodaj');
 const PobierzPracownika = require('./api/Pracownik/pracownik.pobierzpracownika');
 const EdytujPracownika = require('./api/Pracownik/pracownik.edytujpracownika');
+const PobierzLogi = require('./api/Pracownik/pracownik.logowanie');
 
 const PlanTygodniaPlan = require('./api/PlanTygodnia/plantygodnia.plan.planTygodnia');
 const DostepneGrupy = require('./api/Grupy/grupy.dostepnegrupy');
@@ -57,6 +58,11 @@ app.get('/api/mojedane', (req, res) => {
 }
 );
 
+app.get('/api/logi', (req, res) => {
+    PobierzLogi(req, res);
+}
+);
+
 app.route('/api/planTygodnia')
     .get((req, res) => {
         if (req.query.previous) {
@@ -72,7 +78,7 @@ app.route('/api/planTygodnia')
         UsunWpisPlan(req, res);
     });
 
-app.get('/api/plan/drukuj', (req, res) => {
+app.get('/api/planTygodnia/drukuj', (req, res) => {
     DrukujGrupe(req, res);
 });
 
