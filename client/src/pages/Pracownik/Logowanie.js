@@ -17,7 +17,7 @@ export default function LogowaniePage() {
 
     return (
         <main>
-            <div className="p-4">
+            <div className="p-2">
                 <div className="outline outline-1 outline-gray-500">
                     <table className="w-full">
                         <thead className="bg-blue-700 text-white">

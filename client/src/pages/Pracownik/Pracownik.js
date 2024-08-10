@@ -235,8 +235,8 @@ export default function PracownikPage() {
                     </div>
                 </div>
             </div>
-            <div className="w-full h-[41rem] md:w-auto bg-gray-300 m-2 outline outline-1 outline-gray-500">
-                <Table columns={columns} dataSource={tableData} rowKey="id" />
+            <div className="w-full md:w-auto bg-gray-300 m-2 outline outline-1 outline-gray-500">
+                <Table columns={columns} dataSource={tableData} rowKey="id" scroll={{ y: 540 }} />
             </div>
         </div>
     );
