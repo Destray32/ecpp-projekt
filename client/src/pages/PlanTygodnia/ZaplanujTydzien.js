@@ -3,6 +3,7 @@ import { format, startOfWeek, addWeeks, subWeeks, getWeek, addDays, differenceIn
 import { Button } from "primereact/button";
 import { InputText } from "primereact/inputtext";
 import { Dropdown } from "primereact/dropdown";
+import Axios from "axios";
 import 'primeicons/primeicons.css';
 
 import AmberBox from "../../Components/AmberBox"
@@ -16,6 +17,7 @@ export default function ZaplanujTydzienPage() {
     const [wybranaGrupa, setWybranaGrupa] = useState('');
     const [opis, setOpis] = useState('');
     const [naziwsko, setNazwisko] = useState('');
+    const [plany, setPlany] = useState([]);
 
     const handleFiltrujPracownika = (value) => {
         setFiltrujPracownika(value);
@@ -44,7 +46,17 @@ export default function ZaplanujTydzienPage() {
     };
 
     const handleZaplanuj = () => {
-        console.log('Zaplanuj');
+        Axios.post('http://localhost:5000/api/plan/zaplanuj', {
+            dataOd: format(startOfWeek(currentDate, { weekStartsOn: 1 }), 'dd.MM.yyyy'),
+            dataDo: format(addWeeks(startOfWeek(currentDate, { weekStartsOn: 1 }), 1), 'dd.MM.yyyy'),
+            nazwisko: naziwsko,
+            imie: 'Jan',
+            firma: 'firma1',
+            grupa: wybranaGrupa.name,
+            opis: opis
+        }).then((response) => {
+            console.log(response.data);
+        });
     }
     const handleOpis = (e) => {
         setOpis(e.target.value);
@@ -55,7 +67,33 @@ export default function ZaplanujTydzienPage() {
 
     const handleUsun = (index) => {
         console.log('Usun', index);
+        Axios.delete(`http://localhost:5000/api/plan/zaplanuj?id=${index}`)
+            .then((response) => {
+                console.log(response.data);
+            });
     }
+
+    useEffect(() => {
+        // pobiernie grup
+        Axios.get('http://localhost:5000/api/grupy')
+            .then((response) => {
+                setAvailableGroups(response.data);
+            });
+
+        
+    }, []);
+
+    useEffect(() => {
+        // pobieranie planow w danym tygodniu
+        Axios.get(`http://localhost:5000/api/plan/zaplanuj?from=${format(startOfWeek(currentDate, { weekStartsOn: 1 }), 'dd.MM.yyyy')}&to=${format(addWeeks(startOfWeek(currentDate, { weekStartsOn: 1 }), 1), 'dd.MM.yyyy')}`)
+            .then((response) => {
+                console.log(response.data);
+                setPlany(response.data);
+            })
+            .catch((error) => {
+                console.log(error);
+            });
+    }, [currentDate]); // gdy zmieni sie wybrana data, pobierz nowe dane
 
     return (
         <div className="p-4 flex flex-col gap-12">
@@ -103,7 +141,7 @@ export default function ZaplanujTydzienPage() {
                             </tr>
                         </thead>
                         <tbody className="text-center">
-                            {PracownikData.sampleData.map((item, i) => (
+                            {plany.map((item, i) => (
                                 <tr key={i} className="border-b even:bg-gray-200 odd:bg-gray-300">
                                     <td className="border-r">{item.dataOd}</td>
                                     <td className="border-r">{item.dataDo}</td>
