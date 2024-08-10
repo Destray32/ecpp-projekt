@@ -13,7 +13,7 @@ export default function PracownikPage() {
     const searchInput = useRef(null);
 
     const handleDelete = (id) => {
-        axios.delete(`http://localhost:5000/api/employees/${id}`)
+        axios.delete(`http://localhost:5000/api/pracownik/${id}`)
             .then((response) => {
                 console.log(response);
             })
@@ -178,7 +178,7 @@ export default function PracownikPage() {
       ];
 
     useEffect(() => {
-        axios.get("http://localhost:5000/api/employees")
+        axios.get("http://localhost:5000/api/pracownicy")
             .then((response) => {
                 setTableData(response.data);
             })

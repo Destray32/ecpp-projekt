@@ -12,7 +12,7 @@ export default function EdytujPracownikaPage() {
     const { id } = useParams();
 
     useEffect(() => {
-        axios.get(`http://localhost:5000/api/editEmployee/${id}`)
+        axios.get(`http://localhost:5000/api/pracownik/${id}`)
             .then(res => {
                 console.log(res.data);
                 form.setFieldsValue({
@@ -49,7 +49,7 @@ export default function EdytujPracownikaPage() {
     }, [id]);
 
     const handleSubmit = (values) => {
-        axios.put(`http://localhost:5000/api/editEmployee/${id}`, values)
+        axios.put(`http://localhost:5000/api/pracownik/${id}`, values)
             .then(res => {
                 console.log(res);
             })

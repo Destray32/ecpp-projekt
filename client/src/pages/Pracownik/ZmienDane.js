@@ -11,7 +11,7 @@ export default function ZmienDanePage() {
     const [form] = Form.useForm();
 
     useEffect(() => {
-        axios.get('http://localhost:5000/api/myData')
+        axios.get('http://localhost:5000/api/mojedane')
             .then(res => {
                 console.log(res.data);
                 form.setFieldsValue({
