@@ -3,6 +3,8 @@ import AmberBox from "../../Components/AmberBox";
 import { Button } from 'primereact/button';
 import { Dropdown } from 'primereact/dropdown';
 import axios from 'axios';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 export default function SprawdzSamochodPage() {
     const [Pojazd, setPojazd] = useState(null);
@@ -43,6 +45,37 @@ export default function SprawdzSamochodPage() {
         fetchData();
     }, [Pojazd, startDate, endDate]);
 
+    const generatePDF = () => {
+        const doc = new jsPDF();
+        
+        const columns = [
+            { header: "Data", dataKey: "data" },
+            { header: "Imię i nazwisko", dataKey: "dane" },
+            { header: "Pojazd", dataKey: "pojazd" },
+            { header: "Projekt", dataKey: "projekt" },
+            { header: "Ilość godzin", dataKey: "godziny" }
+        ];
+        
+        const rows = tableData.map(item => ({
+            data: item.data,
+            dane: item.dane,
+            pojazd: item.pojazd,
+            projekt: item.projekt,
+            godziny: item.godziny
+        }));
+    
+        doc.autoTable({
+            head: [columns.map(col => col.header)],
+            body: rows.map(row => columns.map(col => row[col.dataKey])),
+            startY: 20,
+            theme: 'striped',
+            styles: { halign: 'center' },
+        });
+    
+        doc.text("Lista samochodów", 14, 15);
+        doc.save("lista-samochodow.pdf");
+    };
+
     return (
         <div>
             <AmberBox>
@@ -51,7 +84,7 @@ export default function SprawdzSamochodPage() {
                     <input type="date" className="p-2.5 rounded" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
                     <input type="date" className="p-2.5 rounded" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
                     <Dropdown value={Pojazd} options={pojazdyOptions} onChange={(e) => setPojazd(e.value)} showClear placeholder="Wybierz pojazd" />
-                    <Button label="Drukuj" className="p-button-outlined border-2 p-2.5 bg-white text-black" />
+                    <Button onClick={generatePDF} label="Drukuj" className="p-button-outlined border-2 p-2.5 bg-white text-black" />
                 </div>
             </AmberBox>
             <div className="w-full md:w-auto bg-gray-300 h-full m-2 outline outline-1 outline-gray-500">
