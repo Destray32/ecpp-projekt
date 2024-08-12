@@ -8,6 +8,8 @@ import axios from "axios";
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
+import { font } from "../../fonts/OpenSans-Regular-normal";
+
 export default function PracownikPage() {
     const [tableData, setTableData] = useState([]);
     const [searchText, setSearchText] = useState('');
@@ -193,6 +195,7 @@ export default function PracownikPage() {
     const printPDF = () => {
         const doc = new jsPDF('landscape');
 
+        doc.setFont("OpenSans-Regular", "normal");
         doc.setFontSize(18);
         doc.text('Lista Pracowników', 14, 12);
 
@@ -213,6 +216,14 @@ export default function PracownikPage() {
             ]),
             margin: { top: 20 },
             tableWidth: 'auto',
+            styles: {
+                font: "OpenSans-Regular",
+                halign: 'center'
+            },
+            headStyles: {
+                font: "OpenSans-Regular",
+                fontStyle: "bold"
+            }
         });
         doc.save('lista-pracownikow.pdf');
     };

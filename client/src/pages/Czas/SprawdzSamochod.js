@@ -6,6 +6,8 @@ import axios from 'axios';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
+import { font } from "../../fonts/OpenSans-Regular-normal";
+
 export default function SprawdzSamochodPage() {
     const [Pojazd, setPojazd] = useState(null);
     const [tableData, setTableData] = useState([]);
@@ -47,6 +49,8 @@ export default function SprawdzSamochodPage() {
 
     const generatePDF = () => {
         const doc = new jsPDF();
+
+        doc.setFont("OpenSans-Regular", "normal");
         
         const columns = [
             { header: "Data", dataKey: "data" },
@@ -69,7 +73,14 @@ export default function SprawdzSamochodPage() {
             body: rows.map(row => columns.map(col => row[col.dataKey])),
             startY: 20,
             theme: 'striped',
-            styles: { halign: 'center' },
+            styles: {
+                font: "OpenSans-Regular",
+                halign: 'center'
+            },
+            headStyles: {
+                font: "OpenSans-Regular",
+                fontStyle: "bold"
+            }
         });
     
         doc.text("Lista samochodów", 14, 15);
