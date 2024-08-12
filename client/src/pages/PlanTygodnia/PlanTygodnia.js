@@ -4,8 +4,10 @@ import { Button } from "primereact/button";
 import { DatePicker } from 'antd';
 import { format, startOfWeek, addWeeks, subWeeks, getWeek, addDays, differenceInHours, getDay } from 'date-fns';
 import Axios from "axios";
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
-import PracownikData from "../../data/PlanTygodniaData";
+
 import AmberBox from "../../Components/AmberBox";
 
 import "primereact/resources/themes/lara-light-cyan/theme.css";
@@ -25,18 +27,65 @@ export default function PlanTygodniaPage() {
     const [selectedM4, setSelectedM4] = useState([]);
     const [selectedM5, setSelectedM5] = useState([]);
 
+
+    const generatePDF = () => {
+        const doc = new jsPDF();
+
+        doc.setFont("OpenSans-Regular", "normal");
+        
+        const columns = [
+            { header: "Nazwisko", dataKey: "data" },
+            { header: "Imię", dataKey: "dane" },
+            { header: "Grupa", dataKey: "pojazd" },
+            { header: "M1", dataKey: "m1" },
+            { header: "M2", dataKey: "m2" },
+            { header: "M3", dataKey: "m3" },
+            { header: "M4", dataKey: "m4" },
+            { header: "M5", dataKey: "m5" },
+            { header: "Opis", dataKey: "opis" }
+
+        ];
+        
+        const rows = pracownikData.map(item => ({
+            data: item.surname,
+            dane: item.name,
+            pojazd: item.vacationGroup,
+            m1: item.M1,
+            m2: item.M2,
+            m3: item.M3,
+            m4: item.M4,
+            m5: item.M5,
+            opis: item.description
+        }));
+    
+        doc.autoTable({
+            head: [columns.map(col => col.header)],
+            body: rows.map(row => columns.map(col => row[col.dataKey])),
+            startY: 20,
+            theme: 'striped',
+            styles: {
+                font: "OpenSans-Regular",
+                halign: 'center'
+            },
+            headStyles: {
+                font: "OpenSans-Regular",
+                fontStyle: "bold"
+            }
+        });
+    
+        doc.text("Grupa", 14, 10);
+        doc.save("drukuj-grupe.pdf");
+    };
+
     const getWeekNumber = (date) => {
         return getWeek(date, { weekStartsOn: 1 });
     };
-
     const previousWeek = () => {
         setCurrentDate(subWeeks(currentDate, 1));
     };
-
     const nextWeek = () => {
         setCurrentDate(addWeeks(currentDate, 1));
     };
-
     const formatWeek = (date) => {
         const start = format(startOfWeek(date, { weekStartsOn: 1 }), 'dd.MM.yyyy');
         const end = format(addWeeks(startOfWeek(date, { weekStartsOn: 1 }), 1), 'dd.MM.yyyy');
@@ -65,6 +114,7 @@ export default function PlanTygodniaPage() {
     const handleDrukuj = () => {
         // logika drukowania na frontendzie
         console.log('Drukuj');
+        generatePDF();
     }
 
     const handleUsunZaznaczone = () => {
@@ -138,27 +188,27 @@ export default function PlanTygodniaPage() {
         switch (columnIndex) {
             case 4:
                 setSelectedM1(prevSelectedM1 =>
-                    prevSelectedM1.length === PracownikData.sampleData.length ? [] : PracownikData.sampleData.map((_, i) => i)
+                    prevSelectedM1.length === pracownikData.length ? [] : pracownikData.map((_, i) => i)
                 );
                 break;
             case 5:
                 setSelectedM2(prevSelectedM2 =>
-                    prevSelectedM2.length === PracownikData.sampleData.length ? [] : PracownikData.sampleData.map((_, i) => i)
+                    prevSelectedM2.length === pracownikData.length ? [] : pracownikData.map((_, i) => i)
                 );
                 break;
             case 6:
                 setSelectedM3(prevSelectedM3 =>
-                    prevSelectedM3.length === PracownikData.sampleData.length ? [] : PracownikData.sampleData.map((_, i) => i)
+                    prevSelectedM3.length === pracownikData.length ? [] : pracownikData.map((_, i) => i)
                 );
                 break;
             case 7:
                 setSelectedM4(prevSelectedM4 =>
-                    prevSelectedM4.length === PracownikData.sampleData.length ? [] : PracownikData.sampleData.map((_, i) => i)
+                    prevSelectedM4.length === pracownikData.length ? [] : pracownikData.map((_, i) => i)
                 );
                 break;
             case 8:
                 setSelectedM5(prevSelectedM5 =>
-                    prevSelectedM5.length === PracownikData.sampleData.length ? [] : PracownikData.sampleData.map((_, i) => i)
+                    prevSelectedM5.length === pracownikData.length ? [] : pracownikData.map((_, i) => i)
                 );
                 break;
             default:
