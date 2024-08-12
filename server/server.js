@@ -45,6 +45,9 @@ const PobierzPojazdy = require('./api/Czas/Pojazdy/pojazdy.pobierz');
 const UsunPojazd = require('./api/Czas/Pojazdy/pojazdy.usun');
 const DodajPojazd = require('./api/Czas/Pojazdy/pojazdy.dodaj');
 
+// Czas > SprawdzSamochod
+const PobierzSamochody = require('./api/Czas/SprawdzSamochod/sprawdzSamochodz.pobierz');
+
 // Ogloszenia
 const PobierzOgloszenia = require('./api/Ogloszenia/ogloszenia.pobierz');
 const DodajOgloszenie = require('./api/Ogloszenia/ogloszenia.dodaj');
@@ -170,6 +173,12 @@ app.route('/api/pojazdy')
 
 app.delete('/api/pojazdy/:id', (req, res) => {
     UsunPojazd(req, res);
+});
+/////////////////////////////////////////
+
+// CZAS > SPRAWDZ SAMOCHOD //
+app.get('/api/samochody', (req, res) => {
+    PobierzSamochody(req, res);
 });
 /////////////////////////////////////////
 
