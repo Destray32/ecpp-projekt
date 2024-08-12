@@ -14,6 +14,7 @@ export default function PracownikPage() {
     const [tableData, setTableData] = useState([]);
     const [searchText, setSearchText] = useState('');
     const [searchedColumn, setSearchedColumn] = useState('');
+    const [filteredData, setFilteredData] = useState([]);
     const searchInput = useRef(null);
 
     const handleDelete = (id) => {
@@ -179,7 +180,7 @@ export default function PracownikPage() {
                 </span>
             ),
         },
-      ];
+    ];
 
     useEffect(() => {
         axios.get("http://localhost:5000/api/pracownicy")
@@ -189,21 +190,22 @@ export default function PracownikPage() {
             .catch((error) => {
                 console.log(error);
             });
-    }
-    , []);
+    }, []);
 
     const printPDF = () => {
         const doc = new jsPDF('landscape');
-
+    
         doc.setFont("OpenSans-Regular", "normal");
         doc.setFontSize(18);
         doc.text('Lista Pracowników', 14, 12);
 
+        const dataToPrint = filteredData.length > 0 ? filteredData : tableData;
+    
         doc.autoTable({
             head: [
                 ['Imię', 'Nazwisko', 'Pesel', 'Grupa urlopowa', 'Firma', 'Telefon 1', 'Telefon 2', 'E-mail', 'Kierownik']
             ],
-            body: tableData.map(employee => [
+            body: dataToPrint.map(employee => [
                 employee.name,
                 employee.surname,
                 employee.pesel,
@@ -228,6 +230,21 @@ export default function PracownikPage() {
         doc.save('lista-pracownikow.pdf');
     };
 
+    const handleTableChange = (pagination, filters, sorter) => {
+        const appliedFilters = filters || {};
+        const filteredDataFromTable = tableData.filter(item => {
+            return Object.keys(appliedFilters).every(key => {
+                const filterValues = appliedFilters[key] || [];
+                if (Array.isArray(filterValues) && filterValues.length > 0) {
+                    const itemValue = item[key] ? item[key].toString().toLowerCase() : '';
+                    return filterValues.some(filterValue => filterValue.toLowerCase() === itemValue || itemValue.includes(filterValue.toLowerCase()));
+                }
+                return true;
+            });
+        });
+        setFilteredData(filteredDataFromTable);
+    };
+    
     return (
         <div>
             <div className="w-full md:w-auto h-full m-2 p-3 bg-amber-100 outline outline-1 outline-gray-500 flex flex-row items-center space-x-4">
@@ -247,7 +264,13 @@ export default function PracownikPage() {
                 </div>
             </div>
             <div className="w-full md:w-auto bg-gray-300 m-2 outline outline-1 outline-gray-500">
-                <Table columns={columns} dataSource={tableData} rowKey="id" scroll={{ y: 540 }} />
+                <Table
+                    columns={columns}
+                    dataSource={tableData}
+                    rowKey="id"
+                    scroll={{ y: 540 }}
+                    onChange={handleTableChange}
+                />
             </div>
         </div>
     );
