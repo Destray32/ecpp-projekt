@@ -1,12 +1,24 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button, Modal, Form, Radio, Select, Input } from 'antd';
 import { CloseOutlined } from '@ant-design/icons';
+import axios from 'axios';
 
 export default function OgloszeniaPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [radioValue, setRadioValue] = useState('grupy');
     const [ogloszenia, setOgloszenia] = useState([]);
     const [form] = Form.useForm();
+
+    useEffect(() => {
+        axios.get('http://localhost:5000/api/ogloszenia')
+            .then((response) => {
+                setOgloszenia(response.data);
+            })
+            .catch((error) => {
+                console.error('Błąd pobierania ogłoszeń:', error);
+            });
+    }
+    , []);
 
     const showModal = () => {
         form.setFieldsValue({
@@ -40,7 +52,13 @@ export default function OgloszeniaPage() {
     }
 
     const deleteOgloszenie = (indexToDelete) => {
-        setOgloszenia(ogloszenia.filter((_, index) => index !== indexToDelete));
+        axios.delete(`http://localhost:5000/api/ogloszenia/${indexToDelete}`)
+            .then(() => {
+                setOgloszenia(ogloszenia.filter((_, index) => index !== indexToDelete));
+            })
+            .catch((error) => {
+                console.error('Błąd usuwania ogłoszenia:', error);
+            });
     }
 
     return (

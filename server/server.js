@@ -5,6 +5,7 @@ const port = 5000;
 const cors = require('cors');
 
 // api importy z folderu api
+// Pracownik
 const ListaPracownikow = require('./api/Pracownik/Pracownik/pracownik.lista');
 const UsunPracownika = require('./api/Pracownik/Pracownik/pracownik.usun');
 const MojeDane = require('./api/Pracownik/Pracownik/pracownik.mojedane');
@@ -13,11 +14,13 @@ const PobierzPracownika = require('./api/Pracownik/Pracownik/pracownik.pobierzpr
 const EdytujPracownika = require('./api/Pracownik/Pracownik/pracownik.edytujpracownika');
 const PobierzLogi = require('./api/Pracownik/pracownik.logowanie');
 
+// Czas > Czas Pracy
 const ZapiszCzasPracy = require('./api/Czas/CzasPracy/czas.czaspracy.zapisz');
 const PobierzCzasPracy = require('./api/Czas/CzasPracy/czas.czaspracy.pobierz');
 const ZamknijTydzien = require('./api/Czas/CzasPracy/czas.czaspracy.zamknij');
 const OtworzTydzien = require('./api/Czas/CzasPracy/czas.czaspracy.otworz');
 
+// Plan Tygodnia
 const PlanTygodniaPlan = require('./api/PlanTygodnia/plantygodnia.plan.planTygodnia');
 const DostepneGrupy = require('./api/Grupy/grupy.dostepnegrupy');
 const DrukujGrupe = require('./api/PlanTygodnia/plantygodnia.plan.drukujGrupe');
@@ -28,6 +31,7 @@ const DodajZaplanuj = require('./api/PlanTygodnia/plantygodnia.zaplanuj.dodajPla
 const GetPlany = require('./api/PlanTygodnia/plantygodnia.zaplanuj.getPlany');
 const UsunPlan = require('./api/PlanTygodnia/plantygodnia.zaplanuj.usunPlan');
 
+// Czas > Projekty
 const GetProjekty = require('./api/Czas/Projekty/czas.projekty.getProjekty');
 const UsunProjekt = require('./api/Czas/Projekty/czas.projekty.usunProjekt');
 const SzukajProjekt = require('./api/Czas/Projekty/czas.projekty.szukajProjekt');
@@ -36,10 +40,24 @@ const PrzeniesNieakt = require('./api/Czas/Projekty/czas.projekty.przeniesNieakt
 const DodajNowyProjekt = require('./api/Czas/Projekty/czas.projekty.dodajNowy');
 const DodajNowaGrupe = require('./api/Czas/Projekty/czas.projekty.dodajNowaGrupa');
 
+// Czas > Urlopy
 const GetUrlopy = require('./api/Czas/Urlopy/czas.urlopy.getUrlopy');
 const DodajUrlop = require('./api/Czas/Urlopy/czas.urlopy.dodajUrlop');
 const ZatwierdzUrlop = require('./api/Czas/Urlopy/czas.urlopy.zatwierdzUrlop');
 const UsunUrlop = require('./api/Czas/Urlopy/czas.urlopy.usunUrlop');
+
+// Czas > Pojazdy
+const PobierzPojazdy = require('./api/Czas/Pojazdy/pojazdy.pobierz');
+const UsunPojazd = require('./api/Czas/Pojazdy/pojazdy.usun');
+const DodajPojazd = require('./api/Czas/Pojazdy/pojazdy.dodaj');
+
+// Czas > SprawdzSamochod
+const PobierzSamochody = require('./api/Czas/SprawdzSamochod/sprawdzSamochodz.pobierz');
+
+// Ogloszenia
+const PobierzOgloszenia = require('./api/Ogloszenia/ogloszenia.pobierz');
+const DodajOgloszenie = require('./api/Ogloszenia/ogloszenia.dodaj');
+const UsunOgloszenie = require('./api/Ogloszenia/ogloszenia.usun');
 
 app.use(cors());
 app.use(express.json());
@@ -170,6 +188,39 @@ app.delete('/api/urlopy', (req, res) => {
 
 /////////////////////////////////////////
 
+// CZAS > POJAZDY //
+app.route('/api/pojazdy')
+    .get((req, res) => {
+        PobierzPojazdy(req, res);
+    })
+    .post((req, res) => {
+        DodajPojazd(req, res);
+    });
+
+app.delete('/api/pojazdy/:id', (req, res) => {
+    UsunPojazd(req, res);
+});
+/////////////////////////////////////////
+
+// CZAS > SPRAWDZ SAMOCHOD //
+app.get('/api/samochody', (req, res) => {
+    PobierzSamochody(req, res);
+});
+/////////////////////////////////////////
+
+// OGLOSZENIA //
+app.route('/api/ogloszenia')
+    .get((req, res) => {
+        PobierzOgloszenia(req, res);
+    })
+    .post((req, res) => {
+        DodajOgloszenie(req, res);
+    });
+
+app.delete('/api/ogloszenia/:id', (req, res) => {
+    UsunOgloszenie(req, res);
+});
+/////////////////////////////////////////
 
 // pobieranie grup z bazy danych
 app.get('/api/grupy', (req, res) => {
