@@ -1,41 +1,25 @@
-import React from "react";
+import React, { useEffect } from "react";
 import AmberBox from "../../Components/AmberBox";
 import { Button } from 'primereact/button';
 import { Link } from "react-router-dom";
-import { Checkbox } from 'primereact/checkbox';
+import axios from "axios";
 
 export default function PojazdyPage() {
-    const [selectedItems, setSelectedItems] = React.useState([]);
+    const [tableData, setTableData] = React.useState([]);
 
-    const sampleData = [
-        {
-            id: 1,
-            Nrrejestracyjny: "BJO042",
-            Marka: "Volvo",
-            Uwagi: "Brak",
-        },
-        {
-            id: 2,
-            Nrrejestracyjny: "BJO042",
-            Marka: "Volvo",
-            Uwagi: "Brak",
-        },
-        {
-            id: 3,
-            Nrrejestracyjny: "BJO042",
-            Marka: "Volvo",
-            Uwagi: "Brak",
-        }
-    ];
-
-    const handleCheckboxChange = (id) => {
-        setSelectedItems(prevState =>
-            prevState.includes(id)
-                ? prevState.filter(item => item !== id)
-                : [...prevState, id]
-        );
-    };
+    useEffect(() => {
+        axios.get("http://localhost:5000/api/pojazdy").then((response) => {
+            setTableData(response.data.pojazdy);
+        });
+    }, []);
     
+    const handleDelete = (id) => {
+        axios.delete(`http://localhost:5000/api/pojazdy/${id}`).then((response) => {
+            console.log(response);
+            setTableData(tableData.filter((item) => item.id !== id));
+        });
+    }
+
     return (
         <div>
         <AmberBox>
@@ -52,30 +36,22 @@ export default function PojazdyPage() {
         <table className="w-full">
             <thead className="bg-blue-700 text-white">
                 <tr>
-                    <th></th>
                     <th className="border-r">Nr</th>
                     <th className="border-r">Nr rejestracyjny</th>
                     <th className="border-r">Marka</th>
                     <th className="border-r">Uwagi</th>
-                    <th></th>
+                    <th>Akcje</th>
                 </tr>
             </thead>
             <tbody className="text-center">
-                {sampleData.map((item) => (
+                {tableData.map((item) => (
                     <tr key={item.id} className="border-b even:bg-gray-200 odd:bg-gray-300">
-                        <td className="border-r">
-                            <Checkbox 
-                                inputId={`cb-${item.id}`}
-                                checked={selectedItems.includes(item.id)}
-                                onChange={() => handleCheckboxChange(item.id)}
-                            />
-                        </td>
                         <td className="border-r">{item.id}</td>
-                        <td className="border-r">{item.Nrrejestracyjny}</td>
-                        <td className="border-r">{item.Marka}</td>
-                        <td className="border-r">{item.Uwagi}</td>
+                        <td className="border-r">{item.numerRejestracyjny}</td>
+                        <td className="border-r">{item.marka}</td>
+                        <td className="border-r">{item.uwagi}</td>
                         <td>
-                            <Button label="Usuń" className="bg-blue-700 text-white p-1 m-0.5" />
+                            <Button onClick={() => handleDelete(item.id)} icon="pi pi-trash" className="p-button-rounded p-button-danger p-button-text p-button-outlined" />
                         </td>
                     </tr>
                 ))}

@@ -5,6 +5,7 @@ const port = 5000;
 const cors = require('cors');
 
 // api importy z folderu api
+// Pracownik
 const ListaPracownikow = require('./api/Pracownik/Pracownik/pracownik.lista');
 const UsunPracownika = require('./api/Pracownik/Pracownik/pracownik.usun');
 const MojeDane = require('./api/Pracownik/Pracownik/pracownik.mojedane');
@@ -13,11 +14,13 @@ const PobierzPracownika = require('./api/Pracownik/Pracownik/pracownik.pobierzpr
 const EdytujPracownika = require('./api/Pracownik/Pracownik/pracownik.edytujpracownika');
 const PobierzLogi = require('./api/Pracownik/pracownik.logowanie');
 
+// Czas > Czas Pracy
 const ZapiszCzasPracy = require('./api/Czas/CzasPracy/czas.czaspracy.zapisz');
 const PobierzCzasPracy = require('./api/Czas/CzasPracy/czas.czaspracy.pobierz');
 const ZamknijTydzien = require('./api/Czas/CzasPracy/czas.czaspracy.zamknij');
 const OtworzTydzien = require('./api/Czas/CzasPracy/czas.czaspracy.otworz');
 
+// Plan Tygodnia
 const PlanTygodniaPlan = require('./api/PlanTygodnia/plantygodnia.plan.planTygodnia');
 const DostepneGrupy = require('./api/Grupy/grupy.dostepnegrupy');
 const DrukujGrupe = require('./api/PlanTygodnia/plantygodnia.plan.drukujGrupe');
@@ -28,6 +31,7 @@ const DodajZaplanuj = require('./api/PlanTygodnia/plantygodnia.zaplanuj.dodajPla
 const GetPlany = require('./api/PlanTygodnia/plantygodnia.zaplanuj.getPlany');
 const UsunPlan = require('./api/PlanTygodnia/plantygodnia.zaplanuj.usunPlan');
 
+// Czas > Projekty
 const GetProjekty = require('./api/Czas/Projekty/czas.projekty.getProjekty');
 const UsunProjekt = require('./api/Czas/Projekty/czas.projekty.usunProjekt');
 const SzukajProjekt = require('./api/Czas/Projekty/czas.projekty.szukajProjekt');
@@ -35,6 +39,11 @@ const PrzeniesAkt = require('./api/Czas/Projekty/czas.projekty.przeniesAkt');
 const PrzeniesNieakt = require('./api/Czas/Projekty/czas.projekty.przeniesNieakt');
 const DodajNowyProjekt = require('./api/Czas/Projekty/czas.projekty.dodajNowy');
 const DodajNowaGrupe = require('./api/Czas/Projekty/czas.projekty.dodajNowaGrupa');
+
+// Czas > Pojazdy
+const PobierzPojazdy = require('./api/Czas/Pojazdy/pojazdy.pobierz');
+const UsunPojazd = require('./api/Czas/Pojazdy/pojazdy.usun');
+const DodajPojazd = require('./api/Czas/Pojazdy/pojazdy.dodaj');
 
 app.use(cors());
 app.use(express.json());
@@ -142,6 +151,20 @@ app.put('/api/czas/przeniesNieakt', (req, res) => {
 });
 app.delete('/api/czas/usun', (req, res) => {
     UsunProjekt(req, res);
+});
+/////////////////////////////////////////
+
+// CZAS > POJAZDY //
+app.route('/api/pojazdy')
+    .get((req, res) => {
+        PobierzPojazdy(req, res);
+    })
+    .post((req, res) => {
+        DodajPojazd(req, res);
+    });
+
+app.delete('/api/pojazdy/:id', (req, res) => {
+    UsunPojazd(req, res);
 });
 /////////////////////////////////////////
 
