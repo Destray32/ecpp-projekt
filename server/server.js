@@ -45,6 +45,11 @@ const PobierzPojazdy = require('./api/Czas/Pojazdy/pojazdy.pobierz');
 const UsunPojazd = require('./api/Czas/Pojazdy/pojazdy.usun');
 const DodajPojazd = require('./api/Czas/Pojazdy/pojazdy.dodaj');
 
+// Ogloszenia
+const PobierzOgloszenia = require('./api/Ogloszenia/ogloszenia.pobierz');
+const DodajOgloszenie = require('./api/Ogloszenia/ogloszenia.dodaj');
+const UsunOgloszenie = require('./api/Ogloszenia/ogloszenia.usun');
+
 app.use(cors());
 app.use(express.json());
 
@@ -165,6 +170,20 @@ app.route('/api/pojazdy')
 
 app.delete('/api/pojazdy/:id', (req, res) => {
     UsunPojazd(req, res);
+});
+/////////////////////////////////////////
+
+// OGLOSZENIA //
+app.route('/api/ogloszenia')
+    .get((req, res) => {
+        PobierzOgloszenia(req, res);
+    })
+    .post((req, res) => {
+        DodajOgloszenie(req, res);
+    });
+
+app.delete('/api/ogloszenia/:id', (req, res) => {
+    UsunOgloszenie(req, res);
 });
 /////////////////////////////////////////
 
