@@ -1,36 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from 'primereact/button';
 import AmberBox from '../../Components/AmberBox';
 import { Checkbox } from 'primereact/checkbox';
+import Axios from 'axios';
 
 export default function TydzienPage() {
     const [selectedWeek, setSelectedWeek] = useState('');
     const [weekRange, setWeekRange] = useState({ start: '', end: '' });
     const [selectedItems, setSelectedItems] = useState([]);
-
-const sampleData = [
-    {
-        id: 1,
-        name: "Marek Zając",
-        grupaurlopowa: "NCC",
-        status1: "Otwarty",
-        status2: "Zamknięty"
-    },
-    {
-        id: 2,
-        name: "Marek Zając",
-        grupaurlopowa: "NCC",
-        status1: "Otwarty",
-        status2: "Zamknięty"
-    },
-    {
-        id: 3,
-        name: "Marek Zając",
-        grupaurlopowa: "NCC",
-        status1: "Otwarty",
-        status2: "Zamknięty"
-    }
-];
+    const [data, setData] = useState([]);
 
     const handleCheckboxChange = (id) => {
         setSelectedItems(prevState =>
@@ -54,6 +32,24 @@ const sampleData = [
         } else {
             setWeekRange({ start: '', end: '' });
         }
+    };
+
+    const handleOtworz = () => {
+        Axios.post('http://localhost:5000/api/tydzien', { 
+            week: selectedWeek
+         })
+            .then(response => console.log(response.data))
+            .catch(error => console.error(error));
+    };
+    const handleZamknij = () => {
+        Axios.delete('http://localhost:5000/api/tydzien', { 
+            data: { id: selectedItems }
+         })
+            .then(response => console.log(response.data))
+            .catch(error => console.error(error));
+    };
+    const handleDrukuj = () => {
+        console.log('Drukuj');
     };
 
     const getStartDateOfWeek = (weekValue) => {
@@ -80,6 +76,16 @@ const sampleData = [
         });
     };
 
+    useEffect(() => {
+        Axios.get('http://localhost:5000/api/tydzien')
+            .then(response => setData(response.data))
+            .catch(error => console.error(error));
+    }, []);
+
+    // useEffect(() => {
+    //     console.log(selectedWeek);
+    // }, [selectedWeek]);
+
     return (
         <div>
             <AmberBox>
@@ -93,9 +99,12 @@ const sampleData = [
                                     {weekRange.start && weekRange.end ? ` ${weekRange.start} - ${weekRange.end}` : 'Wybierz tydzień, aby zobaczyć przedział dni'}
                                 </p>
                             </div>
-                            <Button label="Otwórz tydzień" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 ml-6" />
-                            <Button label="Zamknij tydzień" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 ml-6" />
-                            <Button label="Drukuj" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 ml-6" />
+                            <Button label="Otwórz tydzień" onClick={handleOtworz}
+                            className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 ml-6" />
+                            <Button label="Zamknij tydzień" onClick={handleZamknij}
+                            className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 ml-6" />
+                            <Button label="Drukuj" onClick={handleDrukuj}
+                            className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 ml-6" />
                         </div>
                     </div>
                     
@@ -113,7 +122,7 @@ const sampleData = [
                         </tr>
                     </thead>
                     <tbody className="text-center">
-                        {sampleData.map((item) => (
+                        {data.map((item) => (
                             <tr key={item.id} className="border-b even:bg-gray-200 odd:bg-gray-300">
                                 <td className="border-r">
                                     <Checkbox 

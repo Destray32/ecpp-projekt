@@ -51,6 +51,11 @@ const PobierzPojazdy = require('./api/Czas/Pojazdy/pojazdy.pobierz');
 const UsunPojazd = require('./api/Czas/Pojazdy/pojazdy.usun');
 const DodajPojazd = require('./api/Czas/Pojazdy/pojazdy.dodaj');
 
+// Czas > Tydzien
+const GetTydzien = require('./api/Czas/Tydzien/czas.tydzien.getTydzien');
+const OtworzTydzienCzas = require('./api/Czas/Tydzien/czas.tydzien.otworzTydzien');
+const ZamknijTydzienCzas = require('./api/Czas/Tydzien/czas.tydzien.zamknijTydzien');
+
 // Czas > SprawdzSamochod
 const PobierzSamochody = require('./api/Czas/SprawdzSamochod/sprawdzSamochodz.pobierz');
 
@@ -186,6 +191,19 @@ app.delete('/api/urlopy', (req, res) => {
     UsunUrlop(req, res);
 });
 
+/////////////////////////////////////////
+
+// CZAS > TYDZIEN //
+app.route('/api/tydzien')
+    .get((req, res) => {
+       GetTydzien(req, res);
+    })
+    .post((req, res) => {
+        OtworzTydzienCzas(req, res);
+    })
+    .delete((req, res) => {
+        ZamknijTydzienCzas(req, res);
+    });
 /////////////////////////////////////////
 
 // CZAS > POJAZDY //
