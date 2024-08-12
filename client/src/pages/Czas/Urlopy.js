@@ -5,14 +5,17 @@ import { Button } from 'primereact/button';
 import 'react-calendar/dist/Calendar.css';
 import { InputText } from 'primereact/inputtext';
 import { Checkbox } from 'primereact/checkbox';
-import userEvent from "@testing-library/user-event";
+import Axios from "axios";
 
 export default function UrlopyPage() {
     const [urlopOd, setUrlopOd] = useState(null);
     const [urlopDo, setUrlopDo] = useState(null);
     const [UrlopDla, setUrlopDla] = useState(null);
     const [Status, setStatus] = useState(null);
+    const [statusUpdate, setStatusUpdate] = useState(null);
+    const [komentarz, setKomentarz] = useState('');
     const [selectedItems, setSelectedItems] = useState([]);
+    const [dane, setDane] = useState([]);
 
     const sampleData2 = [
         { id: 1, name: "Zaznacz wszystko" },
@@ -23,32 +26,6 @@ export default function UrlopyPage() {
         { id: 6, name: "Pogab2" },
         { id: 7, name: "Pogab3" },
     ];
-    const sampleData = [
-        {
-            id: 1,
-            name: "Jan Kowalski",
-            urlopOd: "2021-10-01",
-            urlopDo: "2021-10-10",
-            komentarz: "Testowy urlop",
-            status: "Do zatwierdzenia"
-        },
-        {
-            id: 2,
-            name: "Anna Nowak",
-            urlopOd: "2021-10-15",
-            urlopDo: "2021-10-20",
-            komentarz: "Urlop na urlopie",
-            status: "Zatwierdzone"
-        },
-        {
-            id: 3,
-            name: "Marek Zając",
-            urlopOd: "2021-11-01",
-            urlopDo: "2021-11-07",
-            komentarz: "Chorobowe",
-            status: "Anulowane"
-        }
-    ];
 
     const handleCheckboxChange = (id) => {
         setSelectedItems(prevState =>
@@ -58,10 +35,62 @@ export default function UrlopyPage() {
         );
     };
 
+    const handleDodaj = () => {
+        Axios.post("http://localhost:5000/api/urlopy", {
+            imie_nazwisko: UrlopDla,
+            status: Status,
+            urlop_od: urlopOd,
+            urlop_do: urlopDo,
+            komentarz: komentarz,
+        }).then((response) => {
+            console.log(response);
+        });
+
+    };
+    const handleZatwierdz = () => {
+        Axios.put("http://localhost:5000/api/urlopy", {
+            id: selectedItems,
+            status: "Zatwierdzone",
+        }).then((response) => {
+            console.log(response);
+        });
+    };
+    const handleAnuluj = () => {
+        Axios.put("http://localhost:5000/api/urlopy", {
+            id: selectedItems,
+            status: "Anulowane",
+        }).then((response) => {
+            console.log(response);
+        });
+    };
+    const handleSzukaj = () => {
+        console.log("Szukaj");
+    };
+    const handleUsun = (itemId) => {
+        Axios.delete("http://localhost:5000/api/urlopy", {
+            data: {
+                id: itemId,
+            },
+        }).then((response) => {
+            console.log(response);
+        });
+    };
+
+    const handleStatusUpdate = (e) => {
+        setStatusUpdate(e.value);
+    };
+
     // sprawdza stan zaznaczonych checkboxow i ich id
     useEffect(() => { // sprawdz komentarze ponizej
         console.log(selectedItems);
     }, [selectedItems]);
+
+    useEffect(() => {
+        Axios.get("http://localhost:5000/api/urlopy")
+            .then((response) => {
+                setDane(response.data);
+            });
+    }, []);
 
     return (
         <div>
@@ -71,29 +100,29 @@ export default function UrlopyPage() {
                         <div className="w-full flex flex-row items-center p-4">
                             <div className="flex flex-col w-3/12 p-4">
                                 <p className="text-sm text-gray-600 mb-2">Dodaj urlop dla:</p>
-                                <Dropdown 
-                                    value={UrlopDla} 
+                                <Dropdown
+                                    value={UrlopDla}
                                     onChange={(e) => setUrlopDla(e.value)}
-                                    options={["Pawłowski Mateusz"]} 
-                                    editable 
+                                    options={["Pawłowski Mateusz"]}
+                                    editable
                                     placeholder="Pracownik"
                                     autoComplete="off"
-                                    className="p-2" 
-                                    filter 
+                                    className="p-2"
+                                    filter
                                     showClear
                                 />
                             </div>
                             <div className="flex flex-col w-3/12 p-4">
                                 <p className="text-sm text-gray-600 mb-2">Status:</p>
-                                <Dropdown 
-                                    value={Status} 
+                                <Dropdown
+                                    value={Status}
                                     onChange={(e) => setStatus(e.value)}
-                                    options={["Do zatwierdzenia", "Zatwierdzone", "Anulowane"]} 
-                                    editable 
+                                    options={["Do zatwierdzenia", "Zatwierdzone", "Anulowane"]}
+                                    editable
                                     placeholder="Status"
                                     autoComplete="off"
-                                    className="p-2" 
-                                    filter 
+                                    className="p-2"
+                                    filter
                                     showClear
                                 />
                             </div>
@@ -110,8 +139,10 @@ export default function UrlopyPage() {
                         </div>
                     </div>
                     <div className="flex justify-start w-full p-4 ml-4">
-                        <InputText placeholder="Komentarz" className="w-1/3 p-2" />
-                        <Button label="Dodaj" className="p-button-outlined border-2 p-1 ml-2 bg-white" />
+                        <InputText onChange={(e) => setKomentarz(e.target.value)} value={komentarz}
+                            placeholder="Komentarz" className="w-1/3 p-2" />
+                        <Button label="Dodaj" onClick={handleDodaj}
+                            className="p-button-outlined border-2 p-1 ml-2 bg-white" />
                     </div>
                 </div>
             </AmberBox>
@@ -120,26 +151,31 @@ export default function UrlopyPage() {
                 <div className="w-full h-2/5 flex flex-col space-y-2 items-start ">
                     <div className="w-full h-2/6">
                         <div className="w-full flex flex-row items-center p-4">
-                            <Dropdown value={Status} onChange={(e) => setStatus(e.value)} options={["Wszystkie", "Do zatwierdzenia", "Zatwierdzone", "Anulowane"]} editable 
+                            <Dropdown value={Status} onChange={handleStatusUpdate}
+                                options={["Wszystkie", "Do zatwierdzenia", "Zatwierdzone", "Anulowane"]}
+                                editable
                                 placeholder="Filtrowanie"
                                 autoComplete="off"
-                                className="w-3/12 p-2" 
-                                filter 
+                                className="w-3/12 p-2"
+                                filter
                                 showClear
                             />
-                            <Button label="Szukaj" className="p-button-outlined border-2 p-1 bg-white text-black pr-2 pl-2 mr-32" />
+                            <Button label="Szukaj" onClick={handleSzukaj}
+                                className="p-button-outlined border-2 p-1 bg-white text-black pr-2 pl-2 mr-32" />
                             <div>
-                                <Button label="Zatwierdź" className="p-button-outlined border-2 p-1 bg-white text-black pr-2 pl-2 mr-2" />
-                                <Button label="Anuluj" className="p-button-outlined border-2 p-1 bg-white text-black pr-2 pl-2 mr-2" />
+                                <Button label="Zatwierdź" onClick={handleZatwierdz}
+                                    className="p-button-outlined border-2 p-1 bg-white text-black pr-2 pl-2 mr-2" />
+                                <Button label="Anuluj" onClick={handleAnuluj}
+                                    className="p-button-outlined border-2 p-1 bg-white text-black pr-2 pl-2 mr-2" />
                             </div>
-                        </div>  
-                    </div> 
+                        </div>
+                    </div>
                 </div>
                 <div className="flex flex-wrap">
                     {sampleData2.map((item, i) => (
                         <div key={item.id} className="flex items-center mr-4 mb-2">
-                            <Checkbox 
-                                inputId={`czasgrupy-${item.id}`} 
+                            <Checkbox
+                                inputId={`czasgrupy-${item.id}`}
                                 checked={selectedItems.includes(item.id)}
                                 onChange={() => handleCheckboxChange(item.id)}
                             />
@@ -162,13 +198,13 @@ export default function UrlopyPage() {
                         </tr>
                     </thead>
                     <tbody className="text-center">
-                        {sampleData.map((item) => (
+                        {dane.map((item) => (
                             <tr key={item.id} className="border-b even:bg-gray-200 odd:bg-gray-300">
                                 <td className="border-r">
                                     <Checkbox
                                         inputId={`cb-${item.id}`} // możesz to robić w ten sposób, poprzedzając item.id czym więcej.
-                                                                // unikniesz kolizji z innymi id które masz w "selectedItems".
-                                                                // zobacz se konsole i useEffect żeby sprawdzić co sie pojawia po zaznaczaniu
+                                        // unikniesz kolizji z innymi id które masz w "selectedItems".
+                                        // zobacz se konsole i useEffect żeby sprawdzić co sie pojawia po zaznaczaniu
                                         checked={selectedItems.includes(`cb-${item.id}`)}
                                         onChange={() => handleCheckboxChange(`cb-${item.id}`)}
                                     />
@@ -179,7 +215,8 @@ export default function UrlopyPage() {
                                 <td className="border-r">{item.komentarz}</td>
                                 <td className="border-r">{item.status}</td>
                                 <td>
-                                    <Button label="Usuń" className="bg-blue-700 text-white p-1 m-0.5" />
+                                    <Button label="Usuń" onClick={() => handleUsun(`cb-${item.id}`)}
+                                        className="bg-blue-700 text-white p-1 m-0.5" />
                                 </td>
                             </tr>
                         ))}

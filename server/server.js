@@ -36,6 +36,11 @@ const PrzeniesNieakt = require('./api/Czas/Projekty/czas.projekty.przeniesNieakt
 const DodajNowyProjekt = require('./api/Czas/Projekty/czas.projekty.dodajNowy');
 const DodajNowaGrupe = require('./api/Czas/Projekty/czas.projekty.dodajNowaGrupa');
 
+const GetUrlopy = require('./api/Czas/Urlopy/czas.urlopy.getUrlopy');
+const DodajUrlop = require('./api/Czas/Urlopy/czas.urlopy.dodajUrlop');
+const ZatwierdzUrlop = require('./api/Czas/Urlopy/czas.urlopy.zatwierdzUrlop');
+const UsunUrlop = require('./api/Czas/Urlopy/czas.urlopy.usunUrlop');
+
 app.use(cors());
 app.use(express.json());
 
@@ -90,6 +95,7 @@ app.route('/api/czas/otworz')
     });
 /////////////////////////////////////////
 
+// PLAN TYGODNIA "V" > PLAN TYGODNIA //
 app.route('/api/planTygodnia')
     .get((req, res) => {
         if (req.query.previous) {
@@ -108,8 +114,10 @@ app.route('/api/planTygodnia')
 app.get('/api/planTygodnia/drukuj', (req, res) => {
     DrukujGrupe(req, res);
 });
+/////////////////////////////////////////
 
-app.route('/api/plan/zaplanuj')
+// PLAN TYGODNIA "V" > ZAPLANUJ //
+app.route('/api/planTygodnia/zaplanuj')
     .get((req, res) => {
         GetPlany(req, res);
     })
@@ -119,6 +127,7 @@ app.route('/api/plan/zaplanuj')
     .delete((req, res) => {
         UsunPlan(req, res);
     });
+/////////////////////////////////////////
 
 
 // CZAS > PROJEKTY //
@@ -144,6 +153,23 @@ app.delete('/api/czas/usun', (req, res) => {
     UsunProjekt(req, res);
 });
 /////////////////////////////////////////
+
+// CZAS > URLOPY //
+app.get('/api/urlopy', (req, res) => {
+    GetUrlopy(req, res);
+});
+app.post('/api/urlopy', (req, res) => {
+    DodajUrlop(req, res);
+});
+app.put('/api/urlopy', (req, res) => {
+    ZatwierdzUrlop(req, res);
+});
+app.delete('/api/urlopy', (req, res) => {
+    UsunUrlop(req, res);
+});
+
+/////////////////////////////////////////
+
 
 // pobieranie grup z bazy danych
 app.get('/api/grupy', (req, res) => {

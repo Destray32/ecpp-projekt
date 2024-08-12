@@ -10,8 +10,8 @@ const sampleData = [
         opis: "Irure aliquip anim eu et esse officia fugiat anim esse sunt magna."
     },
     {
-        dataOd: "21.08.2024",
-        dataDo: "28.08.2024",
+        dataOd: "12.08.2024",
+        dataDo: "19.08.2024",
         naziwsko: "Kowalski",
         imie: "Jan",
         firma: "Firma1",
