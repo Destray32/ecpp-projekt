@@ -4,7 +4,9 @@ import axios from "axios";
 export default function LogowaniePage() {
     const [logData, setLogData] = useState([]);
 
+
     useEffect(() => {
+
         axios.get("http://localhost:5000/api/logi")
             .then((response) => {
                 setLogData(response.data);
@@ -24,10 +26,8 @@ export default function LogowaniePage() {
                             <tr>
                                 <th className="border-r">Imię</th>
                                 <th className="border-r">Naziwsko</th>
-                                <th className="border-r">Komputer</th>
-                                <th className="border-r">Wersja</th>
                                 <th className="border-r">Data</th>
-                                <th className="border-r">Czas</th>
+                                <th className="border-r">Szczegoły</th>
                             </tr>
                         </thead>
                         <tbody className="text-center">
@@ -35,10 +35,8 @@ export default function LogowaniePage() {
                                 <tr key={i} className="border-b even:bg-gray-200 odd:bg-gray-300">
                                     <td className="border-r">{item.name}</td>
                                     <td className="border-r">{item.surname}</td>
-                                    <td className="border-r">{item.computer}</td>
-                                    <td className="border-r">{item.version}</td>
                                     <td className="border-r">{item.date}</td>
-                                    <td className="border-r">{item.time}</td>
+                                    <td className="border-r">{item.komentarz}</td>
                                 </tr>
                             ))}
                         </tbody>

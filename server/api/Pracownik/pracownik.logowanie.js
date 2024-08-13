@@ -1,70 +1,27 @@
-function PobierzLogi(req, res, next) {
-    res.json([
-        {
-            name: "Jan",
-            surname: "Kowalski",
-            computer: "DEKSTOP-43261F",
-            version: "1.0.0",
-            date: "2021-09-01",
-            time: "12:00:00",
-        },
-        {
-            name: "Anna",
-            surname: "Nowak",
-            computer: "DEKSTOP-43261F",
-            version: "1.0.0",
-            date: "2021-09-01",
-            time: "12:00:00",
-        },
-        {
-            name: "Maria",
-            surname: "Kowalska",
-            computer: "DEKSTOP-43261F",
-            version: "1.0.0",
-            date: "2021-09-01",
-            time: "12:00:00",
-        },
-        {
-            name: "Janusz",
-            surname: "Kowalski",
-            computer: "DEKSTOP-43261F",
-            version: "1.0.0",
-            date: "2021-09-01",
-            time: "12:00:00",
-        },
-        {
-            name: "Jan",
-            surname: "Kowalski",
-            computer: "DEKSTOP-43261F",
-            version: "1.0.0",
-            date: "2021-09-01",
-            time: "12:00:00",
-        },
-        {
-            name: "Ewa",
-            surname: "Nowak",
-            computer: "DEKSTOP-43261F",
-            version: "1.0.0",
-            date: "2021-09-01",
-            time: "12:00:00",
-        },
-        {
-            name: "Piotr",
-            surname: "Zalewski",
-            computer: "DEKSTOP-43261F",
-            version: "1.0.0",
-            date: "2021-09-01",
-            time: "12:00:00",
-        },
-        {
-            name: "Katarzyna",
-            surname: "Wiśniewska",
-            computer: "DEKSTOP-43261F",
-            version: "1.0.0",
-            date: "2021-09-01",
-            time: "12:00:00",
+
+function PobierzLogi(req, res, db) {
+    db.query('SELECT * FROM logi ORDER BY Data DESC', (err, rows) => {
+        if (err) {
+            console.log(err);
+            res.status(500).send('Błąd serwera');
+        } else if (rows.length === 0) {
+            res.status(404).send('Brak danych');
+        } else {
+            const formattedRows = rows.map(row => {
+                const date = new Date(row.Data);
+                const formattedDate = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+                const formattedTime = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}`;
+                return {
+                    idLogi: row.idLogi,
+                    name: row.imie_pracownika,
+                    surname: row.nazwisko_pracownika,
+                    date: `${formattedDate} ${formattedTime}`,
+                    komentarz: row.Komentarz
+                };
+            });
+            res.status(200).send(formattedRows);
         }
-    ]);
+    });
 }
 
 module.exports = PobierzLogi;
