@@ -20,6 +20,8 @@ db.connect((err) => {
     }
 });
 
+module.exports = db;
+
 // api importy z folderu api
 // Pracownik
 const ListaPracownikow = require('./api/Pracownik/Pracownik/pracownik.lista');
@@ -83,6 +85,8 @@ const GenerujRaport = require('./api/Czas/Raporty/raporty.generuj');
 const PobierzOgloszenia = require('./api/Ogloszenia/ogloszenia.pobierz');
 const DodajOgloszenie = require('./api/Ogloszenia/ogloszenia.dodaj');
 const UsunOgloszenie = require('./api/Ogloszenia/ogloszenia.usun');
+const PobierzOgloszeniaPracownicy = require('./api/Ogloszenia/ogloszenia.pobierzPracownikow');
+const PobierzOgloszeniaGrupy = require('./api/Ogloszenia/ogloszenia.pobierzGrupy');
 
 app.use(cors());
 app.use(express.json());
@@ -260,10 +264,19 @@ app.get('/api/generujRaport', (req, res) => {
 app.route('/api/ogloszenia')
     .get((req, res) => {
         PobierzOgloszenia(req, res);
+        
     })
     .post((req, res) => {
         DodajOgloszenie(req, res);
     });
+
+app.get('/api/ogloszenia/pracownicy', (req, res) => {
+    PobierzOgloszeniaPracownicy(req, res);
+});
+
+app.get('/api/ogloszenia/grupy', (req, res) => {
+    PobierzOgloszeniaGrupy(req, res);
+});
 
 app.delete('/api/ogloszenia/:id', (req, res) => {
     UsunOgloszenie(req, res);
