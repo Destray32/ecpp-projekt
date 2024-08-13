@@ -248,14 +248,14 @@ app.route('/api/tydzien')
 // CZAS > POJAZDY //
 app.route('/api/pojazdy')
     .get((req, res) => {
-        PobierzPojazdy(req, res);
+        PobierzPojazdy(req, res, db);
     })
     .post((req, res) => {
-        DodajPojazd(req, res);
+        DodajPojazd(req, res, db);
     });
 
 app.delete('/api/pojazdy/:id', (req, res) => {
-    UsunPojazd(req, res);
+    UsunPojazd(req, res, db);
 });
 /////////////////////////////////////////
 

@@ -1,25 +1,22 @@
-function PobierzPojazdy(req, res) {
-    res.json({
-        pojazdy: [
-            {
-                id: 1,
-                numerRejestracyjny: "BJO042",
-                marka: "Volvo",
-                uwagi: "Brak",
-            },
-            {
-                id: 2,
-                numerRejestracyjny: "BJO042",
-                marka: "Volvo",
-                uwagi: "Brak",
-            },
-            {
-                id: 3,
-                numerRejestracyjny: "BJO042",
-                marka: "Volvo",
-                uwagi: "Brak",
-            }
-        ]
+
+function PobierzPojazdy(req, res, db) {
+    const sql = 'SELECT * FROM pojazdy';
+
+    db.query(sql, (err, result) => {
+        if (err) {
+            console.log(err);
+            res.status(400).send('Błąd pobierania pojazdów');
+        } else {
+            const formattedRows = result.map(row => {
+                return {
+                    id: row.Nr_Pojazdu,
+                    numerRejestracyjny: row.Nr_rejestracyjny,
+                    marka: row.Marka,
+                    uwagi: row.Uwagi
+                };
+            });
+            res.status(200).send({ pojazdy: formattedRows });
+        }
     });
 }
 

@@ -16,7 +16,7 @@ export default function PojazdyPage() {
     const handleDelete = (id) => {
         axios.delete(`http://localhost:5000/api/pojazdy/${id}`).then((response) => {
             console.log(response);
-            setTableData(tableData.filter((item) => item.id !== id));
+            window.location.reload();
         });
     }
 
@@ -44,12 +44,12 @@ export default function PojazdyPage() {
                 </tr>
             </thead>
             <tbody className="text-center">
-                {tableData.map((item) => (
+                {tableData && tableData.map((item) => (
                     <tr key={item.id} className="border-b even:bg-gray-200 odd:bg-gray-300">
                         <td className="border-r">{item.id}</td>
                         <td className="border-r">{item.numerRejestracyjny}</td>
                         <td className="border-r">{item.marka}</td>
-                        <td className="border-r">{item.uwagi}</td>
+                        <td className="border-r">{(item.uwagi === "" ? "Brak" : item.uwagi)}</td>
                         <td>
                             <Button onClick={() => handleDelete(item.id)} icon="pi pi-trash" className="p-button-rounded p-button-danger p-button-text p-button-outlined" />
                         </td>
