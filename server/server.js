@@ -3,6 +3,22 @@ const app = express();
 app.use(express.json());
 const port = 5000;
 const cors = require('cors');
+const mysql = require('mysql2');
+
+const db = mysql.createConnection({
+    host: 'localhost',
+    user: 'root',
+    password: '',
+    database: 'mydb'
+});
+
+db.connect((err) => {
+    if (err) {
+        console.log(err);
+    } else {
+        console.log('Connected to MySQL');
+    }
+});
 
 // api importy z folderu api
 // Pracownik
