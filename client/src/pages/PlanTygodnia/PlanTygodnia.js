@@ -32,7 +32,7 @@ export default function PlanTygodniaPage() {
         const doc = new jsPDF();
 
         doc.setFont("OpenSans-Regular", "normal");
-        
+
         const columns = [
             { header: "Nazwisko", dataKey: "data" },
             { header: "Imię", dataKey: "dane" },
@@ -45,7 +45,7 @@ export default function PlanTygodniaPage() {
             { header: "Opis", dataKey: "opis" }
 
         ];
-        
+
         const rows = pracownikData.map(item => ({
             data: item.surname,
             dane: item.name,
@@ -57,7 +57,7 @@ export default function PlanTygodniaPage() {
             m5: item.M5,
             opis: item.description
         }));
-    
+
         doc.autoTable({
             head: [columns.map(col => col.header)],
             body: rows.map(row => columns.map(col => row[col.dataKey])),
@@ -72,7 +72,7 @@ export default function PlanTygodniaPage() {
                 fontStyle: "bold"
             }
         });
-    
+
         doc.text("Grupa", 14, 10);
         doc.save("drukuj-grupe.pdf");
     };
@@ -129,6 +129,7 @@ export default function PlanTygodniaPage() {
             .catch(err => console.error(err));
     }
 
+    // obsługa przyciusku przeniesienia zaznaczonych pracowników do innej grupy
     const handlePrzeniesZaznaczone = () => {
         console.log(selectedRowIds);
         console.log(grupaPrzenies);
@@ -151,6 +152,18 @@ export default function PlanTygodniaPage() {
                 setPracownikData(res.data);
             })
             .catch(err => console.error(err));
+    }
+
+    // obsługa zmiany grupy w dropdownie
+    const handleChangeGroupFilter = (e) => {
+        setGroup(e.value);
+
+        Axios.get(`http://localhost:5000/api/planTygodnia?group=${e.value.name}`)
+            .then(res => {
+                setPracownikData(res.data);
+            })
+            .catch(err => console.error(err));
+
     }
 
     useEffect(() => {
@@ -286,7 +299,7 @@ export default function PlanTygodniaPage() {
                             </div>
                             <div>
                                 <span>Grupa</span>
-                                <Dropdown value={group} onChange={(e) => setGroup(e.value)}
+                                <Dropdown value={group} onChange={handleChangeGroupFilter}
                                     options={availableGroups} optionLabel="name"
                                     editable placeholder="" autoComplete='off'
                                     className="ml-4 md:w-14rem p-4" />

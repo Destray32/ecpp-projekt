@@ -7,6 +7,8 @@ import { Dropdown } from 'primereact/dropdown';
 export default function RaportyPage() {
     const [Projekt, setProjekt] = React.useState(null);
     const [ignoreDates, setIgnoreDates] = React.useState(false);
+    const [showRaportyFirma, setShowRaportyFirma] = React.useState(false);
+    const [showRaportyPracownik, setShowRaportyPracownik] = React.useState(false);
 
     const projektyOptions = [
         { label: 'A O Tobiasson-22043', value: 'A O Tobiasson-22043' },
@@ -62,25 +64,27 @@ export default function RaportyPage() {
             <div className="w-full md:w-auto bg-gray-300 h-full m-2 outline outline-1 outline-gray-500">
                 <table className="w-full">
                     <tbody className="text-left">
-                        <tr className="border-b even:bg-gray-200 odd:bg-gray-300">
+                        <tr className="border-b even:bg-gray-200 odd:bg-gray-300" 
+                        onClick={() => setShowRaportyFirma(!showRaportyFirma)}>
                             <th className="border-r">Raporty dla firmy</th>
                         </tr>
-                        <tr className="border-b even:bg-gray-200 odd:bg-gray-300">
+                        <tr className={`border-b even:bg-gray-200 odd:bg-gray-300 ${showRaportyFirma ? "" : "hidden"}`}>
                             <td className="border-r">Sprawozdanie z działalności - szczegółowe</td>
                         </tr>
-                        <tr className="border-b even:bg-gray-200 odd:bg-gray-300">
+                        <tr className={`border-b even:bg-gray-200 odd:bg-gray-300 ${showRaportyFirma ? "" : "hidden"}`}>
                             <td className="border-r">Sprawozdanie z działalności - podsumowanie</td>
                         </tr>
-                        <tr className="border-b even:bg-gray-200 odd:bg-gray-300">
+                        <tr className="border-b even:bg-gray-200 odd:bg-gray-300" 
+                        onClick={() => setShowRaportyPracownik(!showRaportyPracownik)}>
                             <th className="border-r">Raporty dla pracownika</th>
                         </tr>
-                        <tr className="border-b even:bg-gray-200 odd:bg-gray-300">
+                        <tr className={`border-b even:bg-gray-200 odd:bg-gray-300 ${showRaportyPracownik ? "" : "hidden"}`}>
                             <td className="border-r">Analiza świadczeń pracowniczych</td>
                         </tr>
-                        <tr className="border-b even:bg-gray-200 odd:bg-gray-300">
+                        <tr className={`border-b even:bg-gray-200 odd:bg-gray-300 ${showRaportyPracownik ? "" : "hidden"}`}>
                             <td className="border-r">Pracownik Analiza czasu - działalność</td>
                         </tr>
-                        <tr className="border-b even:bg-gray-200 odd:bg-gray-300">
+                        <tr className={`border-b even:bg-gray-200 odd:bg-gray-300 ${showRaportyPracownik ? "" : "hidden"}`}>
                             <td className="border-r">Ewidencja czasu pracy</td>
                         </tr>
                     </tbody>
