@@ -133,7 +133,7 @@ app.get('/api/mojedane', (req, res) => {
 /////////////////////////////////////////
 
 app.get('/api/logi', (req, res) => {
-    PobierzLogi(req, res);
+    PobierzLogi(req, res, db);
 }
 );
 
