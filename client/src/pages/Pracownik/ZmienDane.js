@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Form, DatePicker, Input, Checkbox, Radio, Select, ConfigProvider, Button } from 'antd';
 import plPL from 'antd/lib/locale/pl_PL';
@@ -9,6 +9,7 @@ import DaneBox from '../../Components/DaneBox';
 
 export default function ZmienDanePage() {
     const [form] = Form.useForm();
+    const [firma, setFirma] = useState([]);
 
     useEffect(() => {
         axios.get('http://localhost:5000/api/mojedane')
@@ -41,6 +42,15 @@ export default function ZmienDanePage() {
                     newPassword: res.data.newPassword,
                     confirmPassword: res.data.confirmPassword,
                 });
+            })
+            .catch(err => {
+                console.log(err);
+            });
+
+        axios.get('http://localhost:5000/api/pracownik/firmy')
+            .then(res => {
+                setFirma(res.data);
+                console.log(res.data);
             })
             .catch(err => {
                 console.log(err);
@@ -103,6 +113,13 @@ export default function ZmienDanePage() {
                                 </Form.Item>
                             </div>
                             <div className="flex flex-col">
+                                <Form.Item label="Firma" name="company" rules={[{ required: true, message: 'Wybierz firmę' }]}>
+                                    <Select>
+                                        {firma.map(f => (
+                                            <Select.Option key={f.idFirma} value={f.idFirma}>{f.Nazwa_firmy}</Select.Option>
+                                        ))}
+                                    </Select>
+                                </Form.Item>
                                 <Form.Item label="Telefon w Polsce" name="phone1" rules={[{ required: true, message: 'Wprowadź telefon' }]}>
                                     <Input />
                                 </Form.Item>
@@ -140,6 +157,13 @@ export default function ZmienDanePage() {
                                             <Select.Option value="1">Samochód</Select.Option>
                                             <Select.Option value="2">Motocykl</Select.Option>
                                             <Select.Option value="3">Rower</Select.Option>
+                                        </Select>
+                                    </Form.Item>
+                                    <Form.Item label="Grupa urlopowa" name="vacationGroup">
+                                        <Select>
+                                            <Select.Option value="1">Grupa 1</Select.Option>
+                                            <Select.Option value="2">Grupa 2</Select.Option>
+                                            <Select.Option value="3">Grupa 3</Select.Option>
                                         </Select>
                                     </Form.Item>
                                     <Form.Item label="Plan tygodnia 'V'?" name="weeklyPlan" valuePropName="checked">

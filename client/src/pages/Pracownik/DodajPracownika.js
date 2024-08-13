@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Form, DatePicker, Input, Checkbox, Radio, Select, ConfigProvider, Button } from 'antd';
 import plPL from 'antd/lib/locale/pl_PL';
@@ -8,9 +8,39 @@ import DaneBox from '../../Components/DaneBox';
 
 export default function DodajPracownikaPage() {
     const [form] = Form.useForm();
+    const [firma, setFirma] = useState([]);
+    const [grupa, setGrupa] = useState([]);
+    const [pojazd, setPojazd] = useState([]);
+
+    useEffect(() => {
+        axios.get('http://localhost:5000/api/pracownik/firmy')
+            .then(res => {
+                setFirma(res.data);
+            })
+            .catch(err => {
+                console.log(err);
+            });
+
+        axios.get('http://localhost:5000/api/pracownik/grupy')
+            .then(res => {
+                setGrupa(res.data);
+            })
+            .catch(err => {
+                console.log(err);
+            });
+
+        axios.get('http://localhost:5000/api/pracownik/pojazdy')
+            .then(res => {
+                setPojazd(res.data);
+            })
+            .catch(err => {
+                console.log(err);
+            });
+    }, []);
 
     const handleSubmit = (values) => {
-        axios.post('http://localhost:5000/api/addEmployee', values)
+        console.log(values);
+        axios.post('http://localhost:5000/api/pracownicy', values)
             .then(res => {
                 console.log(res);
             })
@@ -71,6 +101,13 @@ export default function DodajPracownikaPage() {
                                 </Form.Item>
                             </div>
                             <div className="flex flex-col">
+                                <Form.Item label="Firma" name="company" rules={[{ required: true, message: 'Wybierz firmę' }]}>
+                                    <Select>
+                                        {firma.map(f => (
+                                            <Select.Option key={f.idFirma} value={f.idFirma}>{f.Nazwa_firmy}</Select.Option>
+                                        ))}
+                                    </Select>
+                                </Form.Item>
                                 <Form.Item label="Telefon w Polsce" name="phone1" rules={[{ required: true, message: 'Wprowadź telefon' }]}>
                                     <Input />
                                 </Form.Item>
@@ -105,9 +142,16 @@ export default function DodajPracownikaPage() {
                                 <div className="flex flex-col">
                                     <Form.Item label="Pojazd" name="vehicle">
                                         <Select>
-                                            <Select.Option value="1">Samochód</Select.Option>
-                                            <Select.Option value="2">Motocykl</Select.Option>
-                                            <Select.Option value="3">Rower</Select.Option>
+                                            {pojazd.map(p => (
+                                                <Select.Option key={p.idPojazdy} value={p.idPojazdy}>{p.Marka}</Select.Option>
+                                            ))}
+                                        </Select>
+                                    </Form.Item>
+                                    <Form.Item label="Grupa urlopowa" name="vacationGroup" rules={[{ required: true, message: 'Wybierz grupę urlopową' }]}>
+                                        <Select>
+                                            {grupa.map(g => (
+                                            <Select.Option key={g.idGrupa_urlopowa} value={g.idGrupa_urlopowa}>{g.Grupa_urlopowacol}</Select.Option>
+                                            ))}
                                         </Select>
                                     </Form.Item>
                                     <Form.Item label="Plan tygodnia 'V'?" name="weeklyPlan" valuePropName="checked">
