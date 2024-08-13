@@ -59,6 +59,10 @@ const ZamknijTydzienCzas = require('./api/Czas/Tydzien/czas.tydzien.zamknijTydzi
 // Czas > SprawdzSamochod
 const PobierzSamochody = require('./api/Czas/SprawdzSamochod/sprawdzSamochodz.pobierz');
 
+// Czas > Raporty
+const PobierzRaporty = require('./api/Czas/Raporty/raporty.pobierz');
+const GenerujRaport = require('./api/Czas/Raporty/raporty.generuj');
+
 // Ogloszenia
 const PobierzOgloszenia = require('./api/Ogloszenia/ogloszenia.pobierz');
 const DodajOgloszenie = require('./api/Ogloszenia/ogloszenia.dodaj');
@@ -223,6 +227,16 @@ app.delete('/api/pojazdy/:id', (req, res) => {
 // CZAS > SPRAWDZ SAMOCHOD //
 app.get('/api/samochody', (req, res) => {
     PobierzSamochody(req, res);
+});
+/////////////////////////////////////////
+
+// CZAS > RAPORTY //
+app.get('/api/raporty', (req, res) => {
+    PobierzRaporty(req, res);
+});
+
+app.get('/api/generujRaport', (req, res) => {
+    GenerujRaport(req, res);
 });
 /////////////////////////////////////////
 

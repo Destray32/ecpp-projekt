@@ -1,19 +1,52 @@
-import React from "react";
+import React, { useEffect } from "react";
 import AmberBox from "../../Components/AmberBox";
 import { Button } from 'primereact/button';
-import { Checkbox } from 'primereact/checkbox';
 import { Dropdown } from 'primereact/dropdown';
+import axios from "axios";
 
 export default function RaportyPage() {
+    const [startDate, setStartDate] = React.useState('');
+    const [endDate, setEndDate] = React.useState('');
     const [Projekt, setProjekt] = React.useState(null);
-    const [ignoreDates, setIgnoreDates] = React.useState(false);
+    const [projektyOptions, setProjektyOptions] = React.useState([]);
     const [showRaportyFirma, setShowRaportyFirma] = React.useState(false);
     const [showRaportyPracownik, setShowRaportyPracownik] = React.useState(false);
 
-    const projektyOptions = [
-        { label: 'A O Tobiasson-22043', value: 'A O Tobiasson-22043' },
-        // Add other project options here
-    ];
+    useEffect(() => {
+        axios.get('http://localhost:5000/api/raporty')
+            .then((response) => {
+                const projekty = response.data;
+                const projektyOptions = projekty.map(projekt => ({ label: projekt.nazwa, value: projekt.id }));
+                setProjektyOptions(projektyOptions);
+            })
+            .catch((error) => {
+                console.log(error);
+            });
+    }, []);
+
+    const handleGenerateReport = () => {
+        if (!Projekt) {
+            alert("Nie wybrano projektu.");
+            return;
+        }
+
+        const userId = [1];
+
+        const params = {
+            user: userId,
+            projectId: Projekt,
+            startDate,
+            endDate,
+        };
+
+        axios.get('http://localhost:5000/api/generujRaport', { params })
+        .then((response) => {
+            console.log(response.data);
+        })
+        .catch((error) => {
+            console.log(error);
+        });
+    };
 
     return (
         <div>
@@ -21,41 +54,12 @@ export default function RaportyPage() {
                 <p>Opcje</p>
             </div>
             <AmberBox>
-                <div className="flex flex-col items-center space-y-8 p-4 w-full">
+                <div className="flex flex-row items-center justify-center space-x-4 w-full">
                     <p>Wybierz okres raportowania</p>
-                    <div className="flex flex-row space-x-4">
-                        <input type="date" className="p-1" disabled={ignoreDates} />
-                        <input type="date" className="p-1" disabled={ignoreDates} />
-                    </div>
-                    <div className="flex flex-row items-center mt-4">
-                        <Checkbox
-                            inputId="ignoreDates"
-                            checked={ignoreDates}
-                            onChange={(e) => setIgnoreDates(e.checked)}
-                            className="mr-2 ml-2"
-                        />
-                        <label htmlFor="ignoreDates">Ignoruj Daty</label>
-                    </div>
-                    <div className="mt-4 w-full flex justify-center">
-                        <div className="w-2/4">
-                            <p>Projekty</p>
-                            <Dropdown 
-                                value={Projekt} 
-                                options={projektyOptions} 
-                                onChange={(e) => setProjekt(e.value)} 
-                                placeholder="Wybierz projekt"
-                                className="w-full p-2" 
-                            />
-                        </div>
-                    </div>
-                    <div className="flex space-x-4 mt-8">
-                        <Button className="p-button-outlined border-2 p-3 bg-white text-black pr-4 pl-4">
-                            Generuj raport
-                        </Button>
-                        <Button className="p-button-outlined border-2 p-3 bg-white text-black pr-4 pl-4">
-                            Anuluj
-                        </Button>
-                    </div>
+                    <input type="date" className="p-2.5 rounded" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                    <input type="date" className="p-2.5 rounded" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                    <Dropdown value={Projekt} options={projektyOptions} onChange={(e) => setProjekt(e.value)} showClear placeholder="Wybierz projekt" />
+                    <Button onClick={handleGenerateReport} label="Generuj raport" className="p-button-outlined border-2 p-2.5 bg-white text-black" />
                 </div>
             </AmberBox>
             <div className="w-auto h-auto bg-blue-700 outline outline-1 outline-black flex flex-row items-center space-x-4 m-2 p-3 text-white">
