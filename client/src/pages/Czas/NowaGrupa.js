@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from "react";
+import React, { useState } from "react";
 import AmberBox from "../../Components/AmberBox";
 import { InputText } from 'primereact/inputtext';
 import { FloatLabel } from 'primereact/floatlabel';
@@ -7,22 +7,22 @@ import { Checkbox } from 'primereact/checkbox';
 import Axios from "axios";
 
 export default function NowaGrupaPage() {
-    const [planTygV, setPlanTygV] = React.useState(false);
-    const [form, setForm] = React.useState({
+    const [planTygV, setPlanTygV] = useState(false);
+    const [form, setForm] = useState({
         zleceniodawca: '',
         cennik: '',
         stawka: '',
-        czyPlanTygV: planTygV
+        czyPlanTygV: 0 // Domyślnie `0` dla `TINYINT`
     });
 
     const handleSave = () => {
-        console.log('Saving data...');
+        console.log('Saving data...', form);
 
         Axios.post('http://localhost:5000/api/czas/grupa', {
             zleceniodawca: form.zleceniodawca,
             cennik: form.cennik,
             stawka: form.stawka,
-            czyPlanTygV: planTygV
+            czyPlanTygV: form.czyPlanTygV // Wysyłamy aktualną wartość
         })
             .then(res => {
                 console.log(res.data);
@@ -37,18 +37,21 @@ export default function NowaGrupaPage() {
     };
 
     const handleZleceniodawca = (e) => {
-        setForm({ ...form, zleceniodawca: e.target.value });
+        setForm(prev => ({ ...prev, zleceniodawca: e.target.value }));
     }
+
     const handleCennik = (e) => {
-        setForm({ ...form, cennik: e.target.value });
+        setForm(prev => ({ ...prev, cennik: e.target.value }));
     }
+
     const handleStawka = (e) => {
-        setForm({ ...form, stawka: e.target.value });
+        setForm(prev => ({ ...prev, stawka: e.target.value }));
     }
+
     const handlePlanTygV = (e) => {
         const checked = e.checked;
         setPlanTygV(checked);
-        setForm({ ...form, czyPlanTygV: checked });
+        setForm(prev => ({ ...prev, czyPlanTygV: checked ? 1 : 0 }));
     }
 
     return (
@@ -73,8 +76,9 @@ export default function NowaGrupaPage() {
                         <label htmlFor="stawka">Stawka/km</label>
                     </FloatLabel>
 
-                    <label htmlFor="stawka">Plan tygodnia "V"?
-                    <Checkbox inputId="PlanTygV" className="mr-2 ml-2" checked={planTygV} onChange={handlePlanTygV} />
+                    <label htmlFor="planTygV">
+                        Plan tygodnia "V"?
+                        <Checkbox inputId="PlanTygV" className="mr-2 ml-2" checked={planTygV} onChange={handlePlanTygV} />
                     </label>
                     
                     <div className="flex space-x-4 mt-8">

@@ -23,6 +23,8 @@ db.connect((err) => {
 module.exports = db;
 
 // api importy z folderu api
+// Grupy
+const UsuwanieGrupy = require('./api/Grupy/grupy.usuwaniegrupy');
 // Pracownik
 const ListaPracownikow = require('./api/Pracownik/Pracownik/pracownik.lista');
 const UsunPracownika = require('./api/Pracownik/Pracownik/pracownik.usun');
@@ -194,25 +196,25 @@ app.route('/api/planTygodnia/zaplanuj')
 
 // CZAS > PROJEKTY //
 app.get('/api/czas/projekty', (req, res) => {
-    GetProjekty(req, res);
+    GetProjekty(req, res, db);
 });
 app.post('/api/czas/projekty', (req, res) => {
-    DodajNowyProjekt(req, res);
+    DodajNowyProjekt(req, res, db);
 });
 app.post('/api/czas/grupa', (req, res) => {
-    DodajNowaGrupe(req, res);
+    DodajNowaGrupe(req, res, db);
 });
 app.get('/api/czas/szukaj', (req, res) => {
-    SzukajProjekt(req, res);
+    SzukajProjekt(req, res, db);
 });
 app.put('/api/czas/przeniesAkt', (req, res) => {
-    PrzeniesAkt(req, res);
+    PrzeniesAkt(req, res, db);
 });
 app.put('/api/czas/przeniesNieakt', (req, res) => {
-    PrzeniesNieakt(req, res);
+    PrzeniesNieakt(req, res, db);
 });
 app.delete('/api/czas/usun', (req, res) => {
-    UsunProjekt(req, res);
+    UsunProjekt(req, res, db);
 });
 /////////////////////////////////////////
 
@@ -300,7 +302,11 @@ app.delete('/api/ogloszenia/:id', (req, res) => {
 
 // pobieranie grup z bazy danych
 app.get('/api/grupy', (req, res) => {
-    DostepneGrupy(req, res);
+    DostepneGrupy(req, res, db);
+});
+
+app.delete('/api/grupy/:id', (req, res) => {
+    UsuwanieGrupy(req, res, db);
 });
 
 app.listen(port, () => {

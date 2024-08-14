@@ -8,10 +8,9 @@ import { Checkbox } from 'primereact/checkbox';
 import Axios from "axios";
 
 export default function ProjektyPage() {
-    const [Filtr, setFiltr] = useState(null);
+    const [filtr, setFiltr] = useState('');
+    const [status, setStatus] = useState('');
     const [selectedItems, setSelectedItems] = React.useState([]);
-    const [selectedItemsNr, setSelectedItemsNr] = React.useState([]);
-    const [availableGroups, setAvailableGroups] = useState([]);
     const [data, setData] = useState([]);
 
     const handleCheckboxChange = (id) => {
@@ -23,13 +22,14 @@ export default function ProjektyPage() {
     };
 
     useEffect(() => {
-        console.log(selectedItems);
-    }, [selectedItems]);
+        fetchProjects();
+    }, []);
 
     const handleDelete = (id) => {
         Axios.delete(`http://localhost:5000/api/czas/usun?id=${id}`)
             .then((response) => {
                 console.log(response.data);
+                window.location.reload();
             })
             .catch((error) => {
                 console.error(error);
@@ -37,7 +37,7 @@ export default function ProjektyPage() {
     };
 
     const handleSzukaj = () => {
-        Axios.get(`http://localhost:5000/api/czas/szukaj?group=${Filtr}`)
+        Axios.get(`http://localhost:5000/api/czas/szukaj?group=${filtr}`)
             .then((response) => {
                 console.log(response.data);
             })
@@ -52,6 +52,7 @@ export default function ProjektyPage() {
         })
             .then((response) => {
                 console.log(response.data);
+                fetchProjects();
             })
             .catch((error) => {
                 console.error(error);
@@ -64,6 +65,7 @@ export default function ProjektyPage() {
         })
             .then((response) => {
                 console.log(response.data);
+                fetchProjects();
             })
             .catch((error) => {
                 console.error(error);
@@ -78,26 +80,16 @@ export default function ProjektyPage() {
 
     };
 
-    useEffect(() => {
-        // pobieranie danych o projektach z serwera
+    const fetchProjects = () => {
         Axios.get("http://localhost:5000/api/czas/projekty")
             .then((response) => {
-                setData(response.data);
+                setData(response.data.projekty);
             })
             .catch((error) => {
                 console.error(error);
             });
+    };
 
-        // pobieranie dostępnych grup z serwera
-        Axios.get("http://localhost:5000/api/grupy")
-            .then((response) => {
-                const groupNames = response.data.map(group => group.name);
-                setAvailableGroups(groupNames);
-                }) 
-            .catch((error) => {
-                console.error(error);
-            });
-    }, []);
 
     return (
         <div>
@@ -106,7 +98,7 @@ export default function ProjektyPage() {
                     <div className="w-full h-2/6">
                         <div className="w-full flex flex-row items-center p-4">
                             <p className="mr-6">Filtr</p>
-                            <Dropdown value={Filtr} onChange={(e) => setFiltr(e.value)} options={availableGroups} editable placeholder="Filtrowanie"
+                            <Dropdown value={filtr} onChange={(e) => setFiltr(e.value)} options={["Aktywny","Nieaktywny","Wszystkie"]} editable placeholder="Filtrowanie"
                                 autoComplete="off"
                                 className="w-3/12 p-2"
                                 filter
@@ -134,34 +126,38 @@ export default function ProjektyPage() {
                         <tr>
                             <th></th>
                             <th className="border-r">Nr</th>
-                            <th className="border-r">Nazwa projektu</th>
-                            <th className="border-r">Kod projektu</th>
+                            <th className="border-r">Nazwa/Kod Projektu</th>
                             <th className="border-r">Status projektu</th>
                             <th></th>
                         </tr>
                     </thead>
                     <tbody className="text-center">
-                        {data.map((item) => (
-                            <tr key={item.id} className="border-b even:bg-gray-200 odd:bg-gray-300">
+                        {data.map((projekty, index) => {
+                            const statusClass = projekty.Status === 'Aktywny'
+                            ? 'text-green-500'
+                            : 'text-red-500';
+
+                            return (
+                            <tr key={projekty.id} className="border-b even:bg-gray-200 odd:bg-gray-300">
                                 <td className="border-r">
                                     <Checkbox
-                                        inputId={`cb-${item.id}`}
-                                        checked={selectedItems.includes(item.id)}
-                                        onChange={() => handleCheckboxChange(item.id)}
+                                        inputId={`cb-${projekty.id}`}
+                                        checked={selectedItems.includes(projekty.id)}
+                                        onChange={() => handleCheckboxChange(projekty.id)}
                                     />
                                 </td>
-                                <td className="border-r">{item.id}</td>
-                                <td className="border-r">{item.Nazwa}</td>
-                                <td className="border-r">{item.kodprojektu}</td>
-                                <td className="border-r">{item.statusprojektu}</td>
+                                <td className="border-r">{index +1}</td>
+                                <td className="border-r">{projekty.NazwaKod_Projektu}</td>
+                                <td className={`border-r ${statusClass}`}>{projekty.Status}</td>
                                 <td>
                                     <Button
-                                        onClick={() => handleDelete(item.id)}
+                                        onClick={() => handleDelete(projekty.id)}
                                         label="Usuń"
                                         className="bg-blue-700 text-white p-1 m-0.5" />
                                 </td>
                             </tr>
-                        ))}
+                            );
+                        })}
                     </tbody>
                 </table>
             </div>

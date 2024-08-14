@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 import AmberBox from "../../Components/AmberBox";
 import { InputText } from 'primereact/inputtext';
 import { FloatLabel } from 'primereact/floatlabel';
@@ -7,9 +7,10 @@ import { Button } from 'primereact/button';
 import Axios from "axios";
 
 export default function DodajNowyProjektPage() {
-    const [firma, setFirma] = React.useState(null);
-    const [zleceniodawca, setZleceniodawca] = React.useState(null);
-    const [form, setForm] = React.useState({
+    const [availableGroups, setAvailableGroups] = React.useState([]);
+    const [form, setForm] = useState({
+        firma: '',
+        zleceniodawca: '',
         nazwa: '',
         kodProjektu: '',
         ulica: '',
@@ -20,26 +21,35 @@ export default function DodajNowyProjektPage() {
 
     const firmyOptions = [
         { name: 'PC Husbyggen', value: 'PC Husbyggen' },
-       
+        // add more options if needed
     ];
 
-    const zleceniodawcaOptions = [
-        { name: 'Client A', value: 'Client A' },
-        { name: 'Client B', value: 'Client B' },
-        
-    ];
+    const fetchGroups = () => {
+        Axios.get("http://localhost:5000/api/grupy")
+            .then((response) => {
+                console.log(response.data);
+                const transformedData = response.data.grupy.map(grupy => ({
+                    name: grupy.Zleceniodawca,
+                    value: grupy.id
+                }));
+                setAvailableGroups(transformedData);
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+    };
+
 
     useEffect(() => {
-        console.log(form);
+        fetchGroups();
     }, [form]);
 
     const handleSave = () => {
         console.log('Saving data...');
         Axios.post('http://localhost:5000/api/czas/projekty', {
-            firma: firma,
-            zleceniodawca: zleceniodawca,
+            firma: form.firma,
+            zleceniodawca: form.zleceniodawca,
             nazwa: form.nazwa,
-            kodProjektu: form.kod,
             ulica: form.ulica,
             miejscowosc: form.miejscowosc,
             kodPocztowy: form.kodPocztowy,
@@ -56,25 +66,34 @@ export default function DodajNowyProjektPage() {
     const handleCancel = () => {
         console.log('Action canceled.');
     };
+
+    const handleFirma = (e) => {
+        setForm({ ...form, firma: e.value });
+    };
+
+    const handleZleceniodawca = (e) => {
+        setForm({ ...form, zleceniodawca: e.value });
+    };
+
     const handleNazwa = (e) => {
         setForm({ ...form, nazwa: e.target.value });
     };
-    const handleKod = (e) => {
-        setForm({ ...form, kod: e.target.value });
-    }
+
     const handleUlica = (e) => {
         setForm({ ...form, ulica: e.target.value });
-    }
+    };
+
     const handleMiejscowosc = (e) => {
         setForm({ ...form, miejscowosc: e.target.value });
-    }
+    };
+
     const handleKodPocztowy = (e) => {
         setForm({ ...form, kodPocztowy: e.target.value });
-    }
+    };
+
     const handleKraj = (e) => {
         setForm({ ...form, kraj: e.target.value });
-    }
-
+    };
 
     return (
         <div>
@@ -86,12 +105,12 @@ export default function DodajNowyProjektPage() {
                     
                     <FloatLabel className="w-full md:w-6/12 lg:w-4/12">
                         <Dropdown 
-                            value={firma} 
-                            onChange={(e) => setFirma(e.value)} 
+                            onChange={(e) => handleFirma(e)} 
                             options={firmyOptions} 
                             optionLabel="name" 
                             placeholder="Firma"
                             className="w-full"
+                            value={form.firma}
                             filter 
                             showClear
                         />
@@ -100,26 +119,23 @@ export default function DodajNowyProjektPage() {
                     
                     <FloatLabel className="w-full md:w-6/12 lg:w-4/12">
                         <Dropdown 
-                            value={zleceniodawca} 
-                            onChange={(e) => setZleceniodawca(e.value)} 
-                            options={zleceniodawcaOptions} 
+                            onChange={(e) => handleZleceniodawca(e)} 
+                            options={availableGroups} 
                             optionLabel="name" 
+                            optionValue="value"
                             placeholder="Zleceniodawca"
                             className="w-full"
+                            value={form.zleceniodawca}
                             filter 
                             showClear
                         />
                         <label htmlFor="zleceniodawca">Zleceniodawca</label>
                     </FloatLabel>
+
                     
                     <FloatLabel className="w-full md:w-6/12 lg:w-4/12">
                         <InputText onChange={handleNazwa} id="nazwa" type="text" className="w-full" />
-                        <label htmlFor="nazwa">Nazwa</label>
-                    </FloatLabel>
-                    
-                    <FloatLabel className="w-full md:w-6/12 lg:w-4/12">
-                        <InputText onChange={handleKod} id="kod" type="text" className="w-full" />
-                        <label htmlFor="kod">Kod projektu</label>
+                        <label htmlFor="nazwa">Nazwa/Kod Projektu</label>
                     </FloatLabel>
                     
                     <FloatLabel className="w-full md:w-6/12 lg:w-4/12">
@@ -134,7 +150,7 @@ export default function DodajNowyProjektPage() {
 
                     <FloatLabel className="w-full md:w-6/12 lg:w-4/12">
                         <InputText onChange={handleKodPocztowy} id="kodPocztowy" type="text" className="w-full" />
-                        <label htmlFor="miejscowosc">Kod pocztowy</label>
+                        <label htmlFor="kodPocztowy">Kod pocztowy</label>
                     </FloatLabel>
                     
                     <FloatLabel className="w-full md:w-6/12 lg:w-4/12">

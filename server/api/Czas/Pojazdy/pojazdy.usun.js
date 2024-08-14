@@ -1,7 +1,7 @@
 function UsunPojazd(req, res, db) {
     const { id } = req.params;
     console.log(id);
-    const sql = `DELETE FROM pojazdy WHERE Nr_Pojazdu = ${id}`;
+    const sql = `DELETE FROM pojazdy WHERE idPojazdy = ${id}`;
     db.query(sql, (err, result) => {
         if (err) {
             console.log(err);

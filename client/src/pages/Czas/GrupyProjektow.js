@@ -2,38 +2,43 @@ import React from "react";
 import AmberBox from "../../Components/AmberBox";
 import { Button } from 'primereact/button';
 import { Checkbox } from 'primereact/checkbox';
-import { Link } from "react-router-dom";
+import { Link, useActionData } from "react-router-dom";
+import Axios from "axios";
+import { useEffect } from "react";
 
 export default function GrupyProjektowPage() {
-    const [selectedItems, setSelectedItems] = React.useState([]);
-
-    const sampleData = [
-        {
-            id: 1,
-            Zleceniodawca: "NCW",
-            Cennik: "2021-10-01",
-            Stawka: "2021-10-10",
-        },
-        {
-            id: 2,
-            Zleceniodawca: "NCW",
-            Cennik: "2021-10-01",
-            Stawka: "2021-10-10",
-        },
-        {
-            id: 3,
-            Zleceniodawca: "NCW",
-            Cennik: "2021-10-01",
-            Stawka: "2021-10-10",
-        }
-    ];
+    const [availableGroups, setAvailableGroups] = React.useState([]);
     
-    const handleCheckboxChange = (id) => {
-        setSelectedItems(prevState =>
-            prevState.includes(id)
-                ? prevState.filter(item => item !== id)
-                : [...prevState, id]
-        );
+   
+    useEffect(() => {
+        fetchGroups();
+    }, []);
+
+    const fetchGroups = () => {
+        Axios.get("http://localhost:5000/api/grupy")
+            .then((response) => {
+                setAvailableGroups(response.data.grupy);
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+    };
+
+    const handleDelete = (id) => {
+        if (id === undefined || id === null) {
+            console.log('Invalid ID:', id);
+            console.error('Invalid ID:', id);
+            return;
+        }
+        console.log(id);
+        Axios.delete(`http://localhost:5000/api/grupy/${id}`)
+            .then((response) => {
+                console.log(response.data);
+                fetchGroups(); 
+            })
+            .catch((error) => {
+                console.error(error);
+            });
     };
 
     return (
@@ -52,7 +57,6 @@ export default function GrupyProjektowPage() {
         <table className="w-full">
             <thead className="bg-blue-700 text-white">
                 <tr>
-                    <th></th>
                     <th className="border-r">Nr</th>
                     <th className="border-r">Zleceniodawca</th>
                     <th className="border-r">Cennik</th>
@@ -61,25 +65,24 @@ export default function GrupyProjektowPage() {
                 </tr>
             </thead>
             <tbody className="text-center">
-                {sampleData.map((item) => (
-                    <tr key={item.id} className="border-b even:bg-gray-200 odd:bg-gray-300">
-                        <td className="border-r">
-                            <Checkbox 
-                                inputId={`cb-${item.id}`}
-                                checked={selectedItems.includes(item.id)}
-                                onChange={() => handleCheckboxChange(item.id)}
-                            />
-                        </td>
-                        <td className="border-r">{item.id}</td>
-                        <td className="border-r">{item.Zleceniodawca}</td>
-                        <td className="border-r">{item.Cennik}</td>
-                        <td className="border-r">{item.Stawka}</td>
+                {availableGroups.map((group, index) => (
+                    <tr key={group.id} className="border-b even:bg-gray-200 odd:bg-gray-300">
+                        <td className="border-r">{index + 1}</td>
+                        <td className="border-r">{group.Zleceniodawca}</td>
+                        <td className="border-r">{group.Cennik}</td>
+                        <td className="border-r">{group.Stawka}</td>
                         <td>
-                            <Button label="Usuń" className="bg-blue-700 text-white p-1 m-0.5" />
+                            <Button 
+                                onClick={() => handleDelete(group.id)}
+                                label="Usuń"
+                                className="bg-blue-700 text-white p-1 m-0.5"
+                            />
                         </td>
                     </tr>
                 ))}
             </tbody>
+
+
         </table>
     </div>
     </div>

@@ -3,8 +3,8 @@ function DodajPojazd(req, res, db) {
 
     const sql = `INSERT INTO 
     pojazdy 
-    (Nr_Pojazdu, Nr_rejestracyjny, Marka, Uwagi) VALUES 
-    (3, '${numerRejestracyjny}', '${marka}', '${uwagi}')`;
+    (Nr_rejestracyjny, Marka, Uwagi) VALUES 
+    ('${numerRejestracyjny}', '${marka}', '${uwagi}')`;
 
     db.query(sql, (err, result) => {
         if (err) {
