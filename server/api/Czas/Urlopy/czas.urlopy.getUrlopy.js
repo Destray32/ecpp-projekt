@@ -1,33 +1,32 @@
-const sampleData = [
-    {
-        id: 1,
-        name: "Jan Kowalski",
-        urlopOd: "2021-10-01",
-        urlopDo: "2021-10-10",
-        komentarz: "Testowy urlop",
-        status: "Do zatwierdzenia"
-    },
-    {
-        id: 2,
-        name: "Anna Nowak",
-        urlopOd: "2021-10-15",
-        urlopDo: "2021-10-20",
-        komentarz: "Urlop na urlopie",
-        status: "Zatwierdzone"
-    },
-    {
-        id: 3,
-        name: "Marek Zając",
-        urlopOd: "2021-11-01",
-        urlopDo: "2021-11-07",
-        komentarz: "Chorobowe",
-        status: "Anulowane"
-    }
-];
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+}
 
+function GetUrlopy(req, res, db) {
+    const sql = 'SELECT * FROM Urlopy';
 
-function GetUrlopy(req, res) {
-  res.status(200).json(sampleData);
+    db.query(sql, (err, result) => {
+        if (err) {
+            console.log('SQL Error:', err);
+            return res.status(400).send('Błąd pobierania urlopów');
+        } else {
+            const formattedRows = result.map(row => ({
+                id: row.idUrlopy,
+                imie: row.Imie,
+                nazwisko: row.Nazwisko,
+                dataOd: formatDate(row.Urlop_od),
+                dataDo: formatDate(row.Urlop_do), 
+                komentarz: row.Komentarz,
+                status: row.Status,
+            }));
+
+            return res.status(200).json({ urlopy: formattedRows });
+        }
+    });
 }
 
 module.exports = GetUrlopy;

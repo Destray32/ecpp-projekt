@@ -37,7 +37,7 @@ export default function ProjektyPage() {
     };
 
     const handleSzukaj = () => {
-        Axios.get(`http://localhost:5000/api/czas/szukaj?group=${filtr}`)
+        Axios.get(`http://localhost:5000/api/czas/szukaj?projekty=${filtr}`)
             .then((response) => {
                 console.log(response.data);
             })

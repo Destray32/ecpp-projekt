@@ -16,6 +16,8 @@ export default function UrlopyPage() {
     const [komentarz, setKomentarz] = useState('');
     const [selectedItems, setSelectedItems] = useState([]);
     const [dane, setDane] = useState([]);
+    const [expandedGroups, setExpandedGroups] = useState({});
+    const extractId = (idWithPrefix) => idWithPrefix.replace('cb-', '');
 
     const sampleData2 = [
         { id: 1, name: "Zaznacz wszystko" },
@@ -34,63 +36,86 @@ export default function UrlopyPage() {
                 : [...prevState, id]
         );
     };
+    const handleUpdateStatus = (newStatus) => {
+        console.log(selectedItems);
+        console.log(newStatus);
+        const ids = selectedItems.map(extractId);
+        Axios.put("http://localhost:5000/api/urlopy", {
+            ids: ids,
+            status: newStatus,
+        })
+        .then(() => {
+            fetchUrlopy(); // Refetch data after updating
+        })
+        .catch((error) => {
+            console.error("There was an error updating the status:", error);
+        });
+    };
+
+    const fetchUrlopy = () => {
+        Axios.get("http://localhost:5000/api/urlopy")
+            .then((response) => {
+                setDane(response.data.urlopy);
+            })
+            .catch((error) => {
+                console.error("There was an error fetching the data:", error);
+            });
+    };
+
+    useEffect(() => {
+        fetchUrlopy();
+    }, []);
 
     const handleDodaj = () => {
         Axios.post("http://localhost:5000/api/urlopy", {
-            imie_nazwisko: UrlopDla,
+            nazwisko_imie: UrlopDla,
             status: Status,
             urlop_od: urlopOd,
             urlop_do: urlopDo,
             komentarz: komentarz,
-        }).then((response) => {
-            console.log(response);
+        })
+        .then(() => {
+            fetchUrlopy();
+        })
+        .catch((error) => {
+            console.error("There was an error adding the leave:", error.response.data);
         });
+    };
 
-    };
-    const handleZatwierdz = () => {
-        Axios.put("http://localhost:5000/api/urlopy", {
-            id: selectedItems,
-            status: "Zatwierdzone",
-        }).then((response) => {
-            console.log(response);
+    const handleZatwierdz = () => handleUpdateStatus("Zatwierdzone");
+    const handleAnuluj = () => handleUpdateStatus("Anulowane");
+
+    const handleUsun = (itemId) => {
+        Axios.delete("http://localhost:5000/api/urlopy", {
+            data: { id: itemId },
+        })
+        .then(() => {
+            fetchUrlopy();
         });
     };
-    const handleAnuluj = () => {
-        Axios.put("http://localhost:5000/api/urlopy", {
-            id: selectedItems,
-            status: "Anulowane",
-        }).then((response) => {
-            console.log(response);
-        });
-    };
+
     const handleSzukaj = () => {
         console.log("Szukaj");
     };
-    const handleUsun = (itemId) => {
-        Axios.delete("http://localhost:5000/api/urlopy", {
-            data: {
-                id: itemId,
-            },
-        }).then((response) => {
-            console.log(response);
-        });
-    };
 
-    const handleStatusUpdate = (e) => {
-        setStatusUpdate(e.value);
-    };
 
-    // sprawdza stan zaznaczonych checkboxow i ich id
-    useEffect(() => { // sprawdz komentarze ponizej
+    useEffect(() => {
         console.log(selectedItems);
     }, [selectedItems]);
 
-    useEffect(() => {
-        Axios.get("http://localhost:5000/api/urlopy")
-            .then((response) => {
-                setDane(response.data);
-            });
-    }, []);
+    const groupedData = dane.reduce((acc, curr) => {
+        const key = `${curr.imie} ${curr.nazwisko}`;
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(curr);
+        return acc;
+    }, {});
+
+    const handleGroupToggle = (name) => {
+        setExpandedGroups(prev => ({
+            ...prev,
+            [name]: !prev[name]
+        }));
+    };
 
     return (
         <div>
@@ -151,12 +176,12 @@ export default function UrlopyPage() {
                 <div className="w-full h-2/5 flex flex-col space-y-2 items-start ">
                     <div className="w-full h-2/6">
                         <div className="w-full flex flex-row items-center p-4">
-                            <Dropdown value={Status} onChange={handleStatusUpdate}
+                            <Dropdown value={Status} onChange={(e) => setStatusUpdate(e.value)}
                                 options={["Wszystkie", "Do zatwierdzenia", "Zatwierdzone", "Anulowane"]}
                                 editable
                                 placeholder="Filtrowanie"
                                 autoComplete="off"
-                                className="w-3/12 p-2"
+                                className="w-3/12 p-1"
                                 filter
                                 showClear
                             />
@@ -198,27 +223,40 @@ export default function UrlopyPage() {
                         </tr>
                     </thead>
                     <tbody className="text-center">
-                        {dane.map((item) => (
-                            <tr key={item.id} className="border-b even:bg-gray-200 odd:bg-gray-300">
-                                <td className="border-r">
-                                    <Checkbox
-                                        inputId={`cb-${item.id}`} // możesz to robić w ten sposób, poprzedzając item.id czym więcej.
-                                        // unikniesz kolizji z innymi id które masz w "selectedItems".
-                                        // zobacz se konsole i useEffect żeby sprawdzić co sie pojawia po zaznaczaniu
-                                        checked={selectedItems.includes(`cb-${item.id}`)}
-                                        onChange={() => handleCheckboxChange(`cb-${item.id}`)}
-                                    />
-                                </td>
-                                <td className="border-r">{item.name}</td>
-                                <td className="border-r">{item.urlopOd}</td>
-                                <td className="border-r">{item.urlopDo}</td>
-                                <td className="border-r">{item.komentarz}</td>
-                                <td className="border-r">{item.status}</td>
-                                <td>
-                                    <Button label="Usuń" onClick={() => handleUsun(`cb-${item.id}`)}
-                                        className="bg-blue-700 text-white p-1 m-0.5" />
-                                </td>
-                            </tr>
+                        {Object.keys(groupedData).map((name) => (
+                            <React.Fragment key={name}>
+                                <tr>
+                                    <td colSpan="7" className="cursor-pointer bg-gray-100 hover:bg-gray-200" onClick={() => handleGroupToggle(name)}>
+                                        <div className="flex items-center justify-between">
+                                            <span>{name}</span>
+                                            <span>{expandedGroups[name] ? '−' : '+'}</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {expandedGroups[name] && groupedData[name].map((urlopy) => (
+                                    <tr key={urlopy.id} className="border-b even:bg-gray-200 odd:bg-gray-300">
+                                        <td className="border-r">
+                                            <Checkbox
+                                                inputId={`cb-${urlopy.id}`}
+                                                checked={selectedItems.includes(`cb-${urlopy.id}`)}
+                                                onChange={() => handleCheckboxChange(`cb-${urlopy.id}`)}
+                                            />
+                                        </td>
+                                        <td className="border-r">{urlopy.imie} {urlopy.nazwisko}</td>
+                                        <td className="border-r">{urlopy.dataOd}</td>
+                                        <td className="border-r">{urlopy.dataDo}</td>
+                                        <td className="border-r">{urlopy.komentarz}</td>
+                                        <td className="border-r">{urlopy.status}</td>
+                                        <td>
+                                            <Button 
+                                                label="Usuń" 
+                                                onClick={() => handleUsun(urlopy.id)} 
+                                                className="bg-blue-700 text-white p-1 m-0.5" 
+                                            />
+                                        </td>
+                                    </tr>
+                                ))}
+                            </React.Fragment>
                         ))}
                     </tbody>
                 </table>

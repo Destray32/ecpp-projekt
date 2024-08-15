@@ -220,16 +220,16 @@ app.delete('/api/czas/usun', (req, res) => {
 
 // CZAS > URLOPY //
 app.get('/api/urlopy', (req, res) => {
-    GetUrlopy(req, res);
+    GetUrlopy(req, res, db);
 });
 app.post('/api/urlopy', (req, res) => {
-    DodajUrlop(req, res);
+    DodajUrlop(req, res, db);
 });
 app.put('/api/urlopy', (req, res) => {
-    ZatwierdzUrlop(req, res);
+    ZatwierdzUrlop(req, res, db);
 });
 app.delete('/api/urlopy', (req, res) => {
-    UsunUrlop(req, res);
+    UsunUrlop(req, res, db);
 });
 
 /////////////////////////////////////////
