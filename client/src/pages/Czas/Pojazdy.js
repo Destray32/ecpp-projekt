@@ -44,9 +44,9 @@ export default function PojazdyPage() {
                 </tr>
             </thead>
             <tbody className="text-center">
-                {tableData && tableData.map((item) => (
+                {tableData && tableData.map((item, index) => (
                     <tr key={item.id} className="border-b even:bg-gray-200 odd:bg-gray-300">
-                        <td className="border-r">{item.id}</td>
+                        <td className="border-r">{index + 1}</td>
                         <td className="border-r">{item.numerRejestracyjny}</td>
                         <td className="border-r">{item.marka}</td>
                         <td className="border-r">{(item.uwagi === "" ? "Brak" : item.uwagi)}</td>

@@ -99,7 +99,7 @@ app.use(express.json());
 // PRACOWNIK > PRACOWNIK //
 app.route('/api/pracownicy')
     .get((req, res) => {
-        ListaPracownikow(req, res);
+        ListaPracownikow(req, res, db);
     })
     .post((req, res) => {
         DodajPracownika(req, res);
@@ -269,7 +269,7 @@ app.delete('/api/pojazdy/:id', (req, res) => {
 
 // CZAS > SPRAWDZ SAMOCHOD //
 app.get('/api/samochody', (req, res) => {
-    PobierzSamochody(req, res);
+    PobierzSamochody(req, res, db);
 });
 /////////////////////////////////////////
 

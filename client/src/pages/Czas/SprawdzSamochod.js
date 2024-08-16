@@ -6,6 +6,8 @@ import axios from 'axios';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
+
+
 import { font } from "../../fonts/OpenSans-Regular-normal";
 
 export default function SprawdzSamochodPage() {
@@ -15,6 +17,7 @@ export default function SprawdzSamochodPage() {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
 
+    
     const fetchData = () => {
         axios.get('http://localhost:5000/api/samochody')
             .then((response) => {

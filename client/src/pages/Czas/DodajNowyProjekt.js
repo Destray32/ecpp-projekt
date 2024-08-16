@@ -8,8 +8,11 @@ import Axios from "axios";
 
 export default function DodajNowyProjektPage() {
     const [availableGroups, setAvailableGroups] = React.useState([]);
+    const [availableProjects, setAvailableProjects] = React.useState([]);
+
+
     const [form, setForm] = useState({
-        firma: '',
+        firma: 'PC Husbyggen',
         zleceniodawca: '',
         nazwa: '',
         kodProjektu: '',
@@ -27,7 +30,6 @@ export default function DodajNowyProjektPage() {
     const fetchGroups = () => {
         Axios.get("http://localhost:5000/api/grupy")
             .then((response) => {
-                console.log(response.data);
                 const transformedData = response.data.grupy.map(grupy => ({
                     name: grupy.Zleceniodawca,
                     value: grupy.id
@@ -39,9 +41,24 @@ export default function DodajNowyProjektPage() {
             });
     };
 
+    const fetchProjects = () => {
+        Axios.get("http://localhost:5000/api/czas/projekty")
+            .then((response) => {
+                const transformedDataProjects = response.data.projekty.map(projekty => ({
+                    name: projekty.NazwaKod_Projektu,
+                    value: projekty.idProjekty
+                }));
+                setAvailableProjects(transformedDataProjects);
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+    };
+
 
     useEffect(() => {
         fetchGroups();
+        fetchProjects();
     }, [form]);
 
     const handleSave = () => {
@@ -68,7 +85,10 @@ export default function DodajNowyProjektPage() {
     };
 
     const handleFirma = (e) => {
-        setForm({ ...form, firma: e.value });
+        setForm(prevState => ({
+            ...prevState,
+            firma: e.value 
+        }));
     };
 
     const handleZleceniodawca = (e) => {
@@ -94,6 +114,7 @@ export default function DodajNowyProjektPage() {
     const handleKraj = (e) => {
         setForm({ ...form, kraj: e.target.value });
     };
+    
 
     return (
         <div>
@@ -111,7 +132,7 @@ export default function DodajNowyProjektPage() {
                             placeholder="Firma"
                             className="w-full"
                             value={form.firma}
-                            filter 
+                            filter
                             showClear
                         />
                         <label htmlFor="firma">Firma</label>
@@ -134,7 +155,18 @@ export default function DodajNowyProjektPage() {
 
                     
                     <FloatLabel className="w-full md:w-6/12 lg:w-4/12">
-                        <InputText onChange={handleNazwa} id="nazwa" type="text" className="w-full" />
+                    <Dropdown 
+                            onChange={(e) => handleNazwa(e)} 
+                            options={availableProjects} 
+                            optionLabel="name" 
+                            optionValue="value"
+                            className="w-full"
+                            value={form.nazwa}
+                            editable
+                            filter valueTemplate={form.nazwa}
+                            showClear
+                            filterBy="name" 
+                        />
                         <label htmlFor="nazwa">Nazwa/Kod Projektu</label>
                     </FloatLabel>
                     

@@ -1,6 +1,5 @@
 function DodajGrupe(req, res, db) {
     const { zleceniodawca, cennik, stawka, czyPlanTygV } = req.body;
-    console.log(zleceniodawca, cennik, stawka, czyPlanTygV);
 
     if (!zleceniodawca || !cennik || !stawka) {
         return res.status(400).json({ message: 'Brak wymaganych danych' });

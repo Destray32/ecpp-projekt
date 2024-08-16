@@ -60,7 +60,7 @@ export default function HomePage() {
                                 <ButtonLewy nazwa='Administracja' onClick={toggleSubMenu} />
                                     {showSubMenu && (
                                         <div className='ml-5 space-y-2'>
-                                            <ButtonLewy  link="projekty" nazwa='Projekty' />
+                                            <ButtonLewy link="projekty" nazwa='Projekty' />
                                             <ButtonLewy link="urlopy" nazwa='Urlopy' />
                                             <ButtonLewy link="pojazdy" nazwa='Pojazdy' />
                                         </div>
