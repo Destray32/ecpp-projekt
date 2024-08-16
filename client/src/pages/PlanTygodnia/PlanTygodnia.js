@@ -170,8 +170,7 @@ export default function PlanTygodniaPage() {
         // pobieranie dostępnych grup z serwera
         Axios.get('http://localhost:5000/api/grupy')
             .then(res => {
-                //console.log(res.data);
-                setAvailableGroups(res.data);
+                setAvailableGroups(res.data.grupy.map(group => ({ name: group.Zleceniodawca, id: group.id })));
             })
             .catch(err => console.error(err));
 

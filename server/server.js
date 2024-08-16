@@ -235,16 +235,22 @@ app.delete('/api/urlopy', (req, res) => {
 /////////////////////////////////////////
 
 // CZAS > TYDZIEN //
-app.route('/api/tydzien')
-    .get((req, res) => {
-       GetTydzien(req, res);
-    })
-    .post((req, res) => {
-        OtworzTydzienCzas(req, res);
-    })
-    .delete((req, res) => {
-        ZamknijTydzienCzas(req, res);
-    });
+app.get('/api/tydzien/:numericWeek', (req, res) => {
+    GetTydzien(req, res, db);
+});
+app.post('/api/tydzien', (req, res) => {
+    OtworzTydzienCzas(req, res, db);
+});
+app.delete('/api/tydzien', (req, res) => {
+    ZamknijTydzienCzas(req, res, db);
+});
+
+    // app.post((req, res) => {
+    //     OtworzTydzienCzas(req, res);
+    // })
+    // .delete((req, res) => {
+    //     ZamknijTydzienCzas(req, res);
+    // });
 /////////////////////////////////////////
 
 // CZAS > POJAZDY //

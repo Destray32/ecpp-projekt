@@ -1,9 +1,18 @@
 
-function OtworzTydzienCzas(req, res) {
-    const {week} = req.body;
-    console.log('OtworzTydzienCzas', week);
+function OtworzTydzienCzas(req, res, db) {
+    const {tydzienRoku, pracownikId} = req.body;
+    console.log(tydzienRoku, pracownikId);
 
-    res.status(200).json({message: 'Otworzono tydzien dla ' + week});
+    const sql = "UPDATE tydzien SET Status_tygodnia = 'Otwarty' WHERE tydzienRoku = ? AND Pracownik_idPracownik = ?";
+    db.query(sql, [tydzienRoku, pracownikId], (err, result) => {
+        if (err) {
+            console.log(err);
+            res.status(400).send('Błąd otwierania tygodnia');
+        } else {
+            res.status(200).send('Otwarto tydzień');
+        }
+    });
+
 }
 
 module.exports = OtworzTydzienCzas;

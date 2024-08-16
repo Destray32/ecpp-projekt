@@ -4,30 +4,77 @@ import AmberBox from '../../Components/AmberBox';
 import { Checkbox } from 'primereact/checkbox';
 import Axios from 'axios';
 
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+
 export default function TydzienPage() {
     const [selectedWeek, setSelectedWeek] = useState('');
+    const [numericWeek, setNumericWeek] = useState(1);
     const [weekRange, setWeekRange] = useState({ start: '', end: '' });
     const [selectedItems, setSelectedItems] = useState([]);
     const [data, setData] = useState([]);
 
-    const handleCheckboxChange = (id) => {
-        setSelectedItems(prevState =>
-            prevState.includes(id)
-                ? prevState.filter(item => item !== id)
-                : [...prevState, id]
-        );
+    const generatePDF = () => {
+        const doc = new jsPDF();
+
+        doc.setFont("OpenSans-Regular", "normal");
+        
+        const columns = [
+            { header: "Imie", dataKey: "imie" },
+            { header: "Nazwisko", dataKey: "naziwsko" },
+            { header: "Grupa urlopowa", dataKey: "grupa" },
+            { header: "Status", dataKey: "status" }
+        ];
+        
+        const rows = data.map(item => ({
+            imie: item.Imie,
+            naziwsko: item.Nazwisko,
+            grupa: item.Zleceniodawca,
+            status: item.Status_tygodnia,
+        }));
+    
+        doc.autoTable({
+            head: [columns.map(col => col.header)],
+            body: rows.map(row => columns.map(col => row[col.dataKey])),
+            startY: 20,
+            theme: 'striped',
+            styles: {
+                font: "OpenSans-Regular",
+                halign: 'center'
+            },
+            headStyles: {
+                font: "OpenSans-Regular",
+                fontStyle: "bold"
+            }
+        });
+    
+        doc.text(`Tydzien: ${numericWeek}, ${weekRange.start} - ${weekRange.end}`, 14, 15);
+        doc.save("statusy-tydzien.pdf");
+    };
+
+    const handleCheckboxChange = (tydzienRoku, Pracownik_idPracownik) => {
+        const selectedPair = { tydzienRoku, Pracownik_idPracownik };
+        setSelectedItems(prevSelectedItems => {
+            if (prevSelectedItems.some(item => item.tydzienRoku === tydzienRoku && item.Pracownik_idPracownik === Pracownik_idPracownik)) {
+                return prevSelectedItems.filter(item => !(item.tydzienRoku === tydzienRoku && item.Pracownik_idPracownik === Pracownik_idPracownik));
+            } else {
+                return [...prevSelectedItems, selectedPair];
+            }
+        });
     };
 
     const handleWeekChange = (event) => {
         const weekValue = event.target.value;
         setSelectedWeek(weekValue);
-        
+
+        setNumericWeek(parseInt(weekValue.substring(6)));
+
         if (weekValue) {
             const startDate = getStartDateOfWeek(weekValue);
             const endDate = getEndDateOfWeek(startDate);
-            setWeekRange({ 
-                start: formatDate(startDate), 
-                end: formatDate(endDate) 
+            setWeekRange({
+                start: formatDate(startDate),
+                end: formatDate(endDate)
             });
         } else {
             setWeekRange({ start: '', end: '' });
@@ -35,27 +82,33 @@ export default function TydzienPage() {
     };
 
     const handleOtworz = () => {
-        Axios.post('http://localhost:5000/api/tydzien', { 
-            week: selectedWeek
-         })
+        Axios.post('http://localhost:5000/api/tydzien', {
+            tydzienRoku: selectedItems.map(item => item.tydzienRoku),
+            pracownikId: selectedItems.map(item => item.Pracownik_idPracownik)
+
+        })
             .then(response => console.log(response.data))
             .catch(error => console.error(error));
     };
     const handleZamknij = () => {
-        Axios.delete('http://localhost:5000/api/tydzien', { 
-            data: { id: selectedItems }
-         })
+        Axios.delete('http://localhost:5000/api/tydzien', {
+            data: {
+                tydzienRoku: selectedItems.map(item => item.tydzienRoku),
+                pracownikId: selectedItems.map(item => item.Pracownik_idPracownik)
+            }
+        })
             .then(response => console.log(response.data))
             .catch(error => console.error(error));
     };
     const handleDrukuj = () => {
         console.log('Drukuj');
+        generatePDF();
     };
 
     const getStartDateOfWeek = (weekValue) => {
         const year = parseInt(weekValue.substring(0, 4));
         const week = parseInt(weekValue.substring(6));
-        
+
         const firstDayOfYear = new Date(year, 0, 1);
         const daysOffset = ((week - 1) * 7) - firstDayOfYear.getDay() + 1;
         return new Date(year, 0, 1 + daysOffset);
@@ -69,22 +122,23 @@ export default function TydzienPage() {
 
     const formatDate = (date) => {
         return date.toLocaleDateString('pl-PL', {
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
             day: 'numeric'
         });
     };
 
     useEffect(() => {
-        Axios.get('http://localhost:5000/api/tydzien')
+        Axios.get(`http://localhost:5000/api/tydzien/${numericWeek}`)
+            // .then(response => console.log(response.data))
             .then(response => setData(response.data))
             .catch(error => console.error(error));
-    }, []);
+    }, [numericWeek]);
 
-    // useEffect(() => {
-    //     console.log(selectedWeek);
-    // }, [selectedWeek]);
+    useEffect(() => {
+        console.log(data);
+    }, [data]);
 
     return (
         <div>
@@ -100,14 +154,14 @@ export default function TydzienPage() {
                                 </p>
                             </div>
                             <Button label="Otwórz tydzień" onClick={handleOtworz}
-                            className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 ml-6" />
+                                className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 ml-6" />
                             <Button label="Zamknij tydzień" onClick={handleZamknij}
-                            className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 ml-6" />
+                                className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 ml-6" />
                             <Button label="Drukuj" onClick={handleDrukuj}
-                            className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 ml-6" />
+                                className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 ml-6" />
                         </div>
                     </div>
-                    
+
                 </div>
             </AmberBox>
             <div className="w-full md:w-auto bg-gray-300 h-full m-2 outline outline-1 outline-gray-500">
@@ -118,23 +172,21 @@ export default function TydzienPage() {
                             <th className="border-r">Imię i nazwisko</th>
                             <th className="border-r">Grupa urlopowa</th>
                             <th className="border-r">Status</th>
-                            <th className="border-r">Status</th>
                         </tr>
                     </thead>
                     <tbody className="text-center">
                         {data.map((item) => (
-                            <tr key={item.id} className="border-b even:bg-gray-200 odd:bg-gray-300">
+                            <tr key={`${item.tydzienRoku}-${item.Pracownik_idPracownik}`} className="border-b even:bg-gray-200 odd:bg-gray-300">
                                 <td className="border-r">
-                                    <Checkbox 
-                                        inputId={`cb-${item.id}`}
-                                        checked={selectedItems.includes(item.id)}
-                                        onChange={() => handleCheckboxChange(item.id)}
+                                    <Checkbox
+                                        inputId={`cb-${item.tydzienRoku}-${item.Pracownik_idPracownik}`}
+                                        checked={selectedItems.some(selectedItem => selectedItem.tydzienRoku === item.tydzienRoku && selectedItem.Pracownik_idPracownik === item.Pracownik_idPracownik)}
+                                        onChange={() => handleCheckboxChange(item.tydzienRoku, item.Pracownik_idPracownik)}
                                     />
                                 </td>
-                                <td className="border-r">{item.name}</td>
-                                <td className="border-r">{item.grupaurlopowa}</td>
-                                <td className="border-r text-green-600">{item.status1}</td>
-                                <td className="border-r text-red-600">{item.status2}</td>
+                                <td className="border-r">{item.Imie + " " + item.Nazwisko}</td>
+                                <td className="border-r">{item.Zleceniodawca}</td>
+                                <td className={`border-r ${item.Status_tygodnia === 'Otwarty' ? 'text-green-600' : 'text-red-600'} `}>{item.Status_tygodnia}</td>
                             </tr>
                         ))}
                     </tbody>
