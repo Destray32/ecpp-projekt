@@ -8,15 +8,17 @@ import { Checkbox } from 'primereact/checkbox';
 import Axios from "axios";
 
 export default function UrlopyPage() {
-    const [urlopOd, setUrlopOd] = useState(null);
-    const [urlopDo, setUrlopDo] = useState(null);
-    const [UrlopDla, setUrlopDla] = useState(null);
-    const [Status, setStatus] = useState(null);
+    const [urlopOd, setUrlopOd] = useState('');
+    const [urlopDo, setUrlopDo] = useState('');
+    const [UrlopDla, setUrlopDla] = useState('');
+    const [Status, setStatus] = useState('');
     const [statusUpdate, setStatusUpdate] = useState(null);
     const [komentarz, setKomentarz] = useState('');
     const [selectedItems, setSelectedItems] = useState([]);
     const [dane, setDane] = useState([]);
     const [expandedGroups, setExpandedGroups] = useState({});
+    const [pracownicy, setPracownicy] = useState([]);
+
     const extractId = (idWithPrefix) => idWithPrefix.replace('cb-', '');
 
     const sampleData2 = [
@@ -128,7 +130,7 @@ export default function UrlopyPage() {
                                 <Dropdown
                                     value={UrlopDla}
                                     onChange={(e) => setUrlopDla(e.value)}
-                                    options={["Pawłowski Mateusz"]}
+                                    options={pracownicy}
                                     editable
                                     placeholder="Pracownik"
                                     autoComplete="off"

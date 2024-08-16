@@ -9,7 +9,7 @@ function PobierzPojazdy(req, res, db) {
         } else {
             const formattedRows = result.map(row => {
                 return {
-                    id: row.Nr_Pojazdu,
+                    id: row.idPojazdy,
                     numerRejestracyjny: row.Nr_rejestracyjny,
                     marka: row.Marka,
                     uwagi: row.Uwagi

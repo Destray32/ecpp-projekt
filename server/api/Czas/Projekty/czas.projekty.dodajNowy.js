@@ -6,7 +6,6 @@ function DodajNowyProjekt(req, res, db) {
     
 
     db.query(sql, (err, result) => {
-        console.log(sql);
     if (err) {
         res.status(400).send('Brak wymaganych danych');
         return;

@@ -18,7 +18,7 @@ function PrzeniesAkt(req, res, db) {
             return res.status(500).send('Błąd przy aktualizacji rekordów');
         }
 
-        console.log(`Zaktualizowano rekordy o ID: ${ids.join(', ')}`);
+
         res.status(200).send(`Przeniesiono rekordy: ${ids.join(', ')} do aktywnych`);
     });
 }
