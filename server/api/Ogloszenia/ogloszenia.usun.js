@@ -7,22 +7,47 @@ function UsunOgloszenie(req, res) {
         return res.status(400).send('Invalid ID');
     }
 
-    const query = 'DELETE FROM ogloszenia WHERE idOgloszenia = ?';
-
-    console.log(`Usuwam ogłoszenie o id: ${id}`);
-
-    db.query(query, [id], (err, result) => {
+    db.beginTransaction((err) => {
         if (err) {
-            console.error(`Błąd usuwania ogłoszenia o id: ${id}`, err);
-            return res.status(500).send('Błąd usuwania ogłoszenia');
+            console.error('Transaction error:', err);
+            return res.status(500).send('Internal server error');
         }
 
-        if (result.affectedRows === 0) {
-            return res.status(404).send('Ogłoszenie nie znalezione');
-        }
+        db.query('DELETE FROM pracownik_has_ogloszenia WHERE Ogloszenia_idOgloszenia = ?', [id], (err) => {
+            if (err) {
+                return db.rollback(() => {
+                    console.error('Error deleting related records:', err);
+                    res.status(500).send('Error deleting related records');
+                });
+            }
 
-        console.log(`Usunięto ogłoszenie o id: ${id}`);
-        res.send('Usunięto ogłoszenie');
+            db.query('DELETE FROM ogloszenia WHERE idOgloszenia = ?', [id], (err, result) => {
+                if (err) {
+                    return db.rollback(() => {
+                        console.error('Error deleting announcement:', err);
+                        res.status(500).send('Error deleting announcement');
+                    });
+                }
+
+                if (result.affectedRows === 0) {
+                    return db.rollback(() => {
+                        res.status(404).send('Announcement not found');
+                    });
+                }
+
+                db.commit((err) => {
+                    if (err) {
+                        return db.rollback(() => {
+                            console.error('Transaction commit error:', err);
+                            res.status(500).send('Internal server error');
+                        });
+                    }
+
+                    console.log(`Deleted announcement with id: ${id}`);
+                    res.send('Announcement deleted');
+                });
+            });
+        });
     });
 }
 

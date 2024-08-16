@@ -5,6 +5,8 @@ import axios from 'axios';
 
 export default function OgloszeniaPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [confirmDeleteVisible, setConfirmDeleteVisible] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState(null);
     const [radioValue, setRadioValue] = useState('grupy');
     const [ogloszenia, setOgloszenia] = useState([]);
     const [pracownicy, setPracownicy] = useState([]);
@@ -12,21 +14,29 @@ export default function OgloszeniaPage() {
     const [form] = Form.useForm();
 
     useEffect(() => {
+        fetchOgloszenia();
+        fetchPracownicy();
+        fetchGrupy();
+    }, []);
+
+    const fetchOgloszenia = () => {
         axios.get('http://localhost:5000/api/ogloszenia')
             .then((response) => {
                 const ogloszenia = response.data.map(ogloszenie => ({
                     id: ogloszenie.idOgloszenia,
                     tytul: ogloszenie.Tytul,
                     tresc: ogloszenie.Wiadomosc,
-                    grupa: ogloszenie.Grupa_urlopowa_idGrupa_urlopowa ? [ogloszenie.Grupa_urlopowa_idGrupa_urlopowa] : undefined,
-                    osoby: ogloszenie.Pracownik_idPracownik ? [ogloszenie.Pracownik_idPracownik] : [],
+                    grupa: ogloszenie.Zleceniodawca ? [ogloszenie.Zleceniodawca] : [],
+                    osoby: ogloszenie.Pracownik_idPracownik || [],
                 }));
                 setOgloszenia(ogloszenia);
             })
             .catch((error) => {
                 console.error('Błąd pobierania ogłoszeń:', error);
             });
+    };
 
+    const fetchPracownicy = () => {
         axios.get('http://localhost:5000/api/ogloszenia/pracownicy')
             .then((response) => {
                 setPracownicy(response.data);
@@ -34,7 +44,9 @@ export default function OgloszeniaPage() {
             .catch((error) => {
                 console.error('Błąd pobierania pracowników:', error);
             });
+    };
 
+    const fetchGrupy = () => {
         axios.get('http://localhost:5000/api/ogloszenia/grupy')
             .then((response) => {
                 setGrupy(response.data);
@@ -42,12 +54,12 @@ export default function OgloszeniaPage() {
             .catch((error) => {
                 console.error('Błąd pobierania grup urlopowych:', error);
             });
-    }, []);
+    };
 
     const showModal = () => {
         form.setFieldsValue({
             do: 'grupy',
-            grupa: undefined,
+            grupa: [],
             osoby: [],
             tytul: '',
             tresc: '',
@@ -67,7 +79,7 @@ export default function OgloszeniaPage() {
 
             axios.post('http://localhost:5000/api/ogloszenia', postData)
                 .then(() => {
-                    setOgloszenia([...ogloszenia, postData]);
+                    fetchOgloszenia();
                     setIsModalOpen(false);
                     form.resetFields();
                 })
@@ -88,16 +100,27 @@ export default function OgloszeniaPage() {
         setRadioValue(e.target.value);
     };
 
-    const deleteOgloszenie = (indexToDelete) => {
-        axios.delete(`http://localhost:5000/api/ogloszenia/${indexToDelete}`)
-            .then(() => {
-                setOgloszenia(ogloszenia.filter((ogloszenie) => ogloszenie.id !== indexToDelete));
-            })
+    const showDeleteConfirm = (id) => {
+        setItemToDelete(id);
+        setConfirmDeleteVisible(true);
+    };
 
-            .catch((error) => {
-                console.error('Błąd usuwania ogłoszenia:', error);
-            });
-    }
+    const handleDeleteOk = () => {
+        if (itemToDelete) {
+            axios.delete(`http://localhost:5000/api/ogloszenia/${itemToDelete}`)
+                .then(() => {
+                    fetchOgloszenia();
+                    setConfirmDeleteVisible(false);
+                })
+                .catch((error) => {
+                    console.error('Błąd usuwania ogłoszenia:', error);
+                });
+        }
+    };
+
+    const handleDeleteCancel = () => {
+        setConfirmDeleteVisible(false);
+    };
 
     return (
         <div className='w-full h-auto flex flex-col items-start justify-start p-2'>
@@ -114,10 +137,10 @@ export default function OgloszeniaPage() {
                         </Form.Item>
                         {radioValue === 'grupy' && (
                             <Form.Item label='Wybierz grupę' name='grupa'>
-                                <Select mode="multiple">
+                                <Select>
                                     {grupy.map(grupa => (
                                         <Select.Option key={grupa.idGrupa_urlopowa} value={grupa.idGrupa_urlopowa}>
-                                            {grupa.Grupa_urlopowacol}
+                                            {grupa.Zleceniodawca}
                                         </Select.Option>
                                     ))}
                                 </Select>
@@ -128,7 +151,7 @@ export default function OgloszeniaPage() {
                                 <Select mode='multiple'>
                                     {pracownicy.map(pracownik => (
                                         <Select.Option key={pracownik.idPracownik} value={pracownik.idPracownik}>
-                                            {`${pracownik.Imie} ${pracownik.Nazwisko}`}
+                                            {`${pracownik.Nazwa_uzytkownika}`}
                                         </Select.Option>
                                     ))}
                                 </Select>
@@ -142,16 +165,26 @@ export default function OgloszeniaPage() {
                         </Form.Item>
                     </Form>
                 </Modal>
+                <Modal
+                    title='Potwierdzenie usunięcia'
+                    open={confirmDeleteVisible}
+                    onOk={handleDeleteOk}
+                    onCancel={handleDeleteCancel}
+                    okText='Usuń'
+                    cancelText='Anuluj'
+                >
+                    <p>Czy na pewno chcesz usunąć to ogłoszenie?</p>
+                </Modal>
             </div>
             <div className='w-full mt-4'>
                 {ogloszenia.length > 0 ? (
-                    ogloszenia.map((ogloszenie, index) => (
+                    ogloszenia.map((ogloszenie) => (
                         <div key={ogloszenie.id} className='w-auto p-2 border-b border-gray-300 relative'>
-                            <CloseOutlined className='text-red-600 text-2xl absolute top-2 right-2 cursor-pointer' onClick={() => deleteOgloszenie(ogloszenie.id)} />
+                            <CloseOutlined className='text-red-600 text-2xl absolute top-2 right-2 cursor-pointer' onClick={() => showDeleteConfirm(ogloszenie.id)} />
                             <h2 className='text-xl font-bold'>{ogloszenie.tytul}</h2>
                             <p className='break-all'>{ogloszenie.tresc}</p>
                             <p className='text-gray-600'>
-                                <strong>Do:</strong> Grupa: {ogloszenie.grupa ? ogloszenie.grupa.join(', ') : 'Brak'} Osoby: {ogloszenie.osoby ? ogloszenie.osoby.join(', ') : 'Brak'}
+                                <strong>Do:</strong> Grupa: {ogloszenie.grupa.length > 0 ? ogloszenie.grupa.join(', ') : 'Brak'} Osoby: {ogloszenie.osoby.length > 0 ? ogloszenie.osoby.join(', ') : 'Brak'}
                             </p>
                         </div>
                     ))
