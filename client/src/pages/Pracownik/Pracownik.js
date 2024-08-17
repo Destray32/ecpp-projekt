@@ -18,6 +18,8 @@ const EditableCell = ({
   editable,
   children,
   selectOptions = [],
+  record,
+  onSave,
   ...restProps
 }) => {
   const [form] = Form.useForm();
@@ -26,6 +28,19 @@ const EditableCell = ({
   const handleChange = value => {
     form.setFieldsValue({ [title]: value });
   };
+
+  const handleSave = async () => {
+    try {
+      const updatedValue = form.getFieldValue(title);
+      await onSave(record.id, title, updatedValue);
+    } catch (error) {
+      console.error('Save failed:', error);
+    }
+  };
+
+  useEffect(() => {
+    form.setFieldsValue({ [title]: children });
+  }, [children, title, form]);
 
   return (
     <td {...restProps}>
@@ -39,7 +54,7 @@ const EditableCell = ({
             <Select
               ref={inputRef}
               onChange={handleChange}
-              defaultValue={children}
+              onBlur={handleSave}
             >
               {selectOptions.map(option => (
                 <Option key={option.id} value={option.id}>
@@ -194,6 +209,8 @@ export default function PracownikPage() {
           title="Grupa urlopowa"
           editable
           selectOptions={groups}
+          record={record}
+          onSave={handleSave}
         >
           {text}
         </EditableCell>
@@ -214,6 +231,8 @@ export default function PracownikPage() {
           title="Firma"
           editable
           selectOptions={firms}
+          record={record}
+          onSave={handleSave}
         >
           {text}
         </EditableCell>
@@ -283,7 +302,6 @@ export default function PracownikPage() {
         id: firm.idFirma,
         name: firm.Nazwa_firmy
       })));
-      console.log(response.data);
     } catch (error) {
       console.log(error);
     }
@@ -296,11 +314,24 @@ export default function PracownikPage() {
         id: group.idGrupa_urlopowa,
         name: group.Zleceniodawca
       })));
-      console.log(response.data);
     } catch (error) {
       console.log(error);
     }
   };
+
+  const handleSave = async (id, field, value) => {
+    try {
+        await axios.put(`http://localhost:5000/api/pracownik/komorka/${id}`, {
+            field: field,
+            value: value,
+        });
+        setTableData(prevData => prevData.map(item =>
+            item.id === id ? { ...item, [field]: value } : item
+        ));
+    } catch (error) {
+        console.error('Update failed:', error);
+    }
+};
 
   const printPDF = () => {
     const doc = new jsPDF('landscape');

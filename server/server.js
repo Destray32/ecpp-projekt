@@ -36,6 +36,7 @@ const PobierzLogi = require('./api/Pracownik/pracownik.logowanie');
 const PobierzPracownicyFirme = require('./api/Pracownik/Pracownik/pacownik.pobierzfirma');
 const PobierzPracownicyGrupy = require('./api/Pracownik/Pracownik/pracownik.pobierzgrupy');
 const PobierzPracownicyPojazd = require('./api/Pracownik/Pracownik/pracownik.pobierzpojazd');
+const KomorkaPracownika = require('./api/Pracownik/Pracownik/pracownik.komorka');
 
 // Czas > Czas Pracy
 const ZapiszCzasPracy = require('./api/Czas/CzasPracy/czas.czaspracy.zapisz');
@@ -115,6 +116,10 @@ app.get('/api/pracownik/grupy', (req, res) => {
 
 app.get('/api/pracownik/pojazdy', (req, res) => {
     PobierzPracownicyPojazd(req, res);
+});
+
+app.put('/api/pracownik/komorka/:id', (req, res) => {
+    KomorkaPracownika(req, res);
 });
 
 app.route('/api/pracownik/:id')
