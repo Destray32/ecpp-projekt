@@ -14,7 +14,6 @@ export default function UrlopyPage() {
     const [urlopDo, setUrlopDo] = useState('');
     const [UrlopDla, setUrlopDla] = useState('');
     const [Status, setStatus] = useState('');
-    const [statusUpdate, setStatusUpdate] = useState(null);
     const [komentarz, setKomentarz] = useState('');
     const [selectedItems, setSelectedItems] = useState([]);
     const [dane, setDane] = useState([]);
@@ -23,6 +22,8 @@ export default function UrlopyPage() {
     const [dostepneGrupy, setDostepneGrupy] = useState([]);
     const [selectedGrupy, setSelectedGrupy] = useState({});
     const [selectedMonthYear, setSelectedMonthYear] = useState(''); // state do wyboru miesiąca i roku dla drukowania urlopów
+    const [filtrValue, setFiltrValue] = useState("Wszystkie");
+
 
     const extractId = (idWithPrefix) => idWithPrefix.replace('cb-', '');
 
@@ -44,6 +45,16 @@ export default function UrlopyPage() {
         }));
     };
 
+    const handleGetPracownicy = () => {
+        Axios.get("http://localhost:5000/api/pracownicy")
+            .then((response) => {
+                setPracownicy(response.data.pracownicy);
+            })
+            .catch((error) => {
+                console.error("There was an error fetching the data:", error);
+            });
+    };
+
     const handleCheckboxChange = (id) => {
         setSelectedItems(prevState =>
             prevState.includes(id)
@@ -52,8 +63,7 @@ export default function UrlopyPage() {
         );
     };
     const handleUpdateStatus = (newStatus) => {
-        console.log(selectedItems);
-        console.log(newStatus);
+        
         const ids = selectedItems.map(extractId);
         Axios.put("http://localhost:5000/api/urlopy", {
             ids: ids,
@@ -202,12 +212,11 @@ export default function UrlopyPage() {
                 <div className="w-full h-2/5 flex flex-col space-y-2 items-start ">
                     <div className="w-full h-2/6">
                         <div className="w-full flex flex-row items-center p-4">
-                            <Dropdown value={Status} onChange={(e) => setStatusUpdate(e.value)}
+                            <Dropdown value={filtrValue} onChange={(e) => setFiltrValue(e.value)}
                                 options={["Wszystkie", "Do zatwierdzenia", "Zatwierdzone", "Anulowane"]}
-                                editable
                                 placeholder="Filtrowanie"
                                 autoComplete="off"
-                                className="w-3/12 p-1"
+                                className="w-4/12"
                                 filter
                                 showClear
                             />
@@ -254,7 +263,7 @@ export default function UrlopyPage() {
                                 <tr>
                                     <td colSpan="7" className="cursor-pointer bg-gray-100 hover:bg-gray-200" onClick={() => handleGroupToggle(name)}>
                                         <div className="flex items-center justify-between">
-                                            <span>{name}</span>
+                                            <p>{name}</p>
                                             <span>{expandedGroups[name] ? '−' : '+'}</span>
                                         </div>
                                     </td>
