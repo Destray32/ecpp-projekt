@@ -18,6 +18,7 @@ export default function RaportyPage() {
     const [availablePracownicy, setAvailablePracownicy] = useState([]);
     const [ignorujDaty, setIgnorujDaty] = useState(false);
     const [selectedRow, setSelectedRow] = useState(null);
+    
 
     useEffect(() => {
         axios.get('http://localhost:5000/api/raporty')

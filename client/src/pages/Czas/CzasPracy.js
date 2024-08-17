@@ -31,6 +31,11 @@ export default function CzasPracyPage() {
     const [additionalProjects, setAdditionalProjects] = useState([]);
     const [daysOfWeek, setDaysOfWeek] = useState(generateWeek(startOfWeek(new Date(), { weekStartsOn: 1 })));
 
+    const [projectTotals, setProjectTotals] = useState({}); // eksperymantlny state do 
+                                                            // przetrzymywania sumy godzin dla projektów 
+                                                            // {projectId: totalHours}
+
+
     const startOfCurrentWeek = startOfWeek(currentDate, { weekStartsOn: 1 });
     const daysOfWeekProjects = generateWeek(startOfCurrentWeek);
 
@@ -138,14 +143,11 @@ export default function CzasPracyPage() {
     const calculateProjectTotal = (project) => {
         return daysOfWeek.reduce((total, day) => {
             const dateKey = format(day, 'yyyy-MM-dd');
-            const start = project.hours[dateKey]?.start || "00:00";
-            const end = project.hours[dateKey]?.end || "00:00";
-            const startDate = new Date(`2000-01-01T${start}`);
-            const endDate = new Date(`2000-01-01T${end}`);
-            if (endDate < startDate) endDate.setDate(endDate.getDate() + 1);
-            return total + (endDate - startDate) / (1000 * 60 * 60);
+            const hours = parseFloat(project.hours[dateKey]?.hours) || 0;
+            return total + hours;
         }, 0);
     };
+
 
     const calculateDailyTotal = (day) => {
         const start = hours[day]?.start || "00:00";
@@ -175,7 +177,7 @@ export default function CzasPracyPage() {
                 acc[format(day, 'yyyy-MM-dd')] = { start: "", end: "" };
                 return acc;
             }, {})
-        
+
         };
 
         setAdditionalProjects(prevProjects => [...prevProjects, newProject]);
@@ -185,7 +187,7 @@ export default function CzasPracyPage() {
         setAdditionalProjects(prevProjects =>
             prevProjects.map(p => {
                 if (p.id === projectId) {
-                    return {
+                    const updatedProject = {
                         ...p,
                         hours: {
                             ...p.hours,
@@ -195,55 +197,85 @@ export default function CzasPracyPage() {
                             }
                         }
                     };
+    
+                    // Calculate the total hours for this project and update the state
+                    const totalHours = calculateProjectTotal(updatedProject);
+                    setProjectTotals(prevTotals => ({
+                        ...prevTotals,
+                        [projectId]: totalHours,
+                    }));
+    
+                    return updatedProject;
                 }
                 return p;
             })
         );
     };
 
-    const AdditionalProjectRow = ({ project }) => {
+
+    useEffect(() => {
+        console.log(projectTotals);
+    }, [projectTotals]);
+    
+
+
+
+    const AdditionalProjectRow = ({ project, onInputChange, first }) => {
         const projectTotal = calculateProjectTotal(project);
 
         return (
             <div className="mt-4">
                 <div className="flex items-center space-x-2">
-                    <div className="w-1/3">Projekt: {project.projekt || "Projekt"}</div>
-                    <div className="flex-1 grid grid-cols-7 gap-1">
-                        {daysOfWeekProjects.map((day, index) => (
-                            <div key={index} className="text-center font-bold">
-                                {format(day, 'EEE', { locale: pl })}
-                            </div>
-                        ))}
+                    <div className="w-1/3 flex flex-row justify-between">
+                    Projekt: {project.projekt || "Projekt"}
+                    <span className="font-bold">Total: {projectTotal.toFixed(2)} godz.</span>
                     </div>
+                    
+
+                    {/* tylko pierwszy projekt zmapuje dni tygodnia */}
+                    {first && (
+                        <div className="flex-1 grid grid-cols-7 gap-1">
+                            {daysOfWeekProjects.map((day, index) => (
+                                <div key={index} className="text-center font-bold">
+                                    {format(day, 'EEE', { locale: pl })}
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
+
                 <div className="flex items-center space-x-2 mt-2">
                     <div className="w-1/3"></div>
                     <div className="flex-1 grid grid-cols-7 gap-1">
                         {daysOfWeekProjects.map((day, index) => {
                             const dateKey = format(day, 'yyyy-MM-dd');
+                            const isLastInput = index === daysOfWeekProjects.length - 1;
                             return (
                                 <div key={index} className="text-center">
                                     <input
-                                        type="text"
-                                        value={projectHours[format(day, 'yyyy-MM-dd')]?.start || ""}
-                                        onChange={(e) => handleTimeInputChangeProjects(format(day, 'yyyy-MM-dd'), 'start', e.target.value)}
-                                        onBlur={(e) => handleTimeBlurProjects(format(day, 'yyyy-MM-dd'), 'start', e.target.value)}
-                                        disabled={getDay(day) === 0}
-                                        className="w-full p-2 border border-gray-300 rounded"
-                                        placeholder="HH:MM"
-                                        maxLength="5"
+                                        type="number"
+                                        value={project.hours[dateKey]?.hours || ""}
+                                        onChange={(e) => onInputChange(project.id, dateKey, 'hours', e.target.value)}
+                                        className={`w-[50%] h-full p-1 border border-gray-300 rounded ${isLastInput ? 'bg-gray-200 cursor-not-allowed' : ''}`}
+                                        placeholder="Hours"
+                                        min="0"
+                                        max="24"
+                                        disabled={isLastInput}
                                     />
                                 </div>
                             );
                         })}
                     </div>
                 </div>
+
                 <div className="w-1/3">
-                    <p className="font-bold">Total: {projectTotal.toFixed(2)} godz.</p>
+                    
                 </div>
             </div>
         );
     };
+
+
 
     return (
         <div>
@@ -380,13 +412,15 @@ export default function CzasPracyPage() {
                                 />
                             </div>
                         </div>
-                        {additionalProjects.map(project => (
+                        {additionalProjects.map((project, index) => (
                             <AdditionalProjectRow
                                 key={project.id}
                                 project={project}
                                 onInputChange={handleAdditionalProjectInputChange}
+                                first={index === 0} // do mapowania dni tygodnia (tylko pierwszy projekt zmapuje)
                             />
                         ))}
+
 
                     </div>
                 </div>

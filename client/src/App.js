@@ -25,11 +25,15 @@ import NowyPojazdPage from './pages/Czas/NowyPojazd';
 import SprawdzSamochodPage from './pages/Czas/SprawdzSamochod';
 import OgloszeniaPage from './pages/Ogloszenia';
 
+import VacationPlanner from './Components/VacationPlanner copy';
+
+
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<LoginPage />} />
+        <Route path="/test" element={<VacationPlanner />} />
         <Route path="/home" element={<HomePage />}>
           <Route path="pracownik" element={<PracownikPage />} />
           <Route path="zmien-dane" element={<ZmienDanePage />} />
