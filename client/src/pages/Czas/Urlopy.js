@@ -7,6 +7,8 @@ import { InputText } from 'primereact/inputtext';
 import { Checkbox } from 'primereact/checkbox';
 import Axios from "axios";
 
+import VacationPlanner from "../../Components/VacationPlanner";
+
 export default function UrlopyPage() {
     const [urlopOd, setUrlopOd] = useState('');
     const [urlopDo, setUrlopDo] = useState('');
@@ -18,6 +20,9 @@ export default function UrlopyPage() {
     const [dane, setDane] = useState([]);
     const [expandedGroups, setExpandedGroups] = useState({});
     const [pracownicy, setPracownicy] = useState([]);
+    const [dostepneGrupy, setDostepneGrupy] = useState([]);
+    const [selectedGrupy, setSelectedGrupy] = useState({});
+    const [selectedMonthYear, setSelectedMonthYear] = useState(''); // state do wyboru miesiąca i roku dla drukowania urlopów
 
     const extractId = (idWithPrefix) => idWithPrefix.replace('cb-', '');
 
@@ -30,6 +35,14 @@ export default function UrlopyPage() {
         { id: 6, name: "Pogab2" },
         { id: 7, name: "Pogab3" },
     ];
+
+    // do zaznaczania grup w tym co generuje spis urlopów
+    const handleGrupaCheckboxChange = (id) => {
+        setSelectedGrupy(prevState => ({
+            ...prevState,
+            [id]: !prevState[id]
+        }));
+    };
 
     const handleCheckboxChange = (id) => {
         setSelectedItems(prevState =>
@@ -46,12 +59,12 @@ export default function UrlopyPage() {
             ids: ids,
             status: newStatus,
         })
-        .then(() => {
-            fetchUrlopy(); // Refetch data after updating
-        })
-        .catch((error) => {
-            console.error("There was an error updating the status:", error);
-        });
+            .then(() => {
+                fetchUrlopy(); // Refetch data after updating
+            })
+            .catch((error) => {
+                console.error("There was an error updating the status:", error);
+            });
     };
 
     const fetchUrlopy = () => {
@@ -64,8 +77,19 @@ export default function UrlopyPage() {
             });
     };
 
+    const fetchGrupy = () => {
+        Axios.get("http://localhost:5000/api/grupy")
+            .then((response) => {
+                setDostepneGrupy(response.data.grupy);
+            })
+            .catch((error) => {
+                console.error("There was an error fetching the data:", error);
+            });
+    };
+
     useEffect(() => {
         fetchUrlopy();
+        fetchGrupy();
     }, []);
 
     const handleDodaj = () => {
@@ -76,12 +100,12 @@ export default function UrlopyPage() {
             urlop_do: urlopDo,
             komentarz: komentarz,
         })
-        .then(() => {
-            fetchUrlopy();
-        })
-        .catch((error) => {
-            console.error("There was an error adding the leave:", error.response.data);
-        });
+            .then(() => {
+                fetchUrlopy();
+            })
+            .catch((error) => {
+                console.error("There was an error adding the leave:", error.response.data);
+            });
     };
 
     const handleZatwierdz = () => handleUpdateStatus("Zatwierdzone");
@@ -91,9 +115,9 @@ export default function UrlopyPage() {
         Axios.delete("http://localhost:5000/api/urlopy", {
             data: { id: itemId },
         })
-        .then(() => {
-            fetchUrlopy();
-        });
+            .then(() => {
+                fetchUrlopy();
+            });
     };
 
     const handleSzukaj = () => {
@@ -102,8 +126,8 @@ export default function UrlopyPage() {
 
 
     useEffect(() => {
-        console.log(selectedItems);
-    }, [selectedItems]);
+        console.log(selectedMonthYear);
+    }, [selectedMonthYear]);
 
     const groupedData = dane.reduce((acc, curr) => {
         const key = `${curr.imie} ${curr.nazwisko}`;
@@ -250,10 +274,10 @@ export default function UrlopyPage() {
                                         <td className="border-r">{urlopy.komentarz}</td>
                                         <td className="border-r">{urlopy.status}</td>
                                         <td>
-                                            <Button 
-                                                label="Usuń" 
-                                                onClick={() => handleUsun(urlopy.id)} 
-                                                className="bg-blue-700 text-white p-1 m-0.5" 
+                                            <Button
+                                                label="Usuń"
+                                                onClick={() => handleUsun(urlopy.id)}
+                                                className="bg-blue-700 text-white p-1 m-0.5"
                                             />
                                         </td>
                                     </tr>
@@ -263,6 +287,31 @@ export default function UrlopyPage() {
                     </tbody>
                 </table>
             </div>
+            <AmberBox style={"justify-around bg-blue-500 text-white"}>
+                <div>
+                    {dostepneGrupy.map((grupa) => (
+                        <div key={grupa.id}>
+                            <Checkbox
+                                inputId={`grupa-${grupa.id}`}
+                                checked={selectedGrupy[grupa.id]}
+                                onChange={() => handleGrupaCheckboxChange(grupa.id)}
+                            />
+                            <span className="ml-2">{grupa.Zleceniodawca}</span>
+                        </div>
+                    ))}
+                </div>
+                <div className="flex flex-row items-center space-x-4">
+                    <InputText
+                        className="text-black"
+                        type="month"
+                        placeholder="Select Year and Month"
+                        value={selectedMonthYear}
+                        onChange={(e) => setSelectedMonthYear(e.target.value)}
+                    />
+                    <Button label="Drukuj" onClick={() => console.log("Printing...")} />
+                </div>
+            </AmberBox>
+            
         </div>
     );
 }
