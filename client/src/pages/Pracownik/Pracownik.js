@@ -1,14 +1,19 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from 'primereact/button';
-import { Table, Input, Space, Modal } from 'antd';
+import { Table, Input, Space, Modal, ConfigProvider, Select, Form } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
+import plPL from 'antd/es/locale/pl_PL';
 import Highlighter from 'react-highlight-words';
 import { Link } from "react-router-dom";
-import axios from "axios";
+import axios from 'axios';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
+import EditableCell from '../../Components/EditableCells';
+
 import { font } from "../../fonts/OpenSans-Regular-normal";
+
+const { Option } = Select;
 
 export default function PracownikPage() {
   const [tableData, setTableData] = useState([]);
@@ -17,6 +22,8 @@ export default function PracownikPage() {
   const [filteredData, setFilteredData] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
+  const [firms, setFirms] = useState([]);
+  const [groups, setGroups] = useState([]);
   const searchInput = useRef(null);
 
   const showConfirmModal = (id) => {
@@ -65,7 +72,7 @@ export default function PracownikPage() {
           ref={node => {
             searchInput.current = node;
           }}
-          placeholder={`Szukaj ${dataIndex}`}
+          placeholder={`Szukaj`}
           value={selectedKeys[0]}
           onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
           onPressEnter={() => handleSearch(selectedKeys, confirm, dataIndex)}
@@ -116,12 +123,14 @@ export default function PracownikPage() {
       dataIndex: 'name',
       key: 'name',
       ...getColumnSearchProps('name'),
+      sorter: (a, b) => a.name.localeCompare(b.name),
     },
     {
       title: 'Nazwisko',
       dataIndex: 'surname',
       key: 'surname',
       ...getColumnSearchProps('surname'),
+      sorter: (a, b) => a.surname.localeCompare(b.surname),
     },
     {
       title: 'Pesel',
@@ -133,38 +142,45 @@ export default function PracownikPage() {
       title: 'Grupa urlopowa',
       dataIndex: 'vacationGroup',
       key: 'vacationGroup',
-      ...getColumnSearchProps('vacationGroup'),
+      editable: true,
+      filters: groups.map(group => ({
+        text: group.name,
+        value: group.id,
+      })),
+      onFilter: (value, record) => record.vacationGroup.indexOf(value) === 0,
+      render: (text, record) => (
+        <EditableCell
+          title="Grupa urlopowa"
+          editable
+          selectOptions={groups}
+          record={record}
+          onSave={handleSave}
+        >
+          {text}
+        </EditableCell>
+      ),
     },
     {
       title: 'Firma',
       dataIndex: 'company',
-      filters: [
-        {
-          text: 'Hejmej Plat',
-          value: 'Hejmej Plat',
-        },
-        {
-          text: 'Midebygg',
-          value: 'Midebygg',
-        },
-        {
-          text: 'PC Group Sp. z o o.',
-          value: 'PC Group Sp. z o o.',
-        },
-        {
-          text: 'PC Husbyggen',
-          value: 'PC Husbyggen',
-        },
-        {
-          text: 'Polbygg',
-          value: 'Polbygg',
-        },
-        {
-          text: 'Zwolnieni',
-          value: 'Zwolnieni',
-        },
-      ],
+      key: 'company',
+      editable: true,
+      filters: firms.map(firm => ({
+        text: firm.Nazwa_firmy,
+        value: firm.idFirma,
+      })),
       onFilter: (value, record) => record.company.indexOf(value) === 0,
+      render: (text, record) => (
+        <EditableCell
+          title="Firma"
+          editable
+          selectOptions={firms}
+          record={record}
+          onSave={handleSave}
+        >
+          {text}
+        </EditableCell>
+      ),
     },
     {
       title: 'Telefon',
@@ -185,12 +201,6 @@ export default function PracownikPage() {
       ...getColumnSearchProps('email'),
     },
     {
-      title: 'Kierownik',
-      dataIndex: 'manager',
-      key: 'manager',
-      ...getColumnSearchProps('manager'),
-    },
-    {
       title: 'Akcje',
       key: 'action',
       render: (text, record) => (
@@ -205,69 +215,119 @@ export default function PracownikPage() {
             onCancel={handleCancel}
             okText="Tak"
             cancelText="Nie"
-            >
+          >
             <p>Czy na pewno chcesz usunąć ten rekord?</p>
-            </Modal>
+          </Modal>
           <Button onClick={() => showConfirmModal(record.id)} className="bg-red-500 text-white p-1 mx-1">Usuń</Button>
         </span>
       ),
     },
   ];
 
-    useEffect(() => {
-        fetchEmployees();
-    }, []);
+  useEffect(() => {
+    fetchEmployees();
+    fetchFirms();
+    fetchGroups();
+  }, []);
 
-    const fetchEmployees = async () => {
-        try {
-            const response = await axios.get("http://localhost:5000/api/pracownicy");
-            setTableData(response.data);
-        } catch (error) {
-            console.log(error);
-        }
-    };
+  const fetchEmployees = async () => {
+    try {
+      const response = await axios.get("http://localhost:5000/api/pracownicy");
+      setTableData(response.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
-    const printPDF = () => {
-        const doc = new jsPDF('landscape');
+  const fetchFirms = async () => {
+    try {
+      const response = await axios.get("http://localhost:5000/api/pracownik/firmy");
+      setFirms(response.data.map(firm => ({
+        id: firm.idFirma,
+        name: firm.Nazwa_firmy
+      })));
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  
+  const fetchGroups = async () => {
+    try {
+      const response = await axios.get("http://localhost:5000/api/pracownik/grupy");
+      setGroups(response.data.map(group => ({
+        id: group.idGrupa_urlopowa,
+        name: group.Zleceniodawca
+      })));
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
-        doc.setFont("OpenSans-Regular", "normal");
-        doc.setFontSize(18);
-        doc.text('Lista Pracowników', 14, 12);
-
-        const dataToPrint = filteredData.length > 0 ? filteredData : tableData;
-
-        doc.autoTable({
-        head: [
-            ['Imię', 'Nazwisko', 'Pesel', 'Grupa urlopowa', 'Firma', 'Telefon 1', 'Telefon 2', 'E-mail', 'Kierownik']
-        ],
-        body: dataToPrint.map(employee => [
-            employee.name,
-            employee.surname,
-            employee.pesel,
-            employee.vacationGroup,
-            employee.company,
-            employee.phone1,
-            employee.phone2,
-            employee.email,
-            employee.manager
-        ]),
-        margin: { top: 20 },
-        tableWidth: 'auto',
-        styles: {
-            font: "OpenSans-Regular",
-            halign: 'center'
-        },
-        headStyles: {
-            font: "OpenSans-Regular",
-            fontStyle: "bold"
-        }
+  const handleSave = async (id, field, value) => {
+    try {
+        await axios.put(`http://localhost:5000/api/pracownik/komorka/${id}`, {
+            field: field,
+            value: value,
         });
-        doc.save('lista-pracownikow.pdf');
-    };
+        setTableData(prevData => prevData.map(item =>
+            item.id === id ? { ...item, [field]: value } : item
+        ));
+    } catch (error) {
+        console.error('Update failed:', error);
+    }
+};
+
+  const printPDF = () => {
+    const doc = new jsPDF('landscape');
+
+    doc.setFont("OpenSans-Regular", "normal");
+    doc.setFontSize(18);
+    doc.text('Lista Pracowników', 14, 12);
+
+    const dataToPrint = filteredData.length > 0 ? filteredData : tableData;
+
+    doc.autoTable({
+      head: [
+        ['Imię', 'Nazwisko', 'Pesel', 'Grupa urlopowa', 'Firma', 'Telefon 1', 'Telefon 2', 'E-mail']
+      ],
+      body: dataToPrint.map(employee => [
+        employee.name,
+        employee.surname,
+        employee.pesel,
+        employee.vacationGroup,
+        employee.company,
+        employee.phone1,
+        employee.phone2,
+        employee.email,
+      ]),
+      margin: { top: 20 },
+      tableWidth: 'auto',
+      styles: {
+        font: "OpenSans-Regular",
+        halign: 'center'
+      },
+      headStyles: {
+        font: "OpenSans-Regular",
+        fontStyle: "bold"
+      }
+    });
+    doc.save('lista-pracownikow.pdf');
+  };
 
   const handleTableChange = (pagination, filters, sorter) => {
+    let sortedData = [...tableData];
+    
+    if (sorter.order) {
+      sortedData.sort((a, b) => {
+        if (sorter.order === 'ascend') {
+          return sorter.field === 'name' ? a.name.localeCompare(b.name) : a.surname.localeCompare(b.surname);
+        }
+        return sorter.field === 'name' ? b.name.localeCompare(a.name) : b.surname.localeCompare(a.surname);
+      });
+    }
+  
     const appliedFilters = filters || {};
-    const filteredDataFromTable = tableData.filter(item => {
+    const filteredDataFromTable = sortedData.filter(item => {
       return Object.keys(appliedFilters).every(key => {
         const filterValues = appliedFilters[key] || [];
         if (Array.isArray(filterValues) && filterValues.length > 0) {
@@ -277,6 +337,7 @@ export default function PracownikPage() {
         return true;
       });
     });
+  
     setFilteredData(filteredDataFromTable);
   };
 
@@ -299,13 +360,20 @@ export default function PracownikPage() {
         </div>
       </div>
       <div className="w-full md:w-auto bg-gray-300 m-2 outline outline-1 outline-gray-500">
-        <Table
-          columns={columns}
-          dataSource={tableData}
-          rowKey="id"
-          scroll={{ y: 540 }}
-          onChange={handleTableChange}
-        />
+        <ConfigProvider locale={plPL}>
+          <Table
+            components={{
+              body: {
+                cell: EditableCell,
+              },
+            }}
+            columns={columns}
+            dataSource={tableData}
+            rowKey="id"
+            scroll={{ y: 540 }}
+            onChange={handleTableChange}
+          />
+        </ConfigProvider>
       </div>
     </div>
   );
