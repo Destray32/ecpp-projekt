@@ -7,7 +7,6 @@ import { InputText } from 'primereact/inputtext';
 import { Checkbox } from 'primereact/checkbox';
 import Axios from "axios";
 
-import VacationPlanner from "../../Components/VacationPlanner";
 
 export default function UrlopyPage() {
     const [urlopOd, setUrlopOd] = useState('');
@@ -21,11 +20,63 @@ export default function UrlopyPage() {
     const [pracownicy, setPracownicy] = useState([]);
     const [dostepneGrupy, setDostepneGrupy] = useState([]);
     const [selectedGrupy, setSelectedGrupy] = useState({});
-    const [selectedMonthYear, setSelectedMonthYear] = useState(''); // state do wyboru miesiąca i roku dla drukowania urlopów
+    const [selectedGrupyNazwa, setSelectedGrupyNazwa] = useState([]);
+    const [selectedWeek, setSelectedWeek] = useState(''); // state do tygodnia ale bez formatowania do pdf
+    const [selectedWeekAndYear, setSelectedWeekAndYear] = useState([]); // state do tygodnia i roku dla pdf
     const [filtrValue, setFiltrValue] = useState("Wszystkie");
 
 
     const extractId = (idWithPrefix) => idWithPrefix.replace('cb-', '');
+
+    const handlePdfDownloadClick = () => {
+
+        Axios.get("http://localhost:5000/api/urlopy/pdf", {
+            params: {
+                Zleceniodawca: selectedGrupyNazwa
+            },
+        })
+            .then((response) => {
+                // console.log("PDF response", response.data);
+                const databaseData = response.data;
+                const transformedData = [];
+
+                databaseData.forEach(entry => {
+                    // Create a unique identifier for the person (you could use name and surname, or any unique key)
+                    const personKey = `${entry.Imie} ${entry.Nazwisko}`;
+
+                    // sprawdzenie czy osoba jest już w tablicy transformedData
+                    let person = transformedData.find(p => p.name === personKey);
+
+                    if (!person) {
+                        // jestli nie ma to dodajemy do tablicy
+                        person = {
+                            id: entry.FK_idPracownik, // zakładamy że id pracownika jest unikalne
+                            name: personKey,
+                            vacations: []
+                        };
+                        transformedData.push(person);
+                    }
+
+                    // dodajemy urlop do danej osoby
+                    person.vacations.push({
+                        from: entry.Urlop_od,
+                        to: entry.Urlop_do,
+                        status: entry.Status
+                    });
+                });
+
+                localStorage.setItem('vacationData', JSON.stringify(transformedData));
+                
+                // Otwarcie nowego okna z pdf-em
+                setTimeout(() => {
+                    window.open(`http://localhost:3000/test`, '_blank');
+                }, 1500);
+
+            })
+            .catch((error) => {
+                console.error("There was an error fetching the data:", error);
+            });
+    };
 
     const sampleData2 = [
         { id: 1, name: "Zaznacz wszystko" },
@@ -38,11 +89,26 @@ export default function UrlopyPage() {
     ];
 
     // do zaznaczania grup w tym co generuje spis urlopów
-    const handleGrupaCheckboxChange = (id) => {
-        setSelectedGrupy(prevState => ({
-            ...prevState,
-            [id]: !prevState[id]
-        }));
+    const handleGrupaCheckboxChange = (id, zleceniodawca) => {
+        setSelectedGrupy(prevState => {
+            const newSelectedGrupy = {
+                ...prevState,
+                [id]: !prevState[id]
+            };
+
+            // Update selectedGrupyNazwa based on checkbox state
+            setSelectedGrupyNazwa(prevSelected => {
+                if (newSelectedGrupy[id]) {
+                    // Checkbox is checked, add Zleceniodawca to the list
+                    return [...prevSelected, zleceniodawca];
+                } else {
+                    // Checkbox is unchecked, remove Zleceniodawca from the list
+                    return prevSelected.filter(item => item !== zleceniodawca);
+                }
+            });
+
+            return newSelectedGrupy;
+        });
     };
 
     const handleGetPracownicy = () => {
@@ -63,7 +129,7 @@ export default function UrlopyPage() {
         );
     };
     const handleUpdateStatus = (newStatus) => {
-        
+
         const ids = selectedItems.map(extractId);
         Axios.put("http://localhost:5000/api/urlopy", {
             ids: ids,
@@ -134,10 +200,23 @@ export default function UrlopyPage() {
         console.log("Szukaj");
     };
 
+    // ustawia do formatu [week, year] wybrany tydzień i rok z inputu
+    const handleSelectWeekAndYear = (e) => {
+        setSelectedWeek(e.target.value);
+        const year = e.target.value.substring(0, 4);
+        const week = e.target.value.substring(6, 8);
+        setSelectedWeekAndYear([week, year]);
+
+        localStorage.setItem('selectedWeekAndYear', JSON.stringify([week, year]));
+    }
 
     useEffect(() => {
-        console.log(selectedMonthYear);
-    }, [selectedMonthYear]);
+        console.log(selectedWeekAndYear);
+    }, [selectedWeekAndYear]);
+
+    useEffect(() => {
+        console.log(selectedGrupyNazwa);
+    }, [selectedGrupyNazwa]);
 
     const groupedData = dane.reduce((acc, curr) => {
         const key = `${curr.imie} ${curr.nazwisko}`;
@@ -303,7 +382,7 @@ export default function UrlopyPage() {
                             <Checkbox
                                 inputId={`grupa-${grupa.id}`}
                                 checked={selectedGrupy[grupa.id]}
-                                onChange={() => handleGrupaCheckboxChange(grupa.id)}
+                                onChange={() => handleGrupaCheckboxChange(grupa.id, grupa.Zleceniodawca)}
                             />
                             <span className="ml-2">{grupa.Zleceniodawca}</span>
                         </div>
@@ -312,15 +391,15 @@ export default function UrlopyPage() {
                 <div className="flex flex-row items-center space-x-4">
                     <InputText
                         className="text-black"
-                        type="month"
-                        placeholder="Select Year and Month"
-                        value={selectedMonthYear}
-                        onChange={(e) => setSelectedMonthYear(e.target.value)}
+                        type="week"
+                        placeholder="Select week"
+                        value={selectedWeek}
+                        onChange={(e) => handleSelectWeekAndYear(e)}
                     />
-                    <Button label="Drukuj" onClick={() => console.log("Printing...")} />
+                    <Button label="Drukuj" onClick={handlePdfDownloadClick} />
                 </div>
             </AmberBox>
-            
+
         </div>
     );
 }

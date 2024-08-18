@@ -32,8 +32,8 @@ export default function CzasPracyPage() {
     const [daysOfWeek, setDaysOfWeek] = useState(generateWeek(startOfWeek(new Date(), { weekStartsOn: 1 })));
 
     const [projectTotals, setProjectTotals] = useState({}); // eksperymantlny state do 
-                                                            // przetrzymywania sumy godzin dla projektów 
-                                                            // {projectId: totalHours}
+    // przetrzymywania sumy godzin dla projektów 
+    // {projectId: totalHours}
 
 
     const startOfCurrentWeek = startOfWeek(currentDate, { weekStartsOn: 1 });
@@ -197,14 +197,14 @@ export default function CzasPracyPage() {
                             }
                         }
                     };
-    
+
                     // Calculate the total hours for this project and update the state
                     const totalHours = calculateProjectTotal(updatedProject);
                     setProjectTotals(prevTotals => ({
                         ...prevTotals,
                         [projectId]: totalHours,
                     }));
-    
+
                     return updatedProject;
                 }
                 return p;
@@ -216,21 +216,33 @@ export default function CzasPracyPage() {
     useEffect(() => {
         console.log(projectTotals);
     }, [projectTotals]);
-    
+
+    // handle do usuwania projektów
+    const handleDeleteProject = (projectId) => {
+        setAdditionalProjects(prevProjects =>
+            prevProjects.filter(project => project.id !== projectId)
+        );
+
+        setProjectTotals(prevTotals => { // usuwanie sumy godzin ze stanu
+            const newTotals = { ...prevTotals };
+            delete newTotals[projectId];
+            return newTotals;
+        });
+    };
 
 
 
-    const AdditionalProjectRow = ({ project, onInputChange, first }) => {
+    const AdditionalProjectRow = ({ project, onInputChange, first, onDelete }) => {
         const projectTotal = calculateProjectTotal(project);
 
         return (
             <div className="mt-4">
                 <div className="flex items-center space-x-2">
                     <div className="w-1/3 flex flex-row justify-between">
-                    Projekt: {project.projekt || "Projekt"}
-                    <span className="font-bold">Total: {projectTotal.toFixed(2)} godz.</span>
+                        Projekt: {project.projekt || "Projekt"}
+                        <span className="font-bold">Total: {projectTotal.toFixed(2)} godz.</span>
                     </div>
-                    
+
 
                     {/* tylko pierwszy projekt zmapuje dni tygodnia */}
                     {first && (
@@ -245,7 +257,14 @@ export default function CzasPracyPage() {
                 </div>
 
                 <div className="flex items-center space-x-2 mt-2">
-                    <div className="w-1/3"></div>
+                    <div className="w-1/3">
+                        <button
+                            onClick={() => onDelete(project.id)}
+                            className="text-red-500 font-bold"
+                        >
+                            Delete
+                        </button>
+                    </div>
                     <div className="flex-1 grid grid-cols-7 gap-1">
                         {daysOfWeekProjects.map((day, index) => {
                             const dateKey = format(day, 'yyyy-MM-dd');
@@ -268,9 +287,6 @@ export default function CzasPracyPage() {
                     </div>
                 </div>
 
-                <div className="w-1/3">
-                    
-                </div>
             </div>
         );
     };
@@ -417,6 +433,7 @@ export default function CzasPracyPage() {
                                 key={project.id}
                                 project={project}
                                 onInputChange={handleAdditionalProjectInputChange}
+                                onDelete={handleDeleteProject} // do usuwania projektów
                                 first={index === 0} // do mapowania dni tygodnia (tylko pierwszy projekt zmapuje)
                             />
                         ))}

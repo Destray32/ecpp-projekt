@@ -1,62 +1,38 @@
-import React, { useState, useEffect } from 'react';
-import { format, addDays, getISOWeek, startOfWeek, endOfWeek } from 'date-fns';
+import React, { useState, useEffect, useRef } from 'react';
+import { format, addDays, getISOWeek, startOfWeek, endOfWeek, isWithinInterval, parseISO, setISOWeek } from 'date-fns';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
-const dummyVacationData = [
-    {
-        id: 1,
-        company: "ABC Corp",
-        department: "IT",
-        name: "John Doe",
-        vacationDates: [
-            "2023-01-10", "2023-01-11", "2023-01-12", "2023-01-13",
-            "2023-05-01", "2023-05-02", "2023-05-03", "2023-05-04", "2023-05-05",
-            "2023-08-14", "2023-08-15", "2023-08-16", "2023-08-17", "2023-08-18"
-        ]
-    },
-    {
-        id: 2,
-        company: "ABC Corp",
-        department: "HR",
-        name: "Jane Smith",
-        vacationDates: [
-            "2023-03-20", "2023-03-21", "2023-03-22", "2023-03-23", "2023-03-24",
-            "2023-07-03", "2023-07-04", "2023-07-05", "2023-07-06", "2023-07-07",
-            "2023-12-27", "2023-12-28", "2023-12-29"
-        ]
-    },
-    {
-        id: 3,
-        company: "XYZ Inc",
-        department: "Sales",
-        name: "Bob Johnson",
-        vacationDates: [
-            "2023-02-13", "2023-02-14", "2023-02-15", "2023-02-16", "2023-02-17",
-            "2023-06-19", "2023-06-20", "2023-06-21", "2023-06-22", "2023-06-23",
-            "2023-10-09", "2023-10-10", "2023-10-11", "2023-10-12", "2023-10-13"
-        ]
-    },
-    {
-        id: 4,
-        company: "XYZ Inc",
-        department: "Marketing",
-        name: "Alice Brown",
-        vacationDates: [
-            "2023-04-03", "2023-04-04", "2023-04-05", "2023-04-06", "2023-04-07",
-            "2023-09-11", "2023-09-12", "2023-09-13", "2023-09-14", "2023-09-15",
-            "2023-12-18", "2023-12-19", "2023-12-20", "2023-12-21", "2023-12-22"
-        ]
-    }
-];
 
 
 const VacationPlanner = () => {
     const [vacationData, setVacationData] = useState([]);
-    const [startDate, setStartDate] = useState(new Date(2023, 0, 1));
-    const [endDate, setEndDate] = useState(new Date(2023, 11, 31));
-
+    const [startDate, setStartDate] = useState(new Date());
+    const [endDate, setEndDate] = useState(new Date());
+    const plannerRef = useRef();
 
     useEffect(() => {
-        setVacationData(dummyVacationData);
+        const storedSelectedWeekAndYear = localStorage.getItem('selectedWeekAndYear');
+        if (storedSelectedWeekAndYear) {
+            const [week, year] = JSON.parse(storedSelectedWeekAndYear);
+
+            // Calculate the start date based on the selected week and year
+            const calculatedStartDate = setISOWeek(new Date(year, 0, 1), parseInt(week, 10));
+
+            // Set the start date and end date
+            setStartDate(calculatedStartDate);
+            setEndDate(new Date(year, 11, 31)); // End date for the entire year
+        }
+
+        const storedVacationData = localStorage.getItem('vacationData');
+        if (storedVacationData) {
+            setVacationData(JSON.parse(storedVacationData));
+        }
+        const timeoutId = setTimeout(() => {
+            downloadPDF();
+        }, 1000);
+
+        return () => clearTimeout(timeoutId);
     }, []);
 
     const getWeekDates = (date) => {
@@ -71,9 +47,8 @@ const VacationPlanner = () => {
         while (currentDate <= endDate) {
             const { start, end } = getWeekDates(currentDate);
             headers.push(
-                <th key={currentDate.toISOString()} className="border p-1 text-xs" colSpan={7}>
-                    <div>{format(start, 'MMM d')} - {format(end, 'MMM d')}</div>
-                    <div>Week {getISOWeek(currentDate)}</div>
+                <th key={currentDate.toISOString()} className="border text-xs" colSpan={7}>
+                    <div>{getISOWeek(currentDate)}</div>
                 </th>
             );
             currentDate = addDays(currentDate, 7);
@@ -82,8 +57,8 @@ const VacationPlanner = () => {
     };
 
     const renderDayHeaders = () => {
-        return ['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, index) => (
-            <th key={day} className="border p-1 text-xs w-4">
+        return ['P', 'W', 'S', 'C', 'P', 'S', 'N'].map((day, index) => (
+            <th key={index} className="border text-xs w-[1px]">
                 {day}
             </th>
         ));
@@ -92,27 +67,78 @@ const VacationPlanner = () => {
     const renderVacationRow = (employee) => {
         let currentDate = startDate;
         const cells = [];
+
         while (currentDate <= endDate) {
             for (let i = 0; i < 7; i++) {
-                const isVacation = employee.vacationDates.includes(format(currentDate, 'yyyy-MM-dd'));
+                let bgColor = '';
+
+                employee.vacations.forEach(vacation => {
+                    const from = parseISO(vacation.from);
+                    const to = parseISO(vacation.to);
+
+                    if (isWithinInterval(currentDate, { start: from, end: to })) {
+                        switch (vacation.status) {
+                            case 'Zatwierdzone':
+                                bgColor = 'bg-green-200';
+                                break;
+                            case 'Do zatwierdzenia':
+                                bgColor = 'bg-yellow-200';
+                                break;
+                            case 'Anulowane':
+                                bgColor = 'bg-red-200';
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                });
+
                 cells.push(
                     <td
                         key={currentDate.toISOString()}
-                        className={`border p-1 ${isVacation ? 'bg-blue-200' : ''} ${i === 6 ? 'bg-red-100' : ''}`}
+                        className={`border ${bgColor} ${i === 6 ? 'bg-red-100' : ''}`}
                     >
-                        {format(currentDate, 'd')}
                     </td>
                 );
+
                 currentDate = addDays(currentDate, 1);
             }
         }
         return cells;
     };
 
+    const downloadPDF = () => {
+        const input = plannerRef.current;
+        html2canvas(input).then(canvas => {
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF('l', 'mm', 'a4');
+            const imgWidth = 297; // A4 width 
+            const pageHeight = 210; // A4 height
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            let heightLeft = imgHeight;
+            let position = 0;
+
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+
+            while (heightLeft >= 0) {
+                position = heightLeft - imgHeight;
+                pdf.addPage();
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+            }
+
+            pdf.save('VacationPlanner.pdf');
+        });
+    };
+
     return (
         <div className="p-4">
-            <h1 className="text-2xl font-bold mb-4">Vacation Plan 2023</h1>
-            <div className="overflow-x-auto">
+            <h1 className="text-2xl font-bold mb-4">Plan urlopów 2023</h1>
+            <button onClick={downloadPDF} className="mb-4 p-2 bg-blue-500 text-white rounded">
+                Download as PDF
+            </button>
+            <div ref={plannerRef} className="overflow-x-auto">
                 <table className="w-full border-collapse text-center">
                     <thead>
                         <tr>
@@ -121,10 +147,7 @@ const VacationPlanner = () => {
                             <th className="border p-2">Name</th>
                             {renderHeader()}
                         </tr>
-                        <tr>
-                            <th colSpan={3}></th>
-                            {renderDayHeaders()}
-                        </tr>
+
                     </thead>
                     <tbody>
                         {vacationData.map((employee, index) => (
@@ -143,4 +166,3 @@ const VacationPlanner = () => {
 };
 
 export default VacationPlanner;
-

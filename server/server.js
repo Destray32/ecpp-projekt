@@ -68,6 +68,7 @@ const GetUrlopy = require('./api/Czas/Urlopy/czas.urlopy.getUrlopy');
 const DodajUrlop = require('./api/Czas/Urlopy/czas.urlopy.dodajUrlop');
 const ZatwierdzUrlop = require('./api/Czas/Urlopy/czas.urlopy.zatwierdzUrlop');
 const UsunUrlop = require('./api/Czas/Urlopy/czas.urlopy.usunUrlop');
+const urlopyPdf = require('./api/Czas/Urlopy/czas.urlopy.urlopyPdf');
 
 // Czas > Pojazdy
 const PobierzPojazdy = require('./api/Czas/Pojazdy/pojazdy.pobierz');
@@ -231,6 +232,11 @@ app.put('/api/urlopy', (req, res) => {
 app.delete('/api/urlopy', (req, res) => {
     UsunUrlop(req, res, db);
 });
+// pobieranie danych dla drukowania pdf urlopow
+app.get('/api/urlopy/pdf', (req, res) => {
+    urlopyPdf(req, res, db);
+});
+
 
 /////////////////////////////////////////
 
