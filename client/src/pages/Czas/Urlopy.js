@@ -16,6 +16,7 @@ export default function UrlopyPage() {
     const [komentarz, setKomentarz] = useState('');
     const [selectedItems, setSelectedItems] = useState([]);
     const [dane, setDane] = useState([]);
+    const [filteredDane, setFilteredDane] = useState([]);
     const [expandedGroups, setExpandedGroups] = useState({});
     const [pracownicy, setPracownicy] = useState([]);
     const [dostepneGrupy, setDostepneGrupy] = useState([]);
@@ -66,7 +67,7 @@ export default function UrlopyPage() {
                 });
 
                 localStorage.setItem('vacationData', JSON.stringify(transformedData));
-                
+
                 // Otwarcie nowego okna z pdf-em
                 setTimeout(() => {
                     window.open(`http://localhost:3000/test`, '_blank');
@@ -114,7 +115,8 @@ export default function UrlopyPage() {
     const handleGetPracownicy = () => {
         Axios.get("http://localhost:5000/api/pracownicy")
             .then((response) => {
-                setPracownicy(response.data.pracownicy);
+                setPracownicy(response.data); // skróciłem do response.data, 
+                // bo mi nie wypełniało dropdowna
             })
             .catch((error) => {
                 console.error("There was an error fetching the data:", error);
@@ -147,6 +149,7 @@ export default function UrlopyPage() {
         Axios.get("http://localhost:5000/api/urlopy")
             .then((response) => {
                 setDane(response.data.urlopy);
+                setFilteredDane(response.data.urlopy);
             })
             .catch((error) => {
                 console.error("There was an error fetching the data:", error);
@@ -166,6 +169,7 @@ export default function UrlopyPage() {
     useEffect(() => {
         fetchUrlopy();
         fetchGrupy();
+        handleGetPracownicy();
     }, []);
 
     const handleDodaj = () => {
@@ -196,9 +200,16 @@ export default function UrlopyPage() {
             });
     };
 
-    const handleSzukaj = () => {
-        console.log("Szukaj");
+    const handleSzukaj = (filter) => {
+        if (filter === "Wszystkie" || filter === "") {
+            setFilteredDane(dane); // pokaz wszystkie
+        } else {
+            const filteredData = dane.filter(item => item.status === filter); // pokaz te ktore maja item.status taki sam jak filter
+            setFilteredDane(filteredData);
+        }
     };
+    
+
 
     // ustawia do formatu [week, year] wybrany tydzień i rok z inputu
     const handleSelectWeekAndYear = (e) => {
@@ -218,12 +229,25 @@ export default function UrlopyPage() {
         console.log(selectedGrupyNazwa);
     }, [selectedGrupyNazwa]);
 
-    const groupedData = dane.reduce((acc, curr) => {
+    useEffect(() => {
+        handleSzukaj(filtrValue);
+    }, [filtrValue]);
+
+    // useEffect(() => {
+    //     console.log(pracownicy);
+    // }, [pracownicy]);
+
+    // useEffect(() => {
+    //     console.log(UrlopDla);
+    // }, [UrlopDla]);
+
+    const groupedData = filteredDane.reduce((acc, curr) => {
         const key = `${curr.imie} ${curr.nazwisko}`;
         if (!acc[key]) acc[key] = [];
         acc[key].push(curr);
         return acc;
     }, {});
+    
 
     const handleGroupToggle = (name) => {
         setExpandedGroups(prev => ({
@@ -243,7 +267,7 @@ export default function UrlopyPage() {
                                 <Dropdown
                                     value={UrlopDla}
                                     onChange={(e) => setUrlopDla(e.value)}
-                                    options={pracownicy}
+                                    options={pracownicy.map(pracownik => `${pracownik.surname} ${pracownik.name}`)}
                                     editable
                                     placeholder="Pracownik"
                                     autoComplete="off"
@@ -299,9 +323,10 @@ export default function UrlopyPage() {
                                 filter
                                 showClear
                             />
-                            <Button label="Szukaj" onClick={handleSzukaj}
-                                className="p-button-outlined border-2 p-1 bg-white text-black pr-2 pl-2 mr-32" />
-                            <div>
+                            {/* <Button label="Szukaj" onClick={() => handleSzukaj(filtrValue)}
+                                className="p-button-outlined border-2 p-1 
+                                bg-white text-black pr-2 pl-2 mr-32 ml-2" /> */}
+                            <div className="ml-8">
                                 <Button label="Zatwierdź" onClick={handleZatwierdz}
                                     className="p-button-outlined border-2 p-1 bg-white text-black pr-2 pl-2 mr-2" />
                                 <Button label="Anuluj" onClick={handleAnuluj}
