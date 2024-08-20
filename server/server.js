@@ -98,6 +98,10 @@ const PobierzOgloszeniaGrupy = require('./api/Ogloszenia/ogloszenia.pobierzGrupy
 app.use(cors());
 app.use(express.json());
 
+app.use(express.json({ type: 'application/json; charset=utf-8' }));
+app.use(express.urlencoded({ extended: true, parameterLimit: 10000, charset: 'utf-8' }));
+
+
 // PRACOWNIK > PRACOWNIK //
 app.route('/api/pracownicy')
     .get((req, res) => {
@@ -151,7 +155,7 @@ app.route('/api/czas')
         PobierzCzasPracy(req, res);
     })
     .post((req, res) => {
-        ZapiszCzasPracy(req, res);
+        ZapiszCzasPracy(req, res, db);
     });
 
 app.route('/api/czas/zamknij')

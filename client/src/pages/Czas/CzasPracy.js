@@ -3,6 +3,7 @@ import { format, startOfWeek, addWeeks, subWeeks, getWeek, getDay } from 'date-f
 import { pl } from 'date-fns/locale';
 import { Dropdown } from "primereact/dropdown";
 import { Button } from 'primereact/button';
+import Axios from "axios";
 
 const generateWeek = (startDate = new Date()) => {
     const week = [];
@@ -30,6 +31,8 @@ export default function CzasPracyPage() {
     const [projectHours, setProjectHours] = useState({});
     const [additionalProjects, setAdditionalProjects] = useState([]);
     const [daysOfWeek, setDaysOfWeek] = useState(generateWeek(startOfWeek(new Date(), { weekStartsOn: 1 })));
+    const [samochody, setSamochody] = useState([]);
+    const [samochodyValue, setSamochodyValue] = useState(null);
 
     const [projectTotals, setProjectTotals] = useState({}); // eksperymantlny state do 
     // przetrzymywania sumy godzin dla projektów 
@@ -38,6 +41,24 @@ export default function CzasPracyPage() {
 
     const startOfCurrentWeek = startOfWeek(currentDate, { weekStartsOn: 1 });
     const daysOfWeekProjects = generateWeek(startOfCurrentWeek);
+
+    const fetchPojazdy = () => {
+        Axios.get("http://localhost:5000/api/pojazdy")
+            .then((response) => {
+                setSamochody(response.data.pojazdy.map(pojazd => ({ label: pojazd.numerRejestracyjny, value: pojazd.numerRejestracyjny })));
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+    }
+
+    useEffect(() => {
+        console.log(hours);
+    }, [hours]);
+
+    useEffect(() => {
+        fetchPojazdy();
+    }, []);
 
     useEffect(() => {
         setDaysOfWeek(generateWeek(startOfCurrentWeek));
@@ -51,6 +72,25 @@ export default function CzasPracyPage() {
                 [type]: value,
             }
         }));
+    };
+
+    const handleSave = () => { // wysyłanie danych (godzin u góry strony) do serwera na przycisku "zapisz"
+        try {
+            const response = Axios.post("http://localhost:5000/api/czas", {
+                pracownikId: Pracownik,
+                projektyId: Projekty,
+                weekData: getWeek(currentDate, { weekStartsOn: 1 }),
+                year: currentDate.getFullYear(),
+                days: daysOfWeek.map(day => ({
+                    dayOfWeek: format(day, 'EEEE', { locale: pl }),
+                    start: hours[format(day, 'yyyy-MM-dd')]?.start || "00:00",
+                    end: hours[format(day, 'yyyy-MM-dd')]?.end || "00:00",
+                }))
+            });
+            console.log(response);
+        } catch (error) {
+            console.error(error);
+        }
     };
 
     const handleTimeInputChangeProjects = (day, type, value) => {
@@ -148,7 +188,6 @@ export default function CzasPracyPage() {
         }, 0);
     };
 
-
     const calculateDailyTotal = (day) => {
         const start = hours[day]?.start || "00:00";
         const end = hours[day]?.end || "00:00";
@@ -212,7 +251,6 @@ export default function CzasPracyPage() {
         );
     };
 
-
     useEffect(() => {
         console.log(projectTotals);
     }, [projectTotals]);
@@ -229,8 +267,6 @@ export default function CzasPracyPage() {
             return newTotals;
         });
     };
-
-
 
     const AdditionalProjectRow = ({ project, onInputChange, first, onDelete }) => {
         const projectTotal = calculateProjectTotal(project);
@@ -285,13 +321,25 @@ export default function CzasPracyPage() {
                             );
                         })}
                     </div>
-                </div>
 
+                </div>
+                <div className="flex gap-4 items-center">
+                    <span>Samochody</span>
+                    <Dropdown
+                        value={samochodyValue}
+                        onChange={(e) => setSamochodyValue(e.value)}
+                        options={samochody}
+                        editable
+                        placeholder="Samochody"
+                        autoComplete="off"
+                        className="p-2"
+                        filter
+                        showClear
+                    />
+                </div>
             </div>
         );
     };
-
-
 
     return (
         <div>
@@ -447,7 +495,10 @@ export default function CzasPracyPage() {
                     <div className="w-full h-2/6">
                         <div className="w-full flex flex-row items-center p-4 justify-between">
                             <div className="w-full flex flex-row items-center space-x-2 justify-between">
-                                <Button label="Zapisz" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 flex-grow" />
+                                <Button label="Zapisz"
+                                    className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 flex-grow"
+                                    onClick={handleSave}
+                                />
                                 <Button label="Zamknij tydzień" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 flex-grow" />
                                 <Button label="Otwórz tydzień" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 flex-grow" />
                                 <Button label="Planowanie urlopu" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 flex-grow" />
