@@ -24,6 +24,7 @@ const formatWeek = (date) => {
 export default function CzasPracyPage() {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [Pracownik, setPracownik] = useState(null);
+    const [pracownicy, setPracownicy] = useState([]);
     const [Firma, setFirma] = useState(null);
     const [Zleceniodawca, setZleceniodawca] = useState(null);
     const [Projekty, setProjekty] = useState(null);
@@ -52,12 +53,23 @@ export default function CzasPracyPage() {
             });
     }
 
+    const fetchPracownicy = () => {
+        Axios.get("http://localhost:5000/api/pracownicy")
+            .then((response) => {
+                setPracownicy(response.data.map(pracownik => ({ label: `${pracownik.name} ${pracownik.surname}`, value: `${pracownik.name} ${pracownik.surname}` })));
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+    }
+
     useEffect(() => {
-        console.log(hours);
-    }, [hours]);
+        console.log(Pracownik);
+    }, [Pracownik]);
 
     useEffect(() => {
         fetchPojazdy();
+        fetchPracownicy();
     }, []);
 
     useEffect(() => {
@@ -75,9 +87,10 @@ export default function CzasPracyPage() {
     };
 
     const handleSave = () => { // wysyłanie danych (godzin u góry strony) do serwera na przycisku "zapisz"
+        const totalHours = calculateWeeklyTotal();
         try {
             const response = Axios.post("http://localhost:5000/api/czas", {
-                pracownikId: Pracownik,
+                pracownikName: Pracownik,
                 projektyId: Projekty,
                 weekData: getWeek(currentDate, { weekStartsOn: 1 }),
                 year: currentDate.getFullYear(),
@@ -85,7 +98,8 @@ export default function CzasPracyPage() {
                     dayOfWeek: format(day, 'EEEE', { locale: pl }),
                     start: hours[format(day, 'yyyy-MM-dd')]?.start || "00:00",
                     end: hours[format(day, 'yyyy-MM-dd')]?.end || "00:00",
-                }))
+                })),
+                totalHours: totalHours,
             });
             console.log(response);
         } catch (error) {
@@ -355,7 +369,7 @@ export default function CzasPracyPage() {
                             <Dropdown
                                 value={Pracownik}
                                 onChange={(e) => setPracownik(e.value)}
-                                options={["Kierownik 1", "Kierownik 2"]}
+                                options={pracownicy}
                                 editable
                                 placeholder="Pracownik"
                                 autoComplete="off"
