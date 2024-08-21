@@ -8,7 +8,7 @@ const mysql = require('mysql2');
 const db = mysql.createConnection({
     host: 'localhost',
     user: 'root',
-    password: '',
+    password: 'root',
     database: 'mydb'
 });
 
@@ -94,6 +94,8 @@ const DodajOgloszenie = require('./api/Ogloszenia/ogloszenia.dodaj');
 const UsunOgloszenie = require('./api/Ogloszenia/ogloszenia.usun');
 const PobierzOgloszeniaPracownicy = require('./api/Ogloszenia/ogloszenia.pobierzPracownikow');
 const PobierzOgloszeniaGrupy = require('./api/Ogloszenia/ogloszenia.pobierzGrupy');
+
+const PobierzDostepneFirmy = require('./api/pobierzDostepneFirmy');
 
 app.use(cors());
 app.use(express.json());
@@ -328,6 +330,10 @@ app.get('/api/grupy', (req, res) => {
 
 app.delete('/api/grupy/:id', (req, res) => {
     UsuwanieGrupy(req, res, db);
+});
+
+app.get('/api/firmy', (req, res) => {
+    PobierzDostepneFirmy(req, res, db);
 });
 
 app.listen(port, () => {

@@ -26,15 +26,17 @@ export default function CzasPracyPage() {
     const [Pracownik, setPracownik] = useState(null);
     const [pracownicy, setPracownicy] = useState([]);
     const [Firma, setFirma] = useState(null);
+    const [firmy, setFirmy] = useState([]);
     const [Zleceniodawca, setZleceniodawca] = useState(null);
+    const [zleceniodawcy, setZleceniodawcy] = useState([]);
     const [Projekty, setProjekty] = useState(null);
+    const [dostepneProjekty, setDostepneProjekty] = useState([]);
     const [hours, setHours] = useState({});
     const [projectHours, setProjectHours] = useState({});
     const [additionalProjects, setAdditionalProjects] = useState([]);
     const [daysOfWeek, setDaysOfWeek] = useState(generateWeek(startOfWeek(new Date(), { weekStartsOn: 1 })));
     const [samochody, setSamochody] = useState([]);
     const [samochodyValue, setSamochodyValue] = useState(null);
-
     const [projectTotals, setProjectTotals] = useState({}); // eksperymantlny state do 
     // przetrzymywania sumy godzin dla projektów 
     // {projectId: totalHours}
@@ -63,13 +65,46 @@ export default function CzasPracyPage() {
             });
     }
 
+    const fetchFirmy = () => {
+        Axios.get("http://localhost:5000/api/firmy")
+            .then((response) => {
+                setFirmy(response.data.map(firma => ({ label: firma.Nazwa_firmy, value: firma.Nazwa_firmy })));
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+    }
+
+    const fetchZleceniodawcy = () => {
+        Axios.get("http://localhost:5000/api/grupy")
+            .then((response) => {
+                setZleceniodawcy(response.data.grupy.map(zleceniodawca => ({ label: zleceniodawca.Zleceniodawca, value: zleceniodawca.Zleceniodawca })));
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+    }
+
+    const fetchProjekty = () => {
+        Axios.get("http://localhost:5000/api/czas/projekty")
+            .then((response) => {
+                setDostepneProjekty(response.data.projekty.map(projekt => ({ label: projekt.NazwaKod_Projektu, value: projekt.NazwaKod_Projektu })));
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+    }
+
     useEffect(() => {
-        console.log(Pracownik);
-    }, [Pracownik]);
+        console.log(additionalProjects);
+    }, [additionalProjects]);
 
     useEffect(() => {
         fetchPojazdy();
         fetchPracownicy();
+        fetchFirmy();
+        fetchZleceniodawcy();
+        fetchProjekty();
     }, []);
 
     useEffect(() => {
@@ -86,12 +121,23 @@ export default function CzasPracyPage() {
         }));
     };
 
-    const handleSave = () => { // wysyłanie danych (godzin u góry strony) do serwera na przycisku "zapisz"
+    const handleSave = async () => { // wysyłanie danych do serwera na przycisku "zapisz"
         const totalHours = calculateWeeklyTotal();
+        
+        // formatowanie dodatkowych projektów do tego samego formatu co wyżej
+        const formattedAdditionalProjects = additionalProjects.map(project => ({
+            ...project,
+            days: daysOfWeek.map(day => ({
+                dayOfWeek: format(day, 'EEEE', { locale: pl }),
+                start: project.hours[format(day, 'yyyy-MM-dd')]?.start || "00:00",
+                end: project.hours[format(day, 'yyyy-MM-dd')]?.end || "00:00",
+            }))
+        }));
+
         try {
-            const response = Axios.post("http://localhost:5000/api/czas", {
+            const response = await Axios.post("http://localhost:5000/api/czas", {
                 pracownikName: Pracownik,
-                projektyId: Projekty,
+                projektyName: Projekty,
                 weekData: getWeek(currentDate, { weekStartsOn: 1 }),
                 year: currentDate.getFullYear(),
                 days: daysOfWeek.map(day => ({
@@ -100,6 +146,7 @@ export default function CzasPracyPage() {
                     end: hours[format(day, 'yyyy-MM-dd')]?.end || "00:00",
                 })),
                 totalHours: totalHours,
+                additionalProjects: formattedAdditionalProjects,
             });
             console.log(response);
         } catch (error) {
@@ -237,37 +284,48 @@ export default function CzasPracyPage() {
     };
 
     const handleAdditionalProjectInputChange = (projectId, date, type, value) => {
+        // Ensure the value is a two-digit number for HH format
+        const formattedValue = value.padStart(2, '0') + ":00";
+        
+        
         setAdditionalProjects(prevProjects =>
-            prevProjects.map(p => {
-                if (p.id === projectId) {
-                    const updatedProject = {
-                        ...p,
+            prevProjects.map(project => {
+                if (project.id === projectId) {
+                    return {
+                        ...project,
                         hours: {
-                            ...p.hours,
+                            ...project.hours,
                             [date]: {
-                                ...p.hours[date],
-                                [type]: value
+                                ...project.hours[date],
+                                [type]: formattedValue,  // Save in HH:MM format
                             }
                         }
                     };
-
-                    // Calculate the total hours for this project and update the state
-                    const totalHours = calculateProjectTotal(updatedProject);
-                    setProjectTotals(prevTotals => ({
-                        ...prevTotals,
-                        [projectId]: totalHours,
-                    }));
-
-                    return updatedProject;
                 }
-                return p;
+                return project;
             })
         );
     };
+    
 
-    useEffect(() => {
-        console.log(projectTotals);
-    }, [projectTotals]);
+    const handleAdditionalProjectTimeBlur = (projectId, date, type, value) => {
+        console.log(value);
+        if (value.length > 0 && value.length < 5) {
+            // If the input value's length is between 1 and 4, return without modifying the value
+            return;
+        }
+        // Ensure value is in the correct format (e.g., "01:00")
+        let cleanValue = value.replace(/\D/g, '');
+        let hours = cleanValue.padStart(2, '0');
+        const formattedValue = `${hours}:00`;
+    
+        handleAdditionalProjectInputChange(projectId, date, type, formattedValue);
+    };
+    
+
+    // useEffect(() => {
+    //     console.log(projectTotals);
+    // }, [projectTotals]);
 
     // handle do usuwania projektów
     const handleDeleteProject = (projectId) => {
@@ -282,19 +340,15 @@ export default function CzasPracyPage() {
         });
     };
 
-    const AdditionalProjectRow = ({ project, onInputChange, first, onDelete }) => {
-        const projectTotal = calculateProjectTotal(project);
-
+    const AdditionalProjectRow = ({ project, onInputChange, onTimeBlur, first, onDelete }) => {
         return (
             <div className="mt-4">
                 <div className="flex items-center space-x-2">
                     <div className="w-1/3 flex flex-row justify-between">
                         Projekt: {project.projekt || "Projekt"}
-                        <span className="font-bold">Total: {projectTotal.toFixed(2)} godz.</span>
+                        <span className="font-bold">Firma: {project.firma || "Firma"}</span>
                     </div>
-
-
-                    {/* tylko pierwszy projekt zmapuje dni tygodnia */}
+    
                     {first && (
                         <div className="flex-1 grid grid-cols-7 gap-1">
                             {daysOfWeekProjects.map((day, index) => (
@@ -305,7 +359,7 @@ export default function CzasPracyPage() {
                         </div>
                     )}
                 </div>
-
+    
                 <div className="flex items-center space-x-2 mt-2">
                     <div className="w-1/3">
                         <button
@@ -318,42 +372,41 @@ export default function CzasPracyPage() {
                     <div className="flex-1 grid grid-cols-7 gap-1">
                         {daysOfWeekProjects.map((day, index) => {
                             const dateKey = format(day, 'yyyy-MM-dd');
-                            const isLastInput = index === daysOfWeekProjects.length - 1;
+                            const niedziela = getDay(day) === 0; // sprawdzamy czy niedziela
                             return (
                                 <div key={index} className="text-center">
                                     <input
                                         type="number"
-                                        value={project.hours[dateKey]?.hours || ""}
-                                        onChange={(e) => onInputChange(project.id, dateKey, 'hours', e.target.value)}
-                                        className={`w-[50%] h-full p-1 border border-gray-300 rounded ${isLastInput ? 'bg-gray-200 cursor-not-allowed' : ''}`}
-                                        placeholder="Hours"
+                                        value={parseInt(project.hours[dateKey]?.start || "00")}
+                                        onChange={(e) => onInputChange(project.id, dateKey, 'start', e.target.value)}
+                                        onBlur={(e) => onTimeBlur(project.id, dateKey, 'start', e.target.value)}
+                                        className="w-[40%] p-1 border border-gray-300 rounded"
+                                        placeholder="HH"
+                                        max="23"
                                         min="0"
-                                        max="24"
-                                        disabled={isLastInput}
+                                        disabled={niedziela}
+                                    />
+                                    <input
+                                        type="number"
+                                        value={parseInt(project.hours[dateKey]?.end || "00")}
+                                        onChange={(e) => onInputChange(project.id, dateKey, 'end', e.target.value)}
+                                        onBlur={(e) => onTimeBlur(project.id, dateKey, 'end', e.target.value)}
+                                        className="w-[40%] p-1 border border-gray-300 rounded ml-1"
+                                        placeholder="HH"
+                                        max="23"
+                                        min="0"
+                                        disabled={niedziela}
                                     />
                                 </div>
                             );
                         })}
                     </div>
-
-                </div>
-                <div className="flex gap-4 items-center">
-                    <span>Samochody</span>
-                    <Dropdown
-                        value={samochodyValue}
-                        onChange={(e) => setSamochodyValue(e.value)}
-                        options={samochody}
-                        editable
-                        placeholder="Samochody"
-                        autoComplete="off"
-                        className="p-2"
-                        filter
-                        showClear
-                    />
                 </div>
             </div>
         );
     };
+    
+
 
     return (
         <div>
@@ -445,7 +498,7 @@ export default function CzasPracyPage() {
                                 <Dropdown
                                     value={Firma}
                                     onChange={(e) => setFirma(e.value)}
-                                    options={["PC Husbyggen"]}
+                                    options={firmy}
                                     editable
                                     placeholder="Firma"
                                     autoComplete="off"
@@ -459,7 +512,7 @@ export default function CzasPracyPage() {
                                 <Dropdown
                                     value={Zleceniodawca}
                                     onChange={(e) => setZleceniodawca(e.value)}
-                                    options={["Kierownik 1", "Kierownik 2"]}
+                                    options={zleceniodawcy}
                                     editable
                                     placeholder="Zleceniodawca"
                                     autoComplete="off"
@@ -473,7 +526,7 @@ export default function CzasPracyPage() {
                                 <Dropdown
                                     value={Projekty}
                                     onChange={(e) => setProjekty(e.value)}
-                                    options={["Kierownik 1", "Kierownik 2"]}
+                                    options={dostepneProjekty}
                                     editable
                                     placeholder="Projekty"
                                     autoComplete="off"
@@ -495,8 +548,9 @@ export default function CzasPracyPage() {
                                 key={project.id}
                                 project={project}
                                 onInputChange={handleAdditionalProjectInputChange}
-                                onDelete={handleDeleteProject} // do usuwania projektów
-                                first={index === 0} // do mapowania dni tygodnia (tylko pierwszy projekt zmapuje)
+                                onTimeBlur={handleAdditionalProjectTimeBlur}
+                                onDelete={handleDeleteProject}
+                                first={index === 0}
                             />
                         ))}
 
