@@ -8,7 +8,7 @@ const mysql = require('mysql2');
 const db = mysql.createConnection({
     host: 'localhost',
     user: 'root',
-    password: 'root',
+    password: '',
     database: 'mydb'
 });
 
@@ -154,7 +154,7 @@ app.get('/api/logi', (req, res) => {
 // CZAS > CZAS PRACY //
 app.route('/api/czas')
     .get((req, res) => {
-        PobierzCzasPracy(req, res);
+        PobierzCzasPracy(req, res, db);
     })
     .post((req, res) => {
         ZapiszCzasPracy(req, res, db);

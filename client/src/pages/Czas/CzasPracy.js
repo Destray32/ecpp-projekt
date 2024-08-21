@@ -54,7 +54,6 @@ export default function CzasPracyPage() {
                 console.error(error);
             });
     }
-
     const fetchPracownicy = () => {
         Axios.get("http://localhost:5000/api/pracownicy")
             .then((response) => {
@@ -64,7 +63,6 @@ export default function CzasPracyPage() {
                 console.error(error);
             });
     }
-
     const fetchFirmy = () => {
         Axios.get("http://localhost:5000/api/firmy")
             .then((response) => {
@@ -74,7 +72,6 @@ export default function CzasPracyPage() {
                 console.error(error);
             });
     }
-
     const fetchZleceniodawcy = () => {
         Axios.get("http://localhost:5000/api/grupy")
             .then((response) => {
@@ -84,7 +81,6 @@ export default function CzasPracyPage() {
                 console.error(error);
             });
     }
-
     const fetchProjekty = () => {
         Axios.get("http://localhost:5000/api/czas/projekty")
             .then((response) => {
@@ -94,10 +90,44 @@ export default function CzasPracyPage() {
                 console.error(error);
             });
     }
+    const fetchWorkHours = async (employeeName, date) => {
+        try {
+            const weekData = getWeek(date, { weekStartsOn: 1 });
+            const year = date.getFullYear();
+            const response = await Axios.get("http://localhost:5000/api/czas", {
+                params: {
+                    pracownikName: employeeName,
+                    weekData: weekData,
+                    year: year,
+                }
+            });
+    
+            if (response.data && response.data.days) {
+                setHours(response.data.days);
+            } else {
+                setHours({}); // Clear hours if no data is returned
+            }
+        } catch (error) {
+            console.error("Error fetching work hours", error);
+        }
+    };
 
     useEffect(() => {
         console.log(additionalProjects);
     }, [additionalProjects]);
+
+    // useEffect(() => {
+    //     console.log(hours);
+    // }, [hours]);
+
+    const [refresh, setRefresh] = useState(false);
+
+    useEffect(() => {
+        if (Pracownik) {
+            fetchWorkHours(Pracownik, currentDate).then(() => setRefresh(!refresh));
+        }
+    }, [Pracownik, currentDate]);
+    
 
     useEffect(() => {
         fetchPojazdy();
@@ -123,7 +153,7 @@ export default function CzasPracyPage() {
 
     const handleSave = async () => { // wysyłanie danych do serwera na przycisku "zapisz"
         const totalHours = calculateWeeklyTotal();
-        
+
         // formatowanie dodatkowych projektów do tego samego formatu co wyżej
         const formattedAdditionalProjects = additionalProjects.map(project => ({
             ...project,
@@ -286,8 +316,8 @@ export default function CzasPracyPage() {
     const handleAdditionalProjectInputChange = (projectId, date, type, value) => {
         // Ensure the value is a two-digit number for HH format
         const formattedValue = value.padStart(2, '0') + ":00";
-        
-        
+
+
         setAdditionalProjects(prevProjects =>
             prevProjects.map(project => {
                 if (project.id === projectId) {
@@ -306,22 +336,17 @@ export default function CzasPracyPage() {
             })
         );
     };
-    
+
 
     const handleAdditionalProjectTimeBlur = (projectId, date, type, value) => {
-        console.log(value);
-        if (value.length > 0 && value.length < 5) {
-            // If the input value's length is between 1 and 4, return without modifying the value
-            return;
-        }
         // Ensure value is in the correct format (e.g., "01:00")
         let cleanValue = value.replace(/\D/g, '');
         let hours = cleanValue.padStart(2, '0');
         const formattedValue = `${hours}:00`;
-    
+
         handleAdditionalProjectInputChange(projectId, date, type, formattedValue);
     };
-    
+
 
     // useEffect(() => {
     //     console.log(projectTotals);
@@ -348,7 +373,7 @@ export default function CzasPracyPage() {
                         Projekt: {project.projekt || "Projekt"}
                         <span className="font-bold">Firma: {project.firma || "Firma"}</span>
                     </div>
-    
+
                     {first && (
                         <div className="flex-1 grid grid-cols-7 gap-1">
                             {daysOfWeekProjects.map((day, index) => (
@@ -359,7 +384,7 @@ export default function CzasPracyPage() {
                         </div>
                     )}
                 </div>
-    
+
                 <div className="flex items-center space-x-2 mt-2">
                     <div className="w-1/3">
                         <button
@@ -405,7 +430,7 @@ export default function CzasPracyPage() {
             </div>
         );
     };
-    
+
 
 
     return (
