@@ -43,6 +43,7 @@ const ZapiszCzasPracy = require('./api/Czas/CzasPracy/czas.czaspracy.zapisz');
 const PobierzCzasPracy = require('./api/Czas/CzasPracy/czas.czaspracy.pobierz');
 const ZamknijTydzien = require('./api/Czas/CzasPracy/czas.czaspracy.zamknij');
 const OtworzTydzien = require('./api/Czas/CzasPracy/czas.czaspracy.otworz');
+const GetCzasProjekt = require('./api/Czas/CzasPracy/czas.czaspracy.getCzasProjekt');
 
 // Plan Tygodnia
 const PlanTygodniaPlan = require('./api/PlanTygodnia/plantygodnia.plan.planTygodnia');
@@ -158,6 +159,11 @@ app.route('/api/czas')
     })
     .post((req, res) => {
         ZapiszCzasPracy(req, res, db);
+    });
+
+app.route('/api/czas/projekt')
+    .get((req, res) => {
+        GetCzasProjekt(req, res, db);
     });
 
 app.route('/api/czas/zamknij')

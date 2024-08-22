@@ -22,6 +22,13 @@ const formatWeek = (date) => {
 };
 
 export default function CzasPracyPage() {
+    // to są stany na sztywno które symulują jeśli będzie zalogowany pracownik nie admin.
+    // czyli, userType to będzie pracownik a user name nie będzie do zmiany bo nie chcemy 
+    // dac opcji podgladu czasu innych pracowników
+    const [userType, setUserType] = useState("Pracownik");
+    const [loggedUserName, setLoggedUserName] = useState("Anna Smith");
+    /////////////////////////
+
     const [currentDate, setCurrentDate] = useState(new Date());
     const [Pracownik, setPracownik] = useState(null);
     const [pracownicy, setPracownicy] = useState([]);
@@ -122,9 +129,12 @@ export default function CzasPracyPage() {
 
     const [refresh, setRefresh] = useState(false);
 
-    useEffect(() => {
-        if (Pracownik) {
+    useEffect(() => { 
+
+        if (Pracownik && (userType === "Administrator")) { // jak jestem adminem to pobieram dane pracownika z dropdowna
             fetchWorkHours(Pracownik, currentDate).then(() => setRefresh(!refresh));
+        } else if (loggedUserName && (userType === "Pracownik")) {                     // jak jestem pracownikiem to pobieram dane zalogowanego pracownika
+            fetchWorkHours(loggedUserName, currentDate).then(() => setRefresh(!refresh));
         }
     }, [Pracownik, currentDate]);
     
@@ -297,20 +307,52 @@ export default function CzasPracyPage() {
     const previousWeek = () => setCurrentDate(subWeeks(currentDate, 1));
     const nextWeek = () => setCurrentDate(addWeeks(currentDate, 1));
 
-    const addWeek = () => {
-        const newProject = {
-            id: Date.now(),
-            firma: Firma || "",
-            zleceniodawca: Zleceniodawca || "",
-            projekt: Projekty || "",
-            hours: daysOfWeek.reduce((acc, day) => {
-                acc[format(day, 'yyyy-MM-dd')] = { start: "", end: "" };
-                return acc;
-            }, {})
-
-        };
-
-        setAdditionalProjects(prevProjects => [...prevProjects, newProject]);
+    const addWeek = async () => {
+        const weekData = getWeek(currentDate, { weekStartsOn: 1 });
+        const year = currentDate.getFullYear();
+    
+        try {
+            const response = await Axios.get("http://localhost:5000/api/czas/projekt", {
+                params: {
+                    pracownikName: loggedUserName,
+                    projektyName: Projekty,
+                    weekData: weekData,
+                    year: year,
+                }
+            });
+    
+            const newProject = {
+                id: Date.now(),
+                firma: Firma || "",
+                zleceniodawca: Zleceniodawca || "",
+                projekt: Projekty || "",
+                hours: {}
+            };
+    
+            if (response.data && response.data.hours) {
+                daysOfWeek.forEach(day => {
+                    const dateKey = format(day, 'yyyy-MM-dd');
+                    const apiData = response.data.hours[dateKey];
+                    if (apiData) {
+                        newProject.hours[dateKey] = {
+                            start: apiData.start.slice(0, 5),  // wyciaganie tylko HH:MM
+                            end: apiData.end.slice(0, 5)
+                        };
+                    } else {
+                        newProject.hours[dateKey] = { start: "", end: "" };
+                    }
+                });
+            } else {
+                daysOfWeek.forEach(day => {
+                    const dateKey = format(day, 'yyyy-MM-dd');
+                    newProject.hours[dateKey] = { start: "", end: "" };
+                });
+            }
+    
+            setAdditionalProjects(prevProjects => [...prevProjects, newProject]);
+        } catch (error) {
+            console.error("Error fetching project hours", error);
+        }
     };
 
     const handleAdditionalProjectInputChange = (projectId, date, type, value) => {
@@ -337,7 +379,6 @@ export default function CzasPracyPage() {
         );
     };
 
-
     const handleAdditionalProjectTimeBlur = (projectId, date, type, value) => {
         // Ensure value is in the correct format (e.g., "01:00")
         let cleanValue = value.replace(/\D/g, '');
@@ -346,7 +387,6 @@ export default function CzasPracyPage() {
 
         handleAdditionalProjectInputChange(projectId, date, type, formattedValue);
     };
-
 
     // useEffect(() => {
     //     console.log(projectTotals);
@@ -373,7 +413,7 @@ export default function CzasPracyPage() {
                         Projekt: {project.projekt || "Projekt"}
                         <span className="font-bold">Firma: {project.firma || "Firma"}</span>
                     </div>
-
+    
                     {first && (
                         <div className="flex-1 grid grid-cols-7 gap-1">
                             {daysOfWeekProjects.map((day, index) => (
@@ -384,7 +424,7 @@ export default function CzasPracyPage() {
                         </div>
                     )}
                 </div>
-
+    
                 <div className="flex items-center space-x-2 mt-2">
                     <div className="w-1/3">
                         <button
@@ -397,12 +437,12 @@ export default function CzasPracyPage() {
                     <div className="flex-1 grid grid-cols-7 gap-1">
                         {daysOfWeekProjects.map((day, index) => {
                             const dateKey = format(day, 'yyyy-MM-dd');
-                            const niedziela = getDay(day) === 0; // sprawdzamy czy niedziela
+                            const niedziela = getDay(day) === 0; // Check if Sunday
                             return (
                                 <div key={index} className="text-center">
                                     <input
                                         type="number"
-                                        value={parseInt(project.hours[dateKey]?.start || "00")}
+                                        value={parseInt(project.hours[dateKey]?.start || "00", 10)}
                                         onChange={(e) => onInputChange(project.id, dateKey, 'start', e.target.value)}
                                         onBlur={(e) => onTimeBlur(project.id, dateKey, 'start', e.target.value)}
                                         className="w-[40%] p-1 border border-gray-300 rounded"
@@ -413,7 +453,7 @@ export default function CzasPracyPage() {
                                     />
                                     <input
                                         type="number"
-                                        value={parseInt(project.hours[dateKey]?.end || "00")}
+                                        value={parseInt(project.hours[dateKey]?.end || "00", 10)}
                                         onChange={(e) => onInputChange(project.id, dateKey, 'end', e.target.value)}
                                         onBlur={(e) => onTimeBlur(project.id, dateKey, 'end', e.target.value)}
                                         className="w-[40%] p-1 border border-gray-300 rounded ml-1"
@@ -430,9 +470,7 @@ export default function CzasPracyPage() {
             </div>
         );
     };
-
-
-
+    
     return (
         <div>
             <div className="w-full md:w-auto h-full m-2 p-3 bg-amber-100 outline outline-1 outline-gray-500 flex flex-col space-y-4">
@@ -444,6 +482,7 @@ export default function CzasPracyPage() {
                                 <p className="text-lg font-bold">Tydzień {getWeekNumber(currentDate)} : {formatWeek(currentDate)}</p>
                                 <Button icon="pi pi-arrow-right" iconPos="right" className="p-button-outlined" onClick={nextWeek} />
                             </div>
+                            
                             <Dropdown
                                 value={Pracownik}
                                 onChange={(e) => setPracownik(e.value)}
@@ -459,6 +498,7 @@ export default function CzasPracyPage() {
                     </div>
                 </div>
             </div>
+            {userType === "Administrator" && (
             <div className="bg-amber-100 outline outline-1 outline-gray-500 space-y-4 m-2 p-3">
                 <div className="grid grid-cols-7 gap-4 text-center font-bold">
                     {daysOfWeek.map((day, i) => (
@@ -514,6 +554,7 @@ export default function CzasPracyPage() {
                     <p>Razem: {calculateWeeklyTotal()} godz.</p>
                 </div>
             </div>
+            )}
             <div className="w-full md:w-auto h-full m-2 p-3 bg-amber-100 outline outline-1 outline-gray-500 flex flex-col space-y-4">
                 <div className="w-full h-2/5 flex flex-col space-y-2 items-start">
                     <div className="w-full h-2/6">
