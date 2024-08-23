@@ -14,7 +14,7 @@ function ZapiszCzasPracy(req, res, db) {
 
                 const pracownikId = pracownikResults[0].idPracownik;
 
-                const handleProject = (projektyId, projektyName, callback) => {
+                const handleProject = (projektyId, projektyName, firmaName, zleceniodawcaName, projectTotalHours, callback) => {
                     db.query(
                         `SELECT * FROM Tydzien WHERE tydzienRoku = ? AND Rok = ? AND Pracownik_idPracownik = ? AND Projekty_idProjekty = ?`,
                         [weekData, year, pracownikId, projektyId],
@@ -37,7 +37,6 @@ function ZapiszCzasPracy(req, res, db) {
                                 validDays.forEach(day => {
                                     const { dayOfWeek, start, end } = day;
 
-                                    // Sprawdzamy, czy dzień już istnieje w bazie
                                     db.query(
                                         `SELECT * FROM Dzien WHERE Dzien_tygodnia = ? AND Tydzien_idTydzien = ?`,
                                         [dayOfWeek, tid],
@@ -101,7 +100,7 @@ function ZapiszCzasPracy(req, res, db) {
                                 tydzienId = existingWeek[0].idTydzien;
                                 db.query(
                                     `UPDATE Tydzien SET Godziny_tygodniowe = ?, Status_tygodnia = ? WHERE idTydzien = ?`,
-                                    [totalHours, 'Otwarty', tydzienId],
+                                    [projectTotalHours, 'Otwarty', tydzienId],
                                     function (err, result) {
                                         if (err) {
                                             console.error(err);
@@ -118,7 +117,7 @@ function ZapiszCzasPracy(req, res, db) {
                                 db.query(
                                     `INSERT INTO Tydzien (Godziny_Tygodniowe, Firma, Zleceniodawca, Projekty, Status_tygodnia, tydzienRoku, Rok, Pracownik_idPracownik, Projekty_idProjekty)
                                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                                    [totalHours, null, null, projektyName, 'Otwarty', weekData, year, pracownikId, projektyId],
+                                    [projectTotalHours, firmaName, zleceniodawcaName, projektyName, 'Otwarty', weekData, year, pracownikId, projektyId],
                                     function (err, result) {
                                         if (err) {
                                             console.error(err);
@@ -154,7 +153,9 @@ function ZapiszCzasPracy(req, res, db) {
                             }
 
                             const projektyId = projektyResults[0].idProjekty;
-                            handleProject(projektyId, project.projekt, () => {
+                            const projectTotalHours = project.totalHours || 0; // Make sure you calculate total hours for each project on the frontend
+
+                            handleProject(projektyId, project.projekt, project.firma, project.zleceniodawca, projectTotalHours, () => {
                                 processAdditionalProjects(index + 1);
                             });
                         }

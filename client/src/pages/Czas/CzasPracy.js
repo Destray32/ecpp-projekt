@@ -163,19 +163,20 @@ export default function CzasPracyPage() {
         }));
     };
 
-    const handleSave = async () => { // wysyłanie danych do serwera na przycisku "zapisz"
+    const handleSave = async () => {
         const totalHours = calculateWeeklyTotal();
-
-        // formatowanie dodatkowych projektów do tego samego formatu co wyżej
+    
+        // Format additional projects with total hours
         const formattedAdditionalProjects = additionalProjects.map(project => ({
             ...project,
+            totalHours: calculateProjectTotal(project), // Calculate total hours for each project
             days: daysOfWeek.map(day => ({
                 dayOfWeek: format(day, 'EEEE', { locale: pl }),
                 start: project.hours[format(day, 'yyyy-MM-dd')]?.start || "00:00",
                 end: project.hours[format(day, 'yyyy-MM-dd')]?.end || "00:00",
             }))
         }));
-
+    
         try {
             const response = await Axios.post("http://localhost:5000/api/czas", {
                 pracownikName: Pracownik,
@@ -195,6 +196,7 @@ export default function CzasPracyPage() {
             console.error(error);
         }
     };
+    
 
     const handleTimeInputChangeProjects = (day, type, value) => {
         setProjectHours(prev => ({
@@ -283,13 +285,26 @@ export default function CzasPracyPage() {
         }));
     };
 
-    const calculateProjectTotal = (project) => {
-        return daysOfWeek.reduce((total, day) => {
-            const dateKey = format(day, 'yyyy-MM-dd');
-            const hours = parseFloat(project.hours[dateKey]?.hours) || 0;
-            return total + hours;
-        }, 0);
-    };
+const calculateProjectTotal = (project) => {
+    return daysOfWeek.reduce((total, day) => {
+        const dateKey = format(day, 'yyyy-MM-dd');
+        const start = project.hours[dateKey]?.start || "00:00";
+        const end = project.hours[dateKey]?.end || "00:00";
+
+        // Convert start and end times to Date objects
+        const startDate = new Date(`2000-01-01T${start}`);
+        const endDate = new Date(`2000-01-01T${end}`);
+
+        // If the end time is earlier than the start time, assume the work went past midnight
+        if (endDate < startDate) endDate.setDate(endDate.getDate() + 1);
+
+        // Calculate hours worked for the day
+        const hoursWorked = (endDate - startDate) / (1000 * 60 * 60);
+
+        return total + hoursWorked;
+    }, 0);
+};
+
 
     const calculateDailyTotal = (day) => {
         const start = hours[day]?.start || "00:00";
@@ -408,6 +423,7 @@ export default function CzasPracyPage() {
     };
 
     const AdditionalProjectRow = ({ project, onInputChange, onTimeBlur, first, onDelete }) => {
+        const projectTotal = calculateProjectTotal(project);
         return (
             <div className="mt-4">
                 <div className="flex items-center space-x-2">
@@ -468,6 +484,7 @@ export default function CzasPracyPage() {
                             );
                         })}
                     </div>
+                    <span>Total: {projectTotal}</span>
                 </div>
             </div>
         );
