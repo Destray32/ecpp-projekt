@@ -1,8 +1,6 @@
 function ZapiszCzasPracy(req, res, db) {
     const { pracownikName, projektyName, weekData, year, days, totalHours, additionalProjects } = req.body;
 
-    console.log(pracownikName, weekData, year, days, totalHours, additionalProjects);
-
     try {
         // Znajdujemy pracownika na podstawie podanej nazwy
         db.query(
@@ -16,30 +14,10 @@ function ZapiszCzasPracy(req, res, db) {
 
                 const pracownikId = pracownikResults[0].idPracownik;
 
-                // Jeśli podano nazwę projektu, znajdź jego ID
-                if (projektyName) {
+                const handleProject = (projektyId, projektyName, callback) => {
                     db.query(
-                        `SELECT idProjekty FROM Projekty WHERE NazwaKod_Projektu = ?`,
-                        [projektyName],
-                        function (err, projektyResults) {
-                            if (err || projektyResults.length === 0) {
-                                console.error(err);
-                                return res.status(400).json({ message: 'Nie znaleziono projektu' });
-                            }
-
-                            const projektyId = projektyResults[0].idProjekty;
-                            handleWeekAndDays(pracownikId, projektyId);
-                        }
-                    );
-                } else {
-                    handleWeekAndDays(pracownikId, null);
-                }
-
-                function handleWeekAndDays(pracownikId, projektyId) {
-                    // Sprawdzamy, czy wpis dla tego tygodnia już istnieje dla danego pracownika i projektu
-                    db.query(
-                        `SELECT * FROM Tydzien WHERE tydzienRoku = ? AND Rok = ? AND Pracownik_idPracownik = ? AND (Projekty_idProjekty = ? OR ? IS NULL)`,
-                        [weekData, year, pracownikId, projektyId, projektyId],
+                        `SELECT * FROM Tydzien WHERE tydzienRoku = ? AND Rok = ? AND Pracownik_idPracownik = ? AND Projekty_idProjekty = ?`,
+                        [weekData, year, pracownikId, projektyId],
                         function (err, existingWeek) {
                             if (err) {
                                 console.error(err);
@@ -48,21 +26,13 @@ function ZapiszCzasPracy(req, res, db) {
 
                             let tydzienId = null;
 
-                            const updateOrInsertDays = () => {
-                                const allDays = [...days];
+                            const updateOrInsertDays = (tid) => {
+                                const projectDays = additionalProjects.find(project => project.projekt === projektyName).days;
 
-                                // Dodajemy dodatkowe dni projektowe do allDays
-                                additionalProjects.forEach(project => {
-                                    project.days.forEach(day => {
-                                        allDays.push(day);
-                                    });
-                                });
+                                const validDays = projectDays.filter(day => !(day.start === '00:00' && day.end === '00:00'));
 
-                                // Filtrujemy dni, w których godziny rozpoczęcia i zakończenia są obie ustawione na "00:00"
-                                const validDays = allDays.filter(day => !(day.start === '00:00' && day.end === '00:00'));
-
-                                let completed = 0; // licznik zakończonych operacji
-                                const totalDays = validDays.length; // liczba dni do przetworzenia
+                                let completed = 0;
+                                const totalDays = validDays.length;
 
                                 validDays.forEach(day => {
                                     const { dayOfWeek, start, end } = day;
@@ -70,7 +40,7 @@ function ZapiszCzasPracy(req, res, db) {
                                     // Sprawdzamy, czy dzień już istnieje w bazie
                                     db.query(
                                         `SELECT * FROM Dzien WHERE Dzien_tygodnia = ? AND Tydzien_idTydzien = ?`,
-                                        [dayOfWeek, tydzienId],
+                                        [dayOfWeek, tid],
                                         function (err, existingDay) {
                                             if (err) {
                                                 console.error(err);
@@ -89,7 +59,7 @@ function ZapiszCzasPracy(req, res, db) {
 
                                                 completed += 1;
                                                 if (completed === totalDays && !res.headersSent) {
-                                                    res.status(200).json({ message: 'Czas pracy został zapisany' });
+                                                    callback();
                                                 }
                                             };
 
@@ -117,7 +87,7 @@ function ZapiszCzasPracy(req, res, db) {
                                                 db.query(
                                                     `INSERT INTO Dzien (Dzien_tygodnia, Rozpoczecia_pracy, Zakonczenia_pracy, Tydzien_idTydzien)
                                                      VALUES (?, ?, ?, ?)`,
-                                                    [dayOfWeekFormatted, start, end, tydzienId],
+                                                    [dayOfWeekFormatted, start, end, tid],
                                                     queryCallback
                                                 );
                                             }
@@ -139,7 +109,7 @@ function ZapiszCzasPracy(req, res, db) {
                                                 return res.status(500).json({ message: 'Wystąpił błąd podczas aktualizacji tygodnia' });
                                             }
                                         } else {
-                                            updateOrInsertDays(); // Po aktualizacji tygodnia, aktualizujemy/wstawiamy dni
+                                            updateOrInsertDays(tydzienId);
                                         }
                                     }
                                 );
@@ -148,7 +118,7 @@ function ZapiszCzasPracy(req, res, db) {
                                 db.query(
                                     `INSERT INTO Tydzien (Godziny_Tygodniowe, Firma, Zleceniodawca, Projekty, Status_tygodnia, tydzienRoku, Rok, Pracownik_idPracownik, Projekty_idProjekty)
                                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                                    [totalHours, null, null, projektyId ? 'projekty_name' : null, 'Otwarty', weekData, year, pracownikId, projektyId],
+                                    [totalHours, null, null, projektyName, 'Otwarty', weekData, year, pracownikId, projektyId],
                                     function (err, result) {
                                         if (err) {
                                             console.error(err);
@@ -156,15 +126,42 @@ function ZapiszCzasPracy(req, res, db) {
                                                 return res.status(500).json({ message: 'Wystąpił błąd podczas dodawania tygodnia' });
                                             }
                                         } else {
-                                            tydzienId = result.insertId; // Zapisujemy nowe id tygodnia
-                                            updateOrInsertDays(); // Po utworzeniu tygodnia, aktualizujemy/wstawiamy dni
+                                            tydzienId = result.insertId;
+                                            updateOrInsertDays(tydzienId);
                                         }
                                     }
                                 );
                             }
                         }
                     );
-                }
+                };
+
+                const processAdditionalProjects = (index) => {
+                    if (index >= additionalProjects.length) {
+                        res.status(200).json({ message: 'Czas pracy został zapisany' });
+                        return;
+                    }
+
+                    const project = additionalProjects[index];
+
+                    db.query(
+                        `SELECT idProjekty FROM Projekty WHERE NazwaKod_Projektu = ?`,
+                        [project.projekt],
+                        function (err, projektyResults) {
+                            if (err || projektyResults.length === 0) {
+                                console.error(err);
+                                return res.status(400).json({ message: 'Nie znaleziono projektu' });
+                            }
+
+                            const projektyId = projektyResults[0].idProjekty;
+                            handleProject(projektyId, project.projekt, () => {
+                                processAdditionalProjects(index + 1);
+                            });
+                        }
+                    );
+                };
+
+                processAdditionalProjects(0);
             }
         );
     } catch (error) {

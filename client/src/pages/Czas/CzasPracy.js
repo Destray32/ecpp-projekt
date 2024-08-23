@@ -135,6 +135,8 @@ export default function CzasPracyPage() {
             fetchWorkHours(Pracownik, currentDate).then(() => setRefresh(!refresh));
         } else if (loggedUserName && (userType === "Pracownik")) {                     // jak jestem pracownikiem to pobieram dane zalogowanego pracownika
             fetchWorkHours(loggedUserName, currentDate).then(() => setRefresh(!refresh));
+            setPracownicy([{ label: loggedUserName, value: loggedUserName }]);
+            setPracownik(loggedUserName); // ustawiamy pracownika na zalogowanego. Pracownik nie ma możliwości zmiany tego
         }
     }, [Pracownik, currentDate]);
     
