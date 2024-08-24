@@ -147,7 +147,7 @@ export default function PracownikPage() {
         text: group.name,
         value: group.id,
       })),
-      onFilter: (value, record) => record.vacationGroup.indexOf(value) === 0,
+      onFilter: (value, record) => record.vacationGroup === value,
       render: (text, record) => (
         <EditableCell
           title="Grupa urlopowa"
@@ -166,10 +166,10 @@ export default function PracownikPage() {
       key: 'company',
       editable: true,
       filters: firms.map(firm => ({
-        text: firm.Nazwa_firmy,
-        value: firm.idFirma,
+        text: firm.name,
+        value: firm.name,
       })),
-      onFilter: (value, record) => record.company.indexOf(value) === 0,
+      onFilter: (value, record) => record.company === value,
       render: (text, record) => (
         <EditableCell
           title="Firma"
@@ -178,7 +178,7 @@ export default function PracownikPage() {
           record={record}
           onSave={handleSave}
         >
-          {text}
+          {text}  // display the company name directly
         </EditableCell>
       ),
     },
@@ -234,6 +234,7 @@ export default function PracownikPage() {
     try {
       const response = await axios.get("http://localhost:5000/api/pracownicy");
       setTableData(response.data);
+      console.log(response.data);
     } catch (error) {
       console.log(error);
     }
@@ -316,7 +317,7 @@ export default function PracownikPage() {
 
   const handleTableChange = (pagination, filters, sorter) => {
     let sortedData = [...tableData];
-    
+  
     if (sorter.order) {
       sortedData.sort((a, b) => {
         if (sorter.order === 'ascend') {
@@ -332,7 +333,10 @@ export default function PracownikPage() {
         const filterValues = appliedFilters[key] || [];
         if (Array.isArray(filterValues) && filterValues.length > 0) {
           const itemValue = item[key] ? item[key].toString().toLowerCase() : '';
-          return filterValues.some(filterValue => filterValue.toLowerCase() === itemValue || itemValue.includes(filterValue.toLowerCase()));
+          return filterValues.some(filterValue => {
+            const filterValueString = filterValue.toString().toLowerCase();
+            return itemValue.includes(filterValueString);
+          });
         }
         return true;
       });
