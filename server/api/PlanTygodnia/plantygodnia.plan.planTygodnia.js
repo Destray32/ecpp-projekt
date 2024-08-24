@@ -34,7 +34,6 @@ function PlanTygodniaPlan(req, res) {
             return;
         }
         res.json(results);
-        console.log(results);
     });
 }
 

@@ -74,12 +74,7 @@ export default function PlanTygodniaPage() {
     const getWeekNumber = (date) => {
         return getWeek(date, { weekStartsOn: 1 });
     };
-    const previousWeek = () => {
-        setCurrentDate(subWeeks(currentDate, 1));
-    };
-    const nextWeek = () => {
-        setCurrentDate(addWeeks(currentDate, 1));
-    };
+    
     const formatWeek = (date) => {
         const start = format(startOfWeek(date, { weekStartsOn: 1 }), 'dd.MM.yyyy');
         const end = format(addWeeks(startOfWeek(date, { weekStartsOn: 1 }), 1), 'dd.MM.yyyy');
@@ -117,10 +112,11 @@ export default function PlanTygodniaPage() {
             }
         })
             .then(res => {
-                console.log(res.data);
+                fetchData();
             })
             .catch(err => console.error(err));
     }
+    
 
     // obsługa przyciusku przeniesienia zaznaczonych pracowników do innej grupy
     const handlePrzeniesZaznaczone = () => {
@@ -138,7 +134,7 @@ export default function PlanTygodniaPage() {
     
         Axios.put('http://localhost:5000/api/planTygodnia', payload)
             .then(res => {
-                console.log(res.data);
+                fetchData();
             })
             .catch(err => {
                 console.error("Error transferring selected employees:", err);
@@ -201,12 +197,16 @@ export default function PlanTygodniaPage() {
     };
 
     useEffect(() => {
+        fetchData();
+    }, []);
+
+    const fetchData = () => {
         Axios.get('http://localhost:5000/api/grupy')
             .then(res => {
                 setAvailableGroups(res.data.grupy.map(group => ({ name: group.Zleceniodawca, id: group.id })));
             })
             .catch(err => console.error(err));
-
+    
         Axios.get('http://localhost:5000/api/planTygodnia')
             .then(res => {
                 const data = res.data;
@@ -235,7 +235,7 @@ export default function PlanTygodniaPage() {
                 setSelectedM5(m5);
             })
             .catch(err => console.error(err));
-    }, []);
+    };
 
     // funkcja do obsługi zmiany stanu checkboxa w pierwszej kolumnie
     const handleRowCheckboxChange = (employeeId) => {
@@ -343,9 +343,7 @@ export default function PlanTygodniaPage() {
                         <div className="h-full flex flex-col justify-around">
                             <div className="flex flex-row gap-32 items-center">
                                 <div className="flex items-center space-x-2">
-                                    <Button label="Poprzedni" icon="pi pi-arrow-left" className="p-button-outlined" onClick={previousWeek} />
                                     <p className="text-lg font-bold">Tydzień {getWeekNumber(currentDate)} : {formatWeek(currentDate)}</p>
-                                    <Button label="Następny" icon="pi pi-arrow-right" iconPos="right" className="p-button-outlined" onClick={nextWeek} />
                                 </div>
                             </div>
                             <div>
@@ -357,7 +355,6 @@ export default function PlanTygodniaPage() {
                             </div>
                         </div>
                     </div>
-
                 </div>
                 <div className="flex gap-24">
                     <Button label="Drukuj grupe" className="bg-white w-[9rem] h-[3rem]"
@@ -366,7 +363,6 @@ export default function PlanTygodniaPage() {
                         text raised onClick={handleDrukuj} />
                 </div>
             </div>
-
             <div className="grid grid-cols-[3fr,1fr] gap-5">
                 <div id="lewa" className="grid grid-cols-auto-fit gap-2.5 p-4">
                     <div className="outline outline-1 outline-gray-500">
@@ -440,7 +436,6 @@ export default function PlanTygodniaPage() {
                         </table>
                     </div>
                 </div>
-
                 <div id="prawa" className="flex flex-col gap-5 mr-2">
                     <AmberBox>
                         <div className="mx-auto flex flex-col justify-between items-center p-4 ">
