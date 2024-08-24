@@ -511,7 +511,6 @@ const calculateProjectTotal = (project) => {
                                 autoComplete="off"
                                 className="w-3/12 p-2"
                                 filter
-                                showClear
                             />
                         </div>
                     </div>

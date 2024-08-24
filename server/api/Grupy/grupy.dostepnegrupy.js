@@ -1,4 +1,3 @@
-
 function DostepneGrupy(req, res, db) {
     const sql = 'SELECT * FROM Grupa_urlopowa';
 

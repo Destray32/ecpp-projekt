@@ -1,32 +1,27 @@
 import React, { useState, useEffect } from "react";
 import { Dropdown } from "primereact/dropdown";
 import { Button } from "primereact/button";
-import { DatePicker } from 'antd';
-import { format, startOfWeek, addWeeks, subWeeks, getWeek, addDays, differenceInHours, getDay } from 'date-fns';
+import { format, startOfWeek, addWeeks, subWeeks, getWeek } from 'date-fns';
 import Axios from "axios";
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-
 
 import AmberBox from "../../Components/AmberBox";
 
 import "primereact/resources/themes/lara-light-cyan/theme.css";
 
-
 export default function PlanTygodniaPage() {
     const [availableGroups, setAvailableGroups] = useState([]);
-    const [group, setGroup] = useState('');
-    const [grupaPrzenies, setGrupaPrzenies] = useState('');
+    const [group, setGroup] = useState(null);
+    const [grupaPrzenies, setGrupaPrzenies] = useState(null);
     const [pracownikData, setPracownikData] = useState([]);
-    const [selectedRowIds, setSelectedRowIds] = useState([]); // stan do pierwszej kolumny z checkboxami
+    const [selectedRowIds, setSelectedRowIds] = useState([]);
     const [currentDate, setCurrentDate] = useState(new Date());
-    // stany do śledzenia zaznaczonych checkboxów w kolumnach M1-M5
     const [selectedM1, setSelectedM1] = useState([]);
     const [selectedM2, setSelectedM2] = useState([]);
     const [selectedM3, setSelectedM3] = useState([]);
     const [selectedM4, setSelectedM4] = useState([]);
     const [selectedM5, setSelectedM5] = useState([]);
-
 
     const generatePDF = () => {
         const doc = new jsPDF();
@@ -43,7 +38,6 @@ export default function PlanTygodniaPage() {
             { header: "M4", dataKey: "m4" },
             { header: "M5", dataKey: "m5" },
             { header: "Opis", dataKey: "opis" }
-
         ];
 
         const rows = pracownikData.map(item => ({
@@ -93,15 +87,14 @@ export default function PlanTygodniaPage() {
     };
 
     // podglad stanu zaznaczonych checkboxów
-    useEffect(() => {
-        console.log('Selected rows:', selectedRowIds);
-        console.log('Selected M1:', selectedM1);
-        console.log('Selected M2:', selectedM2);
-        console.log('Selected M3:', selectedM3);
-        console.log('Selected M4:', selectedM4);
-        console.log('Selected M5:', selectedM5);
-    }, [selectedRowIds, selectedM1, selectedM2, selectedM3, selectedM4, selectedM5]);
-
+    // useEffect(() => {
+    //     console.log('Selected rows:', selectedRowIds);
+    //     console.log('Selected M1:', selectedM1);
+    //     console.log('Selected M2:', selectedM2);
+    //     console.log('Selected M3:', selectedM3);
+    //     console.log('Selected M4:', selectedM4);
+    //     console.log('Selected M5:', selectedM5);
+    // }, [selectedRowIds, selectedM1, selectedM2, selectedM3, selectedM4, selectedM5]);
 
     const handleDrukujGrupe = () => {
         Axios.get(`http://localhost:5000/api/planTygodnia/drukuj?group=${group.name}`)
@@ -131,18 +124,26 @@ export default function PlanTygodniaPage() {
 
     // obsługa przyciusku przeniesienia zaznaczonych pracowników do innej grupy
     const handlePrzeniesZaznaczone = () => {
-        console.log(selectedRowIds);
-        console.log(grupaPrzenies);
-        Axios.put('http://localhost:5000/api/planTygodnia', {
-            id: selectedRowIds,
-            grupa: grupaPrzenies.name
-        })
+        if (!grupaPrzenies) {
+            console.error("No group selected for transfer.");
+            return;
+        }
+    
+        const payload = {
+            ids: selectedRowIds,
+            groupId: grupaPrzenies.id
+        };
+
+        console.log("Transferring selected employees to group:", payload);
+    
+        Axios.put('http://localhost:5000/api/planTygodnia', payload)
             .then(res => {
                 console.log(res.data);
             })
-            .catch(err => console.error(err));
+            .catch(err => {
+                console.error("Error transferring selected employees:", err);
+            });
     }
-
 
     const handleSkopiuj = () => {
         // na razie podmienia dane na pracowników z poprzedniego tygodnia, ale może trzeba ich tylko dodac?
@@ -156,34 +157,59 @@ export default function PlanTygodniaPage() {
 
     // obsługa zmiany grupy w dropdownie
     const handleChangeGroupFilter = (e) => {
-        setGroup(e.value);
-
-        Axios.get(`http://localhost:5000/api/planTygodnia?group=${e.value.name}`)
-            .then(res => {
-                setPracownikData(res.data);
-            })
-            .catch(err => console.error(err));
-
-    }
+        if (e.value) {
+            setGroup(e.value);
+            Axios.get(`http://localhost:5000/api/planTygodnia?group=${e.value.name}`)
+                .then(res => {
+                    setPracownikData(res.data);
+                })
+                .catch(err => console.error(err));
+        } else {
+            setGroup(null);
+            Axios.get('http://localhost:5000/api/planTygodnia')
+                .then(res => {
+                    setPracownikData(res.data);
+                })
+                .catch(err => console.error(err));
+        }
+    };
 
     useEffect(() => {
-        // pobieranie dostępnych grup z serwera
         Axios.get('http://localhost:5000/api/grupy')
             .then(res => {
                 setAvailableGroups(res.data.grupy.map(group => ({ name: group.Zleceniodawca, id: group.id })));
+                console.log(res.data);
             })
             .catch(err => console.error(err));
 
-        // pobieranie danych pracowników z serwera
         Axios.get('http://localhost:5000/api/planTygodnia')
             .then(res => {
-                //console.log(res.data);
                 setPracownikData(res.data);
+                console.log(res.data);
+
+                const m1 = [];
+                const m2 = [];
+                const m3 = [];
+                const m4 = [];
+                const m5 = [];
+
+                res.data.forEach((item, index) => {
+                    const m1_5 = item.M1_5 ? item.M1_5.split(',') : [];
+                    if (m1_5.includes('M1')) m1.push(index);
+                    if (m1_5.includes('M2')) m2.push(index);
+                    if (m1_5.includes('M3')) m3.push(index);
+                    if (m1_5.includes('M4')) m4.push(index);
+                    if (m1_5.includes('M5')) m5.push(index);
+                });
+
+                setSelectedM1(m1);
+                setSelectedM2(m2);
+                setSelectedM3(m3);
+                setSelectedM4(m4);
+                setSelectedM5(m5);
             })
             .catch(err => console.error(err));
     }, []);
-
-
 
     // funkcja do obsługi zmiany stanu checkboxa w pierwszej kolumnie
     const handleRowCheckboxChange = (rowIndex) => {
@@ -300,8 +326,8 @@ export default function PlanTygodniaPage() {
                                 <span>Grupa</span>
                                 <Dropdown value={group} onChange={handleChangeGroupFilter}
                                     options={availableGroups} optionLabel="name"
-                                    editable placeholder="" autoComplete='off'
-                                    className="ml-4 md:w-14rem p-4" />
+                                    editable placeholder="Wybierz grupę" autoComplete='off'
+                                    showClear className="ml-4 md:w-14rem p-4" />
                             </div>
                         </div>
                     </div>
@@ -315,9 +341,8 @@ export default function PlanTygodniaPage() {
                 </div>
             </div>
 
-
-            <div class="grid grid-cols-[3fr,1fr] gap-5">
-                <div id="lewa" class="grid grid-cols-auto-fit gap-2.5 p-4">
+            <div className="grid grid-cols-[3fr,1fr] gap-5">
+                <div id="lewa" className="grid grid-cols-auto-fit gap-2.5 p-4">
                     <div className="outline outline-1 outline-gray-500">
                         <table className="w-full">
                             <thead className="bg-blue-700 text-white">
@@ -390,16 +415,21 @@ export default function PlanTygodniaPage() {
                     </div>
                 </div>
 
-
-
-                <div id="prawa" class="flex flex-col gap-5 mr-2">
+                <div id="prawa" className="flex flex-col gap-5 mr-2">
                     <AmberBox>
                         <div className="mx-auto flex flex-col justify-between items-center p-4 ">
                             <p>Przenieś zaznaczone do</p>
-                            <Dropdown value={grupaPrzenies} onChange={(e) => setGrupaPrzenies(e.value)}
-                                options={availableGroups} optionLabel="name"
-                                editable placeholder="" autoComplete='off'
-                                className="ml-4 md:w-14rem p-4" />
+                            <Dropdown
+                                value={grupaPrzenies}
+                                onChange={(e) => setGrupaPrzenies(e.value)}
+                                options={availableGroups}
+                                optionLabel="name"
+                                optionValue="id"
+                                editable
+                                placeholder=""
+                                autoComplete='off'
+                                className="ml-4 md:w-14rem p-4"
+                            />
                             <Button label="Przenieś" className="bg-white w-[9rem] h-[3rem] mt-4"
                                 text raised onClick={handlePrzeniesZaznaczone} />
                         </div>

@@ -1,34 +1,40 @@
-
-const dane = [
-    { id: 1, name: 'John', surname: 'Doe', vacationGroup: "inni", M1: '', M2: '', M3: '', M4: '', M5: '', description: 'testowy opis' },
-    { id: 1, name: 'John', surname: 'Doe', vacationGroup: "inni", M1: '', M2: '', M3: '', M4: '', M5: '', description: 'testowy opis' },
-    { id: 1, name: 'John', surname: 'Doe', vacationGroup: "inni", M1: '', M2: '', M3: '', M4: '', M5: '', description: 'testowy opis' },
-    { id: 1, name: 'John', surname: 'Doe', vacationGroup: "inni", M1: '', M2: '', M3: '', M4: '', M5: '', description: 'testowy opis' },
-    { id: 1, name: 'John', surname: 'Doe', vacationGroup: "inni", M1: '', M2: '', M3: '', M4: '', M5: '', description: 'testowy opis' },
-    { id: 1, name: 'John', surname: 'Doe', vacationGroup: "inni", M1: '', M2: '', M3: '', M4: '', M5: '', description: 'testowy opis' },
-    { id: 1, name: 'John', surname: 'Doe', vacationGroup: "wszyscy", M1: '', M2: '', M3: '', M4: '', M5: '', description: 'testowy opis' },
-    { id: 1, name: 'John', surname: 'Doe', vacationGroup: "wszyscy", M1: '', M2: '', M3: '', M4: '', M5: '', description: 'testowy opis' },
-    { id: 1, name: 'John', surname: 'Doe', vacationGroup: "wszyscy", M1: '', M2: '', M3: '', M4: '', M5: '', description: 'testowy opis' },
-    { id: 1, name: 'John', surname: 'Doe', vacationGroup: "wszyscy", M1: '', M2: '', M3: '', M4: '', M5: '', description: 'testowy opis' },
-    { id: 1, name: 'John', surname: 'Doe', vacationGroup: "wszyscy", M1: '', M2: '', M3: '', M4: '', M5: '', description: 'testowy opis' },
-    { id: 1, name: 'John', surname: 'Doe', vacationGroup: "wszyscy", M1: '', M2: '', M3: '', M4: '', M5: '', description: 'testowy opis' },
-    { id: 1, name: 'John', surname: 'Doe', vacationGroup: "wszyscy", M1: '', M2: '', M3: '', M4: '', M5: '', description: 'testowy opis' },
-    { id: 1, name: 'John', surname: 'Doe', vacationGroup: "wszyscy", M1: '', M2: '', M3: '', M4: '', M5: '', description: 'testowy opis' },
-]
-
+const db = require('../../../server');
 
 function PlanTygodniaPlan(req, res) {
-
     const { group } = req.query;
-    console.log(group);
-    if (group === undefined) {
-        res.json(dane);
-        return;
-    } else {
-        const data = dane.filter(item => item.vacationGroup === group);
-        res.json(data);
+
+    let sql = `
+        SELECT
+            p.idPracownik as id,
+            d.Imie as name,
+            d.Nazwisko as surname,
+            g.Zleceniodawca AS vacationGroup,
+            i.M AS M1_5,
+            i.Opis as description
+        FROM
+            pracownik p
+        JOIN
+            dane_osobowe d ON p.FK_Dane_osobowe = d.idDane_osobowe
+        JOIN
+            informacje_o_firmie i ON p.FK_Informacje_o_firmie = i.idInformacje_o_firmie
+        JOIN
+            grupa_urlopowa g ON i.FK_idGrupa_urlopowa = g.idGrupa_urlopowa
+        WHERE
+            i.Plan_TygodniaV = 1
+    `;
+
+    if (group) {
+        sql += ` AND g.Zleceniodawca = ?`;
     }
 
+    db.query(sql, group ? [group] : [], (error, results) => {
+        if (error) {
+            console.error('Error executing query:', error);
+            res.status(500).json({ error: 'An error occurred while fetching data.' });
+            return;
+        }
+        res.json(results);
+    });
 }
 
 module.exports = PlanTygodniaPlan;

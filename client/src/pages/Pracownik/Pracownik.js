@@ -178,7 +178,7 @@ export default function PracownikPage() {
           record={record}
           onSave={handleSave}
         >
-          {text}  // display the company name directly
+          {text}
         </EditableCell>
       ),
     },
