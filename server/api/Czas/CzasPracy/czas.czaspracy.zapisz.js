@@ -1,8 +1,10 @@
+const { format } = require('date-fns');
+
 function ZapiszCzasPracy(req, res, db) {
     const { pracownikName, projektyName, weekData, year, days, totalHours, additionalProjects } = req.body;
 
     try {
-        // Znajdujemy pracownika na podstawie podanej nazwy
+        // Znalezienie pracownika na podstawie jego imienia i nazwiska
         db.query(
             `SELECT idPracownik FROM Pracownik INNER JOIN Dane_osobowe ON Pracownik.FK_Dane_osobowe = Dane_osobowe.idDane_osobowe WHERE CONCAT(Dane_osobowe.Imie, ' ', Dane_osobowe.Nazwisko) = ?`,
             [pracownikName],
@@ -14,85 +16,111 @@ function ZapiszCzasPracy(req, res, db) {
 
                 const pracownikId = pracownikResults[0].idPracownik;
 
-                const handleProject = (projektyId, projektyName, firmaName, zleceniodawcaName, projectTotalHours, callback) => {
+                // Funkcja do obsługi projektu, sprawdza czy tydzień już istnieje i odpowiednio aktualizuje lub dodaje dane
+                const handleProject = (projektyId, projektyName, firmaName, zleceniodawcaName, project, callback) => {
                     db.query(
                         `SELECT * FROM Tydzien WHERE tydzienRoku = ? AND Rok = ? AND Pracownik_idPracownik = ? AND Projekty_idProjekty = ?`,
                         [weekData, year, pracownikId, projektyId],
                         function (err, existingWeek) {
                             if (err) {
                                 console.error(err);
-                                return res.status(500).json({ message: 'Wystąpił błąd podczas zapisywania czasu pracy' });
+                                return res.status(500).json({ message: 'Błąd podczas zapisywania czasu pracy' });
                             }
 
                             let tydzienId = null;
 
+                            // Funkcja do aktualizacji lub dodawania dni pracy
                             const updateOrInsertDays = (tid) => {
-                                const projectDays = additionalProjects.find(project => project.projekt === projektyName).days;
+                                const projectDays = project.days;
 
+                                // Filtrujemy dni, w których godziny rozpoczęcia i zakończenia są obie ustawione na "00:00"
                                 const validDays = projectDays.filter(day => !(day.start === '00:00' && day.end === '00:00'));
 
                                 let completed = 0;
                                 const totalDays = validDays.length;
 
                                 validDays.forEach(day => {
-                                    const { dayOfWeek, start, end } = day;
+                                    const { dayOfWeek, start, end, car } = day;
 
+                                    if (!car) {
+                                        console.error('Brak samochodu dla dnia:', dayOfWeek);
+                                        return;
+                                    }
+
+                                    // Znalezienie idPojazdy na podstawie numeru rejestracyjnego
                                     db.query(
-                                        `SELECT * FROM Dzien WHERE Dzien_tygodnia = ? AND Tydzien_idTydzien = ?`,
-                                        [dayOfWeek, tid],
-                                        function (err, existingDay) {
-                                            if (err) {
+                                        `SELECT idPojazdy FROM Pojazdy WHERE Nr_rejestracyjny = ?`,
+                                        [car],
+                                        function (err, carResults) {
+                                            if (err || carResults.length === 0) {
                                                 console.error(err);
                                                 if (!res.headersSent) {
-                                                    return res.status(500).json({ message: 'Wystąpił błąd podczas zapisywania dnia' });
+                                                    return res.status(400).json({ message: 'Nie znaleziono samochodu' });
                                                 }
                                             }
 
-                                            const queryCallback = (err) => {
-                                                if (err) {
-                                                    console.error(err);
-                                                    if (!res.headersSent) {
-                                                        return res.status(500).json({ message: 'Wystąpił błąd podczas aktualizacji/dodawania dnia' });
+                                            const pojazdyId = carResults[0].idPojazdy;
+
+                                            // Kontynuacja wstawiania lub aktualizacji wpisu dla dnia z idPojazdy
+                                            db.query(
+                                                `SELECT * FROM Dzien WHERE Dzien_tygodnia = ? AND Tydzien_idTydzien = ?`,
+                                                [dayOfWeek, tid],
+                                                function (err, existingDay) {
+                                                    if (err) {
+                                                        console.error(err);
+                                                        if (!res.headersSent) {
+                                                            return res.status(500).json({ message: 'Błąd podczas zapisywania dnia' });
+                                                        }
+                                                    }
+
+                                                    const queryCallback = (err) => {
+                                                        if (err) {
+                                                            console.error(err);
+                                                            if (!res.headersSent) {
+                                                                return res.status(500).json({ message: 'Błąd podczas aktualizacji/dodawania dnia' });
+                                                            }
+                                                        }
+
+                                                        completed += 1;
+                                                        if (completed === totalDays && !res.headersSent) {
+                                                            callback();
+                                                        }
+                                                    };
+
+                                                    if (existingDay.length > 0) {
+                                                        // Jeśli dzień już istnieje, aktualizujemy jego godziny pracy i samochód
+                                                        db.query(
+                                                            `UPDATE Dzien SET Rozpoczecia_pracy = ?, Zakonczenia_pracy = ?, Pojazdy_idPojazdy = ? WHERE idDzien = ?`,
+                                                            [start, end, pojazdyId, existingDay[0].idDzien],
+                                                            queryCallback
+                                                        );
+                                                    } else {
+                                                        // Jeśli dzień nie istnieje, dodajemy nowy wpis
+                                                        const daysMapping = {
+                                                            'poniedziałek': 'Poniedziałek',
+                                                            'wtorek': 'Wtorek',
+                                                            'środa': 'Środa',
+                                                            'czwartek': 'Czwartek',
+                                                            'piątek': 'Piątek',
+                                                            'sobota': 'Sobota',
+                                                            'niedziela': 'Niedziela'
+                                                        };
+
+                                                        const dayOfWeekFormatted = daysMapping[dayOfWeek.toLowerCase()];
+
+                                                        db.query(
+                                                            `INSERT INTO Dzien (Dzien_tygodnia, Rozpoczecia_pracy, Zakonczenia_pracy, Tydzien_idTydzien, Pojazdy_idPojazdy)
+                                                            VALUES (?, ?, ?, ?, ?)`,
+                                                            [dayOfWeekFormatted, start, end, tid, pojazdyId],
+                                                            queryCallback
+                                                        );
                                                     }
                                                 }
-
-                                                completed += 1;
-                                                if (completed === totalDays && !res.headersSent) {
-                                                    callback();
-                                                }
-                                            };
-
-                                            if (existingDay.length > 0) {
-                                                // Jeśli dzień już istnieje, aktualizujemy jego godziny pracy
-                                                db.query(
-                                                    `UPDATE Dzien SET Rozpoczecia_pracy = ?, Zakonczenia_pracy = ? WHERE idDzien = ?`,
-                                                    [start, end, existingDay[0].idDzien],
-                                                    queryCallback
-                                                );
-                                            } else {
-                                                // Jeśli dzień nie istnieje, dodajemy nowy wpis
-                                                const daysMapping = {
-                                                    'poniedziałek': 'Poniedziałek',
-                                                    'wtorek': 'Wtorek',
-                                                    'środa': 'Środa',
-                                                    'czwartek': 'Czwartek',
-                                                    'piątek': 'Piątek',
-                                                    'sobota': 'Sobota',
-                                                    'niedziela': 'Niedziela'
-                                                };
-
-                                                const dayOfWeekFormatted = daysMapping[dayOfWeek.toLowerCase()];
-
-                                                db.query(
-                                                    `INSERT INTO Dzien (Dzien_tygodnia, Rozpoczecia_pracy, Zakonczenia_pracy, Tydzien_idTydzien)
-                                                     VALUES (?, ?, ?, ?)`,
-                                                    [dayOfWeekFormatted, start, end, tid],
-                                                    queryCallback
-                                                );
-                                            }
+                                            );
                                         }
                                     );
                                 });
+
                             };
 
                             if (existingWeek.length > 0) {
@@ -100,12 +128,12 @@ function ZapiszCzasPracy(req, res, db) {
                                 tydzienId = existingWeek[0].idTydzien;
                                 db.query(
                                     `UPDATE Tydzien SET Godziny_tygodniowe = ?, Status_tygodnia = ? WHERE idTydzien = ?`,
-                                    [projectTotalHours, 'Otwarty', tydzienId],
+                                    [totalHours, 'Otwarty', tydzienId],
                                     function (err, result) {
                                         if (err) {
                                             console.error(err);
                                             if (!res.headersSent) {
-                                                return res.status(500).json({ message: 'Wystąpił błąd podczas aktualizacji tygodnia' });
+                                                return res.status(500).json({ message: 'Błąd podczas aktualizacji tygodnia' });
                                             }
                                         } else {
                                             updateOrInsertDays(tydzienId);
@@ -116,13 +144,13 @@ function ZapiszCzasPracy(req, res, db) {
                                 // Jeśli tydzień nie istnieje, dodajemy nowy wpis
                                 db.query(
                                     `INSERT INTO Tydzien (Godziny_Tygodniowe, Firma, Zleceniodawca, Projekty, Status_tygodnia, tydzienRoku, Rok, Pracownik_idPracownik, Projekty_idProjekty)
-                                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                                    [projectTotalHours, firmaName, zleceniodawcaName, projektyName, 'Otwarty', weekData, year, pracownikId, projektyId],
+                                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                                    [totalHours, firmaName, zleceniodawcaName, projektyName, 'Otwarty', weekData, year, pracownikId, projektyId],
                                     function (err, result) {
                                         if (err) {
                                             console.error(err);
                                             if (!res.headersSent) {
-                                                return res.status(500).json({ message: 'Wystąpił błąd podczas dodawania tygodnia' });
+                                                return res.status(500).json({ message: 'Błąd podczas dodawania tygodnia' });
                                             }
                                         } else {
                                             tydzienId = result.insertId;
@@ -135,6 +163,7 @@ function ZapiszCzasPracy(req, res, db) {
                     );
                 };
 
+                // Funkcja rekurencyjna do przetwarzania dodatkowych projektów
                 const processAdditionalProjects = (index) => {
                     if (index >= additionalProjects.length) {
                         res.status(200).json({ message: 'Czas pracy został zapisany' });
@@ -143,6 +172,7 @@ function ZapiszCzasPracy(req, res, db) {
 
                     const project = additionalProjects[index];
 
+                    // Znalezienie id projektu na podstawie nazwy projektu
                     db.query(
                         `SELECT idProjekty FROM Projekty WHERE NazwaKod_Projektu = ?`,
                         [project.projekt],
@@ -153,22 +183,20 @@ function ZapiszCzasPracy(req, res, db) {
                             }
 
                             const projektyId = projektyResults[0].idProjekty;
-                            const projectTotalHours = project.totalHours || 0; // Make sure you calculate total hours for each project on the frontend
-
-                            handleProject(projektyId, project.projekt, project.firma, project.zleceniodawca, projectTotalHours, () => {
+                            handleProject(projektyId, project.projekt, project.firma, project.zleceniodawca, project, () => {
                                 processAdditionalProjects(index + 1);
                             });
                         }
                     );
                 };
 
-                processAdditionalProjects(0);
+                processAdditionalProjects(0); // Uruchomienie przetwarzania dodatkowych projektów
             }
         );
     } catch (error) {
         console.error(error);
         if (!res.headersSent) {
-            res.status(500).json({ message: 'Wystąpił błąd podczas zapisywania czasu pracy' });
+            res.status(500).json({ message: 'Błąd podczas zapisywania czasu pracy' });
         }
     }
 }

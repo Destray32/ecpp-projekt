@@ -3,6 +3,7 @@ import { format, startOfWeek, addWeeks, subWeeks, getWeek, getDay } from 'date-f
 import { pl } from 'date-fns/locale';
 import { Dropdown } from "primereact/dropdown";
 import { Button } from 'primereact/button';
+
 import Axios from "axios";
 
 const generateWeek = (startDate = new Date()) => {
@@ -43,7 +44,6 @@ export default function CzasPracyPage() {
     const [additionalProjects, setAdditionalProjects] = useState([]);
     const [daysOfWeek, setDaysOfWeek] = useState(generateWeek(startOfWeek(new Date(), { weekStartsOn: 1 })));
     const [samochody, setSamochody] = useState([]);
-    const [samochodyValue, setSamochodyValue] = useState(null);
     const [projectTotals, setProjectTotals] = useState({}); // eksperymantlny state do 
     // przetrzymywania sumy godzin dla projektów 
     // {projectId: totalHours}
@@ -174,6 +174,7 @@ export default function CzasPracyPage() {
                 dayOfWeek: format(day, 'EEEE', { locale: pl }),
                 start: project.hours[format(day, 'yyyy-MM-dd')]?.start || "00:00",
                 end: project.hours[format(day, 'yyyy-MM-dd')]?.end || "00:00",
+                car: project.hours[format(day, 'yyyy-MM-dd')]?.car || null,
             }))
         }));
     
@@ -285,26 +286,25 @@ export default function CzasPracyPage() {
         }));
     };
 
-const calculateProjectTotal = (project) => {
-    return daysOfWeek.reduce((total, day) => {
-        const dateKey = format(day, 'yyyy-MM-dd');
-        const start = project.hours[dateKey]?.start || "00:00";
-        const end = project.hours[dateKey]?.end || "00:00";
+    const calculateProjectTotal = (project) => {
+        return daysOfWeek.reduce((total, day) => {
+            const dateKey = format(day, 'yyyy-MM-dd');
+            const start = project.hours[dateKey]?.start || "00:00";
+            const end = project.hours[dateKey]?.end || "00:00";
 
-        // Convert start and end times to Date objects
-        const startDate = new Date(`2000-01-01T${start}`);
-        const endDate = new Date(`2000-01-01T${end}`);
+            // Convert start and end times to Date objects
+            const startDate = new Date(`2000-01-01T${start}`);
+            const endDate = new Date(`2000-01-01T${end}`);
 
-        // If the end time is earlier than the start time, assume the work went past midnight
-        if (endDate < startDate) endDate.setDate(endDate.getDate() + 1);
+            // If the end time is earlier than the start time, assume the work went past midnight
+            if (endDate < startDate) endDate.setDate(endDate.getDate() + 1);
 
-        // Calculate hours worked for the day
-        const hoursWorked = (endDate - startDate) / (1000 * 60 * 60);
+            // Calculate hours worked for the day
+            const hoursWorked = (endDate - startDate) / (1000 * 60 * 60);
 
-        return total + hoursWorked;
-    }, 0);
-};
-
+            return total + hoursWorked;
+        }, 0);
+    };
 
     const calculateDailyTotal = (day) => {
         const start = hours[day]?.start || "00:00";
@@ -376,7 +376,6 @@ const calculateProjectTotal = (project) => {
         // Ensure the value is a two-digit number for HH format
         const formattedValue = value.padStart(2, '0') + ":00";
 
-
         setAdditionalProjects(prevProjects =>
             prevProjects.map(project => {
                 if (project.id === projectId) {
@@ -395,7 +394,27 @@ const calculateProjectTotal = (project) => {
             })
         );
     };
-
+    
+    const handleCarSelection = (projectId, date, car) => {
+        setAdditionalProjects(prevProjects =>
+            prevProjects.map(project => {
+                if (project.id === projectId) {
+                    return {
+                        ...project,
+                        hours: {
+                            ...project.hours,
+                            [date]: {
+                                ...project.hours[date],
+                                car,  // Save selected car
+                            }
+                        }
+                    };
+                }
+                return project;
+            })
+        );
+    };
+    
     const handleAdditionalProjectTimeBlur = (projectId, date, type, value) => {
         // Ensure value is in the correct format (e.g., "01:00")
         let cleanValue = value.replace(/\D/g, '');
@@ -422,7 +441,7 @@ const calculateProjectTotal = (project) => {
         });
     };
 
-    const AdditionalProjectRow = ({ project, onInputChange, onTimeBlur, first, onDelete }) => {
+    const AdditionalProjectRow = ({ project, onInputChange, onTimeBlur, onCarChange, first, onDelete }) => {
         const projectTotal = calculateProjectTotal(project);
         return (
             <div className="mt-4">
@@ -480,6 +499,14 @@ const calculateProjectTotal = (project) => {
                                         min="0"
                                         disabled={niedziela}
                                     />
+                                    <Dropdown 
+                                        value={project.hours[dateKey]?.car || null} 
+                                        options={samochody} 
+                                        onChange={(e) => onCarChange(project.id, dateKey, e.value)} 
+                                        placeholder="Wybierz pojazd" 
+                                        className="mt-1"
+                                        disabled={niedziela}
+                                    />
                                 </div>
                             );
                         })}
@@ -489,6 +516,7 @@ const calculateProjectTotal = (project) => {
             </div>
         );
     };
+    
     
     return (
         <div>
@@ -634,6 +662,7 @@ const calculateProjectTotal = (project) => {
                                 onInputChange={handleAdditionalProjectInputChange}
                                 onTimeBlur={handleAdditionalProjectTimeBlur}
                                 onDelete={handleDeleteProject}
+                                onCarChange={handleCarSelection}
                                 first={index === 0}
                             />
                         ))}
