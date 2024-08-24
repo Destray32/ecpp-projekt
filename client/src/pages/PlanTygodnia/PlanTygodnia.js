@@ -125,16 +125,16 @@ export default function PlanTygodniaPage() {
     // obsługa przyciusku przeniesienia zaznaczonych pracowników do innej grupy
     const handlePrzeniesZaznaczone = () => {
         if (!grupaPrzenies) {
-            console.error("No group selected for transfer.");
+            console.error("Nie wybrano grupy do przeniesienia.");
             return;
         }
     
         const payload = {
             ids: selectedRowIds,
-            groupId: grupaPrzenies.id
+            groupId: grupaPrzenies
         };
-
-        console.log("Transferring selected employees to group:", payload);
+    
+        console.log("Przenoszone:", payload);
     
         Axios.put('http://localhost:5000/api/planTygodnia', payload)
             .then(res => {
@@ -143,14 +143,40 @@ export default function PlanTygodniaPage() {
             .catch(err => {
                 console.error("Error transferring selected employees:", err);
             });
-    }
+    };
 
     const handleSkopiuj = () => {
-        // na razie podmienia dane na pracowników z poprzedniego tygodnia, ale może trzeba ich tylko dodac?
         Axios.get('http://localhost:5000/api/planTygodnia?previous=true')
             .then(res => {
-                console.log(res.data);
-                setPracownikData(res.data);
+                const newData = res.data;
+                setPracownikData(prevData => {
+                    const combinedData = [
+                        ...prevData,
+                        ...newData.filter(newItem => !prevData.some(existingItem => existingItem.id === newItem.id))
+                    ];
+                    return combinedData;
+                });
+    
+                const newSelectedM1 = [];
+                const newSelectedM2 = [];
+                const newSelectedM3 = [];
+                const newSelectedM4 = [];
+                const newSelectedM5 = [];
+    
+                newData.forEach(item => {
+                    const roles = item.M1_5 ? item.M1_5.split(',') : [];
+                    if (roles.includes('M1')) newSelectedM1.push(item.id);
+                    if (roles.includes('M2')) newSelectedM2.push(item.id);
+                    if (roles.includes('M3')) newSelectedM3.push(item.id);
+                    if (roles.includes('M4')) newSelectedM4.push(item.id);
+                    if (roles.includes('M5')) newSelectedM5.push(item.id);
+                });
+    
+                setSelectedM1(prevSelectedM1 => [...new Set([...prevSelectedM1, ...newSelectedM1])]);
+                setSelectedM2(prevSelectedM2 => [...new Set([...prevSelectedM2, ...newSelectedM2])]);
+                setSelectedM3(prevSelectedM3 => [...new Set([...prevSelectedM3, ...newSelectedM3])]);
+                setSelectedM4(prevSelectedM4 => [...new Set([...prevSelectedM4, ...newSelectedM4])]);
+                setSelectedM5(prevSelectedM5 => [...new Set([...prevSelectedM5, ...newSelectedM5])]);
             })
             .catch(err => console.error(err));
     }
@@ -178,30 +204,30 @@ export default function PlanTygodniaPage() {
         Axios.get('http://localhost:5000/api/grupy')
             .then(res => {
                 setAvailableGroups(res.data.grupy.map(group => ({ name: group.Zleceniodawca, id: group.id })));
-                console.log(res.data);
             })
             .catch(err => console.error(err));
 
         Axios.get('http://localhost:5000/api/planTygodnia')
             .then(res => {
-                setPracownikData(res.data);
-                console.log(res.data);
-
+                const data = res.data;
+                setPracownikData(data);
+                console.log(data);
+    
                 const m1 = [];
                 const m2 = [];
                 const m3 = [];
                 const m4 = [];
                 const m5 = [];
-
-                res.data.forEach((item, index) => {
-                    const m1_5 = item.M1_5 ? item.M1_5.split(',') : [];
-                    if (m1_5.includes('M1')) m1.push(index);
-                    if (m1_5.includes('M2')) m2.push(index);
-                    if (m1_5.includes('M3')) m3.push(index);
-                    if (m1_5.includes('M4')) m4.push(index);
-                    if (m1_5.includes('M5')) m5.push(index);
+    
+                data.forEach((item) => {
+                    const roles = item.M1_5 ? item.M1_5.split(',') : [];
+                    if (roles.includes('M1')) m1.push(item.id);
+                    if (roles.includes('M2')) m2.push(item.id);
+                    if (roles.includes('M3')) m3.push(item.id);
+                    if (roles.includes('M4')) m4.push(item.id);
+                    if (roles.includes('M5')) m5.push(item.id);
                 });
-
+    
                 setSelectedM1(m1);
                 setSelectedM2(m2);
                 setSelectedM3(m3);
@@ -212,12 +238,12 @@ export default function PlanTygodniaPage() {
     }, []);
 
     // funkcja do obsługi zmiany stanu checkboxa w pierwszej kolumnie
-    const handleRowCheckboxChange = (rowIndex) => {
+    const handleRowCheckboxChange = (employeeId) => {
         setSelectedRowIds(prevSelectedRows => {
-            if (prevSelectedRows.includes(rowIndex)) {
-                return prevSelectedRows.filter(id => id !== rowIndex);
+            if (prevSelectedRows.includes(employeeId)) {
+                return prevSelectedRows.filter(id => id !== employeeId);
             } else {
-                return [...prevSelectedRows, rowIndex];
+                return [...prevSelectedRows, employeeId];
             }
         });
     };
@@ -256,50 +282,50 @@ export default function PlanTygodniaPage() {
 
     // funkcja do obsługi zmiany stanu checkboxa w kolumnach M1-M5
     // przepraszam za wielki switch ;_;
-    const handleColumnCheckboxChange = (columnIndex, rowIndex) => {
+    const handleColumnCheckboxChange = (columnIndex, employeeId) => {
         switch (columnIndex) {
             case 4:
                 setSelectedM1(prevSelectedM1 => {
-                    if (prevSelectedM1.includes(rowIndex)) {
-                        return prevSelectedM1.filter(id => id !== rowIndex);
+                    if (prevSelectedM1.includes(employeeId)) {
+                        return prevSelectedM1.filter(id => id !== employeeId);
                     } else {
-                        return [...prevSelectedM1, rowIndex];
+                        return [...prevSelectedM1, employeeId];
                     }
                 });
                 break;
             case 5:
                 setSelectedM2(prevSelectedM2 => {
-                    if (prevSelectedM2.includes(rowIndex)) {
-                        return prevSelectedM2.filter(id => id !== rowIndex);
+                    if (prevSelectedM2.includes(employeeId)) {
+                        return prevSelectedM2.filter(id => id !== employeeId);
                     } else {
-                        return [...prevSelectedM2, rowIndex];
+                        return [...prevSelectedM2, employeeId];
                     }
                 });
                 break;
             case 6:
                 setSelectedM3(prevSelectedM3 => {
-                    if (prevSelectedM3.includes(rowIndex)) {
-                        return prevSelectedM3.filter(id => id !== rowIndex);
+                    if (prevSelectedM3.includes(employeeId)) {
+                        return prevSelectedM3.filter(id => id !== employeeId);
                     } else {
-                        return [...prevSelectedM3, rowIndex];
+                        return [...prevSelectedM3, employeeId];
                     }
                 });
                 break;
             case 7:
                 setSelectedM4(prevSelectedM4 => {
-                    if (prevSelectedM4.includes(rowIndex)) {
-                        return prevSelectedM4.filter(id => id !== rowIndex);
+                    if (prevSelectedM4.includes(employeeId)) {
+                        return prevSelectedM4.filter(id => id !== employeeId);
                     } else {
-                        return [...prevSelectedM4, rowIndex];
+                        return [...prevSelectedM4, employeeId];
                     }
                 });
                 break;
             case 8:
                 setSelectedM5(prevSelectedM5 => {
-                    if (prevSelectedM5.includes(rowIndex)) {
-                        return prevSelectedM5.filter(id => id !== rowIndex);
+                    if (prevSelectedM5.includes(employeeId)) {
+                        return prevSelectedM5.filter(id => id !== employeeId);
                     } else {
-                        return [...prevSelectedM5, rowIndex];
+                        return [...prevSelectedM5, employeeId];
                     }
                 });
                 break;
@@ -360,13 +386,13 @@ export default function PlanTygodniaPage() {
                                 </tr>
                             </thead>
                             <tbody className="text-center">
-                                {pracownikData.map((item, i) => (
-                                    <tr key={i} className="border-b even:bg-gray-200 odd:bg-gray-300">
+                                {pracownikData.map((item) => (
+                                    <tr key={item.id} className="border-b even:bg-gray-200 odd:bg-gray-300">
                                         <td className="border-r">
                                             <input
                                                 type="checkbox"
-                                                checked={selectedRowIds.includes(i)}
-                                                onChange={() => handleRowCheckboxChange(i)}
+                                                checked={selectedRowIds.includes(item.id)}
+                                                onChange={() => handleRowCheckboxChange(item.id)}
                                             />
                                         </td>
                                         <td className="border-r">{item.surname}</td>
@@ -375,36 +401,36 @@ export default function PlanTygodniaPage() {
                                         <td className="border-r">
                                             <input
                                                 type="checkbox"
-                                                checked={selectedM1.includes(i)}
-                                                onChange={() => handleColumnCheckboxChange(4, i)}
+                                                checked={selectedM1.includes(item.id)}
+                                                onChange={() => handleColumnCheckboxChange(4, item.id)}
                                             />
                                         </td>
                                         <td className="border-r">
                                             <input
                                                 type="checkbox"
-                                                checked={selectedM2.includes(i)}
-                                                onChange={() => handleColumnCheckboxChange(5, i)}
+                                                checked={selectedM2.includes(item.id)}
+                                                onChange={() => handleColumnCheckboxChange(5, item.id)}
                                             />
                                         </td>
                                         <td className="border-r">
                                             <input
                                                 type="checkbox"
-                                                checked={selectedM3.includes(i)}
-                                                onChange={() => handleColumnCheckboxChange(6, i)}
+                                                checked={selectedM3.includes(item.id)}
+                                                onChange={() => handleColumnCheckboxChange(6, item.id)}
                                             />
                                         </td>
                                         <td className="border-r">
                                             <input
                                                 type="checkbox"
-                                                checked={selectedM4.includes(i)}
-                                                onChange={() => handleColumnCheckboxChange(7, i)}
+                                                checked={selectedM4.includes(item.id)}
+                                                onChange={() => handleColumnCheckboxChange(7, item.id)}
                                             />
                                         </td>
                                         <td className="border-r">
                                             <input
                                                 type="checkbox"
-                                                checked={selectedM5.includes(i)}
-                                                onChange={() => handleColumnCheckboxChange(8, i)}
+                                                checked={selectedM5.includes(item.id)}
+                                                onChange={() => handleColumnCheckboxChange(8, item.id)}
                                             />
                                         </td>
                                         <td className="border-r">{item.description}</td>
