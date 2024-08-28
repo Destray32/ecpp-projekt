@@ -9,7 +9,6 @@ import Axios from "axios";
 
 export default function ProjektyPage() {
     const [filtr, setFiltr] = useState('');
-    const [status, setStatus] = useState('');
     const [selectedItems, setSelectedItems] = React.useState([]);
     const [data, setData] = useState([]);
 
@@ -22,14 +21,18 @@ export default function ProjektyPage() {
     };
 
     useEffect(() => {
-        fetchProjects();
-    }, []);
+        if (filtr) {
+            handleSzukaj();
+        } else {
+            fetchProjects();
+        }
+    }, [filtr]);
 
     const handleDelete = (id) => {
         Axios.delete(`http://localhost:5000/api/czas/usun?id=${id}`)
             .then((response) => {
                 console.log(response.data);
-                window.location.reload();
+                fetchProjects();
             })
             .catch((error) => {
                 console.error(error);
@@ -37,14 +40,23 @@ export default function ProjektyPage() {
     };
 
     const handleSzukaj = () => {
-        Axios.get(`http://localhost:5000/api/czas/szukaj?projekty=${filtr}`)
+        Axios.get(`http://localhost:5000/api/czas/szukaj?group=${filtr}`)
             .then((response) => {
-                console.log(response.data);
+                console.log('Response data:', response.data);
+                if (response.data && Array.isArray(response.data.projekty)) {
+                    setData(response.data.projekty);
+                } else {
+                    console.error('Unexpected response structure:', response.data);
+                    setData([]);
+                }
             })
             .catch((error) => {
-                console.error(error);
+                console.error('Error fetching projects:', error);
+                setData([]);
             });
     };
+    
+    
 
     const handlePrzeniesAktyw = () => {
         Axios.put("http://localhost:5000/api/czas/przeniesAkt", {
@@ -83,12 +95,19 @@ export default function ProjektyPage() {
     const fetchProjects = () => {
         Axios.get("http://localhost:5000/api/czas/projekty")
             .then((response) => {
-                setData(response.data.projekty);
+                if (response.data && Array.isArray(response.data.projekty)) {
+                    setData(response.data.projekty);
+                } else {
+                    console.error('Unexpected response structure:', response.data);
+                    setData([]);
+                }
             })
             .catch((error) => {
                 console.error(error);
+                setData([]);
             });
     };
+    
 
 
     return (
