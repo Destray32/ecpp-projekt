@@ -1,5 +1,3 @@
-
-
 function GetTydzien(req, res, db) {
     const { numericWeek } = req.params;
 

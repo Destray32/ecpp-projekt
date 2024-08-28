@@ -13,6 +13,7 @@ export default function TydzienPage() {
     const [weekRange, setWeekRange] = useState({ start: '', end: '' });
     const [selectedItems, setSelectedItems] = useState([]);
     const [data, setData] = useState([]);
+    const [refresh, setRefresh] = useState(false);
 
     const generatePDF = () => {
         const doc = new jsPDF();
@@ -82,24 +83,42 @@ export default function TydzienPage() {
     };
 
     const handleOtworz = () => {
+        if (selectedItems.length === 0) {
+            console.error('No items selected');
+            return;
+        }
+
         Axios.post('http://localhost:5000/api/tydzien', {
-            tydzienRoku: selectedItems.map(item => item.tydzienRoku),
+            tydzienRoku: selectedItems[0].tydzienRoku,
             pracownikId: selectedItems.map(item => item.Pracownik_idPracownik)
 
         })
-            .then(response => console.log(response.data))
+            .then(response => {
+                console.log(response.data);
+                setRefresh(!refresh);
+            })
             .catch(error => console.error(error));
     };
+
     const handleZamknij = () => {
+        if (selectedItems.length === 0) {
+            console.error('No items selected');
+            return;
+        }
+
         Axios.delete('http://localhost:5000/api/tydzien', {
             data: {
-                tydzienRoku: selectedItems.map(item => item.tydzienRoku),
+                tydzienRoku: selectedItems[0].tydzienRoku,
                 pracownikId: selectedItems.map(item => item.Pracownik_idPracownik)
             }
         })
-            .then(response => console.log(response.data))
+        .then(response => {
+            console.log(response.data);
+            setRefresh(!refresh);
+        })
             .catch(error => console.error(error));
     };
+
     const handleDrukuj = () => {
         console.log('Drukuj');
         generatePDF();
@@ -134,7 +153,7 @@ export default function TydzienPage() {
             // .then(response => console.log(response.data))
             .then(response => setData(response.data))
             .catch(error => console.error(error));
-    }, [numericWeek]);
+    }, [numericWeek, refresh]);
 
     useEffect(() => {
         console.log(data);
@@ -171,7 +190,7 @@ export default function TydzienPage() {
                             <th></th>
                             <th className="border-r">Imię i nazwisko</th>
                             <th className="border-r">Grupa urlopowa</th>
-                            <th className="border-r">Status</th>
+                            <th className="border-r w-28">Status</th>
                         </tr>
                     </thead>
                     <tbody className="text-center">
