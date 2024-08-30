@@ -27,7 +27,7 @@ export default function CzasPracyPage() {
     // czyli, userType to będzie pracownik a user name nie będzie do zmiany bo nie chcemy 
     // dac opcji podgladu czasu innych pracowników
     const [userType, setUserType] = useState("Pracownik");
-    const [loggedUserName, setLoggedUserName] = useState("Anna Smith");
+    const [loggedUserName, setLoggedUserName] = useState("Jan Kowalski");
     /////////////////////////
 
     const [currentDate, setCurrentDate] = useState(new Date());

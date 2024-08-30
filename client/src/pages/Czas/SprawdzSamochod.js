@@ -6,8 +6,6 @@ import axios from 'axios';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
-
-
 import { font } from "../../fonts/OpenSans-Regular-normal";
 
 export default function SprawdzSamochodPage() {
@@ -17,23 +15,34 @@ export default function SprawdzSamochodPage() {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
 
-    
+    const formatDate = (dateStr) => {
+        const date = new Date(dateStr);
+        return date.toISOString().split('T')[0];
+    };
+
     const fetchData = () => {
         axios.get('http://localhost:5000/api/samochody')
             .then((response) => {
                 const data = response.data;
+                console.log(data);
 
                 const filteredData = data.filter(item => {
-                    if (Pojazd && item.pojazd !== Pojazd) return false;
-                    if (startDate && item.data < startDate) return false;
-                    if (endDate && item.data > endDate) return false;
+                    const itemDate = formatDate(item.Data);
+                    if (Pojazd && item.Pojazd !== Pojazd) return false;
+                    if (startDate && itemDate < startDate) return false;
+                    if (endDate && itemDate > endDate) return false;
                     return true;
                 });
 
-                setTableData(filteredData);
+                const formattedData = filteredData.map(item => ({
+                    ...item,
+                    Data: formatDate(item.Data)
+                }));
+                
+                setTableData(formattedData);
 
                 if (pojazdyOptions.length === 0) {
-                    const pojazdySet = new Set(data.map(item => item.pojazd));
+                    const pojazdySet = new Set(data.map(item => item.Pojazd));
                     const options = Array.from(pojazdySet).map(pojazd => ({
                         label: pojazd,
                         value: pojazd
@@ -56,19 +65,19 @@ export default function SprawdzSamochodPage() {
         doc.setFont("OpenSans-Regular", "normal");
         
         const columns = [
-            { header: "Data", dataKey: "data" },
-            { header: "Imię i nazwisko", dataKey: "dane" },
-            { header: "Pojazd", dataKey: "pojazd" },
-            { header: "Projekt", dataKey: "projekt" },
-            { header: "Ilość godzin", dataKey: "godziny" }
+            { header: "Data", dataKey: "Data" },
+            { header: "Imię i nazwisko", dataKey: "Pracownik" },
+            { header: "Pojazd", dataKey: "Pojazd" },
+            { header: "Projekt", dataKey: "Projekt" },
+            { header: "Ilość godzin", dataKey: "GodzinyPrzepracowane" }
         ];
         
         const rows = tableData.map(item => ({
-            data: item.data,
-            dane: item.dane,
-            pojazd: item.pojazd,
-            projekt: item.projekt,
-            godziny: item.godziny
+            Data: item.Data,
+            Pracownik: item.Pracownik,
+            Pojazd: item.Pojazd,
+            Projekt: item.Projekt,
+            GodzinyPrzepracowane: item.GodzinyPrzepracowane
         }));
     
         doc.autoTable({
@@ -117,13 +126,13 @@ export default function SprawdzSamochodPage() {
                         </tr>
                     </thead>
                     <tbody className="text-center">
-                        {tableData.map((item) => (
-                            <tr key={item.id} className="border-b even:bg-gray-200 odd:bg-gray-300">
-                                <td className="border-r">{item.data}</td>
-                                <td className="border-r">{item.dane}</td>
-                                <td className="border-r">{item.pojazd}</td>
-                                <td className="border-r">{item.projekt}</td>
-                                <td className="border-r">{item.godziny}</td>
+                        {tableData.map((item, index) => (
+                            <tr key={index} className="border-b even:bg-gray-200 odd:bg-gray-300">
+                                <td className="border-r">{item.Data}</td>
+                                <td className="border-r">{item.Pracownik}</td>
+                                <td className="border-r">{item.Pojazd}</td>
+                                <td className="border-r">{item.Projekt}</td>
+                                <td className="border-r">{item.GodzinyPrzepracowane}</td>
                             </tr>
                         ))}
                     </tbody>
