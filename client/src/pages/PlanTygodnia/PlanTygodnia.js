@@ -68,7 +68,11 @@ export default function PlanTygodniaPage() {
         });
 
         doc.text("Grupa", 14, 10);
-        doc.save("drukuj-grupe.pdf");
+        //doc.save("drukuj-grupe.pdf");
+        const pdfBlob = doc.output('blob');
+        const pdfURL = URL.createObjectURL(pdfBlob);
+
+        window.open(pdfURL, '_blank');
     };
 
     const getWeekNumber = (date) => {

@@ -276,7 +276,7 @@ export default function PracownikPage() {
     } catch (error) {
         console.error('Update failed:', error);
     }
-};
+  };
 
   const printPDF = () => {
     const doc = new jsPDF('landscape');
@@ -312,7 +312,12 @@ export default function PracownikPage() {
         fontStyle: "bold"
       }
     });
-    doc.save('lista-pracownikow.pdf');
+
+    //doc.save('lista-pracownikow.pdf');
+    const pdfBlob = doc.output('blob');
+    const pdfURL = URL.createObjectURL(pdfBlob);
+
+    window.open(pdfURL, '_blank');
   };
 
   const handleTableChange = (pagination, filters, sorter) => {

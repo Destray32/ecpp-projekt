@@ -87,7 +87,11 @@ export default function SprawdzSamochodPage() {
         });
     
         doc.text("Lista samochodów", 14, 15);
-        doc.save("lista-samochodow.pdf");
+        //doc.save("lista-samochodow.pdf");
+        const pdfBlob = doc.output('blob');
+        const pdfURL = URL.createObjectURL(pdfBlob);
+
+        window.open(pdfURL, '_blank');
     };
 
     return (

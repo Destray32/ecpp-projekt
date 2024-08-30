@@ -50,7 +50,11 @@ export default function TydzienPage() {
         });
     
         doc.text(`Tydzien: ${numericWeek}, ${weekRange.start} - ${weekRange.end}`, 14, 15);
-        doc.save("statusy-tydzien.pdf");
+        //doc.save("statusy-tydzien.pdf");
+        const pdfBlob = doc.output('blob');
+        const pdfURL = URL.createObjectURL(pdfBlob);
+
+        window.open(pdfURL, '_blank');
     };
 
     const handleCheckboxChange = (tydzienRoku, Pracownik_idPracownik) => {
