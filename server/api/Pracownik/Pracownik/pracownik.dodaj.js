@@ -1,4 +1,5 @@
 const db = require('../../../server');
+const bcrypt = require('bcryptjs');
 
 function DodajPracownika(req, res) {
     console.log(req.body);
@@ -29,9 +30,33 @@ function DodajPracownika(req, res) {
         active,
         role,
         newPassword,
+        confirmPassword
     } = req.body;
 
+    console.log('newPassword:', newPassword);
+    console.log('confirmPassword:', confirmPassword);
+
+    // Ensure newPassword and confirmPassword are valid
+    if (!newPassword) {
+        console.error('Password is required');
+        return res.status(400).json({ error: 'Password is required' });
+    }
+
+    if (newPassword !== confirmPassword) {
+        console.error('Passwords do not match');
+        return res.status(400).json({ error: 'Passwords do not match' });
+    }
+
+    // Ensure newPassword is a string
+    if (typeof newPassword !== 'string') {
+        console.error('Invalid newPassword type:', typeof newPassword);
+        return res.status(400).json({ error: 'Invalid password format' });
+    }
+
     const hashedPassword = bcrypt.hashSync(newPassword, 10);
+
+    // Debugging output for hashedPassword
+    console.log('Hashed Password:', hashedPassword);
 
     db.beginTransaction(error => {
         if (error) {

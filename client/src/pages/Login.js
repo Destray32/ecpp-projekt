@@ -2,10 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Dropdown } from 'primereact/dropdown';
 import { Password } from 'primereact/password';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 import "primereact/resources/themes/lara-light-cyan/theme.css";
 
 export default function LoginPage() {
+    const navigate = useNavigate();
 
     // listy z których wybierać mozna w dropdownach
     const [availableCompanies, setAvailableCompanies] = useState(['test', 'test2']);
@@ -16,15 +18,43 @@ export default function LoginPage() {
     const [login, setLogin] = useState('');
     const [password, setPassword] = useState('');
 
-    const loginHandler = async () => {
+    useEffect(() => {
+        fetchCompanies();
+        fetchLogins();
+    }, []);
+
+    const fetchCompanies = async () => {
         try {
-            const response = await axios.post('http://localhost:5000/logowanie', { firma, login, password }, { withCredentials: true });
-            console.log(response.data.message);
+            const response = await axios.get('http://localhost:5000/api/firmy');
+            setAvailableCompanies(response.data);
         }
         catch (error) {
             console.error(error);
         }
     }
+
+    const fetchLogins = async () => {
+        try {
+            const response = await axios.get('http://localhost:5000/api/logins');
+            setAvailableLogins(response.data);
+        }
+        catch (error) {
+            console.error(error);
+        }
+    }
+
+    const loginHandler = async (event) => {
+        event.preventDefault();
+        try {
+            const response = await axios.post('http://localhost:5000/api/logowanie', { firma, login, password }, { withCredentials: true });
+            
+            console.log(response.data.message);
+
+            navigate('/home');
+        } catch (error) {
+            console.error(error);
+        }
+    };
 
     // useEffect(() => {
     //     console.log(firma, login, password);

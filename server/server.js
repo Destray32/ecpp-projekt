@@ -4,21 +4,33 @@ app.use(express.json());
 const port = 5000;
 const cors = require('cors');
 const mysql = require('mysql2');
-const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
 
 require('dotenv').config();
+
+app.use(cors({
+    origin: 'http://localhost:3000',
+    credentials: true
+}));
+
+app.use(cookieParser());
+
+app.use(express.json({ type: 'application/json; charset=utf-8' }));
+app.use(express.urlencoded({ extended: true, parameterLimit: 10000, charset: 'utf-8' }));
 
 // JWT middleware
 const authenticateJWT = (req, res, next) => {
     const token = req.cookies.token;
 
     if (!token) {
+        console.log('No token found');
         return res.status(401).json({ error: 'Unauthorized' });
     }
 
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
         if (err) {
+            console.log('Token verification failed:', err);
             return res.status(403).json({ error: 'Forbidden' });
         }
 
@@ -47,19 +59,11 @@ db.connect((err) => {
 
 module.exports = db;
 
-app.use(cors({
-    origin: 'http://localhost:3000',
-    credentials: true
-}));
-
-app.use(authenticateJWT);
-
-app.use(express.json({ type: 'application/json; charset=utf-8' }));
-app.use(express.urlencoded({ extended: true, parameterLimit: 10000, charset: 'utf-8' }));
-
 // api importy z folderu api
 // Logowanie
 const Logowanie = require('./api/logowanie');
+const Companies = require('./api/companies');
+const Logins = require('./api/logins');
 // Grupy
 const UsuwanieGrupy = require('./api/Grupy/grupy.usuwaniegrupy');
 // Pracownik
@@ -140,6 +144,21 @@ app.post('/api/logowanie', (req, res) => {
     Logowanie(req, res);
 });
 
+app.get('/api/firmy', (req, res) => {
+    Companies(req, res);
+});
+
+app.get('/api/logins', (req, res) => {
+    Logins(req, res);
+});
+
+app.post('/api/logout', (req, res) => {
+    res.cookie("token", "", { httpOnly: true, secure: process.env.NODE_ENV === "production", expires: new Date(0) });
+    res.json({ message: "Logged out successfully" });
+});
+
+app.use(authenticateJWT);
+
 // PRACOWNIK > PRACOWNIK //
 app.route('/api/pracownicy')
     .get((req, res) => {
@@ -182,7 +201,7 @@ app.get('/api/mojedane', (req, res) => {
 );
 /////////////////////////////////////////
 
-app.get('/api/logi', (req, res) => {
+app.get('/api/logi', authenticateJWT, (req, res) => {
     PobierzLogi(req, res, db);
 }
 );

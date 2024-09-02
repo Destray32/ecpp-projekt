@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Link, Outlet } from 'react-router-dom';
+import { Link, Outlet, useNavigate } from 'react-router-dom';
 import moment from 'moment';
 import { Button, Badge } from 'antd';
+import axios from 'axios';
 
 import GorneMenu from '../Components/GorneMenu';
 import ButtonLewy from '../Components/ButtonLeweMenu';
@@ -11,9 +12,31 @@ export default function HomePage() {
     const [imie, setImie] = useState('placeholder');
     const [menu, setMenu] = useState('Pracownik');
     const [showSubMenu, setShowSubMenu] = useState(false);
+    const navigate = useNavigate();
+
+    const handleLogout = async () => {
+        try {
+            await axios.post('http://localhost:5000/api/logout', {}, { withCredentials: true });
+            navigate('/');
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    const checkTokenValidity = async () => {
+        try {
+            await axios.get('http://localhost:5000/api/check-token', { withCredentials: true });
+        } catch (error) {
+            if (error.response && error.response.status === 401) {
+                navigate('/');
+            }
+        }
+    }
 
     useEffect(() => { // useEffect ze względu na to żeby tata się zmieniała w razie potrzeby
         // moment.locale('pl'); // nie wiem jeszcze czy potrzebna jest data polska czy szwedzka
+
+        checkTokenValidity();
 
         const timer = setInterval(() => {
             setData(moment().format('DD/MM/YYYY'));
@@ -51,7 +74,7 @@ export default function HomePage() {
                                 <ButtonLewy link="pracownik" nazwa='Pracownik' />
                                 <ButtonLewy link="podzial" nazwa='Podział' />
                                 <ButtonLewy link="logowanie" nazwa='Logowanie' />
-                                <ButtonLewy nazwa='Wyloguj' />
+                                <ButtonLewy nazwa='Wyloguj' onClick={handleLogout} />
                             </>
                         )}
                         {menu === "Czas" && (
@@ -68,14 +91,14 @@ export default function HomePage() {
                                 <ButtonLewy link="tydzien" nazwa='Tydzien' />
                                 <ButtonLewy link="raporty" nazwa='Raporty' />
                                 <ButtonLewy link="sprawdzsamochod" nazwa='Sprawdź samochód' />
-                                <ButtonLewy nazwa='Wyloguj' />
+                                <ButtonLewy nazwa='Wyloguj' onClick={handleLogout} />
                             </>
                         )}
                         {menu === "PlanTygodnia" && (
                             <>
                                 <ButtonLewy link="plan" nazwa='Plan Tygodnia' />
                                 <ButtonLewy link="zaplanuj" nazwa='Zaplanuj Tydzień' />
-                                <ButtonLewy nazwa='Wyloguj' />
+                                <ButtonLewy nazwa='Wyloguj' onClick={handleLogout} />
                             </>
                         )}
                     </div>

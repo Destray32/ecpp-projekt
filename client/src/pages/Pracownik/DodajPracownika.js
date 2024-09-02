@@ -40,7 +40,7 @@ export default function DodajPracownikaPage() {
 
     const handleSubmit = (values) => {
         console.log(values);
-        axios.post('http://localhost:5000/api/pracownicy', { withCredentials: true }, values)
+        axios.post('http://localhost:5000/api/pracownicy', values, { withCredentials: true })
             .then(res => {
                 console.log(res);
             })
