@@ -157,6 +157,10 @@ app.post('/api/logout', (req, res) => {
     res.json({ message: "Logged out successfully" });
 });
 
+//                                                                                  WAŻNE!!!!
+//                                                   JAKBY NIE DZIAŁ JWT MIDDLEWARE TO ZAKOMENTOWAĆ TEN APP.USE POD KOMENTAŻEM
+//                                                            ORAZ SKONTAKTOWAĆ SIĘ Z OSOBĄ ZA NIEGO ODPOWIEDZIALNĄ
+//                                                                      BO PRAWDOPODOBNIE COŚ ZJEBAŁA
 app.use(authenticateJWT);
 
 // PRACOWNIK > PRACOWNIK //

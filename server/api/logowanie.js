@@ -7,7 +7,11 @@ async function Logowanie(req, res) {
     const { firma, login, password } = req.body;
 
     const query = `
-        SELECT * FROM pracownik WHERE Nazwa_uzytkownika = ?
+        SELECT p.idPracownik, p.Haslo, f.Nazwa_firmy
+        FROM pracownik p
+        JOIN informacje_o_firmie i ON p.FK_Informacje_o_firmie = i.idInformacje_o_firmie
+        JOIN firma f ON i.FK_idFirma = f.idFirma
+        WHERE p.Nazwa_uzytkownika = ?
     `;
     const values = [login];
 
@@ -24,6 +28,11 @@ async function Logowanie(req, res) {
         }
 
         const user = result[0];
+
+        if (user.Nazwa_firmy !== firma) {
+            return res.status(401).json({ error: 'Wrong login or company name' });
+        }
+
         const isPasswordValid = await bcrypt.compare(password, user.Haslo);
 
         if (!isPasswordValid) {
