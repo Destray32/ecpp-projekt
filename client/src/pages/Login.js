@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Dropdown } from 'primereact/dropdown';
 import { Password } from 'primereact/password';
-import { Button } from 'primereact/button';
+import axios from 'axios';
 
 import "primereact/resources/themes/lara-light-cyan/theme.css";
 
@@ -16,6 +16,16 @@ export default function LoginPage() {
     const [login, setLogin] = useState('');
     const [password, setPassword] = useState('');
 
+    const loginHandler = async () => {
+        try {
+            const response = await axios.post('http://localhost:5000/logowanie', { firma, login, password }, { withCredentials: true });
+            console.log(response.data.message);
+        }
+        catch (error) {
+            console.error(error);
+        }
+    }
+
     // useEffect(() => {
     //     console.log(firma, login, password);
     // }, [firma, login, password]);
@@ -23,7 +33,7 @@ export default function LoginPage() {
     return (
         <main className='bg-primary min-h-screen flex items-center justify-center'>
             <div className='bg-white w-1/2 h-[20rem] rounded-lg drop-shadow-2xl'>
-                <form className='p-4 space-y-6 h-full'>
+                <form className='p-4 space-y-6 h-full' onSubmit={loginHandler}>
                     <div className='card flex flex-col drop-shadow-lg'>
                         <Dropdown value={firma} onChange={(e) => setFirma(e.value)} options={availableCompanies} optionLabel="name"
                             editable placeholder="Firma" autoComplete='off' className="w-full md:w-14rem p-4" />

@@ -4,6 +4,8 @@ app.use(express.json());
 const port = 5000;
 const cors = require('cors');
 const mysql = require('mysql2');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const db = mysql.createConnection({
     host: 'localhost',
@@ -22,7 +24,19 @@ db.connect((err) => {
 
 module.exports = db;
 
+app.use(cors({
+    origin: 'http://localhost:3000',
+    credentials: true
+}));
+
+app.use(express.json());
+
+app.use(express.json({ type: 'application/json; charset=utf-8' }));
+app.use(express.urlencoded({ extended: true, parameterLimit: 10000, charset: 'utf-8' }));
+
 // api importy z folderu api
+// Logowanie
+const Logowanie = require('./api/logowanie');
 // Grupy
 const UsuwanieGrupy = require('./api/Grupy/grupy.usuwaniegrupy');
 // Pracownik
@@ -98,12 +112,10 @@ const PobierzOgloszeniaGrupy = require('./api/Ogloszenia/ogloszenia.pobierzGrupy
 
 const PobierzDostepneFirmy = require('./api/pobierzDostepneFirmy');
 
-app.use(cors());
-app.use(express.json());
-
-app.use(express.json({ type: 'application/json; charset=utf-8' }));
-app.use(express.urlencoded({ extended: true, parameterLimit: 10000, charset: 'utf-8' }));
-
+// Logowanie
+app.post('/api/logowanie', (req, res) => {
+    Logowanie(req, res);
+});
 
 // PRACOWNIK > PRACOWNIK //
 app.route('/api/pracownicy')

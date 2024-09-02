@@ -31,6 +31,8 @@ function DodajPracownika(req, res) {
         newPassword,
     } = req.body;
 
+    const hashedPassword = bcrypt.hashSync(newPassword, 10);
+
     db.beginTransaction(error => {
         if (error) {
             console.error('Error starting transaction:', error);
@@ -101,7 +103,7 @@ function DodajPracownika(req, res) {
                     login,
                     active ? 'Aktywne' : 'Nieaktywne',
                     role === 1 ? 'Administrator' : role === 2 ? 'Majster' : role === 3 ? 'Pracownik' : 'Gosc',
-                    newPassword,
+                    hashedPassword,
                     daneOsoboweId,
                     informacjeOFirmieId
                 ];
