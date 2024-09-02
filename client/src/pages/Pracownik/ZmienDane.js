@@ -10,6 +10,8 @@ import DaneBox from '../../Components/DaneBox';
 export default function ZmienDanePage() {
     const [form] = Form.useForm();
     const [firma, setFirma] = useState([]);
+    const [grupa, setGrupa] = useState([]);
+    const [pojazd, setPojazd] = useState([]);
 
     useEffect(() => {
         axios.get('http://localhost:5000/api/mojedane', { withCredentials: true })
@@ -24,6 +26,7 @@ export default function ZmienDanePage() {
                     zip: res.data.zip,
                     city: res.data.city,
                     country: res.data.country,
+                    company: res.data.company,
                     phone1: res.data.phone1,
                     phone2: res.data.phone2,
                     email: res.data.email,
@@ -34,6 +37,7 @@ export default function ZmienDanePage() {
                     endDate: res.data.endDate ? dayjs(res.data.endDate, 'DD.MM.YYYY') : null,
                     paycheckCode: res.data.paycheckCode,
                     vehicle: res.data.vehicle,
+                    vacationGroup: res.data.vacationGroup,
                     weeklyPlan: res.data.weeklyPlan,
                     printVacation: res.data.printVacation,
                     login: res.data.login,
@@ -50,7 +54,22 @@ export default function ZmienDanePage() {
         axios.get('http://localhost:5000/api/pracownik/firmy', { withCredentials: true })
             .then(res => {
                 setFirma(res.data);
-                console.log(res.data);
+            })
+            .catch(err => {
+                console.log(err);
+            });
+
+        axios.get('http://localhost:5000/api/pracownik/grupy', { withCredentials: true })
+            .then(res => {
+                setGrupa(res.data);
+            })
+            .catch(err => {
+                console.log(err);
+            });
+
+        axios.get('http://localhost:5000/api/pracownik/pojazdy', { withCredentials: true })
+            .then(res => {
+                setPojazd(res.data);
             })
             .catch(err => {
                 console.log(err);
@@ -154,16 +173,16 @@ export default function ZmienDanePage() {
                                 <div className="flex flex-col">
                                     <Form.Item label="Pojazd" name="vehicle">
                                         <Select>
-                                            <Select.Option value="1">Samochód</Select.Option>
-                                            <Select.Option value="2">Motocykl</Select.Option>
-                                            <Select.Option value="3">Rower</Select.Option>
+                                            {pojazd.map(p => (
+                                                <Select.Option key={p.idPojazdy} value={p.idPojazdy}>{p.Marka}</Select.Option>
+                                            ))}
                                         </Select>
                                     </Form.Item>
                                     <Form.Item label="Grupa urlopowa" name="vacationGroup">
                                         <Select>
-                                            <Select.Option value="1">Grupa 1</Select.Option>
-                                            <Select.Option value="2">Grupa 2</Select.Option>
-                                            <Select.Option value="3">Grupa 3</Select.Option>
+                                            {grupa.map(g => (
+                                                <Select.Option key={g.idGrupa_urlopowa} value={g.idGrupa_urlopowa}>{g.Zleceniodawca}</Select.Option>
+                                            ))}
                                         </Select>
                                     </Form.Item>
                                     <Form.Item label="Plan tygodnia 'V'?" name="weeklyPlan" valuePropName="checked">

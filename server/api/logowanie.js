@@ -45,7 +45,7 @@ async function Logowanie(req, res) {
             httpOnly: true,
             //secure: process.env.NODE_ENV === 'production',    trzeba zmienic jak wyjdzie z developmentu
             secure: false,
-            sameSite: 'lax',
+            sameSite: 'strict',
             maxAge: 3600000,
         });
 
