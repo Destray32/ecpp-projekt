@@ -3,7 +3,6 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 async function Logowanie(req, res) {
-    console.log(req.body);
     const { firma, login, password } = req.body;
 
     const query = `
@@ -20,8 +19,6 @@ async function Logowanie(req, res) {
             console.error('Error in query:', err);
             return res.status(500).json({ error: 'Database query error' });
         }
-
-        console.log(result);
 
         if (result.length === 0) {
             return res.status(401).json({ error: 'Wrong login or password' });

@@ -56,6 +56,19 @@ export default function LoginPage() {
         }
     };
 
+    const testLoginHandler = async () => {
+        try {
+            const testFirma = 'XYZ Sp. z o.o.';
+            const login = 'twachala';
+            const testPassword = 'tomek1';
+            const response = await axios.post('http://localhost:5000/api/logowanie', { firma: testFirma, login, password: testPassword }, { withCredentials: true });
+
+            navigate('/home');
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
     // useEffect(() => {
     //     console.log(firma, login, password);
     // }, [firma, login, password]);
@@ -80,6 +93,7 @@ export default function LoginPage() {
                     </div>
                     <div className='flex justify-center'>
                         <button className='bg-primary text-white p-2 rounded-md w-1/2'>Zaloguj</button>
+                        <button type='button' onClick={testLoginHandler} className='bg-secondary bg-blue-400 text-white p-2 rounded-md w-1/2 ml-4'>Skip</button>
                     </div>
                 </form>
                 
