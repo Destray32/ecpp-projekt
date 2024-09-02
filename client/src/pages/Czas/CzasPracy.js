@@ -48,7 +48,7 @@ export default function CzasPracyPage() {
     const startOfCurrentWeek = startOfWeek(currentDate, { weekStartsOn: 1 });
 
     const fetchPojazdy = () => {
-        Axios.get("http://localhost:5000/api/pojazdy")
+        Axios.get("http://localhost:5000/api/pojazdy", { withCredentials: true })
             .then((response) => {
                 setSamochody(response.data.pojazdy.map(pojazd => ({ label: pojazd.numerRejestracyjny, value: pojazd.numerRejestracyjny })));
             })
@@ -58,7 +58,7 @@ export default function CzasPracyPage() {
     }
 
     const fetchPracownicy = () => {
-        Axios.get("http://localhost:5000/api/pracownicy")
+        Axios.get("http://localhost:5000/api/pracownicy", { withCredentials: true })
             .then((response) => {
                 setPracownicy(response.data.map(pracownik => ({ label: `${pracownik.name} ${pracownik.surname}`, value: `${pracownik.name} ${pracownik.surname}` })));
             })
@@ -68,7 +68,7 @@ export default function CzasPracyPage() {
     }
 
     const fetchFirmy = () => {
-        Axios.get("http://localhost:5000/api/firmy")
+        Axios.get("http://localhost:5000/api/firmy", { withCredentials: true })
             .then((response) => {
                 setFirmy(response.data.map(firma => ({ label: firma.Nazwa_firmy, value: firma.Nazwa_firmy })));
             })
@@ -78,7 +78,7 @@ export default function CzasPracyPage() {
     }
 
     const fetchZleceniodawcy = () => {
-        Axios.get("http://localhost:5000/api/grupy")
+        Axios.get("http://localhost:5000/api/grupy", { withCredentials: true })
             .then((response) => {
                 setZleceniodawcy(response.data.grupy.map(zleceniodawca => ({ label: zleceniodawca.Zleceniodawca, value: zleceniodawca.Zleceniodawca })));
             })
@@ -88,7 +88,7 @@ export default function CzasPracyPage() {
     }
 
     const fetchProjekty = () => {
-        Axios.get("http://localhost:5000/api/czas/projekty")
+        Axios.get("http://localhost:5000/api/czas/projekty", { withCredentials: true })
             .then((response) => {
                 setDostepneProjekty(response.data.projekty.map(projekt => ({ label: projekt.NazwaKod_Projektu, value: projekt.NazwaKod_Projektu })));
             })
@@ -101,7 +101,7 @@ export default function CzasPracyPage() {
         try {
             const weekData = getWeek(date, { weekStartsOn: 1 });
             const year = date.getFullYear();
-            const response = await Axios.get("http://localhost:5000/api/czas", {
+            const response = await Axios.get("http://localhost:5000/api/czas", { withCredentials: true }, {
                 params: {
                     pracownikName: employeeName,
                     weekData: weekData,
@@ -165,7 +165,7 @@ export default function CzasPracyPage() {
         }));
 
         try {
-            const response = await Axios.post("http://localhost:5000/api/czas", {
+            const response = await Axios.post("http://localhost:5000/api/czas", { withCredentials: true }, {
                 pracownikName: Pracownik,
                 projektyName: Projekty,
                 weekData: getWeek(currentDate, { weekStartsOn: 1 }),
@@ -237,7 +237,7 @@ export default function CzasPracyPage() {
         const year = currentDate.getFullYear();
 
         try {
-            const response = await Axios.get("http://localhost:5000/api/czas/projekt", {
+            const response = await Axios.get("http://localhost:5000/api/czas/projekt", { withCredentials: true }, {
                 params: {
                     pracownikName: loggedUserName,
                     projektyName: Projekty,

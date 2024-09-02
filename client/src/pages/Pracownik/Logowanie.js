@@ -7,7 +7,7 @@ export default function LogowaniePage() {
 
     useEffect(() => {
 
-        axios.get("http://localhost:5000/api/logi")
+        axios.get("http://localhost:5000/api/logi", { withCredentials: true })
             .then((response) => {
                 setLogData(response.data);
             })

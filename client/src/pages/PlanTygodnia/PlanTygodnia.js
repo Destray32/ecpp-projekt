@@ -96,7 +96,7 @@ export default function PlanTygodniaPage() {
     // }, [selectedRowIds, selectedM1, selectedM2, selectedM3, selectedM4, selectedM5]);
 
     const handleDrukujGrupe = () => {
-        Axios.get(`http://localhost:5000/api/planTygodnia/drukuj?group=${group.name}`)
+        Axios.get(`http://localhost:5000/api/planTygodnia/drukuj?group=${group.name}`, { withCredentials: true })
             .then(res => {
                 console.log(res.data);
             })
@@ -110,7 +110,7 @@ export default function PlanTygodniaPage() {
     }
 
     const handleUsunZaznaczone = () => {
-        Axios.delete('http://localhost:5000/api/planTygodnia', {
+        Axios.delete('http://localhost:5000/api/planTygodnia', { withCredentials: true }, {
             data: {
                 id: selectedRowIds
             }
@@ -136,7 +136,7 @@ export default function PlanTygodniaPage() {
     
         console.log("Przenoszone:", payload);
     
-        Axios.put('http://localhost:5000/api/planTygodnia', payload)
+        Axios.put('http://localhost:5000/api/planTygodnia', { withCredentials: true }, payload)
             .then(res => {
                 fetchData();
             })
@@ -146,7 +146,7 @@ export default function PlanTygodniaPage() {
     };
 
     const handleSkopiuj = () => {
-        Axios.get('http://localhost:5000/api/planTygodnia?previous=true')
+        Axios.get('http://localhost:5000/api/planTygodnia?previous=true', { withCredentials: true })
             .then(res => {
                 const newData = res.data;
                 setPracownikData(prevData => {
@@ -185,14 +185,14 @@ export default function PlanTygodniaPage() {
     const handleChangeGroupFilter = (e) => {
         if (e.value) {
             setGroup(e.value);
-            Axios.get(`http://localhost:5000/api/planTygodnia?group=${e.value.name}`)
+            Axios.get(`http://localhost:5000/api/planTygodnia?group=${e.value.name}`, { withCredentials: true })
                 .then(res => {
                     setPracownikData(res.data);
                 })
                 .catch(err => console.error(err));
         } else {
             setGroup(null);
-            Axios.get('http://localhost:5000/api/planTygodnia')
+            Axios.get('http://localhost:5000/api/planTygodnia', { withCredentials: true })
                 .then(res => {
                     setPracownikData(res.data);
                 })
@@ -205,13 +205,13 @@ export default function PlanTygodniaPage() {
     }, []);
 
     const fetchData = () => {
-        Axios.get('http://localhost:5000/api/grupy')
+        Axios.get('http://localhost:5000/api/grupy', { withCredentials: true })
             .then(res => {
                 setAvailableGroups(res.data.grupy.map(group => ({ name: group.Zleceniodawca, id: group.id })));
             })
             .catch(err => console.error(err));
     
-        Axios.get('http://localhost:5000/api/planTygodnia')
+        Axios.get('http://localhost:5000/api/planTygodnia', { withCredentials: true })
             .then(res => {
                 const data = res.data;
                 setPracownikData(data);

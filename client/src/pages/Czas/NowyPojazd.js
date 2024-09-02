@@ -14,7 +14,7 @@ export default function NowyPojazdPage() {
     });
 
     const handleSave = () => {
-        axios.post("http://localhost:5000/api/pojazdy", vehicle)
+        axios.post("http://localhost:5000/api/pojazdy", vehicle, { withCredentials: true })
             .then((response) => {
                 console.log(response);
             })

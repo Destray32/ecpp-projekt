@@ -12,7 +12,7 @@ export default function ZmienDanePage() {
     const [firma, setFirma] = useState([]);
 
     useEffect(() => {
-        axios.get('http://localhost:5000/api/mojedane')
+        axios.get('http://localhost:5000/api/mojedane', { withCredentials: true })
             .then(res => {
                 console.log(res.data);
                 form.setFieldsValue({
@@ -47,7 +47,7 @@ export default function ZmienDanePage() {
                 console.log(err);
             });
 
-        axios.get('http://localhost:5000/api/pracownik/firmy')
+        axios.get('http://localhost:5000/api/pracownik/firmy', { withCredentials: true })
             .then(res => {
                 setFirma(res.data);
                 console.log(res.data);

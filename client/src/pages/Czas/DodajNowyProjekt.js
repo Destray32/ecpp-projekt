@@ -28,7 +28,7 @@ export default function DodajNowyProjektPage() {
     ];
 
     const fetchGroups = () => {
-        Axios.get("http://localhost:5000/api/grupy")
+        Axios.get("http://localhost:5000/api/grupy", { withCredentials: true })
             .then((response) => {
                 const transformedData = response.data.grupy.map(grupy => ({
                     name: grupy.Zleceniodawca,
@@ -42,7 +42,7 @@ export default function DodajNowyProjektPage() {
     };
 
     const fetchProjects = () => {
-        Axios.get("http://localhost:5000/api/czas/projekty")
+        Axios.get("http://localhost:5000/api/czas/projekty", { withCredentials: true })
             .then((response) => {
                 const transformedDataProjects = response.data.projekty.map(projekty => ({
                     name: projekty.NazwaKod_Projektu,
@@ -63,7 +63,7 @@ export default function DodajNowyProjektPage() {
 
     const handleSave = () => {
         console.log('Saving data...');
-        Axios.post('http://localhost:5000/api/czas/projekty', {
+        Axios.post('http://localhost:5000/api/czas/projekty', { withCredentials: true }, {
             firma: form.firma,
             zleceniodawca: form.zleceniodawca,
             nazwa: form.nazwa,

@@ -15,7 +15,7 @@ export default function GrupyProjektowPage() {
     }, []);
 
     const fetchGroups = () => {
-        Axios.get("http://localhost:5000/api/grupy")
+        Axios.get("http://localhost:5000/api/grupy", { withCredentials: true })
             .then((response) => {
                 setAvailableGroups(response.data.grupy);
             })
@@ -31,7 +31,7 @@ export default function GrupyProjektowPage() {
             return;
         }
         console.log(id);
-        Axios.delete(`http://localhost:5000/api/grupy/${id}`)
+        Axios.delete(`http://localhost:5000/api/grupy/${id}`, { withCredentials: true })
             .then((response) => {
                 console.log(response.data);
                 fetchGroups(); 

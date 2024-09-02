@@ -31,7 +31,7 @@ export default function UrlopyPage() {
 
     const handlePdfDownloadClick = () => {
 
-        Axios.get("http://localhost:5000/api/urlopy/pdf", {
+        Axios.get("http://localhost:5000/api/urlopy/pdf", { withCredentials: true }, {
             params: {
                 Zleceniodawca: selectedGrupyNazwa
             },
@@ -113,7 +113,7 @@ export default function UrlopyPage() {
     };
 
     const handleGetPracownicy = () => {
-        Axios.get("http://localhost:5000/api/pracownicy")
+        Axios.get("http://localhost:5000/api/pracownicy", { withCredentials: true })
             .then((response) => {
                 setPracownicy(response.data); // skróciłem do response.data, 
                 // bo mi nie wypełniało dropdowna
@@ -133,7 +133,7 @@ export default function UrlopyPage() {
     const handleUpdateStatus = (newStatus) => {
 
         const ids = selectedItems.map(extractId);
-        Axios.put("http://localhost:5000/api/urlopy", {
+        Axios.put("http://localhost:5000/api/urlopy", { withCredentials: true }, {
             ids: ids,
             status: newStatus,
         })
@@ -146,7 +146,7 @@ export default function UrlopyPage() {
     };
 
     const fetchUrlopy = () => {
-        Axios.get("http://localhost:5000/api/urlopy")
+        Axios.get("http://localhost:5000/api/urlopy", { withCredentials: true })
             .then((response) => {
                 setDane(response.data.urlopy);
                 setFilteredDane(response.data.urlopy);
@@ -157,7 +157,7 @@ export default function UrlopyPage() {
     };
 
     const fetchGrupy = () => {
-        Axios.get("http://localhost:5000/api/grupy")
+        Axios.get("http://localhost:5000/api/grupy", { withCredentials: true })
             .then((response) => {
                 setDostepneGrupy(response.data.grupy);
             })
@@ -173,7 +173,7 @@ export default function UrlopyPage() {
     }, []);
 
     const handleDodaj = () => {
-        Axios.post("http://localhost:5000/api/urlopy", {
+        Axios.post("http://localhost:5000/api/urlopy", { withCredentials: true }, {
             nazwisko_imie: UrlopDla,
             status: Status,
             urlop_od: urlopOd,
@@ -192,7 +192,7 @@ export default function UrlopyPage() {
     const handleAnuluj = () => handleUpdateStatus("Anulowane");
 
     const handleUsun = (itemId) => {
-        Axios.delete("http://localhost:5000/api/urlopy", {
+        Axios.delete("http://localhost:5000/api/urlopy", { withCredentials: true }, {
             data: { id: itemId },
         })
             .then(() => {

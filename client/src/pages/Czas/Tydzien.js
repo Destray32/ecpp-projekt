@@ -92,7 +92,7 @@ export default function TydzienPage() {
             return;
         }
 
-        Axios.post('http://localhost:5000/api/tydzien', {
+        Axios.post('http://localhost:5000/api/tydzien', { withCredentials: true }, {
             tydzienRoku: selectedItems[0].tydzienRoku,
             pracownikId: selectedItems.map(item => item.Pracownik_idPracownik)
 
@@ -110,7 +110,7 @@ export default function TydzienPage() {
             return;
         }
 
-        Axios.delete('http://localhost:5000/api/tydzien', {
+        Axios.delete('http://localhost:5000/api/tydzien', { withCredentials: true }, {
             data: {
                 tydzienRoku: selectedItems[0].tydzienRoku,
                 pracownikId: selectedItems.map(item => item.Pracownik_idPracownik)
@@ -153,7 +153,7 @@ export default function TydzienPage() {
     };
 
     useEffect(() => {
-        Axios.get(`http://localhost:5000/api/tydzien/${numericWeek}`)
+        Axios.get(`http://localhost:5000/api/tydzien/${numericWeek}`, { withCredentials: true })
             // .then(response => console.log(response.data))
             .then(response => setData(response.data))
             .catch(error => console.error(error));

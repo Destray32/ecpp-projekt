@@ -7,6 +7,29 @@ const mysql = require('mysql2');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
+require('dotenv').config();
+
+// JWT middleware
+const authenticateJWT = (req, res, next) => {
+    const token = req.cookies.token;
+
+    if (!token) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+        if (err) {
+            return res.status(403).json({ error: 'Forbidden' });
+        }
+
+        req.user = user;
+        next();
+    });
+};
+
+const JWT_SECRET = process.env.JWT_SECRET;
+const NODE_ENV = process.env.NODE_ENV;
+
 const db = mysql.createConnection({
     host: 'localhost',
     user: 'root',
@@ -29,7 +52,7 @@ app.use(cors({
     credentials: true
 }));
 
-app.use(express.json());
+app.use(authenticateJWT);
 
 app.use(express.json({ type: 'application/json; charset=utf-8' }));
 app.use(express.urlencoded({ extended: true, parameterLimit: 10000, charset: 'utf-8' }));

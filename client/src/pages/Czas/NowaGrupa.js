@@ -18,7 +18,7 @@ export default function NowaGrupaPage() {
     const handleSave = () => {
         console.log('Saving data...', form);
 
-        Axios.post('http://localhost:5000/api/czas/grupa', {
+        Axios.post('http://localhost:5000/api/czas/grupa', { withCredentials: true }, {
             zleceniodawca: form.zleceniodawca,
             cennik: form.cennik,
             stawka: form.stawka,

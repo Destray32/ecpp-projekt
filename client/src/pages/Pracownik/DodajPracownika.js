@@ -13,7 +13,7 @@ export default function DodajPracownikaPage() {
     const [pojazd, setPojazd] = useState([]);
 
     useEffect(() => {
-        axios.get('http://localhost:5000/api/pracownik/firmy')
+        axios.get('http://localhost:5000/api/pracownik/firmy', { withCredentials: true })
             .then(res => {
                 setFirma(res.data);
             })
@@ -21,7 +21,7 @@ export default function DodajPracownikaPage() {
                 console.log(err);
             });
 
-        axios.get('http://localhost:5000/api/pracownik/grupy')
+        axios.get('http://localhost:5000/api/pracownik/grupy', { withCredentials: true })
             .then(res => {
                 setGrupa(res.data);
             })
@@ -29,7 +29,7 @@ export default function DodajPracownikaPage() {
                 console.log(err);
             });
 
-        axios.get('http://localhost:5000/api/pracownik/pojazdy')
+        axios.get('http://localhost:5000/api/pracownik/pojazdy', { withCredentials: true })
             .then(res => {
                 setPojazd(res.data);
             })
@@ -40,7 +40,7 @@ export default function DodajPracownikaPage() {
 
     const handleSubmit = (values) => {
         console.log(values);
-        axios.post('http://localhost:5000/api/pracownicy', values)
+        axios.post('http://localhost:5000/api/pracownicy', { withCredentials: true }, values)
             .then(res => {
                 console.log(res);
             })
