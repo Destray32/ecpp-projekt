@@ -140,6 +140,8 @@ const PobierzOgloszeniaGrupy = require('./api/Ogloszenia/ogloszenia.pobierzGrupy
 const PobierzDostepneFirmy = require('./api/pobierzDostepneFirmy');
 
 // Logowanie
+
+
 app.post('/api/logowanie', (req, res) => {
     Logowanie(req, res);
 });
@@ -162,6 +164,10 @@ app.post('/api/logout', (req, res) => {
 //                                                            ORAZ SKONTAKTOWAĆ SIĘ Z OSOBĄ ZA NIEGO ODPOWIEDZIALNĄ
 //                                                                      BO PRAWDOPODOBNIE COŚ ZJEBAŁA
 app.use(authenticateJWT);
+
+app.get('/api/check-token', (req, res) => {
+    res.json({ message: 'Token is valid' });
+});
 
 // PRACOWNIK > PRACOWNIK //
 app.route('/api/pracownicy')

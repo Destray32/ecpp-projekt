@@ -101,7 +101,8 @@ export default function CzasPracyPage() {
         try {
             const weekData = getWeek(date, { weekStartsOn: 1 });
             const year = date.getFullYear();
-            const response = await Axios.get("http://localhost:5000/api/czas", { withCredentials: true }, {
+            const response = await Axios.get("http://localhost:5000/api/czas", {
+                withCredentials: true,
                 params: {
                     pracownikName: employeeName,
                     weekData: weekData,
@@ -547,7 +548,6 @@ export default function CzasPracyPage() {
                                 />
                                 <Button label="Zamknij tydzień" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 flex-grow" />
                                 <Button label="Otwórz tydzień" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 flex-grow" />
-                                <Button label="Planowanie urlopu" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 flex-grow" />
                                 <Button label="Drukuj raport" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 flex-grow" />
                             </div>
                         </div>

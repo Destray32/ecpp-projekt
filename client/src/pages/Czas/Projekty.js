@@ -59,10 +59,10 @@ export default function ProjektyPage() {
     
 
     const handlePrzeniesAktyw = () => {
-        Axios.put("http://localhost:5000/api/czas/przeniesAkt", { withCredentials: true }, {
-            withCredentials: true,
-            ids: selectedItems.map((id) => id)
-        })
+        Axios.put("http://localhost:5000/api/czas/przeniesAkt", 
+            { ids: selectedItems.map((id) => id) },
+            { withCredentials: true }
+        )
             .then((response) => {
                 console.log(response.data);
                 fetchProjects();
@@ -73,9 +73,10 @@ export default function ProjektyPage() {
     };
 
     const handlePrzeniesNieaktyw = () => {
-        Axios.put("http://localhost:5000/api/czas/przeniesNieakt", { withCredentials: true }, {
-            ids: selectedItems.map((id) => id)
-        })
+        Axios.put("http://localhost:5000/api/czas/przeniesNieakt", 
+            { ids: selectedItems.map((id) => id) },
+            { withCredentials: true }
+        )
             .then((response) => {
                 console.log(response.data);
                 fetchProjects();
@@ -94,8 +95,8 @@ export default function ProjektyPage() {
     };
 
     const fetchProjects = () => {
-        Axios.get("http://localhost:5000/api/czas/projekty")
-            .then((response) => {
+        Axios.get("http://localhost:5000/api/czas/projekty", { withCredentials: true })
+                .then((response) => {
                 if (response.data && Array.isArray(response.data.projekty)) {
                     setData(response.data.projekty);
                 } else {

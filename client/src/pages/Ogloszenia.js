@@ -20,7 +20,7 @@ export default function OgloszeniaPage() {
     }, []);
 
     const fetchOgloszenia = () => {
-        axios.get('http://localhost:5000/api/ogloszenia')
+        axios.get('http://localhost:5000/api/ogloszenia', { withCredentials: true })
             .then((response) => {
                 const ogloszenia = response.data.map(ogloszenie => ({
                     id: ogloszenie.idOgloszenia,
@@ -37,7 +37,7 @@ export default function OgloszeniaPage() {
     };
 
     const fetchPracownicy = () => {
-        axios.get('http://localhost:5000/api/ogloszenia/pracownicy')
+        axios.get('http://localhost:5000/api/ogloszenia/pracownicy', { withCredentials: true })
             .then((response) => {
                 setPracownicy(response.data);
             })
@@ -47,7 +47,7 @@ export default function OgloszeniaPage() {
     };
 
     const fetchGrupy = () => {
-        axios.get('http://localhost:5000/api/ogloszenia/grupy')
+        axios.get('http://localhost:5000/api/ogloszenia/grupy', { withCredentials: true })
             .then((response) => {
                 setGrupy(response.data);
             })
@@ -77,7 +77,7 @@ export default function OgloszeniaPage() {
                 osoby: values.osoby || []
             };
 
-            axios.post('http://localhost:5000/api/ogloszenia', postData)
+            axios.post('http://localhost:5000/api/ogloszenia', postData, { withCredentials: true })
                 .then(() => {
                     fetchOgloszenia();
                     setIsModalOpen(false);
@@ -107,7 +107,7 @@ export default function OgloszeniaPage() {
 
     const handleDeleteOk = () => {
         if (itemToDelete) {
-            axios.delete(`http://localhost:5000/api/ogloszenia/${itemToDelete}`)
+            axios.delete(`http://localhost:5000/api/ogloszenia/${itemToDelete}`, { withCredentials: true })
                 .then(() => {
                     fetchOgloszenia();
                     setConfirmDeleteVisible(false);
