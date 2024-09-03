@@ -63,7 +63,7 @@ export default function DodajNowyProjektPage() {
 
     const handleSave = () => {
         console.log('Saving data...');
-        Axios.post('http://localhost:5000/api/czas/projekty', { withCredentials: true }, {
+        Axios.post('http://localhost:5000/api/czas/projekty', {
             firma: form.firma,
             zleceniodawca: form.zleceniodawca,
             nazwa: form.nazwa,
@@ -71,7 +71,9 @@ export default function DodajNowyProjektPage() {
             miejscowosc: form.miejscowosc,
             kodPocztowy: form.kodPocztowy,
             kraj: form.kraj
-        })
+        },
+        { withCredentials: true }
+    )
             .then(res => {
                 console.log(res.data);
             })

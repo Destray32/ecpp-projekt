@@ -18,12 +18,12 @@ export default function NowaGrupaPage() {
     const handleSave = () => {
         console.log('Saving data...', form);
 
-        Axios.post('http://localhost:5000/api/czas/grupa', { withCredentials: true }, {
+        Axios.post('http://localhost:5000/api/czas/grupa', {
             zleceniodawca: form.zleceniodawca,
             cennik: form.cennik,
             stawka: form.stawka,
             czyPlanTygV: form.czyPlanTygV // Wysyłamy aktualną wartość
-        })
+        }, { withCredentials: true })
             .then(res => {
                 console.log(res.data);
             })

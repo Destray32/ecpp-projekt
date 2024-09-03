@@ -79,15 +79,6 @@ export default function UrlopyPage() {
             });
     };
 
-    const sampleData2 = [
-        { id: 1, name: "Zaznacz wszystko" },
-        { id: 2, name: "NCW" },
-        { id: 3, name: "NCC" },
-        { id: 4, name: "Skanska" },
-        { id: 5, name: "Pogab1" },
-        { id: 6, name: "Pogab2" },
-        { id: 7, name: "Pogab3" },
-    ];
 
     // do zaznaczania grup w tym co generuje spis urlopów
     const handleGrupaCheckboxChange = (id, zleceniodawca) => {
@@ -133,10 +124,11 @@ export default function UrlopyPage() {
     const handleUpdateStatus = (newStatus) => {
 
         const ids = selectedItems.map(extractId);
-        Axios.put("http://localhost:5000/api/urlopy", { withCredentials: true }, {
+        Axios.put("http://localhost:5000/api/urlopy", {
             ids: ids,
             status: newStatus,
-        })
+        } , { withCredentials: true }
+    )
             .then(() => {
                 fetchUrlopy(); // Refetch data after updating
             })
@@ -173,13 +165,14 @@ export default function UrlopyPage() {
     }, []);
 
     const handleDodaj = () => {
-        Axios.post("http://localhost:5000/api/urlopy", { withCredentials: true }, {
+        Axios.post("http://localhost:5000/api/urlopy",{
             nazwisko_imie: UrlopDla,
             status: Status,
             urlop_od: urlopOd,
             urlop_do: urlopDo,
             komentarz: komentarz,
-        })
+        }, { withCredentials: true }
+    )
             .then(() => {
                 fetchUrlopy();
             })
@@ -192,13 +185,18 @@ export default function UrlopyPage() {
     const handleAnuluj = () => handleUpdateStatus("Anulowane");
 
     const handleUsun = (itemId) => {
-        Axios.delete("http://localhost:5000/api/urlopy", { withCredentials: true }, {
-            data: { id: itemId },
+        Axios.delete("http://localhost:5000/api/urlopy", {
+            withCredentials: true,
+            data: { id: itemId }
         })
-            .then(() => {
-                fetchUrlopy();
-            });
+        .then(() => {
+            fetchUrlopy();
+        })
+        .catch(error => {
+            console.error('There was an error!', error);
+        });
     };
+    
 
     const handleSzukaj = (filter) => {
         if (filter === "Wszystkie" || filter === "") {
@@ -233,13 +231,18 @@ export default function UrlopyPage() {
         handleSzukaj(filtrValue);
     }, [filtrValue]);
 
-    // useEffect(() => {
-    //     console.log(pracownicy);
-    // }, [pracownicy]);
-
-    // useEffect(() => {
-    //     console.log(UrlopDla);
-    // }, [UrlopDla]);
+    const getStatusClass = (status) => {
+        switch (status) {
+            case 'Anulowane':
+                return 'text-red-500'; 
+            case 'Zatwierdzone':
+                return 'text-green-500'; 
+            case 'Do zatwierdzenia':
+                return 'text-yellow-500'; 
+            default:
+                return ''; 
+        }
+    };
 
     const groupedData = filteredDane.reduce((acc, curr) => {
         const key = `${curr.imie} ${curr.nazwisko}`;
@@ -335,18 +338,7 @@ export default function UrlopyPage() {
                         </div>
                     </div>
                 </div>
-                <div className="flex flex-wrap">
-                    {sampleData2.map((item, i) => (
-                        <div key={item.id} className="flex items-center mr-4 mb-2">
-                            <Checkbox
-                                inputId={`czasgrupy-${item.id}`}
-                                checked={selectedItems.includes(item.id)}
-                                onChange={() => handleCheckboxChange(item.id)}
-                            />
-                            <label htmlFor={`czasgrupy-${item.id}`} className="text-white ml-1">{item.name}</label>
-                        </div>
-                    ))}
-                </div>
+                
             </div>
             <div className="w-full md:w-auto bg-gray-300 h-full m-2 outline outline-1 outline-gray-500">
                 <table className="w-full">
@@ -385,7 +377,7 @@ export default function UrlopyPage() {
                                         <td className="border-r">{urlopy.dataOd}</td>
                                         <td className="border-r">{urlopy.dataDo}</td>
                                         <td className="border-r">{urlopy.komentarz}</td>
-                                        <td className="border-r">{urlopy.status}</td>
+                                        <td className={`border-r ${getStatusClass(urlopy.status)}`}>{urlopy.status}</td>
                                         <td>
                                             <Button
                                                 label="Usuń"

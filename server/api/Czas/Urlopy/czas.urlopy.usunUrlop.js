@@ -1,5 +1,6 @@
 function UsunUrlop(req, res, db) {
     const { id } = req.body;
+    console.log(id);
 
     if (!id) {
         return res.status(400).send('Id jest wymagane');
