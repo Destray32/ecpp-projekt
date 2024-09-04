@@ -64,6 +64,7 @@ module.exports = db;
 const Logowanie = require('./api/logowanie');
 const Companies = require('./api/companies');
 const Logins = require('./api/logins');
+const GetImie = require('./api/home.getImie');
 // Grupy
 const UsuwanieGrupy = require('./api/Grupy/grupy.usuwaniegrupy');
 // Pracownik
@@ -167,6 +168,10 @@ app.use(authenticateJWT);
 
 app.get('/api/check-token', (req, res) => {
     res.json({ message: 'Token is valid' });
+});
+
+app.get('/api/imie', (req, res) => {
+    GetImie(req, res);
 });
 
 // PRACOWNIK > PRACOWNIK //

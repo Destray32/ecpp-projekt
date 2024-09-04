@@ -15,25 +15,47 @@ export default function TydzienPage() {
     const [data, setData] = useState([]);
     const [refresh, setRefresh] = useState(false);
 
+    // Function to get the current week in the format "YYYY-Www"
+    const getCurrentWeek = () => {
+        const now = new Date();
+        const firstDayOfYear = new Date(now.getFullYear(), 0, 1);
+        const days = Math.floor((now - firstDayOfYear) / (24 * 60 * 60 * 1000));
+        const weekNumber = Math.ceil((days + firstDayOfYear.getDay() + 1) / 7);
+        return `${now.getFullYear()}-W${weekNumber.toString().padStart(2, '0')}`;
+    };
+
+    // Set the current week as the default week on load
+    useEffect(() => {
+        const currentWeek = getCurrentWeek();
+        setSelectedWeek(currentWeek);
+        setNumericWeek(parseInt(currentWeek.substring(6)));
+
+        const startDate = getStartDateOfWeek(currentWeek);
+        const endDate = getEndDateOfWeek(startDate);
+        setWeekRange({
+            start: formatDate(startDate),
+            end: formatDate(endDate)
+        });
+    }, []);
+
     const generatePDF = () => {
         const doc = new jsPDF();
-
         doc.setFont("OpenSans-Regular", "normal");
-        
+
         const columns = [
             { header: "Imie", dataKey: "imie" },
             { header: "Nazwisko", dataKey: "naziwsko" },
             { header: "Grupa urlopowa", dataKey: "grupa" },
             { header: "Status", dataKey: "status" }
         ];
-        
+
         const rows = data.map(item => ({
             imie: item.Imie,
             naziwsko: item.Nazwisko,
             grupa: item.Zleceniodawca,
             status: item.Status_tygodnia,
         }));
-    
+
         doc.autoTable({
             head: [columns.map(col => col.header)],
             body: rows.map(row => columns.map(col => row[col.dataKey])),
@@ -48,9 +70,8 @@ export default function TydzienPage() {
                 fontStyle: "bold"
             }
         });
-    
+
         doc.text(`Tydzien: ${numericWeek}, ${weekRange.start} - ${weekRange.end}`, 14, 15);
-        //doc.save("statusy-tydzien.pdf");
         const pdfBlob = doc.output('blob');
         const pdfURL = URL.createObjectURL(pdfBlob);
 
@@ -71,7 +92,6 @@ export default function TydzienPage() {
     const handleWeekChange = (event) => {
         const weekValue = event.target.value;
         setSelectedWeek(weekValue);
-
         setNumericWeek(parseInt(weekValue.substring(6)));
 
         if (weekValue) {
@@ -95,7 +115,7 @@ export default function TydzienPage() {
         Axios.post('http://localhost:5000/api/tydzien', {
             tydzienRoku: selectedItems[0].tydzienRoku,
             pracownikId: selectedItems.map(item => item.Pracownik_idPracownik)
-        } , { withCredentials: true })
+        }, { withCredentials: true })
             .then(response => {
                 setRefresh(!refresh);
             })
@@ -111,15 +131,14 @@ export default function TydzienPage() {
         Axios.delete('http://localhost:5000/api/tydzien', {
             withCredentials: true,
             data: {
-                
                 tydzienRoku: selectedItems[0].tydzienRoku,
                 pracownikId: selectedItems.map(item => item.Pracownik_idPracownik)
             }
         })
 
-        .then(response => {
-            setRefresh(!refresh);
-        })
+            .then(response => {
+                setRefresh(!refresh);
+            })
             .catch(error => console.error(error));
     };
 
@@ -145,22 +164,17 @@ export default function TydzienPage() {
 
     const formatDate = (date) => {
         return date.toLocaleDateString('pl-PL', {
-            weekday: 'long',
             year: 'numeric',
-            month: 'long',
+            month: 'numeric',
             day: 'numeric'
         });
     };
 
     useEffect(() => {
         Axios.get(`http://localhost:5000/api/tydzien/${numericWeek}`, { withCredentials: true })
-            // .then(response => console.log(response.data))
             .then(response => setData(response.data))
             .catch(error => console.error(error));
     }, [numericWeek, refresh]);
-
-    useEffect(() => {
-    }, [data]);
 
     return (
         <div>
@@ -169,7 +183,7 @@ export default function TydzienPage() {
                     <div className="flex flex-row items-center">
                         <div className="flex flex-row items-center">
                             <p className="mr-2">Wybierz tydzień:</p>
-                            <input type="week" onChange={handleWeekChange} />
+                            <input type="week" value={selectedWeek} onChange={handleWeekChange} />
                             <div className="ml-4">
                                 <p>
                                     {weekRange.start && weekRange.end ? ` ${weekRange.start} - ${weekRange.end}` : 'Wybierz tydzień, aby zobaczyć przedział dni'}
@@ -183,7 +197,6 @@ export default function TydzienPage() {
                                 className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 ml-6" />
                         </div>
                     </div>
-
                 </div>
             </AmberBox>
             <div className="w-full md:w-auto bg-gray-300 h-full m-2 outline outline-1 outline-gray-500">

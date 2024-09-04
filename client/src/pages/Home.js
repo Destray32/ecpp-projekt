@@ -33,10 +33,21 @@ export default function HomePage() {
         }
     }
 
+    const getImie = async () => {
+        try {
+            const response = await axios.get('http://localhost:5000/api/imie', { withCredentials: true });
+            const { name, surename } = response.data;
+            setImie(`${name} ${surename}`);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
     useEffect(() => { // useEffect ze względu na to żeby tata się zmieniała w razie potrzeby
         // moment.locale('pl'); // nie wiem jeszcze czy potrzebna jest data polska czy szwedzka
 
         checkTokenValidity();
+        getImie();
 
         const timer = setInterval(() => {
             setData(moment().format('DD/MM/YYYY'));
