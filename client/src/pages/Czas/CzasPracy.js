@@ -166,7 +166,7 @@ export default function CzasPracyPage() {
         }));
 
         try {
-            const response = await Axios.post("http://localhost:5000/api/czas", { withCredentials: true }, {
+            const response = await Axios.post("http://localhost:5000/api/czas", {
                 pracownikName: Pracownik,
                 projektyName: Projekty,
                 weekData: getWeek(currentDate, { weekStartsOn: 1 }),
@@ -178,7 +178,8 @@ export default function CzasPracyPage() {
                 })),
                 totalHours: totalHours,
                 additionalProjects: formattedAdditionalProjects,
-            });
+            },
+            { withCredentials: true });
             console.log(response);
         } catch (error) {
             console.error(error);
@@ -238,14 +239,15 @@ export default function CzasPracyPage() {
         const year = currentDate.getFullYear();
 
         try {
-            const response = await Axios.get("http://localhost:5000/api/czas/projekt", { withCredentials: true }, {
-                params: {
+            const response = await Axios.post("http://localhost:5000/api/czas/projekt",
+                {
                     pracownikName: loggedUserName,
                     projektyName: Projekty,
                     weekData: weekData,
                     year: year,
-                }
-            });
+                },
+                { withCredentials: true }
+            );
 
             const newProject = {
                 id: Date.now(),

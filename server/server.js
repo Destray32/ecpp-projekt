@@ -231,7 +231,7 @@ app.route('/api/czas')
     });
 
 app.route('/api/czas/projekt')
-    .get((req, res) => {
+    .post((req, res) => {
         GetCzasProjekt(req, res, db);
     });
 
