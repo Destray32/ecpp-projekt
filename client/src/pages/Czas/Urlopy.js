@@ -31,11 +31,11 @@ export default function UrlopyPage() {
 
     const handlePdfDownloadClick = () => {
 
-        Axios.get("http://localhost:5000/api/urlopy/pdf", { withCredentials: true }, {
-            params: {
-                Zleceniodawca: selectedGrupyNazwa
-            },
-        })
+        Axios.post(
+            "http://localhost:5000/api/urlopy/pdf",
+            { Zleceniodawca: selectedGrupyNazwa },
+            { withCredentials: true }
+        )
             .then((response) => {
                 // console.log("PDF response", response.data);
                 const databaseData = response.data;
@@ -127,8 +127,8 @@ export default function UrlopyPage() {
         Axios.put("http://localhost:5000/api/urlopy", {
             ids: ids,
             status: newStatus,
-        } , { withCredentials: true }
-    )
+        }, { withCredentials: true }
+        )
             .then(() => {
                 fetchUrlopy(); // Refetch data after updating
             })
@@ -165,14 +165,14 @@ export default function UrlopyPage() {
     }, []);
 
     const handleDodaj = () => {
-        Axios.post("http://localhost:5000/api/urlopy",{
+        Axios.post("http://localhost:5000/api/urlopy", {
             nazwisko_imie: UrlopDla,
             status: Status,
             urlop_od: urlopOd,
             urlop_do: urlopDo,
             komentarz: komentarz,
         }, { withCredentials: true }
-    )
+        )
             .then(() => {
                 fetchUrlopy();
             })
@@ -189,14 +189,14 @@ export default function UrlopyPage() {
             withCredentials: true,
             data: { id: itemId }
         })
-        .then(() => {
-            fetchUrlopy();
-        })
-        .catch(error => {
-            console.error('There was an error!', error);
-        });
+            .then(() => {
+                fetchUrlopy();
+            })
+            .catch(error => {
+                console.error('There was an error!', error);
+            });
     };
-    
+
 
     const handleSzukaj = (filter) => {
         if (filter === "Wszystkie" || filter === "") {
@@ -206,7 +206,7 @@ export default function UrlopyPage() {
             setFilteredDane(filteredData);
         }
     };
-    
+
 
 
     // ustawia do formatu [week, year] wybrany tydzień i rok z inputu
@@ -234,13 +234,13 @@ export default function UrlopyPage() {
     const getStatusClass = (status) => {
         switch (status) {
             case 'Anulowane':
-                return 'text-red-500'; 
+                return 'text-red-500';
             case 'Zatwierdzone':
-                return 'text-green-500'; 
+                return 'text-green-500';
             case 'Do zatwierdzenia':
-                return 'text-yellow-500'; 
+                return 'text-yellow-500';
             default:
-                return ''; 
+                return '';
         }
     };
 
@@ -250,7 +250,7 @@ export default function UrlopyPage() {
         acc[key].push(curr);
         return acc;
     }, {});
-    
+
 
     const handleGroupToggle = (name) => {
         setExpandedGroups(prev => ({
@@ -338,7 +338,7 @@ export default function UrlopyPage() {
                         </div>
                     </div>
                 </div>
-                
+
             </div>
             <div className="w-full md:w-auto bg-gray-300 h-full m-2 outline outline-1 outline-gray-500">
                 <table className="w-full">

@@ -319,7 +319,7 @@ app.delete('/api/urlopy', (req, res) => {
     UsunUrlop(req, res, db);
 });
 // pobieranie danych dla drukowania pdf urlopow
-app.get('/api/urlopy/pdf', (req, res) => {
+app.post('/api/urlopy/pdf', (req, res) => {
     urlopyPdf(req, res, db);
 });
 
