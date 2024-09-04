@@ -25,7 +25,7 @@ export default function LoginPage() {
 
     const fetchCompanies = async () => {
         try {
-            const response = await axios.get('http://localhost:5000/api/firmy');
+            const response = await axios.get('http://localhost:5000/api/companies');
             setAvailableCompanies(response.data);
         }
         catch (error) {
@@ -58,7 +58,7 @@ export default function LoginPage() {
 
     const testLoginHandler = async () => {
         try {
-            const testFirma = 'XYZ Sp. z o.o.';
+            const testFirma = 'PC Husbyggen';
             const login = 'twachala';
             const testPassword = 'tomek1';
             const response = await axios.post('http://localhost:5000/api/logowanie', { firma: testFirma, login, password: testPassword }, { withCredentials: true });

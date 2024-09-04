@@ -400,7 +400,6 @@ export default function CzasPracyPage() {
                                 <p className="text-lg font-bold">Tydzień {getWeekNumber(currentDate)} : {formatWeek(currentDate)}</p>
                                 <Button icon="pi pi-arrow-right" iconPos="right" className="p-button-outlined" onClick={nextWeek} />
                             </div>
-
                             <Dropdown
                                 value={Pracownik}
                                 onChange={(e) => setPracownik(e.value)}
@@ -409,6 +408,7 @@ export default function CzasPracyPage() {
                                 placeholder="Pracownik"
                                 autoComplete="off"
                                 className="w-3/12 p-2"
+                                disabled={userType === "Pracownik"}
                                 filter
                             />
                         </div>

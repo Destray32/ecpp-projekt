@@ -295,7 +295,7 @@ export default function PracownikPage() {
         employee.name,
         employee.surname,
         employee.pesel,
-        employee.vacationGroup,
+        groups.find(group => group.id === employee.vacationGroup)?.name || employee.vacationGroup,
         employee.company,
         employee.phone1,
         employee.phone2,

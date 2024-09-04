@@ -146,7 +146,7 @@ app.post('/api/logowanie', (req, res) => {
     Logowanie(req, res);
 });
 
-app.get('/api/firmy', (req, res) => {
+app.get('/api/companies', (req, res) => {
     Companies(req, res);
 });
 
