@@ -234,7 +234,6 @@ export default function PracownikPage() {
     try {
       const response = await axios.get("http://localhost:5000/api/pracownicy", { withCredentials: true });
       setTableData(response.data);
-      console.log(response.data);
     } catch (error) {
       console.log(error);
     }
@@ -266,10 +265,11 @@ export default function PracownikPage() {
 
   const handleSave = async (id, field, value) => {
     try {
-        await axios.put(`http://localhost:5000/api/pracownik/komorka/${id}`, { withCredentials: true }, {
+        await axios.put(`http://localhost:5000/api/pracownik/komorka/${id}`, {
             field: field,
             value: value,
-        });
+        } , { withCredentials: true }
+      );
         setTableData(prevData => prevData.map(item =>
             item.id === id ? { ...item, [field]: value } : item
         ));

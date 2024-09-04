@@ -136,7 +136,7 @@ export default function PlanTygodniaPage() {
     
         console.log("Przenoszone:", payload);
     
-        Axios.put('http://localhost:5000/api/planTygodnia', { withCredentials: true }, payload)
+        Axios.put('http://localhost:5000/api/planTygodnia', payload, { withCredentials: true })
             .then(res => {
                 fetchData();
             })

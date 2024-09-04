@@ -31,7 +31,6 @@ export default function ProjektyPage() {
     const handleDelete = (id) => {
         Axios.delete(`http://localhost:5000/api/czas/usun?id=${id}`, { withCredentials: true })
             .then((response) => {
-                console.log(response.data);
                 fetchProjects();
             })
             .catch((error) => {
@@ -64,7 +63,6 @@ export default function ProjektyPage() {
             { withCredentials: true }
         )
             .then((response) => {
-                console.log(response.data);
                 fetchProjects();
             })
             .catch((error) => {
@@ -78,7 +76,6 @@ export default function ProjektyPage() {
             { withCredentials: true }
         )
             .then((response) => {
-                console.log(response.data);
                 fetchProjects();
             })
             .catch((error) => {
@@ -134,7 +131,7 @@ export default function ProjektyPage() {
                                 <Button onClick={handleGrupyProjektow} label="Grupy projektów" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2" />
                             </Link>
                             <Link to="/home/nowy-projekt">
-                                <Button onClick={handleNowyProjekt} label="Dodaj nowy" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2" />
+                                <Button onClick={handleNowyProjekt} label="Dodaj nowy projekt" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2" />
                             </Link>
 
                         </div>

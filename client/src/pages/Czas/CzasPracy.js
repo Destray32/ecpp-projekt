@@ -33,7 +33,7 @@ export default function CzasPracyPage() {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [Pracownik, setPracownik] = useState(null);
     const [pracownicy, setPracownicy] = useState([]);
-    const [Firma, setFirma] = useState(null);
+    const [Firma, setFirma] = useState("PC Husbyggen");
     const [firmy, setFirmy] = useState([]);
     const [Zleceniodawca, setZleceniodawca] = useState(null);
     const [zleceniodawcy, setZleceniodawcy] = useState([]);
@@ -336,7 +336,6 @@ export default function CzasPracyPage() {
                 <div className="flex items-center space-x-2">
                     <div className="w-1/3 flex flex-row justify-between">
                         <span>Projekt: {project.projekt || "Projekt"}</span>
-                        <span className="font-bold">Firma: {project.firma || "Firma"}</span>
                     </div>
                     {first && (
                         <div className="flex-1 grid grid-cols-7 gap-1">
@@ -352,7 +351,7 @@ export default function CzasPracyPage() {
                     <div className="w-1/3">
                         <button
                             onClick={() => onDelete(project.id)}
-                            className="text-red-500 font-bold"
+                            className="text-red-500 font-bold border-collapse border border-red-500 p-1 rounded" // moze jakis inny kolor?
                         >
                             Delete
                         </button>
@@ -368,7 +367,7 @@ export default function CzasPracyPage() {
                                         value={project.hours[dateKey]?.hoursWorked || ""}
                                         onChange={(e) => onInputChange(project.id, dateKey, e.target.value)}
                                         className="w-[40%] p-1 border border-gray-300 rounded"
-                                        placeholder="Hours"
+                                        placeholder="0"
                                         disabled={niedziela}
                                         min="0"
                                         max="24"
