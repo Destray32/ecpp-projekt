@@ -231,7 +231,7 @@ app.route('/api/czas')
     });
 
 app.route('/api/czas/projekt')
-    .get((req, res) => {
+    .post((req, res) => {
         GetCzasProjekt(req, res, db);
     });
 
@@ -319,7 +319,7 @@ app.delete('/api/urlopy', (req, res) => {
     UsunUrlop(req, res, db);
 });
 // pobieranie danych dla drukowania pdf urlopow
-app.get('/api/urlopy/pdf', (req, res) => {
+app.post('/api/urlopy/pdf', (req, res) => {
     urlopyPdf(req, res, db);
 });
 

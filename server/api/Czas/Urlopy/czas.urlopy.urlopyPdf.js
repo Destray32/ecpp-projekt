@@ -1,7 +1,5 @@
-
 function urlopyPdf(req, res, db) {
-    const { Zleceniodawca } = req.query;
-
+    const { Zleceniodawca } = req.body;
     const sql = `
         SELECT
     u.idUrlopy, 
@@ -32,19 +30,18 @@ function urlopyPdf(req, res, db) {
 
     db.query(sql, [Zleceniodawca], (err, result) => {
         if (err) {
-            console.log(err);
+            console.error(err);
+            res.status(500).json({ message: 'Błąd podczas pobierania danych urlopów' });
         } else {
-            const data = result.map(row => {
-                return {
-                    idUrlopy: row.idUrlopy,
-                    Imie: row.Imie,
-                    Nazwisko: row.Nazwisko,
-                    Zleceniodawca: row.Zleceniodawca,
-                    Urlop_od: row.Urlop_od,
-                    Urlop_do: row.Urlop_do,
-                    Status: row.Status
-                };
-            });
+            const data = result.map(row => ({
+                idUrlopy: row.idUrlopy,
+                Imie: row.Imie,
+                Nazwisko: row.Nazwisko,
+                Zleceniodawca: row.Zleceniodawca,
+                Urlop_od: row.Urlop_od,
+                Urlop_do: row.Urlop_do,
+                Status: row.Status
+            }));
             res.status(200).json(data);
         }
     });

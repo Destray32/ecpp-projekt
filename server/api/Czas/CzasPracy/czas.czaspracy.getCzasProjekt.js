@@ -1,7 +1,7 @@
 const { format, startOfWeek, addDays, setWeek, setYear } = require('date-fns');
 
 function getCzasProjekt(req, res, db) {
-    const { pracownikName, projektyName, weekData, year } = req.query;
+    const { pracownikName, projektyName, weekData, year } = req.body;
 
     // zapytanie do bazy danych, aby znaleźć ID pracownika na podstawie jego imienia i nazwiska
     // łączymy tabele 'Pracownik' i 'Dane_osobowe', żeby uzyskać odpowiedni rekord
