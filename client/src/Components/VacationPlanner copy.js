@@ -11,6 +11,16 @@ const VacationPlanner = () => {
     const [endDate, setEndDate] = useState(new Date());
     const plannerRef = useRef();
 
+    // pobiera i zwraca rok z localStorage lub aktualny rok jeśli nie ma
+    const getYearLocalStorage = () => {
+        const storedSelectedWeekAndYear = localStorage.getItem('selectedWeekAndYear');
+        if (storedSelectedWeekAndYear) {
+            const [week, year] = JSON.parse(storedSelectedWeekAndYear);
+            return year;
+        }
+        return new Date().getFullYear();
+    };
+
     useEffect(() => {
         const storedSelectedWeekAndYear = localStorage.getItem('selectedWeekAndYear');
         if (storedSelectedWeekAndYear) {
@@ -134,7 +144,7 @@ const VacationPlanner = () => {
 
     return (
         <div className="p-4">
-            <h1 className="text-2xl font-bold mb-4">Plan urlopów 2023</h1>
+            <h1 className="text-2xl font-bold mb-4">Plan urlopów {getYearLocalStorage()}</h1>
             <button onClick={downloadPDF} className="mb-4 p-2 bg-blue-500 text-white rounded">
                 Download as PDF
             </button>

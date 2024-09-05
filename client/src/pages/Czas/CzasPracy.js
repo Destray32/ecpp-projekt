@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { format, startOfWeek, addWeeks, subWeeks, getWeek, getDay } from 'date-fns';
+import { format, startOfWeek, addWeeks, addDays, subWeeks, getWeek, getDay } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { Dropdown } from "primereact/dropdown";
 import { Button } from 'primereact/button';
@@ -120,11 +120,88 @@ export default function CzasPracyPage() {
         }
     };
 
+    const fetchAdditionalProjects = async (employeeName, date) => {
+        try {
+            // wyciągamy numer tygodnia na podstawie daty
+            const weekData = getWeek(date, { weekStartsOn: 1 });
+            // pobieramy rok z daty
+            const year = date.getFullYear();
+            
+            // wysyłamy zapytanie GET do API, żeby pobrać dodatkowe projekty
+            const response = await Axios.get("http://localhost:5000/api/czas/projekty/dodane", {
+                withCredentials: true,
+                params: {
+                    pracownikName: employeeName, // przekazujemy imię pracownika
+                    weekData: weekData, // przekazujemy numer tygodnia
+                    year: year, // przekazujemy rok
+                }
+            });
+    
+            // jeśli są dane projektów w odpowiedzi
+            if (response.data && response.data.projects) {
+                // ustalamy datę początku tygodnia
+                const startOfWeekDate = startOfWeek(date, { weekStartsOn: 1 });
+                
+                // mapujemy nazwy dni tygodnia na konkretne daty
+                const dayNameToDateMap = {
+                    'Poniedziałek': format(startOfWeekDate, 'yyyy-MM-dd'),
+                    'Wtorek': format(addDays(startOfWeekDate, 1), 'yyyy-MM-dd'),
+                    'Środa': format(addDays(startOfWeekDate, 2), 'yyyy-MM-dd'),
+                    'Czwartek': format(addDays(startOfWeekDate, 3), 'yyyy-MM-dd'),
+                    'Piątek': format(addDays(startOfWeekDate, 4), 'yyyy-MM-dd'),
+                    'Sobota': format(addDays(startOfWeekDate, 5), 'yyyy-MM-dd'),
+                    'Niedziela': format(addDays(startOfWeekDate, 6), 'yyyy-MM-dd'),
+                };
+    
+                // przetwarzamy projekty, aktualizując godziny pracy dla każdego dnia tygodnia
+                const loadedProjects = response.data.projects.map(project => {
+                    const updatedHours = {};
+    
+                    // dla każdego dnia z projektu przypisujemy odpowiednią datę
+                    Object.keys(project.hours).forEach(dayOfWeek => {
+                        const dateKey = dayNameToDateMap[dayOfWeek]; // zamieniamy nazwę dnia na konkretną datę
+                        updatedHours[dateKey] = project.hours[dayOfWeek]; // przypisujemy godziny pracy do tej daty
+                    });
+    
+                    // zwracamy projekt z uaktualnionymi godzinami
+                    return {
+                        ...project,
+                        hours: updatedHours
+                    };
+                });
+    
+                // zapisujemy przetworzone projekty w stanie
+                setAdditionalProjects(loadedProjects);
+            } else {
+                // jeśli nie ma projektów, ustawiamy pustą tablicę
+                setAdditionalProjects([]);
+            }
+        } catch (error) {
+            // w przypadku błędu również ustawiamy pustą tablicę
+            setAdditionalProjects([]);
+            
+            // jeśli błąd to 404, to znaczy, że nie ma dodatkowych projektów
+            if (error.response && error.response.status === 404) {
+                console.log("brak dodatkowych projektów");
+            } else {
+                // logujemy inne błędy do konsoli
+                console.error("Błąd podczas pobierania dodatkowych projektów", error);
+            }
+        }
+    };
+    
+    
+    
+
+    
+
     useEffect(() => {
         if (Pracownik && (userType === "Administrator")) {
-            fetchWorkHours(Pracownik, currentDate).then(() => setRefresh(!refresh));
+            fetchWorkHours(Pracownik, currentDate);
+            fetchAdditionalProjects(Pracownik, currentDate);
         } else if (loggedUserName && (userType === "Pracownik")) {
-            fetchWorkHours(loggedUserName, currentDate).then(() => setRefresh(!refresh));
+            fetchWorkHours(loggedUserName, currentDate);
+            fetchAdditionalProjects(loggedUserName, currentDate);
             setPracownicy([{ label: loggedUserName, value: loggedUserName }]);
             setPracownik(loggedUserName);
         }
@@ -212,7 +289,7 @@ export default function CzasPracyPage() {
     const calculateProjectTotal = (project) => {
         return daysOfWeek.reduce((total, day) => {
             const dateKey = format(day, 'yyyy-MM-dd');
-            return total + (parseFloat(project.hours[dateKey]?.hoursWorked) || 0);
+            return total + (parseFloat(project?.hours?.[dateKey]?.hoursWorked) || 0);
         }, 0);
     };
 

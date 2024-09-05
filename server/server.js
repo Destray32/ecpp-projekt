@@ -86,6 +86,7 @@ const PobierzCzasPracy = require('./api/Czas/CzasPracy/czas.czaspracy.pobierz');
 const ZamknijTydzien = require('./api/Czas/CzasPracy/czas.czaspracy.zamknij');
 const OtworzTydzien = require('./api/Czas/CzasPracy/czas.czaspracy.otworz');
 const GetCzasProjekt = require('./api/Czas/CzasPracy/czas.czaspracy.getCzasProjekt');
+const PobierzDodaneProjekty = require('./api/Czas/CzasPracy/czas.czaspracy.projektyDodane');
 
 // Plan Tygodnia
 const PlanTygodniaPlan = require('./api/PlanTygodnia/plantygodnia.plan.planTygodnia');
@@ -244,6 +245,10 @@ app.route('/api/czas/otworz')
     .post((req, res) => {
         OtworzTydzien(req, res);
     });
+
+app.get('/api/czas/projekty/dodane', (req, res) => {
+    PobierzDodaneProjekty(req, res, db);
+});
 /////////////////////////////////////////
 
 // PLAN TYGODNIA "V" > PLAN TYGODNIA //
