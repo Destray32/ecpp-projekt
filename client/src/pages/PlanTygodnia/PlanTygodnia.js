@@ -110,18 +110,18 @@ export default function PlanTygodniaPage() {
     }
 
     const handleUsunZaznaczone = () => {
-        Axios.delete('http://localhost:5000/api/planTygodnia', { withCredentials: true }, {
+        Axios.delete('http://localhost:5000/api/planTygodnia', {
+            withCredentials: true,
             data: {
                 id: selectedRowIds
             }
         })
-            .then(res => {
-                fetchData();
-            })
-            .catch(err => console.error(err));
+        .then(res => {
+            fetchData();
+        })
+        .catch(err => console.error(err));
     }
     
-
     // obsługa przyciusku przeniesienia zaznaczonych pracowników do innej grupy
     const handlePrzeniesZaznaczone = () => {
         if (!grupaPrzenies) {
@@ -136,7 +136,7 @@ export default function PlanTygodniaPage() {
     
         console.log("Przenoszone:", payload);
     
-        Axios.put('http://localhost:5000/api/planTygodnia', { withCredentials: true }, payload)
+        Axios.put('http://localhost:5000/api/planTygodnia', payload, { withCredentials: true })
             .then(res => {
                 fetchData();
             })

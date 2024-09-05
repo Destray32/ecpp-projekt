@@ -56,8 +56,6 @@ export default function ProjektyPage() {
             });
     };
     
-    
-
     const handlePrzeniesAktyw = () => {
         Axios.put("http://localhost:5000/api/czas/przeniesAkt", 
             { ids: selectedItems.map((id) => id) },

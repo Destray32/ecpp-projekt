@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import AmberBox from "../../Components/AmberBox";
 import { InputText } from 'primereact/inputtext';
 import { FloatLabel } from 'primereact/floatlabel';
@@ -30,10 +31,6 @@ export default function NowaGrupaPage() {
             .catch(err => {
                 console.error(err);
             });
-    };
-
-    const handleCancel = () => {
-        console.log('Action canceled.');
     };
 
     const handleZleceniodawca = (e) => {
@@ -83,7 +80,9 @@ export default function NowaGrupaPage() {
                     
                     <div className="flex space-x-4 mt-8">
                         <Button label="Zapisz" icon="pi pi-check" className="p-button-outlined border-2 p-1 bg-white text-black pr-2 pl-2 mr-2" onClick={handleSave} />
-                        <Button label="Anuluj" icon="pi pi-times" className="p-button-outlined border-2 p-1 bg-white text-black pr-2 pl-2 mr-2" onClick={handleCancel} />
+                        <Link to="/home/grupy-projektow">
+                            <Button label="Anuluj" icon="pi pi-times" className="p-button-outlined border-2 p-1 bg-white text-black pr-2 pl-2" />
+                        </Link>
                     </div>
                 </div>
             </AmberBox>

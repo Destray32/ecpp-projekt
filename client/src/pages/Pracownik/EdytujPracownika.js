@@ -80,7 +80,7 @@ export default function EdytujPracownikaPage() {
     }, [id]);
 
     const handleSubmit = (values) => {
-        axios.put(`http://localhost:5000/api/pracownik/${id}`, { withCredentials: true }, values)
+        axios.put(`http://localhost:5000/api/pracownik/${id}`, values, { withCredentials: true })
             .then(res => {
                 console.log(res);
             })

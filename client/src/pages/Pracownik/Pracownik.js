@@ -266,17 +266,19 @@ export default function PracownikPage() {
 
   const handleSave = async (id, field, value) => {
     try {
-        await axios.put(`http://localhost:5000/api/pracownik/komorka/${id}`, { withCredentials: true }, {
-            field: field,
-            value: value,
-        });
+        await axios.put(
+            `http://localhost:5000/api/pracownik/komorka/${id}`,
+            { field: field, value: value },
+            { withCredentials: true }
+        );
         setTableData(prevData => prevData.map(item =>
             item.id === id ? { ...item, [field]: value } : item
         ));
     } catch (error) {
         console.error('Update failed:', error);
     }
-  };
+};
+
 
   const printPDF = () => {
     const doc = new jsPDF('landscape');

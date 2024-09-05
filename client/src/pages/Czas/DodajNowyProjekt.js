@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import AmberBox from "../../Components/AmberBox";
 import { InputText } from 'primereact/inputtext';
 import { FloatLabel } from 'primereact/floatlabel';
@@ -9,7 +10,6 @@ import Axios from "axios";
 export default function DodajNowyProjektPage() {
     const [availableGroups, setAvailableGroups] = React.useState([]);
     const [availableProjects, setAvailableProjects] = React.useState([]);
-
 
     const [form, setForm] = useState({
         firma: 'PC Husbyggen',
@@ -55,7 +55,6 @@ export default function DodajNowyProjektPage() {
             });
     };
 
-
     useEffect(() => {
         fetchGroups();
         fetchProjects();
@@ -80,10 +79,6 @@ export default function DodajNowyProjektPage() {
             .catch(err => {
                 console.error(err);
             });
-    };
-
-    const handleCancel = () => {
-        console.log('Action canceled.');
     };
 
     const handleFirma = (e) => {
@@ -116,7 +111,6 @@ export default function DodajNowyProjektPage() {
     const handleKraj = (e) => {
         setForm({ ...form, kraj: e.target.value });
     };
-    
 
     return (
         <div>
@@ -195,8 +189,9 @@ export default function DodajNowyProjektPage() {
                     <div className="flex space-x-4 mt-8">
                         <Button label="Zapisz" icon="pi pi-check" className="p-button-outlined border-2 p-1 bg-white text-black pr-2 pl-2 mr-2" 
                         onClick={handleSave} />
-                        <Button label="Anuluj" icon="pi pi-times" className="p-button-outlined border-2 p-1 bg-white text-black pr-2 pl-2 mr-2" 
-                        onClick={handleCancel} />
+                        <Link to="/home/projekty">
+                            <Button label="Anuluj" icon="pi pi-times" className="p-button-outlined border-2 p-1 bg-white text-black pr-2 pl-2" />
+                        </Link>
                     </div>
                 </div>
             </AmberBox>
