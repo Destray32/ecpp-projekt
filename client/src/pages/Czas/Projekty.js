@@ -81,14 +81,6 @@ export default function ProjektyPage() {
             });
     };
 
-    const handleGrupyProjektow = () => {
-
-    };
-
-    const handleNowyProjekt = () => {
-
-    };
-
     const fetchProjects = () => {
         Axios.get("http://localhost:5000/api/czas/projekty", { withCredentials: true })
                 .then((response) => {
@@ -126,10 +118,10 @@ export default function ProjektyPage() {
                                 <Button onClick={handlePrzeniesNieaktyw} label="Przenieś do nieaktywnych" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2" />
                             </div>
                             <Link to="/home/grupy-projektow">
-                                <Button onClick={handleGrupyProjektow} label="Grupy projektów" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2" />
+                                <Button label="Grupy projektów" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2" />
                             </Link>
                             <Link to="/home/nowy-projekt">
-                                <Button onClick={handleNowyProjekt} label="Dodaj nowy projekt" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2" />
+                                <Button label="Dodaj nowy projekt" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2" />
                             </Link>
 
                         </div>
@@ -140,7 +132,7 @@ export default function ProjektyPage() {
                 <table className="w-full">
                     <thead className="bg-blue-700 text-white">
                         <tr>
-                            <th></th>
+                            <th className="border-r"></th>
                             <th className="border-r">Nr</th>
                             <th className="border-r">Nazwa/Kod Projektu</th>
                             <th className="border-r">Status projektu</th>
@@ -166,10 +158,16 @@ export default function ProjektyPage() {
                                 <td className="border-r">{projekty.NazwaKod_Projektu}</td>
                                 <td className={`border-r ${statusClass}`}>{projekty.Status}</td>
                                 <td>
+                                    <Link to={`/home/projekt/${projekty.id}`}>
+                                        <Button
+                                            label="Edytuj"
+                                            className="bg-blue-700 text-white p-1 m-0.5"
+                                        />
+                                    </Link>
                                     <Button
                                         onClick={() => handleDelete(projekty.id)}
                                         label="Usuń"
-                                        className="bg-blue-700 text-white p-1 m-0.5" />
+                                        className="bg-red-500 text-white p-1 m-0.5" />
                                 </td>
                             </tr>
                             );

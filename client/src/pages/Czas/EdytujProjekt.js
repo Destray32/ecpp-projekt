@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import AmberBox from "../../Components/AmberBox";
 import { InputText } from 'primereact/inputtext';
 import { FloatLabel } from 'primereact/floatlabel';
@@ -7,14 +7,16 @@ import { Dropdown } from 'primereact/dropdown';
 import { Button } from 'primereact/button';
 import Axios from "axios";
 
-export default function DodajNowyProjektPage() {
+export default function EdytujProjektPage() {
     const [availableGroups, setAvailableGroups] = useState([]);
     const [availableProjects, setAvailableProjects] = useState([]);
+    const { id } = useParams();
 
     const [form, setForm] = useState({
         firma: 'PC Husbyggen',
         zleceniodawca: '',
         nazwa: '',
+        kodProjektu: '',
         ulica: '',
         miejscowosc: '',
         kodPocztowy: '',
@@ -23,7 +25,6 @@ export default function DodajNowyProjektPage() {
 
     const firmyOptions = [
         { name: 'PC Husbyggen', value: 'PC Husbyggen' },
-        // add more options if needed
     ];
 
     const fetchGroups = () => {
@@ -34,12 +35,13 @@ export default function DodajNowyProjektPage() {
                     value: grupy.id
                 }));
                 setAvailableGroups(transformedData);
+                console.log('Available groups:', transformedData);
             })
             .catch((error) => {
                 console.error(error);
             });
     };
-
+    
     const fetchProjects = () => {
         Axios.get("http://localhost:5000/api/czas/projekty", { withCredentials: true })
             .then((response) => {
@@ -54,20 +56,57 @@ export default function DodajNowyProjektPage() {
             });
     };
 
+    const fetchProjectData = (projectId) => {
+        Axios.get(`http://localhost:5000/api/czas/projekty/${projectId}`, { withCredentials: true })
+            .then((response) => {
+                console.log('Response data:', response.data);
+                if (response.data && Array.isArray(response.data) && response.data.length > 0) {
+                    const project = response.data[0];
+                    
+                    setForm({
+                        firma: project.Firma || '',
+                        zleceniodawca: project.Zleceniodawca || '',
+                        nazwa: project.NazwaKod_Projektu || '',
+                        kodProjektu: project.NazwaKod_Projektu || '',
+                        ulica: project.Ulica || '',
+                        miejscowosc: project.Miejscowosc || '',
+                        kodPocztowy: project.Kod_pocztowy || '',
+                        kraj: project.Kraj || ''
+                    });
+                } else {
+                    console.error('Unexpected response structure or no data:', response.data);
+                }
+            })
+            .catch((error) => {
+                console.error('Error fetching project:', error);
+            });
+    };
+
     useEffect(() => {
         fetchGroups();
         fetchProjects();
-    }, []);
+        fetchProjectData(id);
+    }, [id]);
 
     const handleSave = () => {
         console.log('Form:', form);
-        Axios.post('http://localhost:5000/api/czas/projekty', form, { withCredentials: true })
-            .then(res => {
-                console.log(res.data);
-            })
-            .catch(err => {
-                console.error(err);
-            });
+        Axios.put(`http://localhost:5000/api/czas/edytujProjekt/${id}`, {
+            firma: form.firma,
+            zleceniodawca: form.zleceniodawca,
+            nazwa: form.nazwa,
+            ulica: form.ulica,
+            miejscowosc: form.miejscowosc,
+            kodPocztowy: form.kodPocztowy,
+            kraj: form.kraj
+        }, { 
+            withCredentials: true 
+        })
+        .then(res => {
+            console.log("Project updated successfully:", res.data);
+        })
+        .catch(err => {
+            console.error("Error updating project:", err.response ? err.response.data : err.message);
+        });
     };
 
     const handleChange = (e, field) => {
@@ -75,14 +114,6 @@ export default function DodajNowyProjektPage() {
         setForm(prevState => ({
             ...prevState,
             [field]: value
-        }));
-    };
-
-    const handleGroupChange = (e) => {
-        const selectedGroup = availableGroups.find(group => group.value === e.value);
-        setForm(prevState => ({
-            ...prevState,
-            zleceniodawca: selectedGroup ? selectedGroup.name : ''
         }));
     };
 
@@ -111,12 +142,12 @@ export default function DodajNowyProjektPage() {
                     
                     <FloatLabel className="w-full md:w-6/12 lg:w-4/12">
                         <Dropdown 
-                            onChange={handleGroupChange} 
+                            onChange={(e) => handleChange(e, 'zleceniodawca')} 
                             options={availableGroups}
                             optionLabel="name" 
                             optionValue="value"
                             className="w-full"
-                            value={availableGroups.find(group => group.name === form.zleceniodawca)?.value || ''}
+                            value={form.zleceniodawca}
                             editable
                             filter 
                             showClear

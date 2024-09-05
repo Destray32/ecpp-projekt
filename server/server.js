@@ -65,8 +65,10 @@ const Logowanie = require('./api/logowanie');
 const Companies = require('./api/companies');
 const Logins = require('./api/logins');
 const GetImie = require('./api/home.getImie');
+
 // Grupy
 const UsuwanieGrupy = require('./api/Grupy/grupy.usuwaniegrupy');
+
 // Pracownik
 const ListaPracownikow = require('./api/Pracownik/Pracownik/pracownik.lista');
 const UsunPracownika = require('./api/Pracownik/Pracownik/pracownik.usun');
@@ -107,6 +109,8 @@ const PrzeniesAkt = require('./api/Czas/Projekty/czas.projekty.przeniesAkt');
 const PrzeniesNieakt = require('./api/Czas/Projekty/czas.projekty.przeniesNieakt');
 const DodajNowyProjekt = require('./api/Czas/Projekty/czas.projekty.dodajNowy');
 const DodajNowaGrupe = require('./api/Czas/Projekty/czas.projekty.dodajNowaGrupa');
+const PobierzProjekt = require('./api/Czas/Projekty/czas.projekty.pobierzProjekt');
+const EdytujProjekt = require('./api/Czas/Projekty/czas.projekty.edytujProjekt');
 
 // Czas > Urlopy
 const GetUrlopy = require('./api/Czas/Urlopy/czas.urlopy.getUrlopy');
@@ -307,6 +311,12 @@ app.put('/api/czas/przeniesNieakt', (req, res) => {
 });
 app.delete('/api/czas/usun', (req, res) => {
     UsunProjekt(req, res, db);
+});
+app.get('/api/czas/projekty/:id', (req, res) => {
+    PobierzProjekt(req, res, db);
+});
+app.put('/api/czas/edytujProjekt/:id', (req, res) => {
+    EdytujProjekt(req, res, db);
 });
 /////////////////////////////////////////
 
