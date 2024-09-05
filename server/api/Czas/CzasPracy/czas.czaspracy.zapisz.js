@@ -51,7 +51,7 @@ function ZapiszCzasPracy(req, res, db) {
                                         const saveOrUpdateProjects = (dzienId) => {
                                             additionalProjects.forEach(project => {
                                                 const projectDay = project.days.find(pDay => pDay.dayOfWeek === day.dayOfWeek);
-                                                if (projectDay && projectDay.hoursWorked > 0) {
+                                                if (projectDay) {
                                                     projectInsertionPromises.push(new Promise((resolve, reject) => {
                                                         // znajdź ID projektu na podstawie nazwy projektu
                                                         db.query(
@@ -65,56 +65,98 @@ function ZapiszCzasPracy(req, res, db) {
 
                                                                 const projektyId = projektyResults[0].idProjekty;
 
-                                                                // znajdź ID samochodu na podstawie numeru rejestracyjnego
-                                                                db.query(
-                                                                    `SELECT idPojazdy FROM Pojazdy WHERE Nr_rejestracyjny = ?`,
-                                                                    [projectDay.car],
-                                                                    function (err, carResults) {
-                                                                        if (err || carResults.length === 0) {
-                                                                            console.error(err);
-                                                                            return reject(new Error('Nie znaleziono samochodu'));
-                                                                        }
+                                                                // jeśli projectDay.car jest null, ustaw pojazdyId jako null, w przeciwnym razie znajdź ID samochodu
+                                                                const pojazdyId = projectDay.car ? null : null;
 
-                                                                        const pojazdyId = carResults[0].idPojazdy;
+                                                                if (projectDay.car === null || projectDay.car === '') {
+                                                                    // Szukaj rekordu z NULL jako samochód, zaktualizuj samochód z NULL na nowy pojazd
+                                                                    db.query(
+                                                                        `SELECT * FROM Dzien_Projekty WHERE Dzien_idDzien = ? AND Projekty_idProjekty = ? AND Pojazdy_idPojazdy IS NULL`,
+                                                                        [dzienId, projektyId],
+                                                                        function (err, existingProjectDay) {
+                                                                            if (err) {
+                                                                                console.error(err);
+                                                                                return reject(err);
+                                                                            }
 
-                                                                        // sprawdź, czy kombinacja dnia, projektu i samochodu już istnieje w tabeli 'Dzien_Projekty'
-                                                                        db.query(
-                                                                            `SELECT * FROM Dzien_Projekty WHERE Dzien_idDzien = ? AND Projekty_idProjekty = ? AND Pojazdy_idPojazdy = ?`,
-                                                                            [dzienId, projektyId, pojazdyId],
-                                                                            function (err, existingProjectDay) {
+                                                                            const queryCallback = (err) => {
                                                                                 if (err) {
                                                                                     console.error(err);
                                                                                     return reject(err);
                                                                                 }
+                                                                                resolve();
+                                                                            };
 
-                                                                                const queryCallback = (err) => {
+                                                                            if (existingProjectDay.length > 0) {
+                                                                                // jeśli istnieje, zaktualizuj rekord z NULL na nowy samochód
+                                                                                db.query(
+                                                                                    `UPDATE Dzien_Projekty SET Pojazdy_idPojazdy = ?, Godziny_przepracowane = ? WHERE idDzien_Projekty = ?`,
+                                                                                    [pojazdyId, projectDay.hoursWorked, existingProjectDay[0].idDzien_Projekty],
+                                                                                    queryCallback
+                                                                                );
+                                                                            } else {
+                                                                                // w przeciwnym razie wstaw nowy rekord z null w Pojazdy_idPojazdy
+                                                                                db.query(
+                                                                                    `INSERT INTO Dzien_Projekty (Dzien_idDzien, Projekty_idProjekty, Godziny_przepracowane, Pojazdy_idPojazdy) 
+                                                                                    VALUES (?, ?, ?, NULL)`,
+                                                                                    [dzienId, projektyId, projectDay.hoursWorked],
+                                                                                    queryCallback
+                                                                                );
+                                                                            }
+                                                                        }
+                                                                    );
+                                                                } else {
+                                                                    // jeśli samochód jest podany, znajdź ID samochodu
+                                                                    db.query(
+                                                                        `SELECT idPojazdy FROM Pojazdy WHERE Nr_rejestracyjny = ?`,
+                                                                        [projectDay.car],
+                                                                        function (err, carResults) {
+                                                                            if (err || carResults.length === 0) {
+                                                                                console.error(err);
+                                                                                return reject(new Error('Nie znaleziono samochodu'));
+                                                                            }
+
+                                                                            const pojazdyId = carResults[0].idPojazdy;
+
+                                                                            // sprawdź, czy kombinacja dnia, projektu i samochodu już istnieje w tabeli 'Dzien_Projekty'
+                                                                            db.query(
+                                                                                `SELECT * FROM Dzien_Projekty WHERE Dzien_idDzien = ? AND Projekty_idProjekty = ? AND (Pojazdy_idPojazdy IS NULL OR Pojazdy_idPojazdy = ?)`,
+                                                                                [dzienId, projektyId, pojazdyId],
+                                                                                function (err, existingProjectDay) {
                                                                                     if (err) {
                                                                                         console.error(err);
                                                                                         return reject(err);
                                                                                     }
-                                                                                    resolve();
-                                                                                };
 
-                                                                                if (existingProjectDay.length > 0) {
-                                                                                    // jeśli istnieje, zaktualizuj istniejący rekord
-                                                                                    db.query(
-                                                                                        `UPDATE Dzien_Projekty SET Godziny_przepracowane = ? WHERE idDzien_Projekty = ?`,
-                                                                                        [projectDay.hoursWorked, existingProjectDay[0].idDzien_Projekty],
-                                                                                        queryCallback
-                                                                                    );
-                                                                                } else {
-                                                                                    // w przeciwnym razie wstaw nowy rekord
-                                                                                    db.query(
-                                                                                        `INSERT INTO Dzien_Projekty (Dzien_idDzien, Projekty_idProjekty, Godziny_przepracowane, Pojazdy_idPojazdy) 
-                                                                                        VALUES (?, ?, ?, ?)`,
-                                                                                        [dzienId, projektyId, projectDay.hoursWorked, pojazdyId],
-                                                                                        queryCallback
-                                                                                    );
+                                                                                    const queryCallback = (err) => {
+                                                                                        if (err) {
+                                                                                            console.error(err);
+                                                                                            return reject(err);
+                                                                                        }
+                                                                                        resolve();
+                                                                                    };
+
+                                                                                    if (existingProjectDay.length > 0) {
+                                                                                        // jeśli istnieje, zaktualizuj istniejący rekord
+                                                                                        db.query(
+                                                                                            `UPDATE Dzien_Projekty SET Godziny_przepracowane = ?, Pojazdy_idPojazdy = ? WHERE idDzien_Projekty = ?`,
+                                                                                            [projectDay.hoursWorked, pojazdyId, existingProjectDay[0].idDzien_Projekty],
+                                                                                            queryCallback
+                                                                                        );
+                                                                                    } else {
+                                                                                        // w przeciwnym razie wstaw nowy rekord
+                                                                                        db.query(
+                                                                                            `INSERT INTO Dzien_Projekty (Dzien_idDzien, Projekty_idProjekty, Godziny_przepracowane, Pojazdy_idPojazdy) 
+                                                                                            VALUES (?, ?, ?, ?)`,
+                                                                                            [dzienId, projektyId, projectDay.hoursWorked, pojazdyId],
+                                                                                            queryCallback
+                                                                                        );
+                                                                                    }
                                                                                 }
-                                                                            }
-                                                                        );
-                                                                    }
-                                                                );
+                                                                            );
+                                                                        }
+                                                                    );
+                                                                }
                                                             }
                                                         );
                                                     }));

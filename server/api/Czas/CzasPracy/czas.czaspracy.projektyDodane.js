@@ -75,7 +75,7 @@ async function PobierzDodaneProjekty(req, res, db) {
             // dodajemy godziny pracy i informacje o samochodzie dla każdego dnia w tygodniu
             projectsMap[project.projectName].hours[project.dayOfWeek] = {
                 hoursWorked: project.hoursWorked,
-                car: project.car || 'Brak przypisanego samochodu',
+                car: project.car || null,
             };
         });
 

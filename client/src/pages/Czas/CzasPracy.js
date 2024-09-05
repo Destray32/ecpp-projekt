@@ -190,11 +190,6 @@ export default function CzasPracyPage() {
         }
     };
     
-    
-    
-
-    
-
     useEffect(() => {
         if (Pracownik && (userType === "Administrator")) {
             fetchWorkHours(Pracownik, currentDate);
