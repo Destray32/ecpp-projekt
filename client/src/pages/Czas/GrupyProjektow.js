@@ -47,9 +47,12 @@ export default function GrupyProjektowPage() {
             <div className="flex flex-row items-center p-4 w-full">
                 <p>Grupy projektów</p>
                 <div className="ml-auto">
-                <Link to="/home/nowa-grupa">
-                <Button label="Dodaj nową grupę" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2" />
-                </Link>
+                    <Link className="mr-2" to="/home/projekty">
+                        <Button label="Powrót" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2" />
+                    </Link>
+                    <Link to="/home/nowa-grupa">
+                        <Button label="Dodaj nową grupę" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2" />
+                    </Link>
                 </div>
             </div>
         </AmberBox>
@@ -72,10 +75,16 @@ export default function GrupyProjektowPage() {
                         <td className="border-r">{group.Cennik}</td>
                         <td className="border-r">{group.Stawka}</td>
                         <td>
+                            <Link to={`/home/grupa/${group.id}`}>
+                                <Button 
+                                    label="Edytuj"
+                                    className="bg-blue-700 text-white p-1 m-0.5"
+                                />
+                            </Link>
                             <Button 
                                 onClick={() => handleDelete(group.id)}
                                 label="Usuń"
-                                className="bg-blue-700 text-white p-1 m-0.5"
+                                className="bg-red-500 text-white p-1 m-0.5"
                             />
                         </td>
                     </tr>

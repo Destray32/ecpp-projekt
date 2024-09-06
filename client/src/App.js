@@ -27,6 +27,7 @@ import SprawdzSamochodPage from './pages/Czas/SprawdzSamochod';
 import OgloszeniaPage from './pages/Ogloszenia';
 
 import VacationPlanner from './Components/VacationPlanner copy';
+import EdytujGrupePage from './pages/Czas/EdytujGrupe';
 
 
 function App() {
@@ -54,6 +55,7 @@ function App() {
           <Route path="nowy-projekt" element={<NowyProjektPage />} />
           <Route path="projekt/:id" element={<EdytujProjektPage />} />
           <Route path="nowa-grupa" element={<NowaGrupaPage />} />
+          <Route path="grupa/:id" element={<EdytujGrupePage />} />
           <Route path="nowy-pojazd" element={<NowyPojazdPage />} />
           <Route path="sprawdzsamochod" element={<SprawdzSamochodPage />} />
           <Route path="ogloszenia" element={<OgloszeniaPage />} />

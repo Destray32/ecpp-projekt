@@ -63,7 +63,7 @@ export default function DodajNowyProjektPage() {
         console.log('Form:', form);
         Axios.post('http://localhost:5000/api/czas/projekty', form, { withCredentials: true })
             .then(res => {
-                console.log(res.data);
+                window.location.href = '/home/projekty';
             })
             .catch(err => {
                 console.error(err);

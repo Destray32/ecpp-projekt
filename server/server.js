@@ -111,6 +111,8 @@ const DodajNowyProjekt = require('./api/Czas/Projekty/czas.projekty.dodajNowy');
 const DodajNowaGrupe = require('./api/Czas/Projekty/czas.projekty.dodajNowaGrupa');
 const PobierzProjekt = require('./api/Czas/Projekty/czas.projekty.pobierzProjekt');
 const EdytujProjekt = require('./api/Czas/Projekty/czas.projekty.edytujProjekt');
+const PobierzGrupe = require('./api/Czas/Projekty/czas.projekty.pobierzGrupe');
+const EdytujGrupe = require('./api/Czas/Projekty/czas.projekty.edytujGrupe');
 
 // Czas > Urlopy
 const GetUrlopy = require('./api/Czas/Urlopy/czas.urlopy.getUrlopy');
@@ -317,6 +319,12 @@ app.get('/api/czas/projekty/:id', (req, res) => {
 });
 app.put('/api/czas/edytujProjekt/:id', (req, res) => {
     EdytujProjekt(req, res, db);
+});
+app.get('/api/czas/pobierzGrupe/:id', (req, res) => {
+    PobierzGrupe(req, res, db);
+});
+app.put('/api/czas/edytujGrupe/:id', (req, res) => {
+    EdytujGrupe(req, res, db);
 });
 /////////////////////////////////////////
 

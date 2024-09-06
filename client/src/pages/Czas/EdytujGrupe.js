@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useParams } from "react-router-dom";
 import AmberBox from "../../Components/AmberBox";
 import { InputText } from 'primereact/inputtext';
 import { FloatLabel } from 'primereact/floatlabel';
@@ -7,8 +7,9 @@ import { Button } from 'primereact/button';
 import { Checkbox } from 'primereact/checkbox';
 import Axios from "axios";
 
-export default function NowaGrupaPage() {
+export default function EdytujGrupePage() {
     const [planTygV, setPlanTygV] = useState(false);
+    const { id } = useParams();
     const [form, setForm] = useState({
         zleceniodawca: '',
         cennik: '',
@@ -16,10 +17,12 @@ export default function NowaGrupaPage() {
         czyPlanTygV: 0
     });
 
-    const handleSave = () => {
-        console.log('Saving data...', form);
+    useEffect(() => {
+        fetchGroup();
+    }, []);
 
-        Axios.post('http://localhost:5000/api/czas/grupa', {
+    const handleSave = () => {
+        Axios.put(`http://localhost:5000/api/czas/edytujGrupe/${id}`, {
             zleceniodawca: form.zleceniodawca,
             cennik: form.cennik,
             stawka: form.stawka,
@@ -27,7 +30,23 @@ export default function NowaGrupaPage() {
         }, { withCredentials: true })
             .then(res => {
                 console.log(res.data);
-                window.location.href = '/home/grupy-projektow';
+            })
+            .catch(err => {
+                console.error(err);
+            });
+    };
+
+    const fetchGroup = () => {
+        Axios.get(`http://localhost:5000/api/czas/pobierzGrupe/${id}`, { withCredentials: true })
+            .then(res => {
+                const data = res.data[0];
+                setForm({
+                    zleceniodawca: data.Zleceniodawca,
+                    cennik: data.Cennik,
+                    stawka: data.Stawka,
+                    czyPlanTygV: data.Plan_tygodniaV
+                });
+                setPlanTygV(data.Plan_tygodniaV === 1);
             })
             .catch(err => {
                 console.error(err);
@@ -60,17 +79,17 @@ export default function NowaGrupaPage() {
             <AmberBox>
                 <div className="flex flex-col items-center space-y-8 p-4 w-full">
                     <FloatLabel className="w-full md:w-6/12 lg:w-4/12">
-                        <InputText onChange={handleZleceniodawca} id="zleceniodawca" type="text" className="w-full" />
+                        <InputText onChange={handleZleceniodawca} id="zleceniodawca" type="text" className="w-full" value={form.zleceniodawca} />
                         <label htmlFor="zleceniodawca">Zleceniodawca</label>
                     </FloatLabel>
                     
                     <FloatLabel className="w-full md:w-6/12 lg:w-4/12">
-                        <InputText onChange={handleCennik} id="cennik" type="text" className="w-full" />
+                        <InputText onChange={handleCennik} id="cennik" type="text" className="w-full" value={form.cennik} />
                         <label htmlFor="cennik">Cennik</label>
                     </FloatLabel>
                     
                     <FloatLabel className="w-full md:w-6/12 lg:w-4/12">
-                        <InputText onChange={handleStawka} id="stawka" type="text" className="w-full" />
+                        <InputText onChange={handleStawka} id="stawka" type="text" className="w-full" value={form.stawka} />
                         <label htmlFor="stawka">Stawka/km</label>
                     </FloatLabel>
 

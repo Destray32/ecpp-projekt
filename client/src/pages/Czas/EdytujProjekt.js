@@ -102,7 +102,7 @@ export default function EdytujProjektPage() {
             withCredentials: true 
         })
         .then(res => {
-            console.log("Project updated successfully:", res.data);
+            window.location.href = "/home/projekty";
         })
         .catch(err => {
             console.error("Error updating project:", err.response ? err.response.data : err.message);
