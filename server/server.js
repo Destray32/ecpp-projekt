@@ -149,7 +149,6 @@ const PobierzDostepneFirmy = require('./api/pobierzDostepneFirmy');
 
 // Logowanie
 
-
 app.post('/api/logowanie', (req, res) => {
     Logowanie(req, res);
 });

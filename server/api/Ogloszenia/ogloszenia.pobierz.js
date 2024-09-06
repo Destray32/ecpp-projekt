@@ -7,11 +7,12 @@ function PobierzOgloszenia(req, res) {
             o.Tytul AS tytul,
             o.Wiadomosc AS tresc,
             o.Grupa_urlopowa_idGrupa_urlopowa AS grupa_id,
-            GROUP_CONCAT(DISTINCT p.Nazwa_uzytkownika SEPARATOR ', ') AS pracownicy,
+            GROUP_CONCAT(DISTINCT do.Imie, ' ', do.Nazwisko) AS pracownicy,
             g.Zleceniodawca AS grupa_nazwa
         FROM ogloszenia o
         LEFT JOIN pracownik_has_ogloszenia ph ON o.idOgloszenia = ph.Ogloszenia_idOgloszenia
         LEFT JOIN pracownik p ON ph.Pracownik_idPracownik = p.idPracownik
+        LEFT JOIN dane_osobowe do ON p.FK_Dane_osobowe = do.idDane_osobowe
         LEFT JOIN grupa_urlopowa g ON o.Grupa_urlopowa_idGrupa_urlopowa = g.idGrupa_urlopowa
         GROUP BY o.idOgloszenia;
     `;

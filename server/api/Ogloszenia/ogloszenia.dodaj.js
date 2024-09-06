@@ -2,8 +2,9 @@ const db = require('../../server');
 
 function DodajOgloszenie(req, res) {
     const { tytul, tresc, grupa, osoby } = req.body;
-
     const grupaId = grupa && grupa.length > 0 ? grupa[0] : null;
+
+    console.log('Dodawanie ogłoszenia:', tytul, tresc, grupaId, osoby);
 
     const query = `INSERT INTO ogloszenia (Tytul, Wiadomosc, Grupa_urlopowa_idGrupa_urlopowa) VALUES (?, ?, ?)`;
 

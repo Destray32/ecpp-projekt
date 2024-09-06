@@ -151,7 +151,7 @@ export default function OgloszeniaPage() {
                                 <Select mode='multiple'>
                                     {pracownicy.map(pracownik => (
                                         <Select.Option key={pracownik.idPracownik} value={pracownik.idPracownik}>
-                                            {`${pracownik.Nazwa_uzytkownika}`}
+                                            {`${pracownik.Imie} ${pracownik.Nazwisko}`}
                                         </Select.Option>
                                     ))}
                                 </Select>
@@ -184,7 +184,7 @@ export default function OgloszeniaPage() {
                             <h2 className='text-xl font-bold'>{ogloszenie.tytul}</h2>
                             <p className='break-all'>{ogloszenie.tresc}</p>
                             <p className='text-gray-600'>
-                                <strong>Do:</strong> Grupa: {ogloszenie.grupa.length > 0 ? ogloszenie.grupa.join(', ') : 'Brak'} Osoby: {ogloszenie.osoby.length > 0 ? ogloszenie.osoby.join(', ') : 'Brak'}
+                                <strong>Do:</strong> {ogloszenie.grupa.length > 0 ? ogloszenie.grupa.join(', ') : 'Brak'} | {ogloszenie.osoby.length > 0 ? ogloszenie.osoby.join(', ') : 'Brak'}
                             </p>
                         </div>
                     ))
