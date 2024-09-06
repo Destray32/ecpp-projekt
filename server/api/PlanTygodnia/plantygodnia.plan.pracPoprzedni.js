@@ -7,7 +7,7 @@ function PracownicyPoprzedniTydz(req, res) {
             name: "Alice",
             surname: "Johnson",
             vacationGroup: "Zleceniodawca C",
-            M1_5: "M1,M2,M3",
+            M1_5: "M1",
             description: "Opis z poprzedniego tygodnia"
         },
         {

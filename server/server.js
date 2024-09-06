@@ -100,6 +100,7 @@ const PracownicyPoprzedniTydz = require('./api/PlanTygodnia/plantygodnia.plan.pr
 const DodajZaplanuj = require('./api/PlanTygodnia/plantygodnia.zaplanuj.dodajPlan');
 const GetPlany = require('./api/PlanTygodnia/plantygodnia.zaplanuj.getPlany');
 const UsunPlan = require('./api/PlanTygodnia/plantygodnia.zaplanuj.usunPlan');
+const AktualizujM1_5 = require('./api/PlanTygodnia/plantygodnia.zaplanuj.aktualizujM1_5');
 
 // Czas > Projekty
 const GetProjekty = require('./api/Czas/Projekty/czas.projekty.getProjekty');
@@ -274,6 +275,10 @@ app.route('/api/planTygodnia')
 
 app.get('/api/planTygodnia/drukuj', (req, res) => {
     DrukujGrupe(req, res);
+});
+
+app.put('/api/planTygodnia/:employeeId', (req, res ) => {
+    AktualizujM1_5(req, res, db);
 });
 /////////////////////////////////////////
 

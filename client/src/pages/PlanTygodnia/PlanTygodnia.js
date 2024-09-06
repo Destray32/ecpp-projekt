@@ -215,7 +215,6 @@ export default function PlanTygodniaPage() {
             .then(res => {
                 const data = res.data;
                 setPracownikData(data);
-                console.log(data);
     
                 const m1 = [];
                 const m2 = [];
@@ -250,6 +249,22 @@ export default function PlanTygodniaPage() {
                 return [...prevSelectedRows, employeeId];
             }
         });
+    };
+
+    const handleRadioChange = (employeeId, selectedM) => {
+        const updatedData = pracownikData.map((item) =>
+            item.id === employeeId ? { ...item, M1_5: selectedM } : item
+        );
+        setPracownikData(updatedData);
+    
+        Axios.put(`http://localhost:5000/api/planTygodnia/${employeeId}`, {
+            M1_5: selectedM,
+        }, { withCredentials: true })
+            .then((res) => {
+            })
+            .catch((err) => {
+                console.error('Error updating employee:', err);
+            });
     };
 
     const handleSelectAll = (columnIndex) => {
@@ -400,37 +415,37 @@ export default function PlanTygodniaPage() {
                                         <td className="border-r">{item.vacationGroup}</td>
                                         <td className="border-r">
                                             <input
-                                                type="checkbox"
-                                                checked={selectedM1.includes(item.id)}
-                                                onChange={() => handleColumnCheckboxChange(4, item.id)}
+                                                type="radio"
+                                                checked={item.M1_5 === 'M1'}
+                                                onChange={() => handleRadioChange(item.id, 'M1')}
                                             />
                                         </td>
                                         <td className="border-r">
                                             <input
-                                                type="checkbox"
-                                                checked={selectedM2.includes(item.id)}
-                                                onChange={() => handleColumnCheckboxChange(5, item.id)}
+                                                type="radio"
+                                                checked={item.M1_5 === 'M2'}
+                                                onChange={() => handleRadioChange(item.id, 'M2')}
                                             />
                                         </td>
                                         <td className="border-r">
                                             <input
-                                                type="checkbox"
-                                                checked={selectedM3.includes(item.id)}
-                                                onChange={() => handleColumnCheckboxChange(6, item.id)}
+                                                type="radio"
+                                                checked={item.M1_5 === 'M3'}
+                                                onChange={() => handleRadioChange(item.id, 'M3')}
                                             />
                                         </td>
                                         <td className="border-r">
                                             <input
-                                                type="checkbox"
-                                                checked={selectedM4.includes(item.id)}
-                                                onChange={() => handleColumnCheckboxChange(7, item.id)}
+                                                type="radio"
+                                                checked={item.M1_5 === 'M4'}
+                                                onChange={() => handleRadioChange(item.id, 'M4')}
                                             />
                                         </td>
                                         <td className="border-r">
                                             <input
-                                                type="checkbox"
-                                                checked={selectedM5.includes(item.id)}
-                                                onChange={() => handleColumnCheckboxChange(8, item.id)}
+                                                type="radio"
+                                                checked={item.M1_5 === 'M5'}
+                                                onChange={() => handleRadioChange(item.id, 'M5')}
                                             />
                                         </td>
                                         <td className="border-r">{item.description}</td>
