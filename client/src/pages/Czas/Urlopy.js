@@ -26,7 +26,6 @@ export default function UrlopyPage() {
     const [selectedWeekAndYear, setSelectedWeekAndYear] = useState([]); // state do tygodnia i roku dla pdf
     const [filtrValue, setFiltrValue] = useState("Wszystkie");
 
-
     const extractId = (idWithPrefix) => idWithPrefix.replace('cb-', '');
 
     const handlePdfDownloadClick = () => {
@@ -78,7 +77,6 @@ export default function UrlopyPage() {
                 console.error("There was an error fetching the data:", error);
             });
     };
-
 
     // do zaznaczania grup w tym co generuje spis urlopów
     const handleGrupaCheckboxChange = (id, zleceniodawca) => {
@@ -197,7 +195,6 @@ export default function UrlopyPage() {
             });
     };
 
-
     const handleSzukaj = (filter) => {
         if (filter === "Wszystkie" || filter === "") {
             setFilteredDane(dane); // pokaz wszystkie
@@ -206,8 +203,6 @@ export default function UrlopyPage() {
             setFilteredDane(filteredData);
         }
     };
-
-
 
     // ustawia do formatu [week, year] wybrany tydzień i rok z inputu
     const handleSelectWeekAndYear = (e) => {
@@ -250,7 +245,20 @@ export default function UrlopyPage() {
         acc[key].push(curr);
         return acc;
     }, {});
-
+    
+    const sortedGroupedData = Object.keys(groupedData).sort((a, b) => {
+        const aHasPending = groupedData[a].some(vacation => vacation.status === 'Do zatwierdzenia');
+        const bHasPending = groupedData[b].some(vacation => vacation.status === 'Do zatwierdzenia');
+        return aHasPending === bHasPending ? 0 : aHasPending ? -1 : 1;
+    });
+    
+    sortedGroupedData.forEach(name => {
+        groupedData[name].sort((a, b) => {
+            const aPending = a.status === 'Do zatwierdzenia';
+            const bPending = b.status === 'Do zatwierdzenia';
+            return aPending === bPending ? 0 : aPending ? -1 : 1;
+        });
+    });
 
     const handleGroupToggle = (name) => {
         setExpandedGroups(prev => ({
@@ -338,7 +346,6 @@ export default function UrlopyPage() {
                         </div>
                     </div>
                 </div>
-
             </div>
             <div className="w-full md:w-auto bg-gray-300 h-full m-2 outline outline-1 outline-gray-500">
                 <table className="w-full">
@@ -354,7 +361,7 @@ export default function UrlopyPage() {
                         </tr>
                     </thead>
                     <tbody className="text-center">
-                        {Object.keys(groupedData).map((name) => (
+                        {sortedGroupedData.map((name) => (
                             <React.Fragment key={name}>
                                 <tr>
                                     <td colSpan="7" className="cursor-pointer bg-gray-100 hover:bg-gray-200" onClick={() => handleGroupToggle(name)}>
@@ -416,7 +423,6 @@ export default function UrlopyPage() {
                     <Button label="Drukuj" onClick={handlePdfDownloadClick} />
                 </div>
             </AmberBox>
-
         </div>
     );
 }
