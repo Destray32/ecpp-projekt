@@ -47,20 +47,30 @@ const TimeInputs = ({ daysOfWeek, hours, setHours }) => {
         }));
     };
 
-    const handleTimeBlur = (day, type, value) => {
+    const formatTimeValue = (value) => {
         let cleanValue = value.replace(/\D/g, '');
         let hours = '00';
         let minutes = '00';
 
-        if (cleanValue.length <= 2) {
-            hours = cleanValue.padStart(2, '0');
-        } else if (cleanValue.length <= 4) {
+        if (cleanValue.length === 1 || cleanValue.length === 2) {
+            minutes = cleanValue.padStart(2, '0');
+        } else if (cleanValue.length === 3) {
+            hours = cleanValue.slice(0, 1).padStart(2, '0');
+            minutes = cleanValue.slice(1).padEnd(2, '0');
+        } else if (cleanValue.length === 4) {
             hours = cleanValue.slice(0, 2).padStart(2, '0');
             minutes = cleanValue.slice(2).padEnd(2, '0');
         }
 
-        const formattedValue = `${hours}:${minutes}`;
+        // Validate hours and minutes
+        if (parseInt(hours, 10) > 23) hours = '23';
+        if (parseInt(minutes, 10) > 59) minutes = '59';
 
+        return `${hours}:${minutes}`;
+    };
+
+    const handleTimeBlur = (day, type, value) => {
+        const formattedValue = formatTimeValue(value);
         setHours(prev => ({
             ...prev,
             [day]: {
@@ -71,18 +81,7 @@ const TimeInputs = ({ daysOfWeek, hours, setHours }) => {
     };
 
     const handleGlobalTimeBlur = (value, setValue, type) => {
-        let cleanValue = value.replace(/\D/g, '');
-        let hours = '00';
-        let minutes = '00';
-
-        if (cleanValue.length <= 2) {
-            hours = cleanValue.padStart(2, '0');
-        } else if (cleanValue.length <= 4) {
-            hours = cleanValue.slice(0, 2).padStart(2, '0');
-            minutes = cleanValue.slice(2).padEnd(2, '0');
-        }
-
-        const formattedValue = `${hours}:${minutes}`;
+        const formattedValue = formatTimeValue(value);
         setValue(formattedValue);
 
         daysOfWeek.forEach(day => {
@@ -227,7 +226,6 @@ const TimeInputs = ({ daysOfWeek, hours, setHours }) => {
             <div className="text-right mt-6 font-bold">
                 <p>Razem: {calculateWeeklyTotal(hours, daysOfWeek)} godz.</p>
             </div>
-
         </div>
     );
 };
