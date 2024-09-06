@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { format, getDay } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { calculateDailyTotal, calculateWeeklyTotal } from '../../utils/dateUtils';
@@ -25,6 +25,9 @@ import { calculateDailyTotal, calculateWeeklyTotal } from '../../utils/dateUtils
  * <TimeInputs daysOfWeek={daysOfWeek} hours={hours} setHours={setHours} />
  */
 const TimeInputs = ({ daysOfWeek, hours, setHours }) => {
+    const [globalStart, setGlobalStart] = useState('');
+    const [globalEnd, setGlobalEnd] = useState('');
+
     const handleTimeInputChange = (day, type, value) => {
         setHours(prev => ({
             ...prev,
@@ -58,9 +61,47 @@ const TimeInputs = ({ daysOfWeek, hours, setHours }) => {
         }));
     };
 
+    const handleGlobalTimeBlur = (value, setValue, type) => {
+        let cleanValue = value.replace(/\D/g, '');
+        let hours = '00';
+        let minutes = '00';
+
+        if (cleanValue.length <= 2) {
+            hours = cleanValue.padStart(2, '0');
+        } else if (cleanValue.length <= 4) {
+            hours = cleanValue.slice(0, 2).padStart(2, '0');
+            minutes = cleanValue.slice(2).padEnd(2, '0');
+        }
+
+        const formattedValue = `${hours}:${minutes}`;
+        setValue(formattedValue);
+
+        daysOfWeek.forEach(day => {
+            if (getDay(day) === 0) return;
+            handleTimeInputChange(format(day, 'yyyy-MM-dd'), type, formattedValue);
+        });
+    };
+
+    const handleGlobalStartChange = (value) => {
+        setGlobalStart(value);
+        daysOfWeek.forEach(day => {
+            if (getDay(day) === 0) return;
+            handleTimeInputChange(format(day, 'yyyy-MM-dd'), 'start', value);
+        });
+    };
+
+    const handleGlobalEndChange = (value) => {
+        setGlobalEnd(value);
+        daysOfWeek.forEach(day => {
+            if (getDay(day) === 0) return;
+            handleTimeInputChange(format(day, 'yyyy-MM-dd'), 'end', value);
+        });
+    };
+
     return (
         <div className="bg-amber-100 outline outline-1 outline-gray-500 space-y-4 m-2 p-3">
-            <div className="grid grid-cols-7 gap-4 text-center font-bold">
+            <div className="grid grid-cols-8 gap-4 text-center font-bold">
+                <div className="col-span-1"></div>
                 {daysOfWeek.map((day, i) => (
                     <div key={i} className="col-span-1">
                         <p>{format(day, 'EEEE', { locale: pl })} {format(day, 'dd.MM')}</p>
@@ -68,7 +109,18 @@ const TimeInputs = ({ daysOfWeek, hours, setHours }) => {
                 ))}
             </div>
 
-            <div className="grid grid-cols-7 gap-4 mt-4 text-center">
+            <div className="grid grid-cols-8 gap-4 mt-4 text-center">
+                <div className="col-span-1">
+                    <input
+                        type="text"
+                        value={globalStart}
+                        onChange={(e) => handleGlobalStartChange(e.target.value)}
+                        onBlur={(e) => handleGlobalTimeBlur(e.target.value, setGlobalStart, 'start')}
+                        className="w-1/2 p-2 border border-gray-300 rounded"
+                        placeholder="HH:MM"
+                        maxLength="5"
+                    />
+                </div>
                 {daysOfWeek.map((day, i) => (
                     <div key={i} className="col-span-1">
                         <input
@@ -85,7 +137,18 @@ const TimeInputs = ({ daysOfWeek, hours, setHours }) => {
                 ))}
             </div>
 
-            <div className="grid grid-cols-7 gap-4 mt-2 text-center">
+            <div className="grid grid-cols-8 gap-4 mt-2 text-center">
+                <div className="col-span-1">
+                    <input
+                        type="text"
+                        value={globalEnd}
+                        onChange={(e) => handleGlobalEndChange(e.target.value)}
+                        onBlur={(e) => handleGlobalTimeBlur(e.target.value, setGlobalEnd, 'end')}
+                        className="w-1/2 p-2 border border-gray-300 rounded"
+                        placeholder="HH:MM"
+                        maxLength="5"
+                    />
+                </div>
                 {daysOfWeek.map((day, i) => (
                     <div key={i} className="col-span-1">
                         <input
@@ -101,19 +164,6 @@ const TimeInputs = ({ daysOfWeek, hours, setHours }) => {
                     </div>
                 ))}
             </div>
-
-            <div className="grid grid-cols-7 gap-4 mt-4 text-center font-bold">
-                {daysOfWeek.map((day, i) => {
-                    const dayKey = format(day, 'yyyy-MM-dd');
-                    const dayHours = hours[dayKey];
-                    return (
-                        <div key={i} className="col-span-1">
-                            <p>{calculateDailyTotal(dayHours) || 0} godz.</p>
-                        </div>
-                    );
-                })}
-            </div>
-
             <div className="text-right mt-6 font-bold">
                 <p>Razem: {calculateWeeklyTotal(hours, daysOfWeek)} godz.</p>
             </div>
