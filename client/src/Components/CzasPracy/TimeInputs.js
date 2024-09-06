@@ -103,11 +103,15 @@ const TimeInputs = ({ daysOfWeek, hours, setHours }) => {
             </div>
 
             <div className="grid grid-cols-7 gap-4 mt-4 text-center font-bold">
-                {daysOfWeek.map((day, i) => (
-                    <div key={i} className="col-span-1">
-                        <p>{calculateDailyTotal(hours, format(day, 'yyyy-MM-dd')) || 0} godz.</p>
-                    </div>
-                ))}
+                {daysOfWeek.map((day, i) => {
+                    const dayKey = format(day, 'yyyy-MM-dd');
+                    const dayHours = hours[dayKey];
+                    return (
+                        <div key={i} className="col-span-1">
+                            <p>{calculateDailyTotal(dayHours) || 0} godz.</p>
+                        </div>
+                    );
+                })}
             </div>
 
             <div className="text-right mt-6 font-bold">
