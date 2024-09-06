@@ -83,7 +83,6 @@ export default function HomePage() {
                         {menu === "Pracownik" && (
                             <>
                                 <ButtonLewy link="pracownik" nazwa='Pracownik' />
-                                <ButtonLewy link="podzial" nazwa='Podział' />
                                 <ButtonLewy link="logowanie" nazwa='Logowanie' />
                                 <ButtonLewy nazwa='Wyloguj' onClick={handleLogout} />
                             </>
