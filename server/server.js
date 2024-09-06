@@ -121,6 +121,7 @@ const DodajUrlop = require('./api/Czas/Urlopy/czas.urlopy.dodajUrlop');
 const ZatwierdzUrlop = require('./api/Czas/Urlopy/czas.urlopy.zatwierdzUrlop');
 const UsunUrlop = require('./api/Czas/Urlopy/czas.urlopy.usunUrlop');
 const urlopyPdf = require('./api/Czas/Urlopy/czas.urlopy.urlopyPdf');
+const EdytujUrlop = require('./api/Czas/Urlopy/czas.urlopy.edytujUrlop');
 
 // Czas > Pojazdy
 const PobierzPojazdy = require('./api/Czas/Pojazdy/pojazdy.pobierz');
@@ -349,7 +350,9 @@ app.delete('/api/urlopy', (req, res) => {
 app.post('/api/urlopy/pdf', (req, res) => {
     urlopyPdf(req, res, db);
 });
-
+app.put('/api/urlopy/:vacationId', (req, res) => {
+    EdytujUrlop(req, res, db);
+});
 
 /////////////////////////////////////////
 

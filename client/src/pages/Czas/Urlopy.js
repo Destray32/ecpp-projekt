@@ -25,6 +25,8 @@ export default function UrlopyPage() {
     const [selectedWeek, setSelectedWeek] = useState(''); // state do tygodnia ale bez formatowania do pdf
     const [selectedWeekAndYear, setSelectedWeekAndYear] = useState([]); // state do tygodnia i roku dla pdf
     const [filtrValue, setFiltrValue] = useState("Wszystkie");
+    const [editingVacationId, setEditingVacationId] = useState(null);
+    const [editVacationData, setEditVacationData] = useState({ urlopOd: '', urlopDo: '', status: '' });
 
     const extractId = (idWithPrefix) => idWithPrefix.replace('cb-', '');
 
@@ -204,6 +206,42 @@ export default function UrlopyPage() {
         }
     };
 
+    const convertToISOFormat = (dateString) => {
+        const [day, month, year] = dateString.split('/');
+        return `${year}-${month}-${day}`;
+    };
+    
+    const convertToDisplayFormat = (isoDateString) => {
+        const [year, month, day] = isoDateString.split('-');
+        return `${day}/${month}/${year}`;
+    };
+
+    const handleEdit = (vacation) => {
+        setEditingVacationId(vacation.id);
+        setEditVacationData({
+            urlopOd: convertToISOFormat(vacation.dataOd),
+            urlopDo: convertToISOFormat(vacation.dataDo),
+            status: vacation.status,
+            komentarz: vacation.komentarz
+        });
+    };
+
+    const handleSave = (vacationId) => {
+        Axios.put(`http://localhost:5000/api/urlopy/${vacationId}`, {
+            urlopOd: convertToDisplayFormat(editVacationData.urlopOd),
+            urlopDo: convertToDisplayFormat(editVacationData.urlopDo),
+            status: editVacationData.status,
+            komentarz: editVacationData.komentarz
+        }, { withCredentials: true })
+            .then(() => {
+                setEditingVacationId(null);
+                fetchUrlopy();
+            })
+            .catch((error) => {
+                console.error("There was an error updating the vacation:", error);
+            });
+    };
+
     // ustawia do formatu [week, year] wybrany tydzień i rok z inputu
     const handleSelectWeekAndYear = (e) => {
         setSelectedWeek(e.target.value);
@@ -332,7 +370,6 @@ export default function UrlopyPage() {
                                 autoComplete="off"
                                 className="w-4/12"
                                 filter
-                                showClear
                             />
                             {/* <Button label="Szukaj" onClick={() => handleSzukaj(filtrValue)}
                                 className="p-button-outlined border-2 p-1 
@@ -381,17 +418,49 @@ export default function UrlopyPage() {
                                             />
                                         </td>
                                         <td className="border-r">{urlopy.imie} {urlopy.nazwisko}</td>
-                                        <td className="border-r">{urlopy.dataOd}</td>
-                                        <td className="border-r">{urlopy.dataDo}</td>
-                                        <td className="border-r">{urlopy.komentarz}</td>
-                                        <td className={`border-r ${getStatusClass(urlopy.status)}`}>{urlopy.status}</td>
-                                        <td>
-                                            <Button
-                                                label="Usuń"
-                                                onClick={() => handleUsun(urlopy.id)}
-                                                className="bg-blue-700 text-white p-1 m-0.5"
-                                            />
-                                        </td>
+
+                                        {editingVacationId === urlopy.id ? (
+                                            <>
+                                                <td className="border-r">
+                                                    <InputText value={editVacationData.urlopOd}
+                                                        type="date"
+                                                        onChange={(e) => setEditVacationData({ ...editVacationData, urlopOd: e.target.value })}
+                                                    />
+                                                </td>
+                                                <td className="border-r">
+                                                    <InputText value={editVacationData.urlopDo}
+                                                        type="date"
+                                                        onChange={(e) => setEditVacationData({ ...editVacationData, urlopDo: e.target.value })}
+                                                    />
+                                                </td>
+                                                <td className="border-r">
+                                                    <InputText value={editVacationData.komentarz}
+                                                        onChange={(e) => setEditVacationData({ ...editVacationData, komentarz: e.target.value })}
+                                                    />
+                                                </td>
+                                                <td className="border-r">
+                                                    <Dropdown value={editVacationData.status}
+                                                        options={["Do zatwierdzenia", "Zatwierdzone", "Anulowane"]}
+                                                        onChange={(e) => setEditVacationData({ ...editVacationData, status: e.value })}
+                                                    />
+                                                </td>
+                                                <td>
+                                                    <Button label="Zapisz" onClick={() => handleSave(urlopy.id)} className="bg-blue-700 text-white p-1 m-0.5" />
+                                                    <Button label="Anuluj" onClick={() => setEditingVacationId(null)} className="bg-red-500 text-white p-1 m-0.5" />
+                                                </td>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <td className="border-r">{urlopy.dataOd}</td>
+                                                <td className="border-r">{urlopy.dataDo}</td>
+                                                <td className="border-r">{urlopy.komentarz}</td>
+                                                <td className={`border-r ${getStatusClass(urlopy.status)}`}>{urlopy.status}</td>
+                                                <td>
+                                                    <Button label="Edytuj" onClick={() => handleEdit(urlopy)} className="bg-blue-700 text-white p-1 m-0.5" />
+                                                    <Button label="Usuń" onClick={() => handleUsun(urlopy.id)} className="bg-red-500 text-white p-1 m-0.5" />
+                                                </td>
+                                            </>
+                                        )}
                                     </tr>
                                 ))}
                             </React.Fragment>
