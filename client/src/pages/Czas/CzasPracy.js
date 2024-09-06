@@ -28,6 +28,7 @@ export default function CzasPracyPage() {
 
     const startOfCurrentWeek = startOfWeek(currentDate, { weekStartsOn: 1 });
 
+    //#region UseEffects
     useEffect(() => {
         fetchPojazdy();
         fetchPracownicy();
@@ -51,7 +52,9 @@ export default function CzasPracyPage() {
             setPracownik(loggedUserName);
         }
     }, [Pracownik, currentDate]);
+    //#endregion
 
+    //#region fetching
     const fetchPojazdy = () => {
         Axios.get("http://localhost:5000/api/pojazdy", { withCredentials: true })
             .then((response) => {
@@ -180,7 +183,9 @@ export default function CzasPracyPage() {
             }
         }
     };
+    //#endregion
 
+    //#region handlers
     const handleSave = async () => {
         const totalHours = calculateWeeklyTotal(hours, daysOfWeek);
 
@@ -214,7 +219,9 @@ export default function CzasPracyPage() {
             console.error(error);
         }
     };
+    //#endregion
 
+//#region Render
     return (
         <div>
             <WeekNavigation 
@@ -250,4 +257,5 @@ export default function CzasPracyPage() {
             <ActionButtons handleSave={handleSave} />
         </div>
     );
+//#endregion
 }

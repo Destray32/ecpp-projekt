@@ -6,6 +6,28 @@ import { pl } from 'date-fns/locale';
 import Axios from "axios";
 import { calculateProjectTotal } from '../../utils/dateUtils';
 
+/**
+ * Komponent AdditionalProjects.
+ * 
+ * @param {Object} props - Właściwości przekazywane do komponentu.
+ * @param {string} props.Firma - Wybrana firma.
+ * @param {Function} props.setFirma - Funkcja ustawiająca wybraną firmę.
+ * @param {Array} props.firmy - Lista dostępnych firm.
+ * @param {string} props.Zleceniodawca - Wybrany zleceniodawca.
+ * @param {Function} props.setZleceniodawca - Funkcja ustawiająca wybranego zleceniodawcę.
+ * @param {Array} props.zleceniodawcy - Lista dostępnych zleceniodawców.
+ * @param {string} props.Projekty - Wybrany projekt.
+ * @param {Function} props.setProjekty - Funkcja ustawiająca wybrany projekt.
+ * @param {Array} props.dostepneProjekty - Lista dostępnych projektów.
+ * @param {Array} props.additionalProjects - Lista dodatkowych projektów.
+ * @param {Function} props.setAdditionalProjects - Funkcja ustawiająca dodatkowe projekty.
+ * @param {Array} props.daysOfWeek - Lista dni tygodnia.
+ * @param {Array} props.samochody - Lista dostępnych samochodów.
+ * @param {string} props.loggedUserName - Nazwa zalogowanego użytkownika.
+ * @param {Date} props.currentDate - Aktualna data.
+ * 
+ * @returns {JSX.Element} - Zwraca element JSX.
+ */
 const AdditionalProjects = ({
     Firma, setFirma, firmy,
     Zleceniodawca, setZleceniodawca, zleceniodawcy,

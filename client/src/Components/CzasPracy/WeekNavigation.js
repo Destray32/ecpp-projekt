@@ -4,6 +4,20 @@ import { Dropdown } from "primereact/dropdown";
 import { getWeek, subWeeks, addWeeks } from 'date-fns';
 import { formatWeek } from '../../utils/dateUtils';
 
+/**
+ * Komponent nawigacji tygodniowej.
+ * 
+ * @component
+ * @param {Object} props - Właściwości przekazywane do komponentu.
+ * @param {Date} props.currentDate - Aktualnie wybrana data.
+ * @param {Function} props.setCurrentDate - Funkcja ustawiająca aktualną datę.
+ * @param {Object} props.Pracownik - Aktualnie wybrany pracownik.
+ * @param {Function} props.setPracownik - Funkcja ustawiająca aktualnie wybranego pracownika.
+ * @param {Array} props.pracownicy - Lista dostępnych pracowników.
+ * @param {string} props.userType - Typ użytkownika (np. "Pracownik").
+ * 
+ * @returns {JSX.Element} Element JSX reprezentujący nawigację tygodniową.
+ */
 const WeekNavigation = ({ currentDate, setCurrentDate, Pracownik, setPracownik, pracownicy, userType }) => {
     const previousWeek = () => setCurrentDate(subWeeks(currentDate, 1));
     const nextWeek = () => setCurrentDate(addWeeks(currentDate, 1));

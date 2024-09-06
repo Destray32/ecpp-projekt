@@ -3,6 +3,27 @@ import { format, getDay } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { calculateDailyTotal, calculateWeeklyTotal } from '../../utils/dateUtils';
 
+/**
+ * Komponent TimeInputs.
+ * 
+ * @component
+ * @param {Object} props - Właściwości przekazywane do komponentu.
+ * @param {Array<Date>} props.daysOfWeek - Tablica dni tygodnia.
+ * @param {Object} props.hours - Obiekt przechowujący godziny pracy dla poszczególnych dni.
+ * @param {Function} props.setHours - Funkcja ustawiająca godziny pracy.
+ * 
+ * @returns {JSX.Element} Element JSX reprezentujący komponent TimeInputs.
+ * 
+ * @example
+ * const daysOfWeek = [new Date(), new Date(), new Date(), new Date(), new Date(), new Date(), new Date()];
+ * const hours = {
+ *   '2023-01-01': { start: '08:00', end: '16:00' },
+ *   '2023-01-02': { start: '09:00', end: '17:00' },
+ * };
+ * const setHours = (newHours) => console.log(newHours);
+ * 
+ * <TimeInputs daysOfWeek={daysOfWeek} hours={hours} setHours={setHours} />
+ */
 const TimeInputs = ({ daysOfWeek, hours, setHours }) => {
     const handleTimeInputChange = (day, type, value) => {
         setHours(prev => ({
