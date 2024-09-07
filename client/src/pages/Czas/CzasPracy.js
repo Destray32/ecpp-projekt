@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { format, startOfWeek, addWeeks, addDays, subWeeks, getWeek } from 'date-fns';
 import { pl } from 'date-fns/locale';
+import { v4 as uuidv4 } from 'uuid';
+import { Alert, notification } from 'antd';
 import Axios from "axios";
 
 import WeekNavigation from "../../Components/CzasPracy/WeekNavigation";
@@ -165,6 +167,7 @@ export default function CzasPracyPage() {
     
                     return {
                         ...project,
+                        id: uuidv4(),
                         hours: updatedHours
                     };
                 });
@@ -188,6 +191,7 @@ export default function CzasPracyPage() {
     //#region handlers
     const handleSave = async () => {
         const totalHours = calculateWeeklyTotal(hours, daysOfWeek);
+        let hasMissingFields = false;
 
         const formattedAdditionalProjects = additionalProjects.map(project => ({
             ...project,
@@ -207,6 +211,33 @@ export default function CzasPracyPage() {
             }))
         }));
 
+        // pętla sprawdzająca czy wszystkie pola samochód i komentarz są wypełnione
+        additionalProjects.forEach(project => {
+            daysOfWeek.forEach(day => {
+                const dayName = format(day, 'EEEE', { locale: pl });
+                const niedziela = dayName === 'niedziela';
+
+                const formattedDate = format(day, 'yyyy-MM-dd');
+                const projectData = project.hours[formattedDate];
+
+                if ((!projectData || !projectData.comment || !projectData.car) && !niedziela) {
+                    if (projectData !== undefined) {
+                        hasMissingFields = true;
+                    }  
+                }
+            });
+        });
+
+        if (hasMissingFields) {
+            notification.error({
+                message: 'Missing Fields',
+                description: 'Wybierz samochód i dodaj komentarz do wszystkich projektów',
+                placement: 'topRight',
+            });
+            return; // przerwij zapis
+        }
+
+
         try {
             const response = await Axios.post("http://localhost:5000/api/czas", {
                 pracownikName: Pracownik,
@@ -223,7 +254,13 @@ export default function CzasPracyPage() {
                 additionalProjects: formattedAdditionalProjects,
             },
             { withCredentials: true });
-            console.log(response);
+            if (response.status === 200) {
+                notification.success({
+                    message: 'Success',
+                    description: 'Zapisano dane',
+                    placement: 'topRight',
+                });
+            }
         } catch (error) {
             console.error(error);
         }

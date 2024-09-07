@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Dropdown } from "primereact/dropdown";
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Button } from 'primereact/button';
@@ -162,7 +162,7 @@ const AdditionalProjects = ({
                         <span>Projekt: {project.projekt || "Projekt"}</span>
                     </div>
                     {first && (
-                        <div className="flex-1 grid grid-cols-7 gap-1">
+                        <div className="flex-1 grid grid-cols-8 gap-1">
                             {daysOfWeek.map((day, index) => (
                                 <div key={index} className="text-center font-bold">
                                     {format(day, 'EEE', { locale: pl })}
@@ -198,11 +198,6 @@ const AdditionalProjects = ({
                                         min="0"
                                         max="24"
                                     />
-                                    {isActive && project.hours[dateKey]?.car && (
-                                        <div className="mt-1 text-xs">
-                                            Pojazd: {project.hours[dateKey].car}
-                                        </div>
-                                    )}
                                 </div>
                             );
                         })}
@@ -210,9 +205,9 @@ const AdditionalProjects = ({
                     <span>Total: {projectTotal} godz.</span>
                 </div>
                 {activeInput && activeInput.projectId === project.id && (
-                    <div className='border border-gray-500 p-4 text-nowrap'>
-                        <div className='flex justify-between items-center gap-4 space-y-2'>
-                            <span>Komentarz:</span>
+                    <div className='border border-gray-500 p-4 mt-2'>
+                        <div className='grid grid-cols-[auto_1fr] gap-4 items-center'>
+                            <span className="text-right">Komentarz:</span>
                             <InputTextarea
                                 defaultValue={commentRef.current}
                                 onChange={(e) => handleChange(e, commentRef)}
@@ -220,84 +215,70 @@ const AdditionalProjects = ({
                                 className="w-full"
                                 rows={3}
                             />
-                        </div>
-                        <div className='flex justify-between items-center gap-4 space-y-2'>
-                            <span>Samochód:</span>
+
+                            <span className="text-right">Samochód:</span>
                             <Dropdown
                                 value={activeCar}
                                 options={samochody}
                                 onChange={(e) => activeInput && onInputChange(project.id, activeInput.date, e.value, 'car')}
                                 placeholder="Wybierz pojazd"
-                                className="mt-1 w-full"
+                                className="w-full"
                                 disabled={!activeInput || activeInput.projectId !== project.id}
-                                hidden={!activeInput || activeInput.projectId !== project.id}
                             />
-                        </div>
-                        <div className='flex justify-between items-center gap-4 space-y-2'>
-                            <span>Parking:</span>
+
+                            <span className="text-right">Parking:</span>
                             <InputText
-                                defaultValue={parkingRef.current} 
+                                defaultValue={parkingRef.current}
                                 onChange={(e) => handleChange(e, parkingRef)}
                                 onBlur={() => handleBlur('parking', parkingRef)}
                                 className="w-full"
                                 disabled={!activeInput || activeInput.projectId !== project.id}
-                                hidden={!activeInput || activeInput.projectId !== project.id}
-                                />
-                        </div>
-                        <div className='flex justify-between items-center gap-4 space-y-2'>
-                            <span>Ex. kilometry:</span>
+                            />
+
+                            <span className="text-right">Ex. kilometry:</span>
                             <InputText
                                 defaultValue={kmRef.current}
                                 onChange={(e) => handleChange(e, kmRef)}
                                 onBlur={() => handleBlur('km', kmRef)}
                                 className="w-full"
                                 disabled={!activeInput || activeInput.projectId !== project.id}
-                                hidden={!activeInput || activeInput.projectId !== project.id}
-                                />
-                        </div>
-                        <div className='flex justify-between items-center gap-4 space-y-2'>
-                            <span>Inne koszty:</span>
+                            />
+
+                            <span className="text-right">Inne koszty:</span>
                             <InputText
                                 defaultValue={otherRef.current}
                                 onChange={(e) => handleChange(e, otherRef)}
                                 onBlur={() => handleBlur('other', otherRef)}
                                 className="w-full"
                                 disabled={!activeInput || activeInput.projectId !== project.id}
-                                hidden={!activeInput || activeInput.projectId !== project.id}
-                                />
-                        </div>
-                        <div className='flex justify-between items-center gap-4 space-y-2'>
-                            <span>Diety:</span>
+                            />
+
+                            <span className="text-right">Diety:</span>
                             <InputText
                                 defaultValue={dietRef.current}
                                 onChange={(e) => handleChange(e, dietRef)}
                                 onBlur={() => handleBlur('diet', dietRef)}
                                 className="w-full"
                                 disabled={!activeInput || activeInput.projectId !== project.id}
-                                hidden={!activeInput || activeInput.projectId !== project.id}
-                                />
-                        </div>
-                        <div className='flex justify-between items-center gap-4 space-y-2'>
-                            <span>Wypożyczanie narzędzi:</span>
+                            />
+
+                            <span className="text-right">Wypożyczanie narzędzi:</span>
                             <InputText
                                 defaultValue={toolsRef.current}
                                 onChange={(e) => handleChange(e, toolsRef)}
                                 onBlur={() => handleBlur('tools', toolsRef)}
                                 className="w-full"
                                 disabled={!activeInput || activeInput.projectId !== project.id}
-                                hidden={!activeInput || activeInput.projectId !== project.id}
-                                />
-                        </div>
-                        <div className='flex justify-between items-center gap-4 space-y-2'>
-                            <span className=''>Zużyte materiały:</span>
+                            />
+
+                            <span className="text-right">Zużyte materiały:</span>
                             <InputText
                                 defaultValue={materialsRef.current}
                                 onChange={(e) => handleChange(e, materialsRef)}
                                 onBlur={() => handleBlur('materials', materialsRef)}
                                 className="w-full"
                                 disabled={!activeInput || activeInput.projectId !== project.id}
-                                hidden={!activeInput || activeInput.projectId !== project.id}
-                                />
+                            />
                         </div>
                     </div>
                 )}
