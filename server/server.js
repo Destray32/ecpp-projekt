@@ -65,6 +65,7 @@ const Logowanie = require('./api/logowanie');
 const Companies = require('./api/companies');
 const Logins = require('./api/logins');
 const GetImie = require('./api/home.getImie');
+const ZamkniecieStrony = require('./api/zamkniecieStrony');
 
 // Grupy
 const UsuwanieGrupy = require('./api/Grupy/grupy.usuwaniegrupy');
@@ -153,6 +154,10 @@ const PobierzDostepneFirmy = require('./api/pobierzDostepneFirmy');
 
 app.post('/api/logowanie', (req, res) => {
     Logowanie(req, res);
+});
+
+app.post('/api/zamkniecieStrony', (req, res) => {
+    ZamkniecieStrony(req, res);
 });
 
 app.get('/api/companies', (req, res) => {
