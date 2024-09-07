@@ -8,8 +8,8 @@ import { Checkbox } from 'primereact/checkbox';
 import Axios from "axios";
 
 export default function ProjektyPage() {
-    const [filtr, setFiltr] = useState('');
-    const [selectedItems, setSelectedItems] = React.useState([]);
+    const [filtr, setFiltr] = useState('Wszystkie');
+    const [selectedItems, setSelectedItems] = useState([]);
     const [data, setData] = useState([]);
 
     const handleCheckboxChange = (id) => {
@@ -97,8 +97,6 @@ export default function ProjektyPage() {
             });
     };
     
-
-
     return (
         <div>
             <AmberBox>
@@ -106,11 +104,10 @@ export default function ProjektyPage() {
                     <div className="w-full h-2/6">
                         <div className="w-full flex flex-row items-center p-4">
                             <p className="mr-6">Filtr</p>
-                            <Dropdown value={filtr} onChange={(e) => setFiltr(e.value)} options={["Aktywny","Nieaktywny","Wszystkie"]} editable placeholder="Filtrowanie"
+                            <Dropdown value={filtr} onChange={(e) => setFiltr(e.value)} options={["Aktywny","Zamkniety","Wszystkie"]} editable placeholder="Filtrowanie"
                                 autoComplete="off"
                                 className="w-3/12 p-2"
                                 filter
-                                showClear
                             />
                             <Button onClick={handleSzukaj} label="Szukaj" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-32" />
                             <div>
@@ -144,7 +141,6 @@ export default function ProjektyPage() {
                             const statusClass = projekty.Status === 'Aktywny'
                             ? 'text-green-500'
                             : 'text-red-500';
-
                             return (
                             <tr key={projekty.id} className="border-b even:bg-gray-200 odd:bg-gray-300">
                                 <td className="border-r">
