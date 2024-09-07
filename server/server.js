@@ -220,8 +220,10 @@ app.route('/api/pracownik/:id')
 
 app.get('/api/mojedane', (req, res) => {
     MojeDane(req, res);
-}
-);
+});
+app.put('/api/pracownik/zmienMoje', (req, res) => {
+    EdytujPracownika(req, res);
+});
 /////////////////////////////////////////
 
 app.get('/api/logi', authenticateJWT, (req, res) => {

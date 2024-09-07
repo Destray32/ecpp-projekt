@@ -37,6 +37,7 @@ async function Logowanie(req, res) {
         }
 
         const token = jwt.sign({ id: user.idPracownik }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        console.log(user.idPracownik);
 
         res.cookie('token', token, {
             httpOnly: true,
