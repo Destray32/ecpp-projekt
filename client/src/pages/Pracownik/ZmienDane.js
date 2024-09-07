@@ -78,6 +78,13 @@ export default function ZmienDanePage() {
 
     const handleSubmit = (values) => {
         console.log(values);
+        axios.put(`http://localhost:5000/api/pracownik/zmienMoje`, values, { withCredentials: true })
+            .then(res => {
+                console.log(res);
+            })
+            .catch(err => {
+                console.log(err);
+            });
     }
 
     const formItemLayout = {

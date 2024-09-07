@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, Outlet, useNavigate } from 'react-router-dom';
+import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import moment from 'moment';
 import { Button, Badge } from 'antd';
 import axios from 'axios';
@@ -13,6 +13,7 @@ export default function HomePage() {
     const [menu, setMenu] = useState('Pracownik');
     const [showSubMenu, setShowSubMenu] = useState(false);
     const navigate = useNavigate();
+    const location = useLocation();
 
     const handleLogout = async () => {
         try {
@@ -49,12 +50,31 @@ export default function HomePage() {
         checkTokenValidity();
         getImie();
 
+        const handlePageUnload = () => {
+            navigator.sendBeacon('http://localhost:5000/api/zamkniecieStrony');
+        };
+
+        window.addEventListener('beforeunload', handlePageUnload);
+
         const timer = setInterval(() => {
             setData(moment().format('DD/MM/YYYY'));
         }, 1000);
 
-        return () => clearInterval(timer);
+        return () => {
+            clearInterval(timer);
+            window.removeEventListener('beforeunload', handlePageUnload);
+        }
     }, []);
+
+    useEffect(() => {
+        const unlisten = navigate((location, action) => {
+            if (action === 'POP') {
+                navigator.sendBeacon('http://localhost:5000/api/zamkniecieStrony');
+            }
+        });
+
+        return unlisten;
+    }, [navigate]);
 
     const toggleSubMenu = () => {
         setShowSubMenu(prevState => !prevState);

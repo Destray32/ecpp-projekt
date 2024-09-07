@@ -65,6 +65,7 @@ const Logowanie = require('./api/logowanie');
 const Companies = require('./api/companies');
 const Logins = require('./api/logins');
 const GetImie = require('./api/home.getImie');
+const ZamkniecieStrony = require('./api/zamkniecieStrony');
 
 // Grupy
 const UsuwanieGrupy = require('./api/Grupy/grupy.usuwaniegrupy');
@@ -155,6 +156,10 @@ app.post('/api/logowanie', (req, res) => {
     Logowanie(req, res);
 });
 
+app.post('/api/zamkniecieStrony', (req, res) => {
+    ZamkniecieStrony(req, res);
+});
+
 app.get('/api/companies', (req, res) => {
     Companies(req, res);
 });
@@ -220,8 +225,10 @@ app.route('/api/pracownik/:id')
 
 app.get('/api/mojedane', (req, res) => {
     MojeDane(req, res);
-}
-);
+});
+app.put('/api/pracownik/zmienMoje', (req, res) => {
+    EdytujPracownika(req, res);
+});
 /////////////////////////////////////////
 
 app.get('/api/logi', authenticateJWT, (req, res) => {

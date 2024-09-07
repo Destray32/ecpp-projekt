@@ -1,6 +1,22 @@
-
 function PobierzLogi(req, res, db) {
-    db.query('SELECT * FROM logi ORDER BY Data DESC', (err, rows) => {
+    const query = `
+        SELECT 
+            logi.idLogi, 
+            logi.Data, 
+            logi.Komentarz, 
+            dane_osobowe.Imie AS imie_pracownika, 
+            dane_osobowe.Nazwisko AS nazwisko_pracownika
+        FROM 
+            logi
+        JOIN 
+            pracownik ON logi.FK_idPracownik = pracownik.idPracownik
+        JOIN 
+            dane_osobowe ON pracownik.FK_Dane_osobowe = dane_osobowe.idDane_osobowe
+        ORDER BY 
+            logi.Data DESC;
+    `;
+
+    db.query(query, (err, rows) => {
         if (err) {
             console.log(err);
             res.status(500).send('Błąd serwera');

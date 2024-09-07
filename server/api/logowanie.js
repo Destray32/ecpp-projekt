@@ -40,10 +40,22 @@ async function Logowanie(req, res) {
 
         res.cookie('token', token, {
             httpOnly: true,
-            //secure: process.env.NODE_ENV === 'production',    trzeba zmienic jak wyjdzie z developmentu
+            //secure: process.env.NODE_ENV === 'production',  // zmienic jak bedziemy oddawac apke
             secure: false,
             sameSite: 'strict',
             maxAge: 3600000,
+        });
+
+        const logQuery = `
+            INSERT INTO logi (FK_idPracownik, Data, Komentarz) 
+            VALUES (?, NOW(), 'Zalogowano')
+        `;
+        const logValues = [user.idPracownik];
+
+        db.query(logQuery, logValues, (logErr) => {
+            if (logErr) {
+                console.error('Error logging user login:', logErr);
+            }
         });
 
         res.json({ message: 'Logged in' });

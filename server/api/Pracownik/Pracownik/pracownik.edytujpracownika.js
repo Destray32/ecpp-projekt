@@ -1,7 +1,24 @@
 const db = require('../../../server');
+const jwt = require('jsonwebtoken');
 
 function EdytujPracownika(req, res) {
-    const idPracownik = req.params.id;
+    const token = req.cookies.token;
+
+    if (!token) {
+        return res.status(401).json({ error: 'No token provided' });
+    }
+
+    let idPracownik = req.params.id;
+
+    if (!idPracownik || idPracownik === 'zmienMoje') {
+        try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            idPracownik = decoded.id;
+        } catch (error) {
+            return res.status(401).json({ error: 'Invalid token' });
+        }
+    }
+
     const {
         surename,
         name,

@@ -15,6 +15,8 @@ function MojeDane(req, res) {
 
         const userId = decoded.id;
 
+        console.log('MojeDane', userId);
+
         const query = `
             SELECT 
                 dane_osobowe.Imie AS name, 
