@@ -12,7 +12,7 @@ function PobierzCzasPracy(req, res, db) {
         const pracownikId = employeeResult[0].idPracownik;
 
         // zapytanie, aby uzyskać dane dotyczące tygodnia i odpowiadających godzin pracy
-        const timeQuery = `SELECT Dzien_tygodnia as dayOfWeek, Rozpoczecia_pracy as start, Zakonczenia_pracy as end 
+        const timeQuery = `SELECT Dzien_tygodnia as dayOfWeek, Rozpoczecia_pracy as start, Zakonczenia_pracy as end, Przerwa as break 
                            FROM Dzien 
                            INNER JOIN Tydzien ON Dzien.Tydzien_idTydzien = Tydzien.idTydzien 
                            WHERE Tydzien.tydzienRoku = ? AND Tydzien.Rok = ? AND Tydzien.Pracownik_idPracownik = ?`;
@@ -28,7 +28,8 @@ function PobierzCzasPracy(req, res, db) {
                 const dayKey = getDateFromDayName(day.dayOfWeek, weekData, year);
                 normalizedData[dayKey] = {
                     start: formatTime(day.start),
-                    end: formatTime(day.end)
+                    end: formatTime(day.end),
+                    break: formatTime(day.break),
                 };
             });
 

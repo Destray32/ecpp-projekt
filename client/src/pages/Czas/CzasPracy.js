@@ -196,6 +196,14 @@ export default function CzasPracyPage() {
                 dayOfWeek: format(day, 'EEEE', { locale: pl }),
                 hoursWorked: project.hours[format(day, 'yyyy-MM-dd')]?.hoursWorked || 0,
                 car: project.hours[format(day, 'yyyy-MM-dd')]?.car || null,
+                comment: project.hours[format(day, 'yyyy-MM-dd')]?.comment || "",
+                diet: project.hours[format(day, 'yyyy-MM-dd')]?.diet || "",
+                km: project.hours[format(day, 'yyyy-MM-dd')]?.km || "",
+                materials: project.hours[format(day, 'yyyy-MM-dd')]?.materials || "",
+                other: project.hours[format(day, 'yyyy-MM-dd')]?.other || "",
+                parking: project.hours[format(day, 'yyyy-MM-dd')]?.parking || "",
+                tools: project.hours[format(day, 'yyyy-MM-dd')]?.tools || "",
+
             }))
         }));
 
@@ -209,6 +217,7 @@ export default function CzasPracyPage() {
                     dayOfWeek: format(day, 'EEEE', { locale: pl }),
                     start: hours[format(day, 'yyyy-MM-dd')]?.start || "00:00",
                     end: hours[format(day, 'yyyy-MM-dd')]?.end || "00:00",
+                    break: hours[format(day, 'yyyy-MM-dd')]?.break || "00:00",
                 })),
                 totalHours: totalHours,
                 additionalProjects: formattedAdditionalProjects,

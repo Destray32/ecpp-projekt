@@ -166,6 +166,7 @@ const TimeInputs = ({ daysOfWeek, hours, setHours }) => {
                         maxLength="5"
                     />
                 </div>
+                {/* srodkowe */}
                 {daysOfWeek.map((day, i) => (
                     <div key={i} className="col-span-1">
                         <input

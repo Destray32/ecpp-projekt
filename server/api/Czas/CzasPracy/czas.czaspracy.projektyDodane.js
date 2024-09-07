@@ -39,7 +39,14 @@ async function PobierzDodaneProjekty(req, res, db) {
                 po.Nr_rejestracyjny AS car,
                 t.Firma AS firma,
                 t.Zleceniodawca AS zleceniodawca,
-                d.Dzien_tygodnia AS dayOfWeek
+                d.Dzien_tygodnia AS dayOfWeek,
+                dp.Komentarz AS comment,
+                dp.Parking AS parking,
+                dp.Kilometry AS km,
+                dp.Inne_koszty AS other,
+                dp.Diety as diet,
+                dp.Wypozyczenie_narzedzi AS tools,
+                dp.Zuzyte_materialy AS materials
             FROM 
                 Dzien_Projekty dp
             INNER JOIN 
@@ -76,6 +83,13 @@ async function PobierzDodaneProjekty(req, res, db) {
             projectsMap[project.projectName].hours[project.dayOfWeek] = {
                 hoursWorked: project.hoursWorked,
                 car: project.car || null,
+                comment: project.comment || null,
+                parking: project.parking || null,
+                km: project.km || null,
+                other: project.other || null,
+                diet: project.diet || null,
+                tools: project.tools || null,
+                materials: project.materials || null
             };
         });
 

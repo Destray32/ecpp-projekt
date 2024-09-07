@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { Dropdown } from "primereact/dropdown";
+import { InputTextarea } from 'primereact/inputtextarea';
 import { Button } from 'primereact/button';
+import { InputText } from 'primereact/inputtext';
 import { format, getDay, getWeek } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import Axios from "axios";
+
 import { calculateProjectTotal } from '../../utils/dateUtils';
 
 /**
@@ -35,6 +38,25 @@ const AdditionalProjects = ({
     additionalProjects, setAdditionalProjects,
     daysOfWeek, samochody, loggedUserName, currentDate
 }) => {
+    const [activeInput, setActiveInput] = useState(null);
+    const commentRef = useRef('');
+    const parkingRef = useRef('');
+    const kmRef = useRef('');
+    const otherRef = useRef('');
+    const dietRef = useRef('');
+    const toolsRef = useRef('');
+    const materialsRef = useRef('');
+
+    const handleBlur = (inputType, ref) => {
+        if (activeInput) {
+            handleAdditionalProjectInputChange(activeInput.projectId, activeInput.date, ref.current, inputType);
+        }
+    };
+
+    const handleChange = (e, ref) => {
+        ref.current = e.target.value;
+    };
+
     const addWeek = async () => {
         const weekData = getWeek(currentDate, { weekStartsOn: 1 });
         const year = currentDate.getFullYear();
@@ -65,7 +87,14 @@ const AdditionalProjects = ({
                     if (apiData) {
                         newProject.hours[dateKey] = {
                             hoursWorked: apiData.hoursWorked || 0,
-                            car: apiData.car || ""
+                            car: apiData.car || "",
+                            comment: apiData.comment || "",
+                            parking: apiData.parking || "",
+                            km: apiData.km || "",
+                            other: apiData.other || "",
+                            diet: apiData.diet || "",
+                            tools: apiData.tools || "",
+                            materials: apiData.materials || ""
                         };
                     } else {
                         newProject.hours[dateKey] = { hoursWorked: 0, car: "" };
@@ -84,7 +113,7 @@ const AdditionalProjects = ({
         }
     };
 
-    const handleAdditionalProjectInputChange = (projectId, date, value) => {
+    const handleAdditionalProjectInputChange = (projectId, date, value, field) => {
         setAdditionalProjects(prevProjects =>
             prevProjects.map(project => {
                 if (project.id === projectId) {
@@ -94,27 +123,7 @@ const AdditionalProjects = ({
                             ...project.hours,
                             [date]: {
                                 ...project.hours[date],
-                                hoursWorked: value,
-                            }
-                        }
-                    };
-                }
-                return project;
-            })
-        );
-    };
-
-    const handleCarSelection = (projectId, date, car) => {
-        setAdditionalProjects(prevProjects =>
-            prevProjects.map(project => {
-                if (project.id === projectId) {
-                    return {
-                        ...project,
-                        hours: {
-                            ...project.hours,
-                            [date]: {
-                                ...project.hours[date],
-                                car: car,
+                                [field]: value,
                             }
                         }
                     };
@@ -130,8 +139,22 @@ const AdditionalProjects = ({
         );
     };
 
-    const AdditionalProjectRow = ({ project, onInputChange, onCarChange, first, onDelete }) => {
+    const handleInputFocus = (projectId, date) => {
+        setActiveInput({ projectId, date });
+        const project = additionalProjects.find(p => p.id === projectId);
+        commentRef.current = project.hours[date]?.comment || "";
+        parkingRef.current = project.hours[date]?.parking || "";
+        kmRef.current = project.hours[date]?.km || "";
+        otherRef.current = project.hours[date]?.other || "";
+        dietRef.current = project.hours[date]?.diet || "";
+        toolsRef.current = project.hours[date]?.tools || "";
+        materialsRef.current = project.hours[date]?.materials || "";
+    };
+
+    const AdditionalProjectRow = ({ project, onInputChange, first, onDelete }) => {
         const projectTotal = calculateProjectTotal(project, daysOfWeek);
+        const activeCar = activeInput ? project.hours[activeInput.date]?.car : "";
+
         return (
             <div className="mt-4">
                 <div className="flex items-center space-x-2">
@@ -161,32 +184,123 @@ const AdditionalProjects = ({
                         {daysOfWeek.map((day, index) => {
                             const dateKey = format(day, 'yyyy-MM-dd');
                             const niedziela = getDay(day) === 0;
+                            const isActive = activeInput && activeInput.projectId === project.id && activeInput.date === dateKey;
                             return (
                                 <div key={index} className="text-center">
                                     <input
                                         type="number"
                                         value={project.hours[dateKey]?.hoursWorked || ""}
-                                        onChange={(e) => onInputChange(project.id, dateKey, e.target.value)}
-                                        className="w-[40%] p-1 border border-gray-300 rounded"
+                                        onChange={(e) => onInputChange(project.id, dateKey, e.target.value, 'hoursWorked')}
+                                        onFocus={() => handleInputFocus(project.id, dateKey)}
+                                        className={`w-full p-1 border ${isActive ? 'border-blue-500' : 'border-gray-300'} rounded`}
                                         placeholder="0"
                                         disabled={niedziela}
                                         min="0"
                                         max="24"
                                     />
-                                    <Dropdown
-                                        value={project.hours[dateKey]?.car || null}
-                                        options={samochody}
-                                        onChange={(e) => onCarChange(project.id, dateKey, e.value)}
-                                        placeholder="Wybierz pojazd"
-                                        className="mt-1"
-                                        disabled={niedziela}
-                                    />
+                                    {isActive && project.hours[dateKey]?.car && (
+                                        <div className="mt-1 text-xs">
+                                            Pojazd: {project.hours[dateKey].car}
+                                        </div>
+                                    )}
                                 </div>
                             );
                         })}
                     </div>
                     <span>Total: {projectTotal} godz.</span>
                 </div>
+                {activeInput && activeInput.projectId === project.id && (
+                    <div className='border border-gray-500 p-4 text-nowrap'>
+                        <div className='flex justify-between items-center gap-4 space-y-2'>
+                            <span>Komentarz:</span>
+                            <InputTextarea
+                                defaultValue={commentRef.current}
+                                onChange={(e) => handleChange(e, commentRef)}
+                                onBlur={() => handleBlur('comment', commentRef)}
+                                className="w-full"
+                                rows={3}
+                            />
+                        </div>
+                        <div className='flex justify-between items-center gap-4 space-y-2'>
+                            <span>Samochód:</span>
+                            <Dropdown
+                                value={activeCar}
+                                options={samochody}
+                                onChange={(e) => activeInput && onInputChange(project.id, activeInput.date, e.value, 'car')}
+                                placeholder="Wybierz pojazd"
+                                className="mt-1 w-full"
+                                disabled={!activeInput || activeInput.projectId !== project.id}
+                                hidden={!activeInput || activeInput.projectId !== project.id}
+                            />
+                        </div>
+                        <div className='flex justify-between items-center gap-4 space-y-2'>
+                            <span>Parking:</span>
+                            <InputText
+                                defaultValue={parkingRef.current} 
+                                onChange={(e) => handleChange(e, parkingRef)}
+                                onBlur={() => handleBlur('parking', parkingRef)}
+                                className="w-full"
+                                disabled={!activeInput || activeInput.projectId !== project.id}
+                                hidden={!activeInput || activeInput.projectId !== project.id}
+                                />
+                        </div>
+                        <div className='flex justify-between items-center gap-4 space-y-2'>
+                            <span>Ex. kilometry:</span>
+                            <InputText
+                                defaultValue={kmRef.current}
+                                onChange={(e) => handleChange(e, kmRef)}
+                                onBlur={() => handleBlur('km', kmRef)}
+                                className="w-full"
+                                disabled={!activeInput || activeInput.projectId !== project.id}
+                                hidden={!activeInput || activeInput.projectId !== project.id}
+                                />
+                        </div>
+                        <div className='flex justify-between items-center gap-4 space-y-2'>
+                            <span>Inne koszty:</span>
+                            <InputText
+                                defaultValue={otherRef.current}
+                                onChange={(e) => handleChange(e, otherRef)}
+                                onBlur={() => handleBlur('other', otherRef)}
+                                className="w-full"
+                                disabled={!activeInput || activeInput.projectId !== project.id}
+                                hidden={!activeInput || activeInput.projectId !== project.id}
+                                />
+                        </div>
+                        <div className='flex justify-between items-center gap-4 space-y-2'>
+                            <span>Diety:</span>
+                            <InputText
+                                defaultValue={dietRef.current}
+                                onChange={(e) => handleChange(e, dietRef)}
+                                onBlur={() => handleBlur('diet', dietRef)}
+                                className="w-full"
+                                disabled={!activeInput || activeInput.projectId !== project.id}
+                                hidden={!activeInput || activeInput.projectId !== project.id}
+                                />
+                        </div>
+                        <div className='flex justify-between items-center gap-4 space-y-2'>
+                            <span>Wypożyczanie narzędzi:</span>
+                            <InputText
+                                defaultValue={toolsRef.current}
+                                onChange={(e) => handleChange(e, toolsRef)}
+                                onBlur={() => handleBlur('tools', toolsRef)}
+                                className="w-full"
+                                disabled={!activeInput || activeInput.projectId !== project.id}
+                                hidden={!activeInput || activeInput.projectId !== project.id}
+                                />
+                        </div>
+                        <div className='flex justify-between items-center gap-4 space-y-2'>
+                            <span className=''>Zużyte materiały:</span>
+                            <InputText
+                                defaultValue={materialsRef.current}
+                                onChange={(e) => handleChange(e, materialsRef)}
+                                onBlur={() => handleBlur('materials', materialsRef)}
+                                className="w-full"
+                                disabled={!activeInput || activeInput.projectId !== project.id}
+                                hidden={!activeInput || activeInput.projectId !== project.id}
+                                />
+                        </div>
+                    </div>
+                )}
             </div>
         );
     };
@@ -252,7 +366,6 @@ const AdditionalProjects = ({
                             project={project}
                             onInputChange={handleAdditionalProjectInputChange}
                             onDelete={handleDeleteProject}
-                            onCarChange={handleCarSelection}
                             first={index === 0}
                         />
                     ))}

@@ -1,4 +1,4 @@
-const { format } = require('date-fns');
+const { format, add } = require('date-fns');
 
 function ZapiszCzasPracy(req, res, db) {
     const { pracownikName, weekData, year, days, totalHours, additionalProjects } = req.body;
@@ -11,7 +11,7 @@ function ZapiszCzasPracy(req, res, db) {
             function (err, pracownikResults) {
                 if (err || pracownikResults.length === 0) {
                     console.error(err);
-                    return res.status(400).json({ message: 'Nie znaleziono pracownika' });
+                    return res.status(400).json({ message: 'Employee not found' });
                 }
 
                 const pracownikId = pracownikResults[0].idPracownik;
@@ -23,7 +23,7 @@ function ZapiszCzasPracy(req, res, db) {
                     function (err, existingWeek) {
                         if (err) {
                             console.error(err);
-                            return res.status(500).json({ message: 'Błąd podczas zapisywania czasu pracy' });
+                            return res.status(500).json({ message: 'Error while saving work time' });
                         }
 
                         let tydzienId = null;
@@ -42,7 +42,7 @@ function ZapiszCzasPracy(req, res, db) {
                                     function (err, existingDay) {
                                         if (err) {
                                             console.error(err);
-                                            return res.status(500).json({ message: 'Błąd podczas zapisywania dnia' });
+                                            return res.status(500).json({ message: 'Error while saving day' });
                                         }
 
                                         let dzienId = null;
@@ -60,7 +60,7 @@ function ZapiszCzasPracy(req, res, db) {
                                                             function (err, projektyResults) {
                                                                 if (err || projektyResults.length === 0) {
                                                                     console.error(err);
-                                                                    return reject(new Error('Nie znaleziono projektu'));
+                                                                    return reject(new Error('Project not found'));
                                                                 }
 
                                                                 const projektyId = projektyResults[0].idProjekty;
@@ -68,7 +68,7 @@ function ZapiszCzasPracy(req, res, db) {
                                                                 // znajdź ID samochodu na podstawie numeru rejestracyjnego, jeśli jest podany
                                                                 const carQuery = projectDay.car 
                                                                     ? `SELECT idPojazdy FROM Pojazdy WHERE Nr_rejestracyjny = ?`
-                                                                    : `SELECT NULL AS idPojazdy`;  // jeśli samochód nie został wybrany
+                                                                    : `SELECT NULL AS idPojazdy`;  // if no car was selected
                                                                 
                                                                 const carParams = projectDay.car 
                                                                     ? [projectDay.car] 
@@ -77,7 +77,7 @@ function ZapiszCzasPracy(req, res, db) {
                                                                 db.query(carQuery, carParams, function (err, carResults) {
                                                                     if (err) {
                                                                         console.error(err);
-                                                                        return reject(new Error('Błąd podczas znajdowania samochodu'));
+                                                                        return reject(new Error('Error while finding car'));
                                                                     }
 
                                                                     const pojazdyId = carResults[0]?.idPojazdy || null;
@@ -101,30 +101,30 @@ function ZapiszCzasPracy(req, res, db) {
                                                                             };
 
                                                                             if (existingProjectDay.length > 0) {
-                                                                                // sprawdzamy czy jest ten sam samochód
-                                                                                const existingRow = existingProjectDay[0];
-
-                                                                                // jeśli samochód się zmienia, zaktualizuj wpis
-                                                                                if (existingRow.Pojazdy_idPojazdy !== pojazdyId) {
-                                                                                    db.query(
-                                                                                        `UPDATE Dzien_Projekty SET Pojazdy_idPojazdy = ?, Godziny_przepracowane = ? WHERE idDzien_Projekty = ?`,
-                                                                                        [pojazdyId, projectDay.hoursWorked, existingRow.idDzien_Projekty],
-                                                                                        queryCallback
-                                                                                    );
-                                                                                } else {
-                                                                                    // jeśli samochód jest taki sam, zaktualizuj tylko godziny
-                                                                                    db.query(
-                                                                                        `UPDATE Dzien_Projekty SET Godziny_przepracowane = ? WHERE idDzien_Projekty = ?`,
-                                                                                        [projectDay.hoursWorked, existingRow.idDzien_Projekty],
-                                                                                        queryCallback
-                                                                                    );
-                                                                                }
+                                                                                // if the record exists, update all fields
+                                                                                db.query(
+                                                                                    `UPDATE Dzien_Projekty SET 
+                                                                                        Pojazdy_idPojazdy = ?, 
+                                                                                        Godziny_przepracowane = ?, 
+                                                                                        Komentarz = ?, 
+                                                                                        Parking = ?, 
+                                                                                        Kilometry = ?, 
+                                                                                        Inne_koszty = ?, 
+                                                                                        Diety = ?, 
+                                                                                        Wypozyczenie_narzedzi = ?, 
+                                                                                        Zuzyte_materialy = ? 
+                                                                                    WHERE idDzien_Projekty = ?`,
+                                                                                    [pojazdyId, projectDay.hoursWorked, projectDay.comment, projectDay.parking, projectDay.km, projectDay.other, projectDay.diet, projectDay.tools, projectDay.materials, existingProjectDay[0].idDzien_Projekty],
+                                                                                    queryCallback
+                                                                                );
                                                                             } else {
                                                                                 // jeśli rekord nie istnieje, wstaw nowy wpis
                                                                                 db.query(
-                                                                                    `INSERT INTO Dzien_Projekty (Dzien_idDzien, Projekty_idProjekty, Godziny_przepracowane, Pojazdy_idPojazdy) 
-                                                                                    VALUES (?, ?, ?, ?)`,
-                                                                                    [dzienId, projektyId, projectDay.hoursWorked, pojazdyId],
+                                                                                    `INSERT INTO Dzien_Projekty 
+                                                                                        (Dzien_idDzien, Projekty_idProjekty, Godziny_przepracowane, Pojazdy_idPojazdy, 
+                                                                                        Komentarz, Parking, Kilometry, Inne_koszty, Diety, Wypozyczenie_narzedzi, Zuzyte_materialy) 
+                                                                                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                                                                                    [dzienId, projektyId, projectDay.hoursWorked, pojazdyId, projectDay.comment, projectDay.parking, projectDay.km, projectDay.other, projectDay.diet, projectDay.tools, projectDay.materials],
                                                                                     queryCallback
                                                                                 );
                                                                             }
@@ -142,8 +142,8 @@ function ZapiszCzasPracy(req, res, db) {
                                             // jeśli dzień już istnieje, zaktualizuj go
                                             dzienId = existingDay[0].idDzien;
                                             db.query(
-                                                `UPDATE Dzien SET Rozpoczecia_pracy = ?, Zakonczenia_pracy = ? WHERE idDzien = ?`,
-                                                [day.start, day.end, dzienId],
+                                                `UPDATE Dzien SET Rozpoczecia_pracy = ?, Zakonczenia_pracy = ?, Przerwa = ? WHERE idDzien = ?`,
+                                                [day.start, day.end, day.break, dzienId],
                                                 function (err) {
                                                     if (err) {
                                                         console.error(err);
@@ -155,8 +155,8 @@ function ZapiszCzasPracy(req, res, db) {
                                         } else {
                                             // jeśli dzień nie istnieje, wstaw nowy rekord
                                             db.query(
-                                                `INSERT INTO Dzien (Dzien_tygodnia, Rozpoczecia_pracy, Zakonczenia_pracy, Tydzien_idTydzien) VALUES (?, ?, ?, ?)`,
-                                                [day.dayOfWeek, day.start, day.end, tid],
+                                                `INSERT INTO Dzien (Dzien_tygodnia, Rozpoczecia_pracy, Zakonczenia_pracy, Przerwa, Tydzien_idTydzien) VALUES (?, ?, ?, ?, ?)`,
+                                                [day.dayOfWeek, day.start, day.end, day.break, tid],
                                                 function (err, result) {
                                                     if (err) {
                                                         console.error(err);
@@ -178,7 +178,7 @@ function ZapiszCzasPracy(req, res, db) {
                                 })
                                 .catch(error => {
                                     console.error(error);
-                                    res.status(500).json({ message: 'Błąd podczas zapisywania projektów' });
+                                    res.status(500).json({ message: 'Error while saving projects' });
                                 });
                         };
 
@@ -191,13 +191,13 @@ function ZapiszCzasPracy(req, res, db) {
                                 function (err) {
                                     if (err) {
                                         console.error(err);
-                                        return res.status(500).json({ message: 'Błąd podczas aktualizacji tygodnia' });
+                                        return res.status(500).json({ message: 'Error while updating week' });
                                     }
                                     handleDaysAndProjects(tydzienId);
                                 }
                             );
                         } else {
-                            // jeśli tydzień nie istnieje, wstaw nowy rekord
+                            // if the week doesn't exist, insert a new record
                             db.query(
                                 `INSERT INTO Tydzien (Godziny_tygodniowe, Status_tygodnia, tydzienRoku, Rok, Pracownik_idPracownik) VALUES (?, ?, ?, ?, ?)`,
                                 [totalHours, 'Otwarty', weekData, year, pracownikId],
