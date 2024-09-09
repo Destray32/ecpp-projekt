@@ -56,6 +56,7 @@ const AdditionalProjectRow = React.memo(({
                         const dateKey = format(day, 'yyyy-MM-dd');
                         const niedziela = getDay(day) === 0;
                         const isActive = activeInput && activeInput.projectId === project.id && activeInput.date === dateKey;
+                        const hasCommentAndCar = project.hours[dateKey]?.comment && project.hours[dateKey]?.car;
                         return (
                             <div key={index} className="text-center">
                                 <input
@@ -63,7 +64,12 @@ const AdditionalProjectRow = React.memo(({
                                     value={project.hours[dateKey]?.hoursWorked || ""}
                                     onChange={(e) => onInputChange(project.id, dateKey, e.target.value, 'hoursWorked')}
                                     onFocus={() => handleInputFocus(project.id, dateKey)}
-                                    className={`w-full p-1 border ${isActive ? 'border-blue-500' : 'border-gray-300'} rounded`}
+                                    onKeyPress={(e) => {
+                                        if (!/[0-9]/.test(e.key)) {
+                                            e.preventDefault();
+                                        }
+                                    }}
+                                    className={`w-full p-1 border ${isActive ? 'border-blue-500' : 'border-gray-300'} ${hasCommentAndCar ? 'bg-green-200' : ''} rounded`}
                                     placeholder="0"
                                     disabled={niedziela}
                                     min="0"
