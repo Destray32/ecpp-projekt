@@ -7,7 +7,7 @@ import Axios from "axios";
 
 import WeekNavigation from "../../Components/CzasPracy/WeekNavigation";
 import TimeInputs from "../../Components/CzasPracy/TimeInputs";
-import AdditionalProjects from "../../Components/CzasPracy/AdditionalProjects";
+import AdditionalProjects from "../../Components/CzasPracy/AdditionalProjects/AdditionalProjects";
 import ActionButtons from "../../Components/CzasPracy/ActionButtons";
 import { generateWeek, formatWeek, calculateWeeklyTotal, calculateProjectTotal } from '../../utils/dateUtils';
 
