@@ -1,8 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Dropdown } from "primereact/dropdown";
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
+import { notification } from 'antd';
 import { format, getDay, getWeek } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import Axios from "axios";
@@ -47,6 +48,8 @@ const AdditionalProjects = ({
     const toolsRef = useRef('');
     const materialsRef = useRef('');
 
+    const activeInputRef = useRef(null); // ref do śledzenia aktywnego inputa
+
     const handleBlur = (inputType, ref) => {
         if (activeInput) {
             handleAdditionalProjectInputChange(activeInput.projectId, activeInput.date, ref.current, inputType);
@@ -61,6 +64,32 @@ const AdditionalProjects = ({
         const weekData = getWeek(currentDate, { weekStartsOn: 1 });
         const year = currentDate.getFullYear();
 
+        //#region Walidacja
+        if (!Projekty) {
+            notification.error({
+                message: "Błąd",
+                description: "Wybierz projekt",
+            });
+            return;
+        }
+
+        if (!Firma) {
+            notification.error({
+                message: "Błąd",
+                description: "Wybierz firmę",
+            });
+            return;
+        }
+
+        if (!Zleceniodawca) {
+            notification.error({
+                message: "Błąd",
+                description: "Wybierz zleceniodawcę",
+            });
+            return;
+        }
+        //#endregion
+        
         try {
             const response = await Axios.post("http://localhost:5000/api/czas/projekt",
                 {
@@ -140,7 +169,12 @@ const AdditionalProjects = ({
     };
 
     const handleInputFocus = (projectId, date) => {
-        setActiveInput({ projectId, date });
+
+        if (activeInputRef.current?.projectId !== projectId || activeInputRef.current?.date !== date) { // robimy to, aby nie renderowało się za każdym razem, kiedy zmieniamy input
+            activeInputRef.current = { projectId, date }; // zapisz aktywny input w refie
+            setActiveInput({ projectId, date }); // ustaw aktywny input
+        }
+
         const project = additionalProjects.find(p => p.id === projectId);
         commentRef.current = project.hours[date]?.comment || "";
         parkingRef.current = project.hours[date]?.parking || "";
@@ -151,7 +185,13 @@ const AdditionalProjects = ({
         materialsRef.current = project.hours[date]?.materials || "";
     };
 
-    const AdditionalProjectRow = ({ project, onInputChange, first, onDelete }) => {
+    const setInputRef = useCallback((element, projectId, dateKey) => {
+        if (element && activeInput && activeInput.projectId === projectId && activeInput.date === dateKey) {
+            element.focus();
+        }
+    }, [activeInput]);
+
+    const AdditionalProjectRow = React.memo(({ project, onInputChange, first, onDelete }) => {
         const projectTotal = calculateProjectTotal(project, daysOfWeek);
         const activeCar = activeInput ? project.hours[activeInput.date]?.car : "";
 
@@ -197,6 +237,7 @@ const AdditionalProjects = ({
                                         disabled={niedziela}
                                         min="0"
                                         max="24"
+                                        ref={(el) => setInputRef(el, project.id, dateKey)} // ustaw refa do aktywnego inputa
                                     />
                                 </div>
                             );
@@ -284,7 +325,7 @@ const AdditionalProjects = ({
                 )}
             </div>
         );
-    };
+    });
 
     return (
         <div className="w-full md:w-auto h-full m-2 p-3 bg-amber-100 outline outline-1 outline-gray-500 flex flex-col space-y-4">
