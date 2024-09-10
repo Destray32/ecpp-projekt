@@ -150,6 +150,7 @@ const PobierzOgloszeniaGrupy = require('./api/Ogloszenia/ogloszenia.pobierzGrupy
 
 // Archiwum
 const PobierzArchiwum = require('./api/Czas/Archiwum/archiwum.pobierz');
+const PrzywrocArchiwum = require('./api/Czas/Archiwum/archiwum.przywroc');
 
 const PobierzDostepneFirmy = require('./api/pobierzDostepneFirmy');
 
@@ -441,6 +442,9 @@ app.delete('/api/ogloszenia/:id', (req, res) => {
 // ARCHIWUM //
 app.get('/api/czas/archiwum/:selectedOption', (req, res) => {
     PobierzArchiwum(req, res);
+});
+app.post('/api/czas/archiwum/przywroc', (req, res) => {
+    PrzywrocArchiwum(req, res);
 });
 /////////////////////////////////////////
 

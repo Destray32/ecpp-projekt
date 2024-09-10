@@ -1,6 +1,6 @@
 const db = require('../../../server');
 
-function PobierzArchiwum (req, res) {
+function PobierzArchiwum(req, res) {
     const selectedOption = req.params.selectedOption;
 
     const tableMap = {
@@ -17,7 +17,17 @@ function PobierzArchiwum (req, res) {
         return res.status(404).json({ message: 'Option not found' });
     }
 
-    const query = `SELECT * FROM ${tableName} WHERE Archiwum = 1`;
+    let query;
+    if (tableName === 'pracownik') {
+        query = `
+            SELECT p.*, d.Imie, d.Nazwisko
+            FROM pracownik p
+            JOIN dane_osobowe d ON p.FK_Dane_osobowe = d.idDane_osobowe
+            WHERE p.Archiwum = 1
+        `;
+    } else {
+        query = `SELECT * FROM ${tableName} WHERE Archiwum = 1`;
+    }
 
     db.query(query, (err, result) => {
         if (err) {

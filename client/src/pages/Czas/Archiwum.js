@@ -21,8 +21,16 @@ export default function ArchiwumPage() {
         }
     };
 
-    const handleActionClick = (record) => {
-        console.log('Action button clicked for record:', record);
+    const handleActionClick = async (record) => {
+        try {
+            await axios.post('http://localhost:5000/api/czas/archiwum/przywroc', {
+                tableName: selectedOption,
+                recordId: record.idPracownik || record.idFirma || record.idProjekty || record.idPojazdy || record.idGrupa_urlopowa
+            }, { withCredentials: true });
+            fetchData();
+        } catch (error) {
+            console.error('Failed to restore record:', error);
+        }
     };
 
     const columns = {
