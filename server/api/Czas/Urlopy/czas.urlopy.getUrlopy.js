@@ -7,7 +7,21 @@ function formatDate(dateString) {
 }
 
 function GetUrlopy(req, res, db) {
-    const sql = 'SELECT * FROM Urlopy';
+    const sql = `
+        SELECT 
+            u.idUrlopy, 
+            u.Imie, 
+            u.Nazwisko, 
+            u.Urlop_od, 
+            u.Urlop_do, 
+            u.Komentarz, 
+            u.Status,
+            g.Zleceniodawca
+        FROM Urlopy u
+        JOIN Pracownik p ON u.FK_idPracownik = p.idPracownik
+        JOIN Informacje_o_firmie i ON p.FK_Informacje_o_firmie = i.idInformacje_o_firmie
+        JOIN Grupa_urlopowa g ON i.FK_idGrupa_urlopowa = g.idGrupa_urlopowa
+    `;
 
     db.query(sql, (err, result) => {
         if (err) {
@@ -22,6 +36,7 @@ function GetUrlopy(req, res, db) {
                 dataDo: formatDate(row.Urlop_do), 
                 komentarz: row.Komentarz,
                 status: row.Status,
+                zleceniodawca: row.Zleceniodawca
             }));
 
             return res.status(200).json({ urlopy: formattedRows });

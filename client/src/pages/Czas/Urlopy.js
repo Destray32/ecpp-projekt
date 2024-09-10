@@ -15,8 +15,7 @@ export default function UrlopyPage() {
     const [Status, setStatus] = useState('');
     const [komentarz, setKomentarz] = useState('');
     const [selectedItems, setSelectedItems] = useState([]);
-    const [dane, setDane] = useState([]);
-    const [filteredDane, setFilteredDane] = useState([]);
+    const [filteredDane, setFilteredDane] = useState({ ApprovedUrlopy: {}, Pozostale: {} });
     const [expandedGroups, setExpandedGroups] = useState({});
     const [pracownicy, setPracownicy] = useState([]);
     const [dostepneGrupy, setDostepneGrupy] = useState([]);
@@ -24,11 +23,136 @@ export default function UrlopyPage() {
     const [selectedGrupyNazwa, setSelectedGrupyNazwa] = useState([]);
     const [selectedWeek, setSelectedWeek] = useState(''); // state do tygodnia ale bez formatowania do pdf
     const [selectedWeekAndYear, setSelectedWeekAndYear] = useState([]); // state do tygodnia i roku dla pdf
-    const [filtrValue, setFiltrValue] = useState("Wszystkie");
     const [editingVacationId, setEditingVacationId] = useState(null);
     const [editVacationData, setEditVacationData] = useState({ urlopOd: '', urlopDo: '', status: '' });
+    const [groupSelections, setGroupSelections] = useState({});
+
+    const [remainingGroupSelections, setRemainingGroupSelections] = useState({});
+    const [remainingExpandedGroups, setRemainingExpandedGroups] = useState({});
+    const [remainingSelectedItems, setRemainingSelectedItems] = useState([]);
+    const [approvedGroupSelections, setApprovedGroupSelections] = useState({});
+    const [approvedExpandedGroups, setApprovedExpandedGroups] = useState({});
+    const [approvedSelectedItems, setApprovedSelectedItems] = useState([]);
+    
 
     const extractId = (idWithPrefix) => idWithPrefix.replace('cb-', '');
+
+    const renderTable = (data, title, groupSelections, setGroupSelections, expandedGroups, setExpandedGroups, selectedItems, setSelectedItems) => (
+        <>
+            <div className="overflow-x-auto">
+                <table className="w-full table-fixed">
+                    <thead className="bg-blue-700 text-white sticky top-0 z-10">
+                        <tr>
+                            <th className="border-r px-2 py-1 w-12"></th>
+                            <th className="border-r px-2 py-1 w-32">Imię i nazwisko</th>
+                            <th className="border-r px-2 py-1 w-24">Urlop od</th>
+                            <th className="border-r px-2 py-1 w-24">Url do</th>
+                            <th className="border-r px-2 py-1 w-64">Komentarz</th>
+                            <th className="border-r px-2 py-1 w-24">Status</th>
+                            <th className="w-32"></th>
+                        </tr>
+                    </thead>
+                    <tbody className="text-center">
+                        {Object.keys(data).map((name) => (
+                            <React.Fragment key={name}>
+                                <tr>
+                                    <td colSpan="7" className="cursor-pointer bg-gray-100 hover:bg-gray-200">
+                                        <div className="flex items-center">
+                                            <Checkbox
+                                                inputId={`${title}-${name}`}
+                                                checked={groupSelections[name] || false}
+                                                onChange={(e) => {
+                                                    e.stopPropagation();
+                                                    handleGroupCheckboxChange(name, setGroupSelections, groupSelections, setSelectedItems, data[name]);
+                                                }}
+                                            />
+                                            <p className="ml-2" onClick={() => handleGroupToggle(name, setExpandedGroups, expandedGroups)}>{name}</p>
+                                            <span className="ml-auto" onClick={() => handleGroupToggle(name, setExpandedGroups, expandedGroups)}>{expandedGroups[name] ? '−' : '+'}</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {expandedGroups[name] && data[name].map((urlopy) => (
+                                    <tr key={urlopy.id} className="border-b even:bg-gray-200 odd:bg-gray-300">
+                                        <td className="border-r px-2 py-1">
+                                            <Checkbox
+                                                inputId={`cb-${urlopy.id}`}
+                                                checked={selectedItems.includes(`cb-${urlopy.id}`)}
+                                                onChange={() => handleCheckboxChange(`cb-${urlopy.id}`, setSelectedItems, selectedItems)}
+                                            />
+                                        </td>
+                                        <td className="border-r px-2 py-1">{urlopy.imie} {urlopy.nazwisko}</td>
+                                        {editingVacationId === urlopy.id ? (
+                                            <>
+                                                <td className="border-r px-2 py-1">
+                                                    <InputText value={editVacationData.urlopOd} type="date" onChange={(e) => setEditVacationData({ ...editVacationData, urlopOd: e.target.value })} />
+                                                </td>
+                                                <td className="border-r px-2 py-1">
+                                                    <InputText value={editVacationData.urlopDo} type="date" onChange={(e) => setEditVacationData({ ...editVacationData, urlopDo: e.target.value })} />
+                                                </td>
+                                                <td className="border-r px-2 py-1">
+                                                    <InputText value={editVacationData.komentarz} onChange={(e) => setEditVacationData({ ...editVacationData, komentarz: e.target.value })} />
+                                                </td>
+                                                <td className="border-r px-2 py-1">
+                                                    <Dropdown value={editVacationData.status} options={["Do zatwierdzenia", "Zatwierdzone", "Anulowane"]} onChange={(e) => setEditVacationData({ ...editVacationData, status: e.value })} />
+                                                </td>
+                                                <td className="px-2 py-1">
+                                                    <Button label="Zapisz" onClick={() => handleSave(urlopy.id)} className="bg-blue-700 text-white p-1 m-0.5 text-xs" />
+                                                    <Button label="Anuluj" onClick={() => setEditingVacationId(null)} className="bg-red-500 text-white p-1 m-0.5 text-xs" />
+                                                </td>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <td className="border-r px-2 py-1">{urlopy.dataOd}</td>
+                                                <td className="border-r px-2 py-1">{urlopy.dataDo}</td>
+                                                <td className="border-r px-2 py-1">{urlopy.komentarz}</td>
+                                                <td className={`border-r px-2 py-1 ${getStatusClass(urlopy.status)}`}>{urlopy.status}</td>
+                                                <td className="px-2 py-1">
+                                                    <Button label="Edytuj" onClick={() => handleEdit(urlopy)} className="bg-blue-700 text-white p-1 m-0.5 text-sm" />
+                                                    <Button label="Usuń" onClick={() => handleUsun(urlopy.id)} className="bg-red-500 text-white p-1 m-0.5 text-sm" />
+                                                    <Button label="Zatwierdź" onClick={() => handleZatwierdz(urlopy.id)} className="bg-green-500 text-white p-1 m-0.5 text-sm" />
+                                                    <Button label="Anuluj" onClick={() => handleAnuluj(urlopy.id)} className="bg-red-500 text-white p-1 m-0.5 text-sm" />
+                                                </td>
+                                            </>
+                                        )}
+                                    </tr>
+                                ))}
+                            </React.Fragment>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </>
+    );
+    
+    const ApprovedTable = () => {
+        return renderTable(
+            filteredDane.ApprovedUrlopy,
+            'Zatwierdzone urlopy',
+            approvedGroupSelections,
+            setApprovedGroupSelections,
+            approvedExpandedGroups,
+            setApprovedExpandedGroups,
+            approvedSelectedItems,
+            setApprovedSelectedItems
+        );
+    };
+    
+    const RemainingTable = () => {
+        return renderTable(
+            filteredDane.Pozostale,
+            'Pozostałe urlopy',
+            remainingGroupSelections,
+            setRemainingGroupSelections,
+            remainingExpandedGroups,
+            setRemainingExpandedGroups,
+            remainingSelectedItems,
+            setRemainingSelectedItems
+        );
+    };
+    
+
+    
+
 
     const handlePdfDownloadClick = () => {
 
@@ -80,28 +204,30 @@ export default function UrlopyPage() {
             });
     };
 
-    // do zaznaczania grup w tym co generuje spis urlopów
-    const handleGrupaCheckboxChange = (id, zleceniodawca) => {
-        setSelectedGrupy(prevState => {
-            const newSelectedGrupy = {
-                ...prevState,
-                [id]: !prevState[id]
-            };
-
-            // Update selectedGrupyNazwa based on checkbox state
-            setSelectedGrupyNazwa(prevSelected => {
-                if (newSelectedGrupy[id]) {
-                    // Checkbox is checked, add Zleceniodawca to the list
-                    return [...prevSelected, zleceniodawca];
-                } else {
-                    // Checkbox is unchecked, remove Zleceniodawca from the list
-                    return prevSelected.filter(item => item !== zleceniodawca);
-                }
-            });
-
-            return newSelectedGrupy;
-        });
+    const handleGroupCheckboxChange = (groupName, setGroupSelections, groupSelections, setSelectedItems, data) => {
+        const isChecked = !groupSelections[groupName];
+        setGroupSelections(prevSelections => ({
+            ...prevSelections,
+            [groupName]: isChecked,
+        }));
+        setSelectedItems(isChecked ? data.map(item => `cb-${item.id}`) : []);
     };
+    
+    const handleCheckboxChange = (checkboxId, setSelectedItems, selectedItems) => {
+        setSelectedItems(prevSelectedItems => 
+            prevSelectedItems.includes(checkboxId) 
+                ? prevSelectedItems.filter(item => item !== checkboxId) 
+                : [...prevSelectedItems, checkboxId]
+        );
+    };
+    
+    const handleGroupToggle = (groupName, setExpandedGroups, expandedGroups) => {
+        setExpandedGroups(prevExpandedGroups => ({
+            ...prevExpandedGroups,
+            [groupName]: !prevExpandedGroups[groupName],
+        }));
+    };
+
 
     const handleGetPracownicy = () => {
         Axios.get("http://localhost:5000/api/pracownicy", { withCredentials: true })
@@ -114,16 +240,11 @@ export default function UrlopyPage() {
             });
     };
 
-    const handleCheckboxChange = (id) => {
-        setSelectedItems(prevState =>
-            prevState.includes(id)
-                ? prevState.filter(item => item !== id)
-                : [...prevState, id]
-        );
-    };
-    const handleUpdateStatus = (newStatus) => {
+    
+    const handleUpdateStatus = (id, newStatus) => {
 
         const ids = selectedItems.map(extractId);
+        ids.push(id);
         Axios.put("http://localhost:5000/api/urlopy", {
             ids: ids,
             status: newStatus,
@@ -137,16 +258,66 @@ export default function UrlopyPage() {
             });
     };
 
-    const fetchUrlopy = () => {
+    const fetchUrlopy = (selectedGroups = {}) => {
         Axios.get("http://localhost:5000/api/urlopy", { withCredentials: true })
             .then((response) => {
-                setDane(response.data.urlopy);
-                setFilteredDane(response.data.urlopy);
+                const urlopyData = response.data.urlopy;
+    
+                console.log("Selected Groups:", selectedGroups);
+    
+                const filterBySelectedGroups = (data) => {
+                    if (Object.keys(selectedGroups).length === 0) return data;
+                    return data.filter(item => selectedGroups[item.zleceniodawca] === true);
+                };
+                
+    
+                const filteredUrlopyData = filterBySelectedGroups(urlopyData);
+                console.log("Filtered URLopy Data:", filteredUrlopyData);
+    
+                // Split filtered data into approved and remaining
+                const approvedUrlopy = urlopyData.filter(item => item.status === "Do zatwierdzenia");
+                const remainingUrlopy = filteredUrlopyData.filter(item => item.status !== "Do zatwierdzenia");
+    
+                // Group and sort data by name
+                const groupByName = (data) => data.reduce((acc, curr) => {
+                    const key = `${curr.imie} ${curr.nazwisko}`;
+                    if (!acc[key]) acc[key] = [];
+                    acc[key].push(curr);
+                    return acc;
+                }, {});
+    
+                const groupedApproved = groupByName(approvedUrlopy);
+                const groupedRemaining = groupByName(remainingUrlopy);
+    
+                const sortGroupedData = (groupedData) => {
+                    const sortedData = Object.keys(groupedData).sort();
+                    return sortedData.reduce((acc, name) => {
+                        acc[name] = groupedData[name];
+                        return acc;
+                    }, {});
+                };
+    
+                const sortedApprovedData = sortGroupedData(groupedApproved);
+                const sortedRemainingData = sortGroupedData(groupedRemaining);
+    
+                const sortEntriesInGroups = (groupedData) => {
+                    Object.keys(groupedData).forEach(name => {
+                        groupedData[name].sort((a, b) => a.dataOd.localeCompare(b.dataOd));
+                    });
+                    return groupedData;
+                };
+    
+                const sortedApprovedEntries = sortEntriesInGroups(sortedApprovedData);
+                const sortedRemainingEntries = sortEntriesInGroups(sortedRemainingData);
+    
+                setFilteredDane({ ApprovedUrlopy: sortedApprovedEntries, Pozostale: sortedRemainingEntries });
             })
             .catch((error) => {
                 console.error("There was an error fetching the data:", error);
             });
     };
+    
+
 
     const fetchGrupy = () => {
         Axios.get("http://localhost:5000/api/grupy", { withCredentials: true })
@@ -181,8 +352,8 @@ export default function UrlopyPage() {
             });
     };
 
-    const handleZatwierdz = () => handleUpdateStatus("Zatwierdzone");
-    const handleAnuluj = () => handleUpdateStatus("Anulowane");
+    const handleZatwierdz = (id) => handleUpdateStatus(id, "Zatwierdzone");
+    const handleAnuluj = (id) => handleUpdateStatus(id, "Anulowane");
 
     const handleUsun = (itemId) => {
         Axios.delete("http://localhost:5000/api/urlopy", {
@@ -197,14 +368,31 @@ export default function UrlopyPage() {
             });
     };
 
-    const handleSzukaj = (filter) => {
-        if (filter === "Wszystkie" || filter === "") {
-            setFilteredDane(dane); // pokaz wszystkie
-        } else {
-            const filteredData = dane.filter(item => item.status === filter); // pokaz te ktore maja item.status taki sam jak filter
-            setFilteredDane(filteredData);
-        }
+     // do zaznaczania grup w tym co generuje spis urlopów
+     const handleGrupaCheckboxChange = (id, zleceniodawca) => {
+        setSelectedGrupy(prevState => {
+            const newSelectedGrupy = {
+                ...prevState,
+                [id]: !prevState[id]
+            };
+
+            
+
+            // Update selectedGrupyNazwa based on checkbox state
+            setSelectedGrupyNazwa(prevSelected => {
+                if (newSelectedGrupy[id]) {
+                    // Checkbox is checked, add Zleceniodawca to the list
+                    return [...prevSelected, zleceniodawca];
+                } else {
+                    // Checkbox is unchecked, remove Zleceniodawca from the list
+                    return prevSelected.filter(item => item !== zleceniodawca);
+                }
+            });
+
+            return newSelectedGrupy;
+        });
     };
+
 
     const convertToISOFormat = (dateString) => {
         const [day, month, year] = dateString.split('/');
@@ -252,17 +440,10 @@ export default function UrlopyPage() {
         localStorage.setItem('selectedWeekAndYear', JSON.stringify([week, year]));
     }
 
-    useEffect(() => {
-        console.log(selectedWeekAndYear);
-    }, [selectedWeekAndYear]);
+    const handleSearch = () => {
+        fetchUrlopy(selectedGrupyNazwa);
+    };
 
-    useEffect(() => {
-        console.log(selectedGrupyNazwa);
-    }, [selectedGrupyNazwa]);
-
-    useEffect(() => {
-        handleSzukaj(filtrValue);
-    }, [filtrValue]);
 
     const getStatusClass = (status) => {
         switch (status) {
@@ -277,41 +458,13 @@ export default function UrlopyPage() {
         }
     };
 
-    const groupedData = filteredDane.reduce((acc, curr) => {
-        const key = `${curr.imie} ${curr.nazwisko}`;
-        if (!acc[key]) acc[key] = [];
-        acc[key].push(curr);
-        return acc;
-    }, {});
-    
-    const sortedGroupedData = Object.keys(groupedData).sort((a, b) => {
-        const aHasPending = groupedData[a].some(vacation => vacation.status === 'Do zatwierdzenia');
-        const bHasPending = groupedData[b].some(vacation => vacation.status === 'Do zatwierdzenia');
-        return aHasPending === bHasPending ? 0 : aHasPending ? -1 : 1;
-    });
-    
-    sortedGroupedData.forEach(name => {
-        groupedData[name].sort((a, b) => {
-            const aPending = a.status === 'Do zatwierdzenia';
-            const bPending = b.status === 'Do zatwierdzenia';
-            return aPending === bPending ? 0 : aPending ? -1 : 1;
-        });
-    });
-
-    const handleGroupToggle = (name) => {
-        setExpandedGroups(prev => ({
-            ...prev,
-            [name]: !prev[name]
-        }));
-    };
-
     return (
         <div>
             <AmberBox>
                 <div className="w-full h-2/5 flex flex-col space-y-2 items-start">
                     <div className="w-full h-2/6">
                         <div className="w-full flex flex-row items-center p-4">
-                            <div className="flex flex-col w-3/12 p-4">
+                            <div className="flex flex-col w-2/12 p-4">
                                 <p className="text-sm text-gray-600 mb-2">Dodaj urlop dla:</p>
                                 <Dropdown
                                     value={UrlopDla}
@@ -325,7 +478,7 @@ export default function UrlopyPage() {
                                     showClear
                                 />
                             </div>
-                            <div className="flex flex-col w-3/12 p-4">
+                            <div className="flex flex-col w-2/12 p-4">
                                 <p className="text-sm text-gray-600 mb-2">Status:</p>
                                 <Dropdown
                                     value={Status}
@@ -342,11 +495,11 @@ export default function UrlopyPage() {
                         </div>
                     </div>
                     <div className="w-full flex flex-row space-x-4 p-4 ml-4">
-                        <div className="flex flex-col w-full md:w-1/6">
+                        <div className="flex flex-col w-full md:w-1/12">
                             <p className="text-sm text-gray-600 mb-2">Urlop od:</p>
                             <InputText id="UrlopOd" value={urlopOd} onChange={(e) => setUrlopOd(e.target.value)} type="date" />
                         </div>
-                        <div className="flex flex-col w-full md:w-1/6">
+                        <div className="flex flex-col w-full md:w-1/12">
                             <p className="text-sm text-gray-600 mb-2">Urlop do:</p>
                             <InputText id="UrlopDo" value={urlopDo} onChange={(e) => setUrlopDo(e.target.value)} type="date" />
                         </div>
@@ -360,112 +513,16 @@ export default function UrlopyPage() {
                 </div>
             </AmberBox>
             <div className="w-auto h-auto bg-blue-700 outline outline-1 outline-black flex flex-row items-center space-x-4 m-2 p-3 text-white">
-                <p>Urlopy</p>
-                <div className="w-full h-2/5 flex flex-col space-y-2 items-start ">
-                    <div className="w-full h-2/6">
-                        <div className="w-full flex flex-row items-center p-4">
-                            <Dropdown value={filtrValue} onChange={(e) => setFiltrValue(e.value)}
-                                options={["Wszystkie", "Do zatwierdzenia", "Zatwierdzone", "Anulowane"]}
-                                placeholder="Filtrowanie"
-                                autoComplete="off"
-                                className="w-4/12"
-                                filter
-                            />
-                            {/* <Button label="Szukaj" onClick={() => handleSzukaj(filtrValue)}
-                                className="p-button-outlined border-2 p-1 
-                                bg-white text-black pr-2 pl-2 mr-32 ml-2" /> */}
-                            <div className="ml-8">
-                                <Button label="Zatwierdź" onClick={handleZatwierdz}
-                                    className="p-button-outlined border-2 p-1 bg-white text-black pr-2 pl-2 mr-2" />
-                                <Button label="Anuluj" onClick={handleAnuluj}
-                                    className="p-button-outlined border-2 p-1 bg-white text-black pr-2 pl-2 mr-2" />
-                            </div>
-                        </div>
-                    </div>
+                <p className="font-bold whitespace-nowrap">Urlopy do zatwierdzenia</p>
+            <div className="w-full h-2/5 flex flex-col space-y-2 items-start">
+                <div className="w-full h-2/6">
                 </div>
             </div>
+            </div>
+
             <div className="w-full md:w-auto bg-gray-300 h-full m-2 outline outline-1 outline-gray-500">
                 <table className="w-full">
-                    <thead className="bg-blue-700 text-white">
-                        <tr>
-                            <th></th>
-                            <th className="border-r">Imię i nazwisko</th>
-                            <th className="border-r">Urlop od</th>
-                            <th className="border-r">Urlop do</th>
-                            <th className="border-r">Komentarz</th>
-                            <th className="border-r">Status</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody className="text-center">
-                        {sortedGroupedData.map((name) => (
-                            <React.Fragment key={name}>
-                                <tr>
-                                    <td colSpan="7" className="cursor-pointer bg-gray-100 hover:bg-gray-200" onClick={() => handleGroupToggle(name)}>
-                                        <div className="flex items-center justify-between">
-                                            <p>{name}</p>
-                                            <span>{expandedGroups[name] ? '−' : '+'}</span>
-                                        </div>
-                                    </td>
-                                </tr>
-                                {expandedGroups[name] && groupedData[name].map((urlopy) => (
-                                    <tr key={urlopy.id} className="border-b even:bg-gray-200 odd:bg-gray-300">
-                                        <td className="border-r">
-                                            <Checkbox
-                                                inputId={`cb-${urlopy.id}`}
-                                                checked={selectedItems.includes(`cb-${urlopy.id}`)}
-                                                onChange={() => handleCheckboxChange(`cb-${urlopy.id}`)}
-                                            />
-                                        </td>
-                                        <td className="border-r">{urlopy.imie} {urlopy.nazwisko}</td>
-
-                                        {editingVacationId === urlopy.id ? (
-                                            <>
-                                                <td className="border-r">
-                                                    <InputText value={editVacationData.urlopOd}
-                                                        type="date"
-                                                        onChange={(e) => setEditVacationData({ ...editVacationData, urlopOd: e.target.value })}
-                                                    />
-                                                </td>
-                                                <td className="border-r">
-                                                    <InputText value={editVacationData.urlopDo}
-                                                        type="date"
-                                                        onChange={(e) => setEditVacationData({ ...editVacationData, urlopDo: e.target.value })}
-                                                    />
-                                                </td>
-                                                <td className="border-r">
-                                                    <InputText value={editVacationData.komentarz}
-                                                        onChange={(e) => setEditVacationData({ ...editVacationData, komentarz: e.target.value })}
-                                                    />
-                                                </td>
-                                                <td className="border-r">
-                                                    <Dropdown value={editVacationData.status}
-                                                        options={["Do zatwierdzenia", "Zatwierdzone", "Anulowane"]}
-                                                        onChange={(e) => setEditVacationData({ ...editVacationData, status: e.value })}
-                                                    />
-                                                </td>
-                                                <td>
-                                                    <Button label="Zapisz" onClick={() => handleSave(urlopy.id)} className="bg-blue-700 text-white p-1 m-0.5" />
-                                                    <Button label="Anuluj" onClick={() => setEditingVacationId(null)} className="bg-red-500 text-white p-1 m-0.5" />
-                                                </td>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <td className="border-r">{urlopy.dataOd}</td>
-                                                <td className="border-r">{urlopy.dataDo}</td>
-                                                <td className="border-r">{urlopy.komentarz}</td>
-                                                <td className={`border-r ${getStatusClass(urlopy.status)}`}>{urlopy.status}</td>
-                                                <td>
-                                                    <Button label="Edytuj" onClick={() => handleEdit(urlopy)} className="bg-blue-700 text-white p-1 m-0.5" />
-                                                    <Button label="Usuń" onClick={() => handleUsun(urlopy.id)} className="bg-red-500 text-white p-1 m-0.5" />
-                                                </td>
-                                            </>
-                                        )}
-                                    </tr>
-                                ))}
-                            </React.Fragment>
-                        ))}
-                    </tbody>
+                    <ApprovedTable/>
                 </table>
             </div>
             <AmberBox style={"justify-around bg-blue-500 text-white"}>
@@ -481,6 +538,7 @@ export default function UrlopyPage() {
                         </div>
                     ))}
                 </div>
+                <Button label="Szukaj" onClick={handleSearch} />
                 <div className="flex flex-row items-center space-x-4">
                     <InputText
                         className="text-black"
@@ -492,6 +550,11 @@ export default function UrlopyPage() {
                     <Button label="Drukuj" onClick={handlePdfDownloadClick} />
                 </div>
             </AmberBox>
+            <div className="w-full md:w-auto bg-gray-300 h-full m-2 outline outline-1 outline-gray-500">
+                <table className="w-full">
+                    <RemainingTable />
+                </table>
+            </div>
         </div>
     );
 }
