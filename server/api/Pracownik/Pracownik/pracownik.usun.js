@@ -9,10 +9,8 @@ function UsunPracownika(req, res) {
             return res.status(500).json({ error: 'Database transaction error' });
         }
 
-        const query = `
-            DELETE FROM pracownik
-            WHERE idPracownik = ?
-        `;
+        const query = `UPDATE pracownik SET Archiwum = 1 WHERE idPracownik = ?;`;
+        
         const values = [id];
 
         db.query(query, values, (error, result) => {

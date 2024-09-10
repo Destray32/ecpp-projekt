@@ -1,7 +1,7 @@
 const db = require('../../../server');
 
 function PobierzPracownicyGrupy(req, res) {
-    const query = `SELECT idGrupa_urlopowa, Zleceniodawca FROM grupa_urlopowa`;
+    const query = `SELECT idGrupa_urlopowa, Zleceniodawca FROM grupa_urlopowa WHERE Archiwum = 0;`;
 
     db.query(query, (err, result) => {
         if (err) {

@@ -111,7 +111,7 @@ export default function DodajNowyProjektPage() {
                     
                     <FloatLabel className="w-full md:w-6/12 lg:w-4/12">
                         <Dropdown 
-                            onChange={handleGroupChange} 
+                            onChange={handleGroupChange}
                             options={availableGroups}
                             optionLabel="name" 
                             optionValue="value"

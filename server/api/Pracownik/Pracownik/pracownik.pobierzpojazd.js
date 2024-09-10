@@ -1,7 +1,7 @@
 const db = require('../../../server');
 
 function PobierzPracownicyPojazd(req, res) {
-    const query = `SELECT idPojazdy, Marka FROM pojazdy`;
+    const query = `SELECT idPojazdy, Marka FROM pojazdy WHERE Archiwum = 0;`;
 
     db.query(query, (err, result) => {
         if (err) {

@@ -1,6 +1,6 @@
 function GetProjekty(req, res, db) {
     
-    const sql = 'SELECT * FROM projekty';
+    const sql = 'SELECT * FROM projekty WHERE Archiwum = 0';
 
     db.query(sql, (err, result) => {
         if (err) {

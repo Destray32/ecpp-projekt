@@ -1,5 +1,5 @@
 function DostepneGrupy(req, res, db) {
-    const sql = 'SELECT * FROM Grupa_urlopowa';
+    const sql = 'SELECT * FROM Grupa_urlopowa WHERE Archiwum = 0;';
 
     db.query(sql, (err, result) => {
         if (err) {

@@ -130,7 +130,6 @@ function EdytujPracownika(req, res) {
                     });
                 }
 
-                // Check if newPassword is provided
                 let queryUpdatePracownik;
                 let valuesUpdatePracownik;
 

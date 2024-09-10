@@ -1,7 +1,7 @@
 const db = require('../../server');
 
 function PobierzOgloszeniaPracownicy(req, res) {
-    const query = `SELECT p.idPracownik, d.Imie, d.Nazwisko FROM pracownik p JOIN dane_osobowe d ON p.FK_Dane_osobowe = d.idDane_osobowe`;
+    const query = `SELECT p.idPracownik, d.Imie, d.Nazwisko FROM pracownik p JOIN dane_osobowe d ON p.FK_Dane_osobowe = d.idDane_osobowe WHERE p.Archwum = 0;`;
 
     db.query(query, (err, result) => {
         if (err) {

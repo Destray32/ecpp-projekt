@@ -1,6 +1,6 @@
 
 function PobierzPojazdy(req, res, db) {
-    const sql = 'SELECT * FROM pojazdy';
+    const sql = 'SELECT * FROM pojazdy WHERE Archiwum = 0';
 
     db.query(sql, (err, result) => {
         if (err) {

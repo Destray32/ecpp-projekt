@@ -1,9 +1,7 @@
 const db = require('../../server');
 
 function Companies (req, res) {
-    const query = `
-        SELECT Nazwa_firmy from firma
-    `;
+    const query = `SELECT Nazwa_firmy from firma WHERE Archiwum = 0`;
     
     db.query(query, (err, result) => {
         if (err) {

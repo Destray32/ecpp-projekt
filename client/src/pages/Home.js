@@ -50,11 +50,11 @@ export default function HomePage() {
         checkTokenValidity();
         getImie();
 
-        const handlePageUnload = () => {
-            navigator.sendBeacon('http://localhost:5000/api/zamkniecieStrony');
-        };
+        // const handlePageUnload = () => {
+        //     navigator.sendBeacon('http://localhost:5000/api/zamkniecieStrony');
+        // };
 
-        window.addEventListener('beforeunload', handlePageUnload);
+        // window.addEventListener('beforeunload', handlePageUnload);
 
         const timer = setInterval(() => {
             setData(moment().format('DD/MM/YYYY'));
@@ -62,19 +62,19 @@ export default function HomePage() {
 
         return () => {
             clearInterval(timer);
-            window.removeEventListener('beforeunload', handlePageUnload);
+            //window.removeEventListener('beforeunload', handlePageUnload);
         }
     }, []);
 
-    useEffect(() => {
-        const unlisten = navigate((location, action) => {
-            if (action === 'POP') {
-                navigator.sendBeacon('http://localhost:5000/api/zamkniecieStrony');
-            }
-        });
+    // useEffect(() => {
+    //     const unlisten = navigate((location, action) => {
+    //         if (action === 'POP') {
+    //             navigator.sendBeacon('http://localhost:5000/api/zamkniecieStrony');
+    //         }
+    //     });
 
-        return unlisten;
-    }, [navigate]);
+    //     return unlisten;
+    // }, [navigate]);
 
     const toggleSubMenu = () => {
         setShowSubMenu(prevState => !prevState);

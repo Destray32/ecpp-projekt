@@ -25,7 +25,10 @@ function ListaPracownikow(req, res) {
         JOIN 
             Firma f ON iof.FK_idFirma = f.idFirma
         JOIN 
-            grupa_urlopowa gu ON iof.FK_idGrupa_urlopowa = gu.idGrupa_urlopowa;`;
+            grupa_urlopowa gu ON iof.FK_idGrupa_urlopowa = gu.idGrupa_urlopowa
+        WHERE
+            p.Archiwum = 0;
+    `;
 
     db.query(query, (err, result) => {
         if (err) {

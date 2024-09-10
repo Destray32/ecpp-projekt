@@ -4,7 +4,6 @@ function OtworzTydzienCzas(req, res, db) {
 
     const sql = "UPDATE tydzien SET Status_tygodnia = 'Otwarty' WHERE tydzienRoku = ? AND Pracownik_idPracownik IN (?)";
     
-
     db.query(sql, [tydzienRoku, pracownikId], (err, result) => {
         if (err) {
             console.log(err);

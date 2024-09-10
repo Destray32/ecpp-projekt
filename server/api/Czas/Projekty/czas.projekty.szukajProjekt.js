@@ -1,7 +1,7 @@
 function SzukajProjekt(req, res, db) {
     const group = req.query.group;
 
-    let sql = 'SELECT * FROM projekty';
+    let sql = 'SELECT * FROM projekty WHERE Archiwum = 0';
     const queryParams = [];
 
     if (group && group !== 'Wszystkie') {

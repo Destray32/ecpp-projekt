@@ -7,7 +7,7 @@ function UsuwanieGrupy(req, res, db) {
         return res.status(400).json({ message: 'Brak identyfikatora grupy' });
     }
 
-    const sql = `DELETE FROM Grupa_urlopowa WHERE idGrupa_urlopowa = ?`;
+    const sql = `UPDATE grupa_urlopowa SET Archiwum = 1 WHERE idGrupa_urlopowa = ?`;
 
     db.query(sql, [id], (err, result) => {
         if (err) {
