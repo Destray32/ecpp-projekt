@@ -148,6 +148,9 @@ const UsunOgloszenie = require('./api/Ogloszenia/ogloszenia.usun');
 const PobierzOgloszeniaPracownicy = require('./api/Ogloszenia/ogloszenia.pobierzPracownikow');
 const PobierzOgloszeniaGrupy = require('./api/Ogloszenia/ogloszenia.pobierzGrupy');
 
+// Archiwum
+const PobierzArchiwum = require('./api/Czas/Archiwum/archiwum.pobierz');
+
 const PobierzDostepneFirmy = require('./api/pobierzDostepneFirmy');
 
 // Logowanie
@@ -432,6 +435,12 @@ app.get('/api/ogloszenia/grupy', (req, res) => {
 
 app.delete('/api/ogloszenia/:id', (req, res) => {
     UsunOgloszenie(req, res);
+});
+/////////////////////////////////////////
+
+// ARCHIWUM //
+app.get('/api/czas/archiwum/:selectedOption', (req, res) => {
+    PobierzArchiwum(req, res);
 });
 /////////////////////////////////////////
 

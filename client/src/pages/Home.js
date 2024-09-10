@@ -116,6 +116,7 @@ export default function HomePage() {
                                             <ButtonLewy link="projekty" nazwa='Projekty' />
                                             <ButtonLewy link="urlopy" nazwa='Urlopy' />
                                             <ButtonLewy link="pojazdy" nazwa='Pojazdy' />
+                                            <ButtonLewy link="archiwum" nazwa='Archiwum' />
                                         </div>
                                     )}
                                 <ButtonLewy link="tydzien" nazwa='Tydzien' />

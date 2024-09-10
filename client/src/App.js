@@ -13,6 +13,7 @@ import CzasPage from './pages/Czas/CzasPracy';
 import ProjektyPage from './pages/Czas/Projekty';
 import UrlopyPage from './pages/Czas/Urlopy';
 import PojazdyPage from './pages/Czas/Pojazdy';
+import ArchiwumPage from './pages/Czas/Archiwum';
 import TydzienPage from './pages/Czas/Tydzien';
 import RaportyPage from './pages/Czas/Raporty';
 import PlanTygodniaPage from './pages/PlanTygodnia/PlanTygodnia';
@@ -45,6 +46,7 @@ function App() {
           <Route path="projekty" element={<ProjektyPage />} />
           <Route path="urlopy" element={<UrlopyPage />} />
           <Route path="pojazdy" element={<PojazdyPage />} />
+          <Route path="archiwum" element={<ArchiwumPage />} />
           <Route path="tydzien" element={<TydzienPage />} />
           <Route path="raporty" element={<RaportyPage />} />
           <Route path="plan" element={<PlanTygodniaPage />} />
