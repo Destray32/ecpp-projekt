@@ -1,8 +1,15 @@
 function ZatwierdzUrlop(req, res, db) {
-    const { ids, status } = req.body;
-    console.log(ids, status);
+    let { ids, status } = req.body;
     
-    if (!ids || !status) {
+    if (!Array.isArray(ids)) {
+        if (typeof ids === 'string') {
+            ids = ids.split(',').map(id => id.trim());
+        } else {
+            return res.status(400).send('IDs must be an array or a comma-separated string');
+        }
+    }
+
+    if (!ids.length || !status) {
         return res.status(400).send('IDs and status are required');
     }
 

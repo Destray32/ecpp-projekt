@@ -6,6 +6,7 @@ import 'react-calendar/dist/Calendar.css';
 import { InputText } from 'primereact/inputtext';
 import { Checkbox } from 'primereact/checkbox';
 import Axios from "axios";
+import ZatwierdzWindow from '../../Components/Urlopy/ZatwierdzWindow';
 
 
 export default function UrlopyPage() {
@@ -14,7 +15,6 @@ export default function UrlopyPage() {
     const [UrlopDla, setUrlopDla] = useState('');
     const [Status, setStatus] = useState('');
     const [komentarz, setKomentarz] = useState('');
-    const [selectedItems, setSelectedItems] = useState([]);
     const [filteredDane, setFilteredDane] = useState({ ApprovedUrlopy: {}, Pozostale: {} });
     const [pracownicy, setPracownicy] = useState([]);
     const [dostepneGrupy, setDostepneGrupy] = useState([]);
@@ -24,6 +24,8 @@ export default function UrlopyPage() {
     const [selectedWeekAndYear, setSelectedWeekAndYear] = useState([]); // state do tygodnia i roku dla pdf
     const [editingVacationId, setEditingVacationId] = useState(null);
     const [editVacationData, setEditVacationData] = useState({ urlopOd: '', urlopDo: '', status: '' });
+    const [zatwierdzWindowVisible, setZatwierdzWindowVisible] = useState(false);
+    const [selectedForZatwierdzenie, setSelectedForZatwierdzenie] = useState([]);
 
     // RenderTable component 
     const [remainingGroupSelections, setRemainingGroupSelections] = useState({});
@@ -132,8 +134,8 @@ export default function UrlopyPage() {
                                                     <td className="px-2 py-1">
                                                         <Button label="Edytuj" onClick={() => handleEdit(urlopy)} className="bg-blue-700 text-white p-1 m-0.5 text-sm" />
                                                         <Button label="Usuń" onClick={() => handleUsun(urlopy.id)} className="bg-red-500 text-white p-1 m-0.5 text-sm" />
-                                                        <Button label="Zatwierdź" onClick={() => handleZatwierdz(urlopy.id)} className="bg-green-500 text-white p-1 m-0.5 text-sm" />
-                                                        <Button label="Anuluj" onClick={() => handleAnuluj(urlopy.id)} className="bg-red-500 text-white p-1 m-0.5 text-sm" />
+                                                        <Button label="Zatwierdź" onClick={() => handleZatwierdz(urlopy.id, false)} className="bg-green-500 text-white p-1 m-0.5 text-sm" />
+                                                        <Button label="Anuluj" onClick={() => handleAnuluj(urlopy.id, false)} className="bg-red-500 text-white p-1 m-0.5 text-sm" />
                                                     </td>
                                                 </>
                                             )}
@@ -273,34 +275,95 @@ export default function UrlopyPage() {
             });
     };
 
-    
-    const handleUpdateStatus = (id = null, newStatus) => {
-        let ids = [];
-        if (id) {
-            ids.push(id);
-        } else {
-            ids = [...approvedSelectedItems].map(item => extractId(item));
-        }
-    
-        if (ids.length === 0) {
-            console.log("No items selected for status update");
-            return;
-        }
-    
+    const handleZatwierdzConfirm = () => {
+        const ids = selectedForZatwierdzenie.map(item => item.id);
         Axios.put("http://localhost:5000/api/urlopy", {
             ids: ids,
-            status: newStatus,
+            status: "Zatwierdzone",
         }, { withCredentials: true })
             .then(() => {
                 fetchUrlopy();
                 setApprovedSelectedItems([]);
+                setZatwierdzWindowVisible(false);
+                setApprovedGroupSelections({});
+                setApprovedSelectedItems([]);
+                
             })
             .catch((error) => {
                 console.error("There was an error updating the status:", error);
             });
     };
+    
+    const handleZatwierdz = (id, showDialog = true) => handleUpdateStatus(id, "Zatwierdzone", showDialog);
+    const handleAnuluj = (id, showDialog = true) => handleUpdateStatus(id, "Anulowane", showDialog);
+    
+    const handleUpdateStatus = (id = null, newStatus, showDialog = true) => {
+        let selectedItems = [];
+        const flattenArray = (obj) => Object.values(obj).flat();
+    
+        if (id) {
+            const allUrlopy = [
+                ...flattenArray(filteredDane.ApprovedUrlopy),
+                ...flattenArray(filteredDane.Pozostale)
+            ];
+            
+            const item = allUrlopy.find(item => item.id === id);
+            if (item) {
+                selectedItems.push({
+                    id: item.id,
+                    imie: item.imie,
+                    nazwisko: item.nazwisko,
+                    dataOd: item.dataOd,
+                    dataDo: item.dataDo
+                });
+            }
+        } else {
+            const allSelectedIds = [...approvedSelectedItems, ...remainingSelectedItems].map(extractId);
+            const allUrlopy = [
+                ...flattenArray(filteredDane.ApprovedUrlopy),
+                ...flattenArray(filteredDane.Pozostale)
+            ];
+            
+            selectedItems = allUrlopy
+                .filter(item => allSelectedIds.includes(item.id.toString()))
+                .map(item => ({
+                    id: item.id,
+                    imie: item.imie,
+                    nazwisko: item.nazwisko,
+                    dataOd: item.dataOd,
+                    dataDo: item.dataDo
+                }));
+        }
+    
+        if (selectedItems.length === 0) {
+            console.log("No items selected for status update");
+            return;
+        }
+    
+        setSelectedForZatwierdzenie(selectedItems);
+        
+        if (showDialog) {
+            setZatwierdzWindowVisible(true);
+        } else {
+            const idsArray = Array.isArray(id) ? id : [id];
 
-    const fetchUrlopy = (selectedGroups = {}) => {
+            Axios.put("http://localhost:5000/api/urlopy", {
+                ids: idsArray,
+                status: newStatus,
+            }, { withCredentials: true })
+                .then(() => {
+                    fetchUrlopy();
+                    setApprovedSelectedItems([]);
+                })
+                .catch((error) => {
+                    console.error("There was an error updating the status:", error);
+                });
+        }
+    };
+
+
+
+    const fetchUrlopy = () => {
         Axios.get("http://localhost:5000/api/urlopy", { withCredentials: true })
             .then((response) => {
                 const urlopyData = response.data.urlopy;
@@ -392,9 +455,6 @@ export default function UrlopyPage() {
                 console.error("There was an error adding the leave:", error.response.data);
             });
     };
-
-    const handleZatwierdz = (id) => handleUpdateStatus(id, "Zatwierdzone");
-    const handleAnuluj = (id) => handleUpdateStatus(id, "Anulowane");
 
     const handleUsun = (itemId) => {
         Axios.delete("http://localhost:5000/api/urlopy", {
@@ -533,19 +593,43 @@ export default function UrlopyPage() {
                         </div>
                     </div>
                     <div className="flex justify-start w-full p-4 ml-4">
-                        <InputText onChange={(e) => setKomentarz(e.target.value)} value={komentarz}
-                            placeholder="Komentarz" className="w-1/3 p-2" />
-                        <Button label="Dodaj" onClick={handleDodaj}
-                            className="p-button-outlined border-2 p-1 ml-2 bg-white" />
+                    <div className="flex flex-col w-full md:w-3/6">
+                    <p className={`text-sm mb-2 ${komentarz.length >= 45 ? 'text-red-600' : 'text-gray-600'}`}>
+                        Komentarz: {komentarz.length}/45
+                        {komentarz.length >= 45 && ' Maksymalna ilość znaków'}
+                    </p>
+                        <div className="flex items-center"> 
+                            <InputText
+                                onChange={(e) => setKomentarz(e.target.value)}
+                                value={komentarz}
+                                placeholder="Komentarz"
+                                className="flex-grow p-2" 
+                                maxLength={45}
+                            />
+                            <Button
+                                label="Dodaj"
+                                onClick={handleDodaj}
+                                className="p-button-outlined border-2 p-1 ml-2 bg-white flex-shrink-0"
+                            />
+                        </div>
                     </div>
+                    
                 </div>
+                </div>
+                
             </AmberBox>
             <div className="w-auto h-auto bg-blue-700 outline outline-1 outline-black flex flex-row items-center space-x-4 m-2 p-3 text-white">
                 <p className="font-bold whitespace-nowrap">Urlopy do zatwierdzenia</p>
                 <Button 
                     label="Zatwierdź" 
                     onClick={() => handleUpdateStatus(null, "Zatwierdzone")} 
-                    className="bg-green-500 text-white p-1 m-0.5 text-sm" 
+                    className="bg-green-500 text-white p-1 m-0.5 text-sm w-24" 
+                />
+                <ZatwierdzWindow 
+                    visible={zatwierdzWindowVisible}
+                    onHide={() => setZatwierdzWindowVisible(false)}
+                    selectedItems={selectedForZatwierdzenie}
+                    onConfirm={handleZatwierdzConfirm}
                 />
             <div className="w-full h-2/5 flex flex-col space-y-2 items-start">
                 <div className="w-full h-2/6">
