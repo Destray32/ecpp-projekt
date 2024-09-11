@@ -12,10 +12,9 @@ import ActionButtons from "../../Components/CzasPracy/ActionButtons";
 import { generateWeek, formatWeek, calculateWeeklyTotal, calculateProjectTotal } from '../../utils/dateUtils';
 
 export default function CzasPracyPage() {
-    const [userType, setUserType] = useState("Pracownik");
-    const [loggedUserName, setLoggedUserName] = useState("Jan Kowalski");
-    const [currentDate, setCurrentDate] = useState(new Date());
+    const [userType, setUserType] = useState(null);
     const [Pracownik, setPracownik] = useState(null);
+    const [currentDate, setCurrentDate] = useState(new Date());
     const [pracownicy, setPracownicy] = useState([]);
     const [Firma, setFirma] = useState("PC Husbyggen");
     const [firmy, setFirmy] = useState([]);
@@ -32,6 +31,7 @@ export default function CzasPracyPage() {
 
     //#region UseEffects
     useEffect(() => {
+        fetchZalogowanyUzytkownik();
         fetchPojazdy();
         fetchPracownicy();
         fetchFirmy();
@@ -47,16 +47,27 @@ export default function CzasPracyPage() {
         if (Pracownik && (userType === "Administrator")) {
             fetchWorkHours(Pracownik, currentDate);
             fetchAdditionalProjects(Pracownik, currentDate);
-        } else if (loggedUserName && (userType === "Pracownik")) {
-            fetchWorkHours(loggedUserName, currentDate);
-            fetchAdditionalProjects(loggedUserName, currentDate);
-            setPracownicy([{ label: loggedUserName, value: loggedUserName }]);
-            setPracownik(loggedUserName);
+        } else if (Pracownik && (userType === "Pracownik")) {
+            fetchWorkHours(Pracownik, currentDate);
+            fetchAdditionalProjects(Pracownik, currentDate);
+            setPracownicy([{ label: Pracownik, value: Pracownik }]);
         }
     }, [Pracownik, currentDate]);
     //#endregion
 
     //#region fetching
+    const fetchZalogowanyUzytkownik = () => {
+        Axios.get("http://localhost:5000/api/imie", { withCredentials: true })
+            .then((response) => {
+                const fullName = `${response.data.name} ${response.data.surename}`;
+                setPracownik(fullName);
+                setUserType(response.data.accountType);
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+    };
+
     const fetchPojazdy = () => {
         Axios.get("http://localhost:5000/api/pojazdy", { withCredentials: true })
             .then((response) => {
@@ -297,7 +308,7 @@ export default function CzasPracyPage() {
                 setAdditionalProjects={setAdditionalProjects}
                 daysOfWeek={daysOfWeek}
                 samochody={samochody}
-                loggedUserName={loggedUserName}
+                loggedUserName={Pracownik}
                 currentDate={currentDate}
             />
             <ActionButtons handleSave={handleSave} />

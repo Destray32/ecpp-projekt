@@ -14,7 +14,8 @@ function GetImie(req, res) {
         const query = `
             SELECT 
                 dane_osobowe.Imie AS name,
-                dane_osobowe.Nazwisko AS surename
+                dane_osobowe.Nazwisko AS surename,
+                pracownik.Typ_konta AS accountType
             FROM pracownik
             JOIN dane_osobowe ON dane_osobowe.idDane_osobowe = pracownik.FK_Dane_osobowe
             WHERE pracownik.idPracownik = ?
