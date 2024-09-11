@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef} from "react";
 import AmberBox from "../../Components/AmberBox";
 import { Dropdown } from 'primereact/dropdown';
 import { Button } from 'primereact/button';
@@ -16,7 +16,6 @@ export default function UrlopyPage() {
     const [komentarz, setKomentarz] = useState('');
     const [selectedItems, setSelectedItems] = useState([]);
     const [filteredDane, setFilteredDane] = useState({ ApprovedUrlopy: {}, Pozostale: {} });
-    const [expandedGroups, setExpandedGroups] = useState({});
     const [pracownicy, setPracownicy] = useState([]);
     const [dostepneGrupy, setDostepneGrupy] = useState([]);
     const [selectedGrupy, setSelectedGrupy] = useState({});
@@ -25,8 +24,8 @@ export default function UrlopyPage() {
     const [selectedWeekAndYear, setSelectedWeekAndYear] = useState([]); // state do tygodnia i roku dla pdf
     const [editingVacationId, setEditingVacationId] = useState(null);
     const [editVacationData, setEditVacationData] = useState({ urlopOd: '', urlopDo: '', status: '' });
-    const [groupSelections, setGroupSelections] = useState({});
 
+    // RenderTable component 
     const [remainingGroupSelections, setRemainingGroupSelections] = useState({});
     const [remainingExpandedGroups, setRemainingExpandedGroups] = useState({});
     const [remainingSelectedItems, setRemainingSelectedItems] = useState([]);
@@ -37,122 +36,148 @@ export default function UrlopyPage() {
 
     const extractId = (idWithPrefix) => idWithPrefix.replace('cb-', '');
 
-    const renderTable = (data, title, groupSelections, setGroupSelections, expandedGroups, setExpandedGroups, selectedItems, setSelectedItems) => (
-        <>
-            <div className="overflow-x-auto">
-                <table className="w-full table-fixed">
-                    <thead className="bg-blue-700 text-white sticky top-0 z-10">
-                        <tr>
-                            <th className="border-r px-2 py-1 w-12"></th>
-                            <th className="border-r px-2 py-1 w-32">Imię i nazwisko</th>
-                            <th className="border-r px-2 py-1 w-24">Urlop od</th>
-                            <th className="border-r px-2 py-1 w-24">Url do</th>
-                            <th className="border-r px-2 py-1 w-64">Komentarz</th>
-                            <th className="border-r px-2 py-1 w-24">Status</th>
-                            <th className="w-32"></th>
-                        </tr>
-                    </thead>
-                    <tbody className="text-center">
-                        {Object.keys(data).map((name) => (
-                            <React.Fragment key={name}>
-                                <tr>
-                                    <td colSpan="7" className="cursor-pointer bg-gray-100 hover:bg-gray-200">
-                                        <div className="flex items-center">
-                                            <Checkbox
-                                                inputId={`${title}-${name}`}
-                                                checked={groupSelections[name] || false}
-                                                onChange={(e) => {
-                                                    e.stopPropagation();
-                                                    handleGroupCheckboxChange(name, setGroupSelections, groupSelections, setSelectedItems, data[name]);
-                                                }}
-                                            />
-                                            <p className="ml-2" onClick={() => handleGroupToggle(name, setExpandedGroups, expandedGroups)}>{name}</p>
-                                            <span className="ml-auto" onClick={() => handleGroupToggle(name, setExpandedGroups, expandedGroups)}>{expandedGroups[name] ? '−' : '+'}</span>
-                                        </div>
-                                    </td>
-                                </tr>
-                                {expandedGroups[name] && data[name].map((urlopy) => (
-                                    <tr key={urlopy.id} className="border-b even:bg-gray-200 odd:bg-gray-300">
-                                        <td className="border-r px-2 py-1">
-                                            <Checkbox
-                                                inputId={`cb-${urlopy.id}`}
-                                                checked={selectedItems.includes(`cb-${urlopy.id}`)}
-                                                onChange={() => handleCheckboxChange(`cb-${urlopy.id}`, setSelectedItems, selectedItems)}
-                                            />
-                                        </td>
-                                        <td className="border-r px-2 py-1">{urlopy.imie} {urlopy.nazwisko}</td>
-                                        {editingVacationId === urlopy.id ? (
-                                            <>
-                                                <td className="border-r px-2 py-1">
-                                                    <InputText value={editVacationData.urlopOd} type="date" onChange={(e) => setEditVacationData({ ...editVacationData, urlopOd: e.target.value })} />
-                                                </td>
-                                                <td className="border-r px-2 py-1">
-                                                    <InputText value={editVacationData.urlopDo} type="date" onChange={(e) => setEditVacationData({ ...editVacationData, urlopDo: e.target.value })} />
-                                                </td>
-                                                <td className="border-r px-2 py-1">
-                                                    <InputText value={editVacationData.komentarz} onChange={(e) => setEditVacationData({ ...editVacationData, komentarz: e.target.value })} />
-                                                </td>
-                                                <td className="border-r px-2 py-1">
-                                                    <Dropdown value={editVacationData.status} options={["Do zatwierdzenia", "Zatwierdzone", "Anulowane"]} onChange={(e) => setEditVacationData({ ...editVacationData, status: e.value })} />
-                                                </td>
-                                                <td className="px-2 py-1">
-                                                    <Button label="Zapisz" onClick={() => handleSave(urlopy.id)} className="bg-blue-700 text-white p-1 m-0.5 text-xs" />
-                                                    <Button label="Anuluj" onClick={() => setEditingVacationId(null)} className="bg-red-500 text-white p-1 m-0.5 text-xs" />
-                                                </td>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <td className="border-r px-2 py-1">{urlopy.dataOd}</td>
-                                                <td className="border-r px-2 py-1">{urlopy.dataDo}</td>
-                                                <td className="border-r px-2 py-1">{urlopy.komentarz}</td>
-                                                <td className={`border-r px-2 py-1 ${getStatusClass(urlopy.status)}`}>{urlopy.status}</td>
-                                                <td className="px-2 py-1">
-                                                    <Button label="Edytuj" onClick={() => handleEdit(urlopy)} className="bg-blue-700 text-white p-1 m-0.5 text-sm" />
-                                                    <Button label="Usuń" onClick={() => handleUsun(urlopy.id)} className="bg-red-500 text-white p-1 m-0.5 text-sm" />
-                                                    <Button label="Zatwierdź" onClick={() => handleZatwierdz(urlopy.id)} className="bg-green-500 text-white p-1 m-0.5 text-sm" />
-                                                    <Button label="Anuluj" onClick={() => handleAnuluj(urlopy.id)} className="bg-red-500 text-white p-1 m-0.5 text-sm" />
-                                                </td>
-                                            </>
-                                        )}
-                                    </tr>
-                                ))}
-                            </React.Fragment>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-        </>
-    );
+    const RenderTable = ({ data, title, groupSelections, setGroupSelections, expandedGroups, setExpandedGroups, selectedItems, setSelectedItems }) => {
+        const inputRef = useRef(null);
     
+        useEffect(() => {
+            if (editingVacationId && inputRef.current) {
+                inputRef.current.focus();
+            }
+        }, [editingVacationId]);
+    
+        const handleEdit = (vacation) => {
+            setEditingVacationId(vacation.id);
+            setEditVacationData({
+                urlopOd: convertToISOFormat(vacation.dataOd),
+                urlopDo: convertToISOFormat(vacation.dataDo),
+                status: vacation.status,
+                komentarz: vacation.komentarz
+            });
+        };
+    
+        return (
+            <>
+                <div className="overflow-x-auto">
+                    <table className="w-full table-fixed">
+                        <thead className="bg-blue-700 text-white sticky top-0 z-10">
+                            <tr>
+                                <th className="border-r px-2 py-1 w-12"></th>
+                                <th className="border-r px-2 py-1 w-32">Imię i nazwisko</th>
+                                <th className="border-r px-2 py-1 w-24">Urlop od</th>
+                                <th className="border-r px-2 py-1 w-24">Url do</th>
+                                <th className="border-r px-2 py-1 w-64">Komentarz</th>
+                                <th className="border-r px-2 py-1 w-24">Status</th>
+                                <th className="w-32"></th>
+                            </tr>
+                        </thead>
+                        <tbody className="text-center">
+                            {Object.keys(data).map((name) => (
+                                <React.Fragment key={name}>
+                                    <tr>
+                                        <td colSpan="7" className="cursor-pointer bg-gray-100 hover:bg-gray-200">
+                                            <div className="flex items-center">
+                                                <Checkbox
+                                                    inputId={`cb-${name}`}
+                                                    checked={groupSelections[name] || false}
+                                                    className="ml-2 bg-gray-500"
+                                                    onChange={(e) => {
+                                                        e.stopPropagation();
+                                                        handleGroupCheckboxChange(name, setGroupSelections, groupSelections, setSelectedItems, data[name]);
+                                                    }}
+                                                />
+                                                <p className="ml-2" onClick={() => handleGroupToggle(name, setExpandedGroups, expandedGroups)}>{name}</p>
+                                                <span className="ml-auto" onClick={() => handleGroupToggle(name, setExpandedGroups, expandedGroups)}>{expandedGroups[name] ? '−' : '+'}</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {expandedGroups[name] && data[name].map((urlopy) => (
+                                        <tr key={urlopy.id} className="border-b even:bg-gray-200 odd:bg-gray-300">
+                                            <td className="border-r px-2 py-1">
+                                                <Checkbox
+                                                    inputId={`cb-${urlopy.id}`}
+                                                    checked={selectedItems.includes(`cb-${urlopy.id}`)}
+                                                    onChange={() => handleCheckboxChange(`cb-${urlopy.id}`, setSelectedItems, selectedItems)}
+                                                />
+                                            </td>
+                                            <td className="border-r px-2 py-1">{urlopy.imie} {urlopy.nazwisko}</td>
+                                            {editingVacationId === urlopy.id ? (
+                                                <>
+                                                    <td className="border-r px-2 py-1">
+                                                        <InputText value={editVacationData.urlopOd} type="date" onChange={(e) => setEditVacationData({ ...editVacationData, urlopOd: e.target.value })} />
+                                                    </td>
+                                                    <td className="border-r px-2 py-1">
+                                                        <InputText value={editVacationData.urlopDo} type="date" onChange={(e) => setEditVacationData({ ...editVacationData, urlopDo: e.target.value })} />
+                                                    </td>
+                                                    <td className="border-r px-2 py-1">
+                                                        <InputText
+                                                            ref={inputRef}
+                                                            value={editVacationData.komentarz}
+                                                            onChange={(e) => setEditVacationData({ ...editVacationData, komentarz: e.target.value })}
+                                                        />
+                                                    </td>
+                                                    <td className="border-r px-2 py-1">
+                                                        <Dropdown value={editVacationData.status} options={["Do zatwierdzenia", "Zatwierdzone", "Anulowane"]} onChange={(e) => setEditVacationData({ ...editVacationData, status: e.value })} />
+                                                    </td>
+                                                    <td className="px-2 py-1">
+                                                        <Button label="Zapisz" onClick={() => handleSave(urlopy.id)} className="bg-blue-700 text-white p-1 m-0.5 text-xs" />
+                                                        <Button label="Anuluj" onClick={() => setEditingVacationId(null)} className="bg-red-500 text-white p-1 m-0.5 text-xs" />
+                                                    </td>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <td className="border-r px-2 py-1">{urlopy.dataOd}</td>
+                                                    <td className="border-r px-2 py-1">{urlopy.dataDo}</td>
+                                                    <td className="border-r px-2 py-1">{urlopy.komentarz}</td>
+                                                    <td className={`border-r px-2 py-1 ${getStatusClass(urlopy.status)}`}>{urlopy.status}</td>
+                                                    <td className="px-2 py-1">
+                                                        <Button label="Edytuj" onClick={() => handleEdit(urlopy)} className="bg-blue-700 text-white p-1 m-0.5 text-sm" />
+                                                        <Button label="Usuń" onClick={() => handleUsun(urlopy.id)} className="bg-red-500 text-white p-1 m-0.5 text-sm" />
+                                                        <Button label="Zatwierdź" onClick={() => handleZatwierdz(urlopy.id)} className="bg-green-500 text-white p-1 m-0.5 text-sm" />
+                                                        <Button label="Anuluj" onClick={() => handleAnuluj(urlopy.id)} className="bg-red-500 text-white p-1 m-0.5 text-sm" />
+                                                    </td>
+                                                </>
+                                            )}
+                                        </tr>
+                                    ))}
+                                </React.Fragment>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </>
+        );
+    };
+
     const ApprovedTable = () => {
-        return renderTable(
-            filteredDane.ApprovedUrlopy,
-            'Zatwierdzone urlopy',
-            approvedGroupSelections,
-            setApprovedGroupSelections,
-            approvedExpandedGroups,
-            setApprovedExpandedGroups,
-            approvedSelectedItems,
-            setApprovedSelectedItems
+        return (
+            <RenderTable
+                data={filteredDane.ApprovedUrlopy}
+                title='Zatwierdzone urlopy'
+                groupSelections={approvedGroupSelections}
+                setGroupSelections={setApprovedGroupSelections}
+                expandedGroups={approvedExpandedGroups}
+                setExpandedGroups={setApprovedExpandedGroups}
+                selectedItems={approvedSelectedItems}
+                setSelectedItems={setApprovedSelectedItems}
+            />
         );
     };
     
     const RemainingTable = () => {
-        return renderTable(
-            filteredDane.Pozostale,
-            'Pozostałe urlopy',
-            remainingGroupSelections,
-            setRemainingGroupSelections,
-            remainingExpandedGroups,
-            setRemainingExpandedGroups,
-            remainingSelectedItems,
-            setRemainingSelectedItems
+        return (
+            <RenderTable
+                data={filteredDane.Pozostale}
+                title='Pozostałe urlopy'
+                groupSelections={remainingGroupSelections}
+                setGroupSelections={setRemainingGroupSelections}
+                expandedGroups={remainingExpandedGroups}
+                setExpandedGroups={setRemainingExpandedGroups}
+                selectedItems={remainingSelectedItems}
+                setSelectedItems={setRemainingSelectedItems}
+            />
         );
     };
     
-
-    
-
 
     const handlePdfDownloadClick = () => {
 
@@ -206,17 +231,25 @@ export default function UrlopyPage() {
 
     const handleGroupCheckboxChange = (groupName, setGroupSelections, groupSelections, setSelectedItems, data) => {
         const isChecked = !groupSelections[groupName];
+        
         setGroupSelections(prevSelections => ({
             ...prevSelections,
             [groupName]: isChecked,
         }));
-        setSelectedItems(isChecked ? data.map(item => `cb-${item.id}`) : []);
+        
+        const itemIds = data.map(item => `cb-${item.id}`);
+        
+        setSelectedItems(prevSelectedItems => 
+            isChecked 
+                ? [...new Set([...prevSelectedItems, ...itemIds])]
+                : prevSelectedItems.filter(item => !itemIds.includes(item)) 
+        );
     };
     
     const handleCheckboxChange = (checkboxId, setSelectedItems, selectedItems) => {
         setSelectedItems(prevSelectedItems => 
             prevSelectedItems.includes(checkboxId) 
-                ? prevSelectedItems.filter(item => item !== checkboxId) 
+                ? prevSelectedItems.filter(item => item !== checkboxId)
                 : [...prevSelectedItems, checkboxId]
         );
     };
@@ -241,17 +274,26 @@ export default function UrlopyPage() {
     };
 
     
-    const handleUpdateStatus = (id, newStatus) => {
-
-        const ids = selectedItems.map(extractId);
-        ids.push(id);
+    const handleUpdateStatus = (id = null, newStatus) => {
+        let ids = [];
+        if (id) {
+            ids.push(id);
+        } else {
+            ids = [...approvedSelectedItems].map(item => extractId(item));
+        }
+    
+        if (ids.length === 0) {
+            console.log("No items selected for status update");
+            return;
+        }
+    
         Axios.put("http://localhost:5000/api/urlopy", {
             ids: ids,
             status: newStatus,
-        }, { withCredentials: true }
-        )
+        }, { withCredentials: true })
             .then(() => {
-                fetchUrlopy(); // Refetch data after updating
+                fetchUrlopy();
+                setApprovedSelectedItems([]);
             })
             .catch((error) => {
                 console.error("There was an error updating the status:", error);
@@ -263,16 +305,13 @@ export default function UrlopyPage() {
             .then((response) => {
                 const urlopyData = response.data.urlopy;
     
-                console.log("Selected Groups:", selectedGroups);
-    
                 const filterBySelectedGroups = (data) => {
-                    if (Object.keys(selectedGroups).length === 0) return data;
-                    return data.filter(item => selectedGroups[item.zleceniodawca] === true);
+                    if (selectedGrupyNazwa.length === 0) return data;
+                    return data.filter(item => selectedGrupyNazwa.includes(item.zleceniodawca));
                 };
                 
     
                 const filteredUrlopyData = filterBySelectedGroups(urlopyData);
-                console.log("Filtered URLopy Data:", filteredUrlopyData);
     
                 // Split filtered data into approved and remaining
                 const approvedUrlopy = urlopyData.filter(item => item.status === "Do zatwierdzenia");
@@ -330,9 +369,11 @@ export default function UrlopyPage() {
     };
 
     useEffect(() => {
+
         fetchUrlopy();
         fetchGrupy();
         handleGetPracownicy();
+
     }, []);
 
     const handleDodaj = () => {
@@ -370,13 +411,11 @@ export default function UrlopyPage() {
 
      // do zaznaczania grup w tym co generuje spis urlopów
      const handleGrupaCheckboxChange = (id, zleceniodawca) => {
-        setSelectedGrupy(prevState => {
+            setSelectedGrupy(prevState => {
             const newSelectedGrupy = {
                 ...prevState,
                 [id]: !prevState[id]
             };
-
-            
 
             // Update selectedGrupyNazwa based on checkbox state
             setSelectedGrupyNazwa(prevSelected => {
@@ -402,16 +441,6 @@ export default function UrlopyPage() {
     const convertToDisplayFormat = (isoDateString) => {
         const [year, month, day] = isoDateString.split('-');
         return `${day}/${month}/${year}`;
-    };
-
-    const handleEdit = (vacation) => {
-        setEditingVacationId(vacation.id);
-        setEditVacationData({
-            urlopOd: convertToISOFormat(vacation.dataOd),
-            urlopDo: convertToISOFormat(vacation.dataDo),
-            status: vacation.status,
-            komentarz: vacation.komentarz
-        });
     };
 
     const handleSave = (vacationId) => {
@@ -441,9 +470,8 @@ export default function UrlopyPage() {
     }
 
     const handleSearch = () => {
-        fetchUrlopy(selectedGrupyNazwa);
-    };
-
+    fetchUrlopy(selectedGrupyNazwa);
+};
 
     const getStatusClass = (status) => {
         switch (status) {
@@ -514,6 +542,11 @@ export default function UrlopyPage() {
             </AmberBox>
             <div className="w-auto h-auto bg-blue-700 outline outline-1 outline-black flex flex-row items-center space-x-4 m-2 p-3 text-white">
                 <p className="font-bold whitespace-nowrap">Urlopy do zatwierdzenia</p>
+                <Button 
+                    label="Zatwierdź" 
+                    onClick={() => handleUpdateStatus(null, "Zatwierdzone")} 
+                    className="bg-green-500 text-white p-1 m-0.5 text-sm" 
+                />
             <div className="w-full h-2/5 flex flex-col space-y-2 items-start">
                 <div className="w-full h-2/6">
                 </div>
