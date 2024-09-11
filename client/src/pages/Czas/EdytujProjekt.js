@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import AmberBox from "../../Components/AmberBox";
-import { InputText } from 'primereact/inputtext';
-import { FloatLabel } from 'primereact/floatlabel';
-import { Dropdown } from 'primereact/dropdown';
-import { Button } from 'primereact/button';
+import { Input, Select, Button, AutoComplete } from "antd";
 import Axios from "axios";
+
+const { Option } = Select;
 
 export default function EdytujProjektPage() {
     const [availableGroups, setAvailableGroups] = useState([]);
@@ -35,13 +34,12 @@ export default function EdytujProjektPage() {
                     value: grupy.id
                 }));
                 setAvailableGroups(transformedData);
-                console.log('Available groups:', transformedData);
             })
             .catch((error) => {
                 console.error(error);
             });
     };
-    
+
     const fetchProjects = () => {
         Axios.get("http://localhost:5000/api/czas/projekty", { withCredentials: true })
             .then((response) => {
@@ -59,10 +57,8 @@ export default function EdytujProjektPage() {
     const fetchProjectData = (projectId) => {
         Axios.get(`http://localhost:5000/api/czas/projekty/${projectId}`, { withCredentials: true })
             .then((response) => {
-                console.log('Response data:', response.data);
                 if (response.data && Array.isArray(response.data) && response.data.length > 0) {
                     const project = response.data[0];
-                    
                     setForm({
                         firma: project.Firma || '',
                         zleceniodawca: project.Zleceniodawca || '',
@@ -73,8 +69,6 @@ export default function EdytujProjektPage() {
                         kodPocztowy: project.Kod_pocztowy || '',
                         kraj: project.Kraj || ''
                     });
-                } else {
-                    console.error('Unexpected response structure or no data:', response.data);
                 }
             })
             .catch((error) => {
@@ -89,16 +83,7 @@ export default function EdytujProjektPage() {
     }, [id]);
 
     const handleSave = () => {
-        console.log('Form:', form);
-        Axios.put(`http://localhost:5000/api/czas/edytujProjekt/${id}`, {
-            firma: form.firma,
-            zleceniodawca: form.zleceniodawca,
-            nazwa: form.nazwa,
-            ulica: form.ulica,
-            miejscowosc: form.miejscowosc,
-            kodPocztowy: form.kodPocztowy,
-            kraj: form.kraj
-        }, { 
+        Axios.put(`http://localhost:5000/api/czas/edytujProjekt/${id}`, form, { 
             withCredentials: true 
         })
         .then(res => {
@@ -109,8 +94,7 @@ export default function EdytujProjektPage() {
         });
     };
 
-    const handleChange = (e, field) => {
-        const value = e.value !== undefined ? e.value : e.target.value;
+    const handleChange = (value, field) => {
         setForm(prevState => ({
             ...prevState,
             [field]: value
@@ -120,81 +104,87 @@ export default function EdytujProjektPage() {
     return (
         <div>
             <div className="w-auto h-auto bg-blue-700 outline outline-1 outline-black flex flex-row items-center space-x-4 m-2 p-3 text-white">
-                <p>Dodaj nowy projekt</p>
+                <p>Edytuj projekt</p>
             </div>
             <AmberBox>
                 <div className="flex flex-col items-center space-y-8 p-4 w-full">
-                    
-                <FloatLabel className="w-full md:w-6/12 lg:w-4/12">
-                        <Dropdown 
-                            onChange={(e) => handleChange(e, 'firma')} 
-                            options={firmyOptions} 
-                            optionLabel="name" 
-                            optionValue="value"
+
+                    <div className="w-full md:w-6/12 lg:w-4/12">
+                        <label htmlFor="firma">Firma</label>
+                        <Select
+                            onChange={(value) => handleChange(value, 'firma')}
                             className="w-full"
                             value={form.firma}
-                            editable
-                            filter 
-                            showClear
-                        />
-                        <label htmlFor="firma">Firma</label>
-                    </FloatLabel>
-                    
-                    <FloatLabel className="w-full md:w-6/12 lg:w-4/12">
-                        <Dropdown 
-                            onChange={(e) => handleChange(e, 'zleceniodawca')} 
-                            options={availableGroups}
-                            optionLabel="name" 
-                            optionValue="value"
+                            showSearch
+                            allowClear
+                        >
+                            {firmyOptions.map((option) => (
+                                <Option key={option.value} value={option.value}>
+                                    {option.name}
+                                </Option>
+                            ))}
+                        </Select>
+                    </div>
+
+                    <div className="w-full md:w-6/12 lg:w-4/12">
+                        <label htmlFor="zleceniodawca">Zleceniodawca</label>
+                        <Select
+                            onChange={(value) => handleChange(value, 'zleceniodawca')}
                             className="w-full"
                             value={form.zleceniodawca}
-                            editable
-                            filter 
-                            showClear
-                        />
-                        <label htmlFor="zleceniodawca">Zleceniodawca</label>
-                    </FloatLabel>
+                            showSearch
+                            allowClear
+                        >
+                            {availableGroups.map((group) => (
+                                <Option key={group.value} value={group.value}>
+                                    {group.name}
+                                </Option>
+                            ))}
+                        </Select>
+                    </div>
 
-                    <FloatLabel className="w-full md:w-6/12 lg:w-4/12">
-                        <Dropdown 
-                            onChange={(e) => handleChange(e, 'nazwa')} 
-                            options={availableProjects} 
-                            optionLabel="name" 
-                            optionValue="value"
+                    <div className="w-full md:w-6/12 lg:w-4/12">
+                        <label htmlFor="nazwa">Nazwa/Kod Projektu</label>
+                        <AutoComplete
+                            onChange={(value) => handleChange(value, 'nazwa')}
                             className="w-full"
                             value={form.nazwa}
-                            editable
-                            filter 
-                            showClear
+                            options={availableProjects.map(project => ({
+                                value: project.value,
+                                label: project.name
+                            }))}
+                            placeholder="Wybierz projekt"
+                            filterOption={(inputValue, option) =>
+                                option.label.toLowerCase().includes(inputValue.toLowerCase())
+                            }
+                            allowClear
                         />
-                        <label htmlFor="nazwa">Nazwa/Kod Projektu</label>
-                    </FloatLabel>
-                    
-                    <FloatLabel className="w-full md:w-6/12 lg:w-4/12">
-                        <InputText onChange={(e) => handleChange(e, 'ulica')} id="ulica" type="text" className="w-full" value={form.ulica} />
-                        <label htmlFor="ulica">Ulica</label>
-                    </FloatLabel>
-                    
-                    <FloatLabel className="w-full md:w-6/12 lg:w-4/12">
-                        <InputText onChange={(e) => handleChange(e, 'miejscowosc')} id="miejscowosc" type="text" className="w-full" value={form.miejscowosc} />
-                        <label htmlFor="miejscowosc">Miejscowość</label>
-                    </FloatLabel>
+                    </div>
 
-                    <FloatLabel className="w-full md:w-6/12 lg:w-4/12">
-                        <InputText onChange={(e) => handleChange(e, 'kodPocztowy')} id="kodPocztowy" type="text" className="w-full" value={form.kodPocztowy} />
+                    <div className="w-full md:w-6/12 lg:w-4/12">
+                        <label htmlFor="ulica">Ulica</label>
+                        <Input onChange={(e) => handleChange(e.target.value, 'ulica')} value={form.ulica} />
+                    </div>
+
+                    <div className="w-full md:w-6/12 lg:w-4/12">
+                        <label htmlFor="miejscowosc">Miejscowość</label>
+                        <Input onChange={(e) => handleChange(e.target.value, 'miejscowosc')} value={form.miejscowosc} />
+                    </div>
+
+                    <div className="w-full md:w-6/12 lg:w-4/12">
                         <label htmlFor="kodPocztowy">Kod pocztowy</label>
-                    </FloatLabel>
-                    
-                    <FloatLabel className="w-full md:w-6/12 lg:w-4/12">
-                        <InputText onChange={(e) => handleChange(e, 'kraj')} id="kraj" type="text" className="w-full" value={form.kraj} />
+                        <Input onChange={(e) => handleChange(e.target.value, 'kodPocztowy')} value={form.kodPocztowy} />
+                    </div>
+
+                    <div className="w-full md:w-6/12 lg:w-4/12">
                         <label htmlFor="kraj">Kraj</label>
-                    </FloatLabel>
-                    
+                        <Input onChange={(e) => handleChange(e.target.value, 'kraj')} value={form.kraj} />
+                    </div>
+
                     <div className="flex space-x-4 mt-8">
-                        <Button label="Zapisz" icon="pi pi-check" className="p-button-outlined border-2 p-1 bg-white text-black pr-2 pl-2 mr-2" 
-                        onClick={handleSave} />
+                        <Button type="primary" onClick={handleSave}>Zapisz</Button>
                         <Link to="/home/projekty">
-                            <Button label="Anuluj" icon="pi pi-times" className="p-button-outlined border-2 p-1 bg-white text-black pr-2 pl-2" />
+                            <Button>Anuluj</Button>
                         </Link>
                     </div>
                 </div>
