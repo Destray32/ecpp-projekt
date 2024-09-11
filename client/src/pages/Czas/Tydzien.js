@@ -14,6 +14,7 @@ export default function TydzienPage() {
     const [selectedItems, setSelectedItems] = useState([]);
     const [data, setData] = useState([]);
     const [refresh, setRefresh] = useState(false);
+    const [selectAll, setSelectAll] = useState(false);
 
     // Function to get the current week in the format "YYYY-Www"
     const getCurrentWeek = () => {
@@ -89,6 +90,15 @@ export default function TydzienPage() {
         });
     };
 
+    const handleSelectAll = () => {
+        if (selectAll) {
+            setSelectedItems([]);
+        } else {
+            setSelectedItems(data.map(item => ({ tydzienRoku: item.tydzienRoku, Pracownik_idPracownik: item.Pracownik_idPracownik })));
+        }
+        setSelectAll(!selectAll);
+    };
+
     const handleWeekChange = (event) => {
         const weekValue = event.target.value;
         setSelectedWeek(weekValue);
@@ -118,6 +128,8 @@ export default function TydzienPage() {
         }, { withCredentials: true })
             .then(response => {
                 setRefresh(!refresh);
+                setSelectedItems([]);
+                setSelectAll(false);
             })
             .catch(error => console.error(error));
     };
@@ -135,9 +147,10 @@ export default function TydzienPage() {
                 pracownikId: selectedItems.map(item => item.Pracownik_idPracownik)
             }
         })
-
             .then(response => {
                 setRefresh(!refresh);
+                setSelectedItems([]);
+                setSelectAll(false);
             })
             .catch(error => console.error(error));
     };
@@ -203,7 +216,13 @@ export default function TydzienPage() {
                 <table className="w-full">
                     <thead className="bg-blue-700 text-white">
                         <tr>
-                            <th></th>
+                            <th className='border-r'>
+                                <Checkbox
+                                    inputId="cb-select-all"
+                                    checked={selectAll}
+                                    onChange={handleSelectAll}
+                                />
+                            </th>
                             <th className="border-r">Imię i nazwisko</th>
                             <th className="border-r">Grupa urlopowa</th>
                             <th className="border-r w-28">Status</th>
