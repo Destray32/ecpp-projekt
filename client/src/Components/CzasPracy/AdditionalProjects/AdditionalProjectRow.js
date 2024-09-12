@@ -56,7 +56,7 @@ const AdditionalProjectRow = React.memo(({
                         const dateKey = format(day, 'yyyy-MM-dd');
                         const niedziela = getDay(day) === 0;
                         const isActive = activeInput && activeInput.projectId === project.id && activeInput.date === dateKey;
-                        const hasCommentAndCar = project.hours[dateKey]?.comment && project.hours[dateKey]?.car;
+                        const hasCommentAndCar = project.hours[dateKey]?.comment && project.hours[dateKey]?.car && project.hours[dateKey]?.hoursWorked > 0;
                         return (
                             <div key={index} className="text-center">
                                 <input
@@ -110,17 +110,10 @@ const AdditionalProjectRow = React.memo(({
                             className="w-full"
                         />
 
-                        <span className="text-right">Ex. kilometry:</span>
+                        <span className="text-right">Kilometry:</span>
                         <InputText
                             value={project.hours[activeInput.date]?.km || ""}
                             onChange={(e) => onInputChange(project.id, activeInput.date, e.target.value, 'km')}
-                            className="w-full"
-                        />
-
-                        <span className="text-right">Inne koszty:</span>
-                        <InputText
-                            value={project.hours[activeInput.date]?.other || ""}
-                            onChange={(e) => onInputChange(project.id, activeInput.date, e.target.value, 'other')}
                             className="w-full"
                         />
 
@@ -135,13 +128,6 @@ const AdditionalProjectRow = React.memo(({
                         <InputText
                             value={project.hours[activeInput.date]?.tools || ""}
                             onChange={(e) => onInputChange(project.id, activeInput.date, e.target.value, 'tools')}
-                            className="w-full"
-                        />
-
-                        <span className="text-right">Zużyte materiały:</span>
-                        <InputText
-                            value={project.hours[activeInput.date]?.materials || ""}
-                            onChange={(e) => onInputChange(project.id, activeInput.date, e.target.value, 'materials')}
                             className="w-full"
                         />
                     </div>

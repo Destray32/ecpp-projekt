@@ -43,10 +43,8 @@ async function PobierzDodaneProjekty(req, res, db) {
                 dp.Komentarz AS comment,
                 dp.Parking AS parking,
                 dp.Kilometry AS km,
-                dp.Inne_koszty AS other,
                 dp.Diety as diet,
-                dp.Wypozyczenie_narzedzi AS tools,
-                dp.Zuzyte_materialy AS materials
+                dp.Wypozyczenie_narzedzi AS tools
             FROM 
                 Dzien_Projekty dp
             INNER JOIN 
@@ -86,10 +84,8 @@ async function PobierzDodaneProjekty(req, res, db) {
                 comment: project.comment || null,
                 parking: project.parking || null,
                 km: project.km || null,
-                other: project.other || null,
                 diet: project.diet || null,
                 tools: project.tools || null,
-                materials: project.materials || null
             };
         });
 

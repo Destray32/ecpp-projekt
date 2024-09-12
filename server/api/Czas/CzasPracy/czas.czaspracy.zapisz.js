@@ -109,12 +109,10 @@ function ZapiszCzasPracy(req, res, db) {
                                                                                         Komentarz = ?, 
                                                                                         Parking = ?, 
                                                                                         Kilometry = ?, 
-                                                                                        Inne_koszty = ?, 
                                                                                         Diety = ?, 
-                                                                                        Wypozyczenie_narzedzi = ?, 
-                                                                                        Zuzyte_materialy = ? 
+                                                                                        Wypozyczenie_narzedzi = ?
                                                                                     WHERE idDzien_Projekty = ?`,
-                                                                                    [pojazdyId, projectDay.hoursWorked, projectDay.comment, projectDay.parking, projectDay.km, projectDay.other, projectDay.diet, projectDay.tools, projectDay.materials, existingProjectDay[0].idDzien_Projekty],
+                                                                                    [pojazdyId, projectDay.hoursWorked, projectDay.comment, projectDay.parking, projectDay.km, projectDay.diet, projectDay.tools, existingProjectDay[0].idDzien_Projekty],
                                                                                     queryCallback
                                                                                 );
                                                                             } else {
@@ -122,9 +120,9 @@ function ZapiszCzasPracy(req, res, db) {
                                                                                 db.query(
                                                                                     `INSERT INTO Dzien_Projekty 
                                                                                         (Dzien_idDzien, Projekty_idProjekty, Godziny_przepracowane, Pojazdy_idPojazdy, 
-                                                                                        Komentarz, Parking, Kilometry, Inne_koszty, Diety, Wypozyczenie_narzedzi, Zuzyte_materialy) 
-                                                                                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                                                                                    [dzienId, projektyId, projectDay.hoursWorked, pojazdyId, projectDay.comment, projectDay.parking, projectDay.km, projectDay.other, projectDay.diet, projectDay.tools, projectDay.materials],
+                                                                                        Komentarz, Parking, Kilometry,  Diety, Wypozyczenie_narzedzi) 
+                                                                                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                                                                                    [dzienId, projektyId, projectDay.hoursWorked, pojazdyId, projectDay.comment, projectDay.parking, projectDay.km, projectDay.diet, projectDay.tools],
                                                                                     queryCallback
                                                                                 );
                                                                             }
@@ -186,8 +184,8 @@ function ZapiszCzasPracy(req, res, db) {
                             // jeśli tydzień już istnieje, zaktualizuj go
                             tydzienId = existingWeek[0].idTydzien;
                             db.query(
-                                `UPDATE Tydzien SET Godziny_tygodniowe = ?, Status_tygodnia = ? WHERE idTydzien = ?`,
-                                [totalHours, 'Otwarty', tydzienId],
+                                `UPDATE Tydzien SET Godziny_tygodniowe = ? WHERE idTydzien = ?`,
+                                [totalHours, tydzienId],
                                 function (err) {
                                     if (err) {
                                         console.error(err);
@@ -199,8 +197,8 @@ function ZapiszCzasPracy(req, res, db) {
                         } else {
                             // if the week doesn't exist, insert a new record
                             db.query(
-                                `INSERT INTO Tydzien (Godziny_tygodniowe, Status_tygodnia, tydzienRoku, Rok, Pracownik_idPracownik) VALUES (?, ?, ?, ?, ?)`,
-                                [totalHours, 'Otwarty', weekData, year, pracownikId],
+                                `INSERT INTO Tydzien (Godziny_tygodniowe, tydzienRoku, Rok, Pracownik_idPracownik) VALUES (?, ?, ?, ?)`,
+                                [totalHours, weekData, year, pracownikId],
                                 function (err, result) {
                                     if (err) {
                                         console.error(err);

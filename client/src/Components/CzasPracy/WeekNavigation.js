@@ -15,10 +15,11 @@ import { formatWeek } from '../../utils/dateUtils';
  * @param {Function} props.setPracownik - Funkcja ustawiająca aktualnie wybranego pracownika.
  * @param {Array} props.pracownicy - Lista dostępnych pracowników.
  * @param {string} props.userType - Typ użytkownika (np. "Pracownik").
+ * @param {string} props.statusTyg - Status tygodnia (np. "Otwarty").
  * 
  * @returns {JSX.Element} Element JSX reprezentujący nawigację tygodniową.
  */
-const WeekNavigation = ({ currentDate, setCurrentDate, Pracownik, setPracownik, pracownicy, userType }) => {
+const WeekNavigation = ({ currentDate, setCurrentDate, Pracownik, setPracownik, pracownicy, userType, statusTyg }) => {
     const previousWeek = () => setCurrentDate(subWeeks(currentDate, 1));
     const nextWeek = () => setCurrentDate(addWeeks(currentDate, 1));
 
@@ -32,6 +33,7 @@ const WeekNavigation = ({ currentDate, setCurrentDate, Pracownik, setPracownik, 
                             <p className="text-lg font-bold">Tydzień {getWeek(currentDate, { weekStartsOn: 1 })} : {formatWeek(currentDate)}</p>
                             <Button icon="pi pi-arrow-right" iconPos="right" className="p-button-outlined" onClick={nextWeek} />
                         </div>
+                        <span className="text-lg font-bold">Status: {statusTyg}</span>
                         <Dropdown
                             value={Pracownik}
                             onChange={(e) => setPracownik(e.value)}

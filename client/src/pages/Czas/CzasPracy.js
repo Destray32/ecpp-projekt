@@ -26,6 +26,7 @@ export default function CzasPracyPage() {
     const [additionalProjects, setAdditionalProjects] = useState([]);
     const [daysOfWeek, setDaysOfWeek] = useState(generateWeek(startOfWeek(new Date(), { weekStartsOn: 1 })));
     const [samochody, setSamochody] = useState([]);
+    const [statusTygodnia, setStatusTygodnia] = useState(null);
 
     const startOfCurrentWeek = startOfWeek(currentDate, { weekStartsOn: 1 });
 
@@ -41,6 +42,10 @@ export default function CzasPracyPage() {
 
     useEffect(() => {
         setDaysOfWeek(generateWeek(startOfCurrentWeek));
+    }, [currentDate]);
+
+    useEffect(() => {
+        fetchStatusTygodnia();
     }, [currentDate]);
 
     useEffect(() => {
@@ -145,7 +150,7 @@ export default function CzasPracyPage() {
         try {
             const weekData = getWeek(date, { weekStartsOn: 1 });
             const year = date.getFullYear();
-            
+
             const response = await Axios.get("http://localhost:5000/api/czas/projekty/dodane", {
                 withCredentials: true,
                 params: {
@@ -154,10 +159,10 @@ export default function CzasPracyPage() {
                     year: year,
                 }
             });
-    
+
             if (response.data && response.data.projects) {
                 const startOfWeekDate = startOfWeek(date, { weekStartsOn: 1 });
-                
+
                 const dayNameToDateMap = {
                     'Poniedziałek': format(startOfWeekDate, 'yyyy-MM-dd'),
                     'Wtorek': format(addDays(startOfWeekDate, 1), 'yyyy-MM-dd'),
@@ -167,29 +172,29 @@ export default function CzasPracyPage() {
                     'Sobota': format(addDays(startOfWeekDate, 5), 'yyyy-MM-dd'),
                     'Niedziela': format(addDays(startOfWeekDate, 6), 'yyyy-MM-dd'),
                 };
-    
+
                 const loadedProjects = response.data.projects.map(project => {
                     const updatedHours = {};
-    
+
                     Object.keys(project.hours).forEach(dayOfWeek => {
                         const dateKey = dayNameToDateMap[dayOfWeek];
                         updatedHours[dateKey] = project.hours[dayOfWeek];
                     });
-    
+
                     return {
                         ...project,
                         id: uuidv4(),
                         hours: updatedHours
                     };
                 });
-    
+
                 setAdditionalProjects(loadedProjects);
             } else {
                 setAdditionalProjects([]);
             }
         } catch (error) {
             setAdditionalProjects([]);
-            
+
             if (error.response && error.response.status === 404) {
                 console.log("brak dodatkowych projektów");
             } else {
@@ -197,44 +202,88 @@ export default function CzasPracyPage() {
             }
         }
     };
+
+    const fetchStatusTygodnia = async () => {
+        try {
+            const weekData = getWeek(currentDate, { weekStartsOn: 1 });
+            const response = await Axios.get(`http://localhost:5000/api/tydzien/${weekData}`, {
+                withCredentials: true
+            });
+
+            if (response.data && response.data[0]) {
+                setStatusTygodnia(response.data[0].Status_tygodnia);
+            } else {
+                setStatusTygodnia(null);
+            }
+
+            // if (response.data && response.data.status) {
+            //     if (response.data.status === "Zamknięty") {
+            //         notification.error({
+            //             message: 'Błąd',
+            //             description: 'Tydzień jest zamknięty',
+            //             placement: 'topRight',
+            //         });
+            //     }
+            // }
+        } catch (error) {
+            console.error("Error fetching week status", error);
+        }
+    }
     //#endregion
 
     //#region handlers
     const handleSave = async () => {
         const totalHours = calculateWeeklyTotal(hours, daysOfWeek);
-        let hasMissingFields = false;
+
+        let hasMissingFields = false; // stan dla sprawdzania czy brakuje pola w dodatkowych projektach
+        let hasMissingStartEndBreak = false; // stan dla sprawdzania czy godziny sa ustawione dla dodatkowych projektow ale nie ma start, end, lub break
 
         const formattedAdditionalProjects = additionalProjects.map(project => ({
             ...project,
             totalHours: calculateProjectTotal(project, daysOfWeek),
-            days: daysOfWeek.map(day => ({
-                dayOfWeek: format(day, 'EEEE', { locale: pl }),
-                hoursWorked: project.hours[format(day, 'yyyy-MM-dd')]?.hoursWorked || 0,
-                car: project.hours[format(day, 'yyyy-MM-dd')]?.car || null,
-                comment: project.hours[format(day, 'yyyy-MM-dd')]?.comment || "",
-                diet: project.hours[format(day, 'yyyy-MM-dd')]?.diet || "",
-                km: project.hours[format(day, 'yyyy-MM-dd')]?.km || "",
-                materials: project.hours[format(day, 'yyyy-MM-dd')]?.materials || "",
-                other: project.hours[format(day, 'yyyy-MM-dd')]?.other || "",
-                parking: project.hours[format(day, 'yyyy-MM-dd')]?.parking || "",
-                tools: project.hours[format(day, 'yyyy-MM-dd')]?.tools || "",
+            days: daysOfWeek.map(day => {
+                const dayName = format(day, 'EEEE', { locale: pl });
+                const formattedDate = format(day, 'yyyy-MM-dd');
+                const projectData = project.hours[formattedDate];
+                const hoursWorked = projectData?.hoursWorked || 0;
 
-            }))
+
+                return {
+                    dayOfWeek: dayName,
+                    hoursWorked: hoursWorked,
+                    car: hoursWorked > 0 ? projectData?.car || null : null, // null jesli nie ma godzin pracy
+                    comment: hoursWorked > 0 ? projectData?.comment || "" : "", // tak samo tutaj 
+                    diet: projectData?.diet || "",
+                    km: projectData?.km || "",
+                    materials: projectData?.materials || "",
+                    parking: projectData?.parking || "",
+                    tools: projectData?.tools || ""
+                };
+            })
         }));
 
-        // pętla sprawdzająca czy wszystkie pola samochód i komentarz są wypełnione
         additionalProjects.forEach(project => {
             daysOfWeek.forEach(day => {
                 const dayName = format(day, 'EEEE', { locale: pl });
-                const niedziela = dayName === 'niedziela';
 
-                const formattedDate = format(day, 'yyyy-MM-dd');
-                const projectData = project.hours[formattedDate];
+                // pomijanie niedzieli
+                if (dayName !== 'Niedziela') {
+                    const formattedDate = format(day, 'yyyy-MM-dd');
+                    const projectData = project.hours[formattedDate];
+                    const hoursWorked = projectData?.hoursWorked || 0; // default 0 jesli nie ma godzin pracy
 
-                if ((!projectData || !projectData.comment || !projectData.car) && !niedziela) {
-                    if (projectData !== undefined) {
-                        hasMissingFields = true;
-                    }  
+                    // przeskipowanie checkowania jesli nie ma godzin pracy w danym dniu
+                    if (hoursWorked > 0) {
+                        // sprawdza czy godziny sa ustawione dla danego dnia w projekcie ale nie ma start, end, lub break
+                        if ((!hours[formattedDate]?.start || !hours[formattedDate]?.end || !hours[formattedDate]?.break)) {
+                            console.log(`Additional project is filled but start, break, or end times are missing for ${dayName} (${formattedDate}).`);
+                            hasMissingStartEndBreak = true;
+                        }
+                        if (!projectData?.car || !projectData?.comment) {
+                            hasMissingFields = true;
+                            console.log(`Missing car or comment for ${dayName} (${formattedDate}).`);
+                        }
+                    }
                 }
             });
         });
@@ -245,9 +294,17 @@ export default function CzasPracyPage() {
                 description: 'Wybierz samochód i dodaj komentarz do wszystkich projektów',
                 placement: 'topRight',
             });
-            return; // przerwij zapis
+            return;
         }
 
+        if (hasMissingStartEndBreak) {
+            notification.error({
+                message: 'Missing Fields',
+                description: 'Wybierz godziny rozpoczęcia, zakończenia i przerwy dla dni w których są projekty',
+                placement: 'topRight',
+            });
+            return;
+        }
 
         try {
             const response = await Axios.post("http://localhost:5000/api/czas", {
@@ -255,16 +312,21 @@ export default function CzasPracyPage() {
                 projektyName: Projekty,
                 weekData: getWeek(currentDate, { weekStartsOn: 1 }),
                 year: currentDate.getFullYear(),
-                days: daysOfWeek.map(day => ({
-                    dayOfWeek: format(day, 'EEEE', { locale: pl }),
-                    start: hours[format(day, 'yyyy-MM-dd')]?.start || "00:00",
-                    end: hours[format(day, 'yyyy-MM-dd')]?.end || "00:00",
-                    break: hours[format(day, 'yyyy-MM-dd')]?.break || "00:00",
-                })),
+                days: daysOfWeek.map(day => {
+                    const formattedDate = format(day, 'yyyy-MM-dd');
+                    const hoursData = hours[formattedDate] || {};
+
+                    return {
+                        dayOfWeek: format(day, 'EEEE', { locale: pl }),
+                        start: hoursData.start || "00:00",
+                        end: hoursData.end || "00:00",
+                        break: hoursData.break || "00:00",
+                    };
+                }),
                 totalHours: totalHours,
                 additionalProjects: formattedAdditionalProjects,
-            },
-            { withCredentials: true });
+            }, { withCredentials: true });
+
             if (response.status === 200) {
                 notification.success({
                     message: 'Success',
@@ -276,25 +338,41 @@ export default function CzasPracyPage() {
             console.error(error);
         }
     };
+
+    const handleZamknijTydzien = async () => {
+        const totalHours = calculateWeeklyTotal(hours, daysOfWeek);
+        let projectTotalHours = additionalProjects.map(project => calculateProjectTotal(project, daysOfWeek));
+        projectTotalHours = projectTotalHours.reduce((acc, curr) => acc + curr, 0);
+
+        if (projectTotalHours !== totalHours) {
+            notification.error({
+                message: 'Błąd',
+                description: 'Suma godzin w dodatkowych projektach nie zgadza się z sumą godzin pracy',
+                placement: 'topRight',
+            });
+            return;
+        }
+    };
     //#endregion
 
-//#region Render
+    //#region Render
     return (
         <div>
-            <WeekNavigation 
+            <WeekNavigation
                 currentDate={currentDate}
                 setCurrentDate={setCurrentDate}
                 Pracownik={Pracownik}
                 setPracownik={setPracownik}
                 pracownicy={pracownicy}
                 userType={userType}
+                statusTyg={statusTygodnia}
             />
-            <TimeInputs 
+            <TimeInputs
                 daysOfWeek={daysOfWeek}
                 hours={hours}
                 setHours={setHours}
             />
-            <AdditionalProjects 
+            <AdditionalProjects
                 Firma={Firma}
                 setFirma={setFirma}
                 firmy={firmy}
@@ -311,8 +389,8 @@ export default function CzasPracyPage() {
                 loggedUserName={Pracownik}
                 currentDate={currentDate}
             />
-            <ActionButtons handleSave={handleSave} />
+            <ActionButtons handleSave={handleSave} handleCloseWeek={handleZamknijTydzien} />
         </div>
     );
-//#endregion
+    //#endregion
 }
