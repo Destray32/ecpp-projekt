@@ -14,6 +14,7 @@ export default function HomePage() {
     const [showSubMenu, setShowSubMenu] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
+    const [badgeCount, setBadgeCount] = useState(0);
 
     const handleLogout = async () => {
         try {
@@ -44,11 +45,21 @@ export default function HomePage() {
         }
     }
 
+    const getBadgeCount = async () => {
+        try {
+            const response = await axios.get('http://localhost:5000/api/ogloszenia/count', { withCredentials: true });
+            setBadgeCount(response.data.count);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
     useEffect(() => { // useEffect ze względu na to żeby tata się zmieniała w razie potrzeby
         // moment.locale('pl'); // nie wiem jeszcze czy potrzebna jest data polska czy szwedzka
 
         checkTokenValidity();
         getImie();
+        getBadgeCount();
 
         // const handlePageUnload = () => {
         //     navigator.sendBeacon('http://localhost:5000/api/zamkniecieStrony');
@@ -89,7 +100,7 @@ export default function HomePage() {
                     <div className="flex items-center">
                         <span className="mr-4">{imie + ' ' + data}</span> {/* imie i data */}
                         <Link to="/home/ogloszenia" className='mr-4'>
-                            <Badge count={5} >
+                            <Badge count={badgeCount}>
                                 <Button type="primary" size="large">
                                     Ogłoszenia
                                 </Button>

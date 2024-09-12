@@ -12,12 +12,24 @@ export default function OgloszeniaPage() {
     const [pracownicy, setPracownicy] = useState([]);
     const [grupy, setGrupy] = useState([]);
     const [form] = Form.useForm();
+    const [accountType, setAccountType] = useState(null);
 
     useEffect(() => {
+        fetchUserAccountType();
         fetchOgloszenia();
         fetchPracownicy();
         fetchGrupy();
     }, []);
+
+    const fetchUserAccountType = () => {
+        axios.get('http://localhost:5000/api/imie', { withCredentials: true })
+            .then(response => {
+                setAccountType(response.data.accountType);
+            })
+            .catch(error => {
+                console.error('Error fetching user account type:', error);
+            });
+    };
 
     const fetchOgloszenia = () => {
         axios.get('http://localhost:5000/api/ogloszenia', { withCredentials: true })
@@ -139,7 +151,9 @@ export default function OgloszeniaPage() {
         <div className='w-full h-auto flex flex-col items-start justify-start p-2'>
             <div className='w-full h-15 flex flex-row items-start justify-between bg-amber-100 outline outline-1 outline-gray-500 p-2'>
                 <h1 className='text-2xl'>Ogłoszenia</h1>
-                <Button type='primary' onClick={showModal}>Dodaj ogłoszenie</Button>
+                    {accountType === 'Administrator' || accountType === 'Majster' ? (
+                        <Button type='primary' onClick={showModal}>Dodaj ogłoszenie</Button>
+                    ) : null}
                 <Modal title='Dodaj ogłoszenie' open={isModalOpen} onOk={handleOk} onCancel={handleCancel}>
                     <Form form={form}>
                         <Form.Item label='Do' name='do'>
@@ -193,7 +207,9 @@ export default function OgloszeniaPage() {
                 {ogloszenia.length > 0 ? (
                     ogloszenia.map((ogloszenie) => (
                         <div key={ogloszenie.id} className={`w-auto p-2 border-b border-gray-300 relative ${ogloszenie.przeczytane ? '' : 'bg-orange-100'}`} onClick={() => markAsRead(ogloszenie.id)}>
-                            <CloseOutlined className='text-red-600 text-2xl absolute top-2 right-2 cursor-pointer' onClick={() => showDeleteConfirm(ogloszenie.id)} />
+                            {accountType === 'Administrator' || accountType === 'Majster' ? (
+                                <CloseOutlined className='text-red-600 text-2xl absolute top-2 right-2 cursor-pointer' onClick={() => showDeleteConfirm(ogloszenie.id)} />
+                            ) : null}
                             <h2 className='text-xl font-bold'>{ogloszenie.tytul}</h2>
                             <p className='break-all'>{ogloszenie.tresc}</p>
                             <p className='text-gray-600'>
