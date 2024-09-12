@@ -28,6 +28,7 @@ export default function OgloszeniaPage() {
                     tresc: ogloszenie.Wiadomosc,
                     grupa: ogloszenie.Zleceniodawca ? [ogloszenie.Zleceniodawca] : [],
                     osoby: ogloszenie.Pracownik_idPracownik || [],
+                    przeczytane: ogloszenie.Przeczytane
                 }));
                 setOgloszenia(ogloszenia);
             })
@@ -122,6 +123,18 @@ export default function OgloszeniaPage() {
         setConfirmDeleteVisible(false);
     };
 
+    const markAsRead = (announcementId) => {
+        axios.post('http://localhost:5000/api/ogloszenia/przeczytane', { idOgloszenia: announcementId }, { withCredentials: true })
+          .then(response => {
+            if (response.status === 200) {
+              fetchOgloszenia();
+            }
+          })
+          .catch(error => {
+            console.error('Error marking announcement as read:', error);
+          });
+      };
+
     return (
         <div className='w-full h-auto flex flex-col items-start justify-start p-2'>
             <div className='w-full h-15 flex flex-row items-start justify-between bg-amber-100 outline outline-1 outline-gray-500 p-2'>
@@ -179,7 +192,7 @@ export default function OgloszeniaPage() {
             <div className='w-full mt-4'>
                 {ogloszenia.length > 0 ? (
                     ogloszenia.map((ogloszenie) => (
-                        <div key={ogloszenie.id} className='w-auto p-2 border-b border-gray-300 relative'>
+                        <div key={ogloszenie.id} className={`w-auto p-2 border-b border-gray-300 relative ${ogloszenie.przeczytane ? '' : 'bg-orange-100'}`} onClick={() => markAsRead(ogloszenie.id)}>
                             <CloseOutlined className='text-red-600 text-2xl absolute top-2 right-2 cursor-pointer' onClick={() => showDeleteConfirm(ogloszenie.id)} />
                             <h2 className='text-xl font-bold'>{ogloszenie.tytul}</h2>
                             <p className='break-all'>{ogloszenie.tresc}</p>

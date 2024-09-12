@@ -147,6 +147,7 @@ const DodajOgloszenie = require('./api/Ogloszenia/ogloszenia.dodaj');
 const UsunOgloszenie = require('./api/Ogloszenia/ogloszenia.usun');
 const PobierzOgloszeniaPracownicy = require('./api/Ogloszenia/ogloszenia.pobierzPracownikow');
 const PobierzOgloszeniaGrupy = require('./api/Ogloszenia/ogloszenia.pobierzGrupy');
+const ZaznaczOgloszeniePrzeczytane = require('./api/Ogloszenia/ogloszenia.zaznaczPrzeczytane');
 
 // Archiwum
 const PobierzArchiwum = require('./api/Czas/Archiwum/archiwum.pobierz');
@@ -436,6 +437,10 @@ app.get('/api/ogloszenia/grupy', (req, res) => {
 
 app.delete('/api/ogloszenia/:id', (req, res) => {
     UsunOgloszenie(req, res);
+});
+
+app.post('/api/ogloszenia/przeczytane', (req, res) => {
+    ZaznaczOgloszeniePrzeczytane(req, res);
 });
 /////////////////////////////////////////
 
