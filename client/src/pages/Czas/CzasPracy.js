@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { format, startOfWeek, addWeeks, addDays, subWeeks, getWeek } from 'date-fns';
+import { format, startOfWeek, addWeeks, addDays, subWeeks, getWeek, set } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { v4 as uuidv4 } from 'uuid';
 import { Alert, notification } from 'antd';
@@ -14,6 +14,7 @@ import { generateWeek, formatWeek, calculateWeeklyTotal, calculateProjectTotal }
 export default function CzasPracyPage() {
     const [userType, setUserType] = useState(null);
     const [Pracownik, setPracownik] = useState(null);
+    const [currentUserId, setCurrentUserId] = useState(null);
     const [currentDate, setCurrentDate] = useState(new Date());
     const [pracownicy, setPracownicy] = useState([]);
     const [Firma, setFirma] = useState("PC Husbyggen");
@@ -58,9 +59,31 @@ export default function CzasPracyPage() {
             setPracownicy([{ label: Pracownik, value: Pracownik }]);
         }
     }, [Pracownik, currentDate]);
+
+    useEffect(() => {
+        if (Pracownik) {
+            fetchUserId();
+        }
+    }, [Pracownik]);
     //#endregion
 
     //#region fetching
+    const fetchUserId = async () => {
+        try {
+        await Axios.get("http://localhost:5000/api/pracownicy", { withCredentials: true })
+            .then((response) => {
+                console.log(response.data);
+                const userId = response.data.find(pracownik => `${pracownik.name} ${pracownik.surname}` === Pracownik).id;
+                setCurrentUserId(userId);
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
     const fetchZalogowanyUzytkownik = () => {
         Axios.get("http://localhost:5000/api/imie", { withCredentials: true })
             .then((response) => {
@@ -351,6 +374,27 @@ export default function CzasPracyPage() {
                 placement: 'topRight',
             });
             return;
+        } else {
+            try {
+                fetchUserId();
+                const response = await Axios.delete("http://localhost:5000/api/tydzien", {
+                    data: {
+                    tydzienRoku: getWeek(currentDate, { weekStartsOn: 1 }),
+                    pracownikId: currentUserId
+                    },
+                    withCredentials: true
+                });
+                if (response.status === 200) {
+                    notification.success({
+                        message: 'Success',
+                        description: 'Zamknięto tydzień',
+                        placement: 'topRight',
+                    });
+                    //setStatusTygodnia("Zamknięty");
+                }
+            } catch (error) {
+                console.error(error);
+            }
         }
     };
     //#endregion

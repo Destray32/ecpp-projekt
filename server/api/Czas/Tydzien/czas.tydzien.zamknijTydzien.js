@@ -2,9 +2,9 @@ function ZamknijTydzienCzas(req, res, db) {
     const { tydzienRoku, pracownikId } = req.body;
     console.log(tydzienRoku, pracownikId);
 
-    if (!Array.isArray(pracownikId) || pracownikId.length === 0) {
-        return res.status(400).send('No employees selected');
-    }
+    // if (!Array.isArray(pracownikId) || pracownikId.length === 0) {
+    //     return res.status(400).send('No employees selected');
+    // }
 
     const sql = `UPDATE tydzien SET Status_tygodnia = 'Zamkniety' WHERE tydzienRoku = ? AND Pracownik_idPracownik IN (?)`;
 
