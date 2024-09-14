@@ -14,7 +14,8 @@ const AdditionalProjectRow = React.memo(({
     daysOfWeek, 
     activeInput, 
     handleInputFocus, 
-    samochody 
+    samochody,
+    statusTyg
 }) => {
     const projectTotal = calculateProjectTotal(project, daysOfWeek);
     const activeCar = activeInput ? project.hours[activeInput.date]?.car : "";
@@ -47,6 +48,7 @@ const AdditionalProjectRow = React.memo(({
                     <button
                         onClick={() => onDelete(project.id)}
                         className="text-red-500 font-bold border-collapse border border-red-500 p-1 rounded"
+                        disabled={statusTyg === "Zamkniety"}
                     >
                         Delete
                     </button>
@@ -71,7 +73,7 @@ const AdditionalProjectRow = React.memo(({
                                     }}
                                     className={`w-full p-1 border ${isActive ? 'border-blue-500' : 'border-gray-300'} ${hasCommentAndCar ? 'bg-green-200' : ''} rounded`}
                                     placeholder="0"
-                                    disabled={niedziela}
+                                    disabled={niedziela || statusTyg === "Zamkniety"}
                                     min="0"
                                     max="24"
                                     ref={(el) => setInputRef(el, project.id, dateKey)}
@@ -92,6 +94,7 @@ const AdditionalProjectRow = React.memo(({
                             onChange={(e) => onInputChange(project.id, activeInput.date, e.target.value, 'comment')}
                             className="w-full"
                             rows={3}
+                            disabled={statusTyg === "Zamkniety"}
                         />
 
                         <span className="text-right">Samochód:</span>
@@ -101,6 +104,8 @@ const AdditionalProjectRow = React.memo(({
                             onChange={(e) => onInputChange(project.id, activeInput.date, e.value, 'car')}
                             placeholder="Wybierz pojazd"
                             className="w-full"
+                            showClear
+                            disabled={statusTyg === "Zamkniety"}
                         />
 
                         <span className="text-right">Parking:</span>
@@ -108,6 +113,7 @@ const AdditionalProjectRow = React.memo(({
                             value={project.hours[activeInput.date]?.parking || ""}
                             onChange={(e) => onInputChange(project.id, activeInput.date, e.target.value, 'parking')}
                             className="w-full"
+                            disabled={statusTyg === "Zamkniety"}
                         />
 
                         <span className="text-right">Kilometry:</span>
@@ -115,6 +121,7 @@ const AdditionalProjectRow = React.memo(({
                             value={project.hours[activeInput.date]?.km || ""}
                             onChange={(e) => onInputChange(project.id, activeInput.date, e.target.value, 'km')}
                             className="w-full"
+                            disabled={statusTyg === "Zamkniety"}
                         />
 
                         <span className="text-right">Diety:</span>
@@ -122,6 +129,7 @@ const AdditionalProjectRow = React.memo(({
                             value={project.hours[activeInput.date]?.diet || ""}
                             onChange={(e) => onInputChange(project.id, activeInput.date, e.target.value, 'diet')}
                             className="w-full"
+                            disabled={statusTyg === "Zamkniety"}
                         />
 
                         <span className="text-right">Wypożyczanie narzędzi:</span>
@@ -129,6 +137,7 @@ const AdditionalProjectRow = React.memo(({
                             value={project.hours[activeInput.date]?.tools || ""}
                             onChange={(e) => onInputChange(project.id, activeInput.date, e.target.value, 'tools')}
                             className="w-full"
+                            disabled={statusTyg === "Zamkniety"}
                         />
                     </div>
                 </div>

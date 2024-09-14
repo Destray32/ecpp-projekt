@@ -9,10 +9,10 @@ function GetProjekty(req, res, db) {
         } else {
             const formattedRows = result.map(row => ({
                 id: row.idProjekty,
-                Firma: row.Firma,
-                Zleceniodawca: row.Zleceniodawca,
                 NazwaKod_Projektu: row.NazwaKod_Projektu,
                 Status: row.Status,
+                Grupa_urlopowa_idGrupa_urlopowa: row.Grupa_urlopowa_idGrupa_urlopowa,
+                Firma_idFirma: row.Firma_idFirma,
             }));
             res.status(200).send({ projekty: formattedRows });
         }

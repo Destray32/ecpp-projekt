@@ -2,18 +2,16 @@ function EdytujProjekt(req, res, db) {
     const { firma, zleceniodawca, nazwa, ulica, miejscowosc, kodPocztowy, kraj } = req.body;
     const { id } = req.params;
 
+    console.log('Edytuj projekt:', firma, zleceniodawca, nazwa, ulica, miejscowosc, kodPocztowy, kraj, id);
+
     if (!firma || !zleceniodawca || !nazwa || !ulica || !miejscowosc || !kodPocztowy || !kraj) {
         res.status(400).send('Brak wymaganych danych');
         return;
     }
 
-    const sql = `
-        UPDATE projekty
-        SET Firma = ?, Zleceniodawca = ?, NazwaKod_Projektu = ?, Ulica = ?, Miejscowosc = ?, Kod_Pocztowy = ?, Kraj = ?
-        WHERE idProjekty = ?
-    `;
+    const sql = "UPDATE projekty SET NazwaKod_Projektu = ?, Ulica = ?, Miejscowosc = ?, Kod_pocztowy = ?, Kraj = ?, Grupa_urlopowa_idGrupa_urlopowa = ?, Firma_idFirma = ? WHERE idProjekty = ?;";
 
-    const values = [firma, zleceniodawca, nazwa, ulica, miejscowosc, kodPocztowy, kraj, id];
+    const values = [nazwa, ulica, miejscowosc, kodPocztowy, kraj, zleceniodawca, firma, id];
 
     db.query(sql, values, (err, result) => {
         if (err) {

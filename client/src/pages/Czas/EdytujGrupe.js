@@ -30,6 +30,7 @@ export default function EdytujGrupePage() {
         }, { withCredentials: true })
             .then(res => {
                 console.log(res.data);
+                window.location.href = "/home/grupy-projektow";
             })
             .catch(err => {
                 console.error(err);

@@ -31,7 +31,7 @@ function ZapiszCzasPracy(req, res, db) {
                         // funkcja do obsługi dni i projektów
                         const handleDaysAndProjects = (tid) => {
                             // wstaw lub zaktualizuj godziny pracy dla każdego dnia w tabeli 'Dzien'
-                            const validDays = days.filter(day => !(day.start === '00:00' && day.end === '00:00'));
+                            const validDays = days.filter(day => day.dayOfWeek !== null);
 
                             let projectInsertionPromises = [];
 

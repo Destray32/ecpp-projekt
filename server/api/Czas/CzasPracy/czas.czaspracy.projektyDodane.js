@@ -37,8 +37,6 @@ async function PobierzDodaneProjekty(req, res, db) {
                 dp.Godziny_przepracowane AS hoursWorked,
                 p.NazwaKod_Projektu AS projectName,
                 po.Nr_rejestracyjny AS car,
-                t.Firma AS firma,
-                t.Zleceniodawca AS zleceniodawca,
                 d.Dzien_tygodnia AS dayOfWeek,
                 dp.Komentarz AS comment,
                 dp.Parking AS parking,

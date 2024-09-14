@@ -5,10 +5,9 @@ function SzukajProjekt(req, res, db) {
     const queryParams = [];
 
     if (group && group !== 'Wszystkie') {
-        sql += ' WHERE Status = ?';
+        sql += ' AND Status = ?';
         queryParams.push(group);
     }
-
 
     db.query(sql, queryParams, (err, result) => {
         if (err) {

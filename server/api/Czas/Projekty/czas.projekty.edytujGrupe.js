@@ -6,7 +6,7 @@ function EdytujGrupe(req, res, db) {
         return res.status(400).json({ message: 'Brak wymaganych danych' });
     }
 
-    const sql = `UPDATE Grupa_urlopowa SET Zleceniodawca = ?, Cennik = ?, Stawka = ?, Plan_tygodniaV = ? WHERE id = ?`;
+    const sql = `UPDATE Grupa_urlopowa SET Zleceniodawca = ?, Cennik = ?, Stawka = ?, Plan_tygodniaV = ? WHERE idGrupa_urlopowa = ?`;
     db.query(sql, [zleceniodawca, cennik, stawka, czyPlanTygV, req.params.id], (err, result) => {
         if (err) {
             console.log(err);

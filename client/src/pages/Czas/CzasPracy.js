@@ -46,10 +46,6 @@ export default function CzasPracyPage() {
     }, [currentDate]);
 
     useEffect(() => {
-        fetchStatusTygodnia();
-    }, [currentDate]);
-
-    useEffect(() => {
         if (Pracownik && (userType === "Administrator")) {
             fetchWorkHours(Pracownik, currentDate);
             fetchAdditionalProjects(Pracownik, currentDate);
@@ -59,6 +55,12 @@ export default function CzasPracyPage() {
             setPracownicy([{ label: Pracownik, value: Pracownik }]);
         }
     }, [Pracownik, currentDate]);
+
+    useEffect(() => {
+        if (currentUserId) {
+            fetchStatusTygodnia();
+        }
+    }, [currentUserId, currentDate]);
 
     useEffect(() => {
         if (Pracownik) {
@@ -72,7 +74,7 @@ export default function CzasPracyPage() {
         try {
         await Axios.get("http://localhost:5000/api/pracownicy", { withCredentials: true })
             .then((response) => {
-                console.log(response.data);
+                //console.log(response.data);
                 const userId = response.data.find(pracownik => `${pracownik.name} ${pracownik.surname}` === Pracownik).id;
                 setCurrentUserId(userId);
             })
@@ -119,27 +121,35 @@ export default function CzasPracyPage() {
     const fetchFirmy = () => {
         Axios.get("http://localhost:5000/api/firmy", { withCredentials: true })
             .then((response) => {
-                setFirmy(response.data.map(firma => ({ label: firma.Nazwa_firmy, value: firma.Nazwa_firmy })));
+                setFirmy(response.data.map(firma => ({ label: firma.Nazwa_firmy, value: firma.idFirma })));
             })
             .catch((error) => {
                 console.error(error);
             });
     }
-
+    
     const fetchZleceniodawcy = () => {
         Axios.get("http://localhost:5000/api/grupy", { withCredentials: true })
             .then((response) => {
-                setZleceniodawcy(response.data.grupy.map(zleceniodawca => ({ label: zleceniodawca.Zleceniodawca, value: zleceniodawca.Zleceniodawca })));
+                setZleceniodawcy(response.data.grupy.map(zleceniodawca => ({
+                    label: zleceniodawca.Zleceniodawca,
+                    value: zleceniodawca.id
+                })));
             })
             .catch((error) => {
                 console.error(error);
             });
     }
-
+    
     const fetchProjekty = () => {
         Axios.get("http://localhost:5000/api/czas/projekty", { withCredentials: true })
             .then((response) => {
-                setDostepneProjekty(response.data.projekty.map(projekt => ({ label: projekt.NazwaKod_Projektu, value: projekt.NazwaKod_Projektu })));
+                setDostepneProjekty(response.data.projekty.map(projekt => ({
+                    label: projekt.NazwaKod_Projektu,
+                    value: projekt.NazwaKod_Projektu,
+                    Firma_idFirma: projekt.Firma_idFirma,
+                    Grupa_urlopowa_idGrupa_urlopowa: projekt.Grupa_urlopowa_idGrupa_urlopowa
+                })));
             })
             .catch((error) => {
                 console.error(error);
@@ -227,19 +237,28 @@ export default function CzasPracyPage() {
     };
 
     const fetchStatusTygodnia = async () => {
-        try {
-            const weekData = getWeek(currentDate, { weekStartsOn: 1 });
-            const response = await Axios.get(`http://localhost:5000/api/tydzien/${weekData}`, {
-                withCredentials: true
-            });
+    try {
+        const weekData = getWeek(currentDate, { weekStartsOn: 1 });
+        const response = await Axios.get(`http://localhost:5000/api/tydzien/${weekData}`, {
+            withCredentials: true
+        });
 
-            if (response.data && response.data[0]) {
-                setStatusTygodnia(response.data[0].Status_tygodnia);
+        if (response.data && response.data.length) {
+            const userId = currentUserId;
+
+            const userStatus = response.data.find(item => item.idPracownik === userId);
+
+            if (userStatus) {
+                setStatusTygodnia(userStatus.Status_tygodnia);
             } else {
+                console.log("Brak statusu tygodnia dla użytkownika");
                 setStatusTygodnia(null);
             }
+        } else {
+            setStatusTygodnia(null);
+        }
 
-            // if (response.data && response.data.status) {
+        // if (response.data && response.data.status) {
             //     if (response.data.status === "Zamknięty") {
             //         notification.error({
             //             message: 'Błąd',
@@ -248,10 +267,11 @@ export default function CzasPracyPage() {
             //         });
             //     }
             // }
-        } catch (error) {
-            console.error("Error fetching week status", error);
-        }
+
+    } catch (error) {
+        console.error("Error fetching week status", error);
     }
+};
     //#endregion
 
     //#region handlers
@@ -260,6 +280,7 @@ export default function CzasPracyPage() {
 
         let hasMissingFields = false; // stan dla sprawdzania czy brakuje pola w dodatkowych projektach
         let hasMissingStartEndBreak = false; // stan dla sprawdzania czy godziny sa ustawione dla dodatkowych projektow ale nie ma start, end, lub break
+        let dayHourMismatch = false; // stan dla sprawdzania czy godziny przypisane do projektow zgadzaja sie z godzinami pracy
 
         const formattedAdditionalProjects = additionalProjects.map(project => ({
             ...project,
@@ -269,7 +290,6 @@ export default function CzasPracyPage() {
                 const formattedDate = format(day, 'yyyy-MM-dd');
                 const projectData = project.hours[formattedDate];
                 const hoursWorked = projectData?.hoursWorked || 0;
-
 
                 return {
                     dayOfWeek: dayName,
@@ -311,9 +331,33 @@ export default function CzasPracyPage() {
             });
         });
 
+        daysOfWeek.forEach(day => {
+            const dayName = format(day, 'EEEE', { locale: pl });
+            const formattedDate = format(day, 'yyyy-MM-dd');
+            const dailyHours = hours[formattedDate] || {};
+            
+            const totalDayHours = dailyHours.end && dailyHours.start ? 
+                parseFloat(dailyHours.end.split(":")[0]) - parseFloat(dailyHours.start.split(":")[0]) - parseFloat(dailyHours.break.split(":")[0]) 
+                : 0;
+    
+            let projectDayHours = 0;
+    
+            additionalProjects.forEach(project => {
+                const projectData = project.hours[formattedDate];
+                if (projectData?.hoursWorked) {
+                    projectDayHours += parseFloat(projectData.hoursWorked);
+                }
+            });
+    
+            if (totalDayHours !== projectDayHours) {
+                dayHourMismatch = true;
+                console.log(`Różnica w godzinach dla ${dayName}. Godziny pracy: ${totalDayHours}, godziny w dodatkowych projektach: ${projectDayHours}`);
+            }
+        });
+
         if (hasMissingFields) {
             notification.error({
-                message: 'Missing Fields',
+                message: 'Puste pola w dodatkowych projektach',
                 description: 'Wybierz samochód i dodaj komentarz do wszystkich projektów',
                 placement: 'topRight',
             });
@@ -322,8 +366,17 @@ export default function CzasPracyPage() {
 
         if (hasMissingStartEndBreak) {
             notification.error({
-                message: 'Missing Fields',
+                message: 'Puste pola',
                 description: 'Wybierz godziny rozpoczęcia, zakończenia i przerwy dla dni w których są projekty',
+                placement: 'topRight',
+            });
+            return;
+        }
+
+        if (dayHourMismatch) {
+            notification.error({
+                message: 'Różnica w godzinach',
+                description: 'Suma godzin pracy nie zgadza się z sumą godzin w dodatkowych projektach',
                 placement: 'topRight',
             });
             return;
@@ -380,7 +433,8 @@ export default function CzasPracyPage() {
                 const response = await Axios.delete("http://localhost:5000/api/tydzien", {
                     data: {
                     tydzienRoku: getWeek(currentDate, { weekStartsOn: 1 }),
-                    pracownikId: currentUserId
+                    pracownikId: currentUserId,
+                    year: currentDate.getFullYear(),
                     },
                     withCredentials: true
                 });
@@ -391,6 +445,7 @@ export default function CzasPracyPage() {
                         placement: 'topRight',
                     });
                     //setStatusTygodnia("Zamknięty");
+                    fetchStatusTygodnia();
                 }
             } catch (error) {
                 console.error(error);
@@ -415,6 +470,7 @@ export default function CzasPracyPage() {
                 daysOfWeek={daysOfWeek}
                 hours={hours}
                 setHours={setHours}
+                statusTyg={statusTygodnia}
             />
             <AdditionalProjects
                 Firma={Firma}
@@ -432,6 +488,7 @@ export default function CzasPracyPage() {
                 samochody={samochody}
                 loggedUserName={Pracownik}
                 currentDate={currentDate}
+                statusTyg={statusTygodnia}
             />
             <ActionButtons handleSave={handleSave} handleCloseWeek={handleZamknijTydzien} />
         </div>

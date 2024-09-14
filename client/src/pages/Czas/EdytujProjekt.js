@@ -12,7 +12,7 @@ export default function EdytujProjektPage() {
     const { id } = useParams();
 
     const [form, setForm] = useState({
-        firma: 'PC Husbyggen',
+        firma: '1',
         zleceniodawca: '',
         nazwa: '',
         kodProjektu: '',
@@ -21,10 +21,6 @@ export default function EdytujProjektPage() {
         kodPocztowy: '',
         kraj: ''
     });
-
-    const firmyOptions = [
-        { name: 'PC Husbyggen', value: 'PC Husbyggen' },
-    ];
 
     const fetchGroups = () => {
         Axios.get("http://localhost:5000/api/grupy", { withCredentials: true })
@@ -60,8 +56,8 @@ export default function EdytujProjektPage() {
                 if (response.data && Array.isArray(response.data) && response.data.length > 0) {
                     const project = response.data[0];
                     setForm({
-                        firma: project.Firma || '',
-                        zleceniodawca: project.Zleceniodawca || '',
+                        firma: project.Firma_idFirma || '1',
+                        zleceniodawca: project.Grupa_urlopowa_idGrupa_urlopowa || '',
                         nazwa: project.NazwaKod_Projektu || '',
                         kodProjektu: project.NazwaKod_Projektu || '',
                         ulica: project.Ulica || '',
@@ -69,6 +65,7 @@ export default function EdytujProjektPage() {
                         kodPocztowy: project.Kod_pocztowy || '',
                         kraj: project.Kraj || ''
                     });
+                    console.log(project);
                 }
             })
             .catch((error) => {
@@ -118,11 +115,9 @@ export default function EdytujProjektPage() {
                             showSearch
                             allowClear
                         >
-                            {firmyOptions.map((option) => (
-                                <Option key={option.value} value={option.value}>
-                                    {option.name}
-                                </Option>
-                            ))}
+                            <Option key={1} value={1}>
+                                PC Husbyggen
+                            </Option>
                         </Select>
                     </div>
 

@@ -11,7 +11,7 @@ export default function DodajNowyProjektPage() {
     const [availableProjects, setAvailableProjects] = useState([]);
 
     const [form, setForm] = useState({
-        firma: 'PC Husbyggen',
+        firma: '1',
         zleceniodawca: '',
         nazwa: '',
         ulica: '',
@@ -19,11 +19,6 @@ export default function DodajNowyProjektPage() {
         kodPocztowy: '',
         kraj: ''
     });
-
-    const firmyOptions = [
-        { name: 'PC Husbyggen', value: 'PC Husbyggen' },
-        // add more options if needed
-    ];
 
     const fetchGroups = () => {
         Axios.get("http://localhost:5000/api/grupy", { withCredentials: true })
@@ -77,10 +72,9 @@ export default function DodajNowyProjektPage() {
     };
 
     const handleGroupChange = (value) => {
-        const selectedGroup = availableGroups.find(group => group.value === value);
         setForm(prevState => ({
             ...prevState,
-            zleceniodawca: selectedGroup ? selectedGroup.name : ''
+            zleceniodawca: value
         }));
     };
 
@@ -100,11 +94,9 @@ export default function DodajNowyProjektPage() {
                             value={form.firma}
                             showSearch
                         >
-                            {firmyOptions.map((option) => (
-                                <Option key={option.value} value={option.value}>
-                                    {option.name}
-                                </Option>
-                            ))}
+                            <Option key="1" value="1">
+                                PC Husbyggen
+                            </Option>
                         </Select>
                     </div>
 
@@ -113,7 +105,7 @@ export default function DodajNowyProjektPage() {
                         <Select
                             onChange={handleGroupChange}
                             className="w-full"
-                            value={availableGroups.find(group => group.name === form.zleceniodawca)?.value || ''}
+                            value={form.zleceniodawca}
                             showSearch
                             allowClear
                         >

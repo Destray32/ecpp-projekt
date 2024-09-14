@@ -34,9 +34,36 @@ const AdditionalProjects = ({
     Zleceniodawca, setZleceniodawca, zleceniodawcy,
     Projekty, setProjekty, dostepneProjekty,
     additionalProjects, setAdditionalProjects,
-    daysOfWeek, samochody, loggedUserName, currentDate
+    daysOfWeek, samochody, loggedUserName, currentDate,
+    statusTyg
 }) => {
     const [activeInput, setActiveInput] = useState(null);
+    const [filteredZleceniodawcy, setFilteredZleceniodawcy] = useState([]);
+    const [filteredProjekty, setFilteredProjekty] = useState([]);
+
+    useEffect(() => {
+        if (Firma) {
+            const filteredZleceniodawcy = zleceniodawcy.filter(zleceniodawca =>
+                zleceniodawca.Firma_idFirma === Firma.value
+            );
+    
+            setFilteredZleceniodawcy(filteredZleceniodawcy);
+        } else {
+            setFilteredZleceniodawcy([]);
+        }
+    }, [Firma, zleceniodawcy]);
+
+    useEffect(() => {
+        if (Zleceniodawca) {
+            const filteredProjekty = dostepneProjekty.filter(projekt =>
+                projekt.Grupa_urlopowa_idGrupa_urlopowa === Zleceniodawca
+            );
+    
+            setFilteredProjekty(filteredProjekty);
+        } else {
+            setFilteredProjekty([]);
+        }
+    }, [Firma, Zleceniodawca, dostepneProjekty]);
 
     const addWeek = async () => {
         const weekData = getWeek(currentDate, { weekStartsOn: 1 });
@@ -137,6 +164,7 @@ const AdditionalProjects = ({
                                 className="p-2"
                                 filter
                                 showClear
+                                disabled={statusTyg === "Zamkniety"}
                             />
                         </div>
                         <div className="flex flex-col w-3/12">
@@ -144,13 +172,14 @@ const AdditionalProjects = ({
                             <Dropdown
                                 value={Zleceniodawca}
                                 onChange={(e) => setZleceniodawca(e.value)}
-                                options={zleceniodawcy}
+                                options={filteredZleceniodawcy}
                                 editable
                                 placeholder="Zleceniodawca"
                                 autoComplete="off"
                                 className="p-2"
                                 filter
                                 showClear
+                                disabled={statusTyg === "Zamkniety"}
                             />
                         </div>
                         <div className="flex flex-col w-3/12">
@@ -158,13 +187,14 @@ const AdditionalProjects = ({
                             <Dropdown
                                 value={Projekty}
                                 onChange={(e) => setProjekty(e.value)}
-                                options={dostepneProjekty}
+                                options={filteredProjekty}
                                 editable
                                 placeholder="Projekty"
                                 autoComplete="off"
                                 className="p-2"
                                 filter
                                 showClear
+                                disabled={statusTyg === "Zamkniety"}
                             />
                         </div>
                         <div className="mt-8">
@@ -172,6 +202,7 @@ const AdditionalProjects = ({
                                 onClick={addWeek}
                                 label="Dodaj"
                                 className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mb-4"
+                                disabled={statusTyg === "Zamkniety"}
                             />
                         </div>
                     </div>
@@ -187,6 +218,7 @@ const AdditionalProjects = ({
                             setActiveInput={setActiveInput}
                             handleInputFocus={handleInputFocus}
                             samochody={samochody}
+                            statusTyg={statusTyg}
                         />
                     ))}
                 </div>
