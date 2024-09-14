@@ -9,7 +9,7 @@ import { Button } from 'primereact/button';
  * @param {Function} props.handleOpenWeek - Funkcja obsługująca otwarcie tygodnia
  * @param {Function} props.handlePrintReport - Funkcja obsługująca drukowanie raportu
  */
-const PrzyciskAkcji = ({ handleSave, handleCloseWeek, handleOpenWeek, handlePrintReport }) => {
+const PrzyciskAkcji = ({ handleSave, handleCloseWeek, handleOpenWeek, handlePrintReport, statusTyg, userType }) => {
     return (
         <div className="w-full md:w-auto h-full m-2 p-3 bg-amber-100 outline outline-1 outline-gray-500 flex flex-col space-y-4">
             <div className="w-full h-2/5 flex flex-col space-y-2 items-start">
@@ -20,21 +20,25 @@ const PrzyciskAkcji = ({ handleSave, handleCloseWeek, handleOpenWeek, handlePrin
                                 label="Zapisz"
                                 className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 flex-grow"
                                 onClick={handleSave}
+                                disabled={statusTyg === 'Zamkniety'}
                             />
                             <Button 
                                 label="Zamknij tydzień" 
                                 className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 flex-grow" 
                                 onClick={handleCloseWeek}
+                                disabled={statusTyg === 'Zamkniety'}
                             />
                             <Button 
                                 label="Otwórz tydzień" 
                                 className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 flex-grow" 
                                 onClick={handleOpenWeek}
+                                disabled={userType !== 'Administrator'}
                             />
                             <Button 
                                 label="Drukuj raport" 
                                 className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 flex-grow" 
                                 onClick={handlePrintReport}
+                                disabled={userType !== 'Administrator'}
                             />
                         </div>
                     </div>

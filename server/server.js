@@ -86,8 +86,6 @@ const KomorkaPracownika = require('./api/Pracownik/Pracownik/pracownik.komorka')
 // Czas > Czas Pracy
 const ZapiszCzasPracy = require('./api/Czas/CzasPracy/czas.czaspracy.zapisz');
 const PobierzCzasPracy = require('./api/Czas/CzasPracy/czas.czaspracy.pobierz');
-const ZamknijTydzien = require('./api/Czas/CzasPracy/czas.czaspracy.zamknij');
-const OtworzTydzien = require('./api/Czas/CzasPracy/czas.czaspracy.otworz');
 const GetCzasProjekt = require('./api/Czas/CzasPracy/czas.czaspracy.getCzasProjekt');
 const PobierzDodaneProjekty = require('./api/Czas/CzasPracy/czas.czaspracy.projektyDodane');
 
@@ -254,16 +252,6 @@ app.route('/api/czas')
 app.route('/api/czas/projekt')
     .post((req, res) => {
         GetCzasProjekt(req, res, db);
-    });
-
-app.route('/api/czas/zamknij')
-    .post((req, res) => {
-        ZamknijTydzien(req, res);
-    });
-
-app.route('/api/czas/otworz')
-    .post((req, res) => {
-        OtworzTydzien(req, res);
     });
 
 app.get('/api/czas/projekty/dodane', (req, res) => {

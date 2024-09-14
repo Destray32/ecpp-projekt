@@ -452,6 +452,29 @@ export default function CzasPracyPage() {
             }
         }
     };
+
+    const handleOtworzTydzien = async () => {
+        try {
+            fetchUserId();
+            const response = await Axios.post("http://localhost:5000/api/tydzien", {
+                tydzienRoku: getWeek(currentDate, { weekStartsOn: 1 }),
+                pracownikId: currentUserId,
+                year: currentDate.getFullYear(),
+            }, { withCredentials: true });
+
+            if (response.status === 200) {
+                notification.success({
+                    message: 'Success',
+                    description: 'Otwarto tydzień',
+                    placement: 'topRight',
+                });
+                //setStatusTygodnia(null);
+                fetchStatusTygodnia();
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
     //#endregion
 
     //#region Render
@@ -490,7 +513,7 @@ export default function CzasPracyPage() {
                 currentDate={currentDate}
                 statusTyg={statusTygodnia}
             />
-            <ActionButtons handleSave={handleSave} handleCloseWeek={handleZamknijTydzien} />
+            <ActionButtons handleSave={handleSave} handleCloseWeek={handleZamknijTydzien} handleOpenWeek={handleOtworzTydzien} statusTyg={statusTygodnia} userType={userType} />
         </div>
     );
     //#endregion

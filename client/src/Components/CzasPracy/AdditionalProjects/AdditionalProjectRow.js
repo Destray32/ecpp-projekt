@@ -82,7 +82,7 @@ const AdditionalProjectRow = React.memo(({
                         );
                     })}
                 </div>
-                <span>Total: {projectTotal} godz.</span>
+                <span>Razem: {projectTotal} godz.</span>
             </div>
             {/* Only render additional fields if the project is active */}
             {activeInput && activeInput.projectId === project.id && (
