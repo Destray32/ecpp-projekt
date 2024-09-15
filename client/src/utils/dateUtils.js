@@ -18,11 +18,19 @@ export const formatWeek = (date) => {
 
 export const calculateDailyTotal = (dayHours) => {
     const start = dayHours?.start || "00:00";
+    const breakTime = dayHours?.break || "00:00";
     const end = dayHours?.end || "00:00";
+
     const startDate = new Date(`2000-01-01T${start}`);
     const endDate = new Date(`2000-01-01T${end}`);
+    const breakDate = new Date(`2000-01-01T${breakTime}`);
+
     if (endDate < startDate) endDate.setDate(endDate.getDate() + 1);
-    return (endDate - startDate) / (1000 * 60 * 60);
+
+    const totalHours = (endDate - startDate) / (1000 * 60 * 60);
+    const breakHours = breakDate.getHours() + breakDate.getMinutes() / 60;
+
+    return totalHours - breakHours;
 };
 
 export const calculateWeeklyTotal = (hours, daysOfWeek) => {
