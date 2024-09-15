@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const app = express();
 app.use(express.json());
 const port = 5000;
@@ -18,6 +19,8 @@ app.use(cookieParser());
 
 app.use(express.json({ type: 'application/json; charset=utf-8' }));
 app.use(express.urlencoded({ extended: true, parameterLimit: 10000, charset: 'utf-8' }));
+
+app.use(express.static(path.join(__dirname, '../client/build')));
 
 // JWT middleware
 const authenticateJWT = (req, res, next) => {
@@ -45,7 +48,7 @@ const NODE_ENV = process.env.NODE_ENV;
 const db = mysql.createConnection({
     host: 'localhost',
     user: 'root',
-    password: '',
+    password: 'root',
     database: 'mydb'
 });
 
@@ -457,6 +460,10 @@ app.delete('/api/grupy/:id', (req, res) => {
 
 app.get('/api/firmy', (req, res) => {
     PobierzDostepneFirmy(req, res, db);
+});
+
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
 });
 
 app.listen(port, () => {
