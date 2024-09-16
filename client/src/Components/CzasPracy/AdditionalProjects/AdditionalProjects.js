@@ -136,6 +136,21 @@ const AdditionalProjects = ({
     };
 
     const handleDeleteProject = (projectId) => {
+        // na podstawie id projektu ustawionego poprzez uuid4 wchodzimy do tego projektu i
+        // wyciągamy wszystkie id nadesłane z bazy dla każdego dzien_projekty i usuwamy
+        additionalProjects.forEach(project => {
+            if (project.id === projectId) {
+                console.log(project);
+                Object.values(project.hours).forEach(async hour => {
+                    try {
+                        await Axios.delete(`http://localhost:5000/api/czas/projekt/${hour.id}`, { withCredentials: true });
+                    } catch (error) {
+                        console.error("Error deleting project", error);
+                    }
+                });
+            }
+        });
+
         setAdditionalProjects(prevProjects =>
             prevProjects.filter(project => project.id !== projectId)
         );

@@ -33,7 +33,8 @@ async function PobierzDodaneProjekty(req, res, db) {
 
         // pobieramy szczegóły projektów (firma, zleceniodawca, projekt, godziny, pojazdy) dla danego tygodnia
         const projectQuery = `
-            SELECT 
+            SELECT
+                dp.idDzien_Projekty AS id, 
                 dp.Godziny_przepracowane AS hoursWorked,
                 p.NazwaKod_Projektu AS projectName,
                 po.Nr_rejestracyjny AS car,
@@ -77,6 +78,7 @@ async function PobierzDodaneProjekty(req, res, db) {
 
             // dodajemy godziny pracy i informacje o samochodzie dla każdego dnia w tygodniu
             projectsMap[project.projectName].hours[project.dayOfWeek] = {
+                id: project.id,
                 hoursWorked: project.hoursWorked,
                 car: project.car || null,
                 comment: project.comment || null,

@@ -88,6 +88,7 @@ const ZapiszCzasPracy = require('./api/Czas/CzasPracy/czas.czaspracy.zapisz');
 const PobierzCzasPracy = require('./api/Czas/CzasPracy/czas.czaspracy.pobierz');
 const GetCzasProjekt = require('./api/Czas/CzasPracy/czas.czaspracy.getCzasProjekt');
 const PobierzDodaneProjekty = require('./api/Czas/CzasPracy/czas.czaspracy.projektyDodane');
+const UsunDodatkowyProject = require('./api/Czas/CzasPracy/czas.czaspracy.usun');
 
 // Plan Tygodnia
 const PlanTygodniaPlan = require('./api/PlanTygodnia/plantygodnia.plan.planTygodnia');
@@ -253,6 +254,10 @@ app.route('/api/czas/projekt')
     .post((req, res) => {
         GetCzasProjekt(req, res, db);
     });
+
+app.delete('/api/czas/projekt/:id', (req, res) => {
+    UsunDodatkowyProject(req, res, db);
+});
 
 app.get('/api/czas/projekty/dodane', (req, res) => {
     PobierzDodaneProjekty(req, res, db);
