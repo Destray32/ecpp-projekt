@@ -268,20 +268,20 @@ app.get('/api/czas/projekty/dodane', (req, res) => {
 app.route('/api/planTygodnia')
     .get((req, res) => {
         if (req.query.previous) {
-            PracownicyPoprzedniTydz(req, res);
+            PracownicyPoprzedniTydz(req, res, db);
         } else {
-            PlanTygodniaPlan(req, res);
+            PlanTygodniaPlan(req, res, db);
         }
     })
     .put((req, res) => {
-        PrzeniesWpisPlan(req, res);
+        PrzeniesWpisPlan(req, res, db);
     })
     .delete((req, res) => {
-        UsunWpisPlan(req, res);
+        UsunWpisPlan(req, res, db);
     });
 
 app.get('/api/planTygodnia/drukuj', (req, res) => {
-    DrukujGrupe(req, res);
+    DrukujGrupe(req, res, db);
 });
 
 app.put('/api/planTygodnia/:employeeId', (req, res ) => {
@@ -292,13 +292,13 @@ app.put('/api/planTygodnia/:employeeId', (req, res ) => {
 // PLAN TYGODNIA "V" > ZAPLANUJ //
 app.route('/api/planTygodnia/zaplanuj')
     .get((req, res) => {
-        GetPlany(req, res);
+        GetPlany(req, res, db);
     })
     .post((req, res) => {
-        DodajZaplanuj(req, res);
+        DodajZaplanuj(req, res, db);
     })
     .delete((req, res) => {
-        UsunPlan(req, res);
+        UsunPlan(req, res, db);
     });
 /////////////////////////////////////////
 
