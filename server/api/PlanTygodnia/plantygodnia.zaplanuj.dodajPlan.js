@@ -18,7 +18,6 @@ function DodajZaplanuj(req, res, db) {
     const formattedDataOd = startDate.toISOString().split('T')[0];
     const formattedDataDo = new Date(dataDo).toISOString().split('T')[0];
 
-    console.log('Adding plan:', formattedDataOd, formattedDataDo, weekOfYear, year, pracownicy, grupa, opis);
 
     const sql = 'INSERT INTO Plan_Tygodnia_V (data_od, data_do, tydzienRoku, Rok, Pracownik_idPracownik, Grupa_urlopowa_idGrupa_urlopowa, opis) VALUES ?';
     const values = pracownicy.map(pracownik => [formattedDataOd, formattedDataDo, weekOfYear, year, pracownik, grupa, opis]);

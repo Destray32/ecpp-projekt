@@ -11,11 +11,14 @@ function GetPlany(req, res, db) {
         p.Opis, 
         dane.imie, 
         dane.nazwisko, 
-        grupa.Zleceniodawca 
+        grupa.Zleceniodawca,
+        pojazd.Nr_rejestracyjny as pojazd
         FROM Plan_Tygodnia_V p 
         JOIN Pracownik prac ON p.Pracownik_idPracownik = prac.idPracownik
         JOIN Grupa_urlopowa grupa ON p.Grupa_urlopowa_idGrupa_urlopowa = grupa.idGrupa_urlopowa
-        JOIN Dane_osobowe dane ON prac.FK_Dane_osobowe = dane.idDane_osobowe`;
+        JOIN Dane_osobowe dane ON prac.FK_Dane_osobowe = dane.idDane_osobowe
+        JOIN Informacje_o_firmie iof ON prac.FK_Informacje_o_firmie = iof.idInformacje_o_firmie
+        JOIN Pojazdy pojazd ON iof.FK_idPojazdy = pojazd.idPojazdy`;
 
     const sqlParts = [];
     const values = [];

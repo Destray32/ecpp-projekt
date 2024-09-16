@@ -143,7 +143,7 @@ export default function DodajPracownikaPage() {
                                     <Form.Item label="Pojazd" name="vehicle">
                                         <Select>
                                             {pojazd.map(p => (
-                                                <Select.Option key={p.idPojazdy} value={p.idPojazdy}>{p.Marka}</Select.Option>
+                                                <Select.Option key={p.idPojazdy} value={p.idPojazdy}>{p.Nr_rejestracyjny}</Select.Option>
                                             ))}
                                         </Select>
                                     </Form.Item>

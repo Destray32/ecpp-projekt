@@ -1,7 +1,6 @@
-const db = require('../../../server');
-
-function PlanTygodniaPlan(req, res) {
-    const { group } = req.query;
+function PlanTygodniaPlan(req, res, db) {
+    const { group, weekNumber} = req.query;
+    console.log(weekNumber);
 
     let sql = `
         SELECT
@@ -22,6 +21,13 @@ function PlanTygodniaPlan(req, res) {
         WHERE
             i.Plan_TygodniaV = 1
     `;
+
+    let sql2 = `
+        SELECT
+        plan.Pracownik_idPracownik as idPracownik,
+        
+
+        `
 
     if (group) {
         sql += ` AND g.Zleceniodawca = ?`;

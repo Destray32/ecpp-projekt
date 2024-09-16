@@ -23,6 +23,16 @@ export default function PlanTygodniaPage() {
     const [selectedM4, setSelectedM4] = useState([]);
     const [selectedM5, setSelectedM5] = useState([]);
 
+    const weekNumber = getWeek(currentDate, { weekStartsOn: 1 });
+
+    const previousWeek = () => {
+        setCurrentDate(subWeeks(currentDate, 1));
+    };
+
+    const nextWeek = () => {
+        setCurrentDate(addWeeks(currentDate, 1));
+    };
+
     const generatePDF = () => {
         const doc = new jsPDF();
 
@@ -85,15 +95,6 @@ export default function PlanTygodniaPage() {
         return `${start} - ${end}`;
     };
 
-    // podglad stanu zaznaczonych checkboxów
-    // useEffect(() => {
-    //     console.log('Selected rows:', selectedRowIds);
-    //     console.log('Selected M1:', selectedM1);
-    //     console.log('Selected M2:', selectedM2);
-    //     console.log('Selected M3:', selectedM3);
-    //     console.log('Selected M4:', selectedM4);
-    //     console.log('Selected M5:', selectedM5);
-    // }, [selectedRowIds, selectedM1, selectedM2, selectedM3, selectedM4, selectedM5]);
 
     const handleDrukujGrupe = () => {
         Axios.get(`http://localhost:5000/api/planTygodnia/drukuj?group=${group.name}`, { withCredentials: true })
@@ -192,7 +193,7 @@ export default function PlanTygodniaPage() {
                 .catch(err => console.error(err));
         } else {
             setGroup(null);
-            Axios.get('http://localhost:5000/api/planTygodnia', { withCredentials: true })
+            Axios.get(`http://localhost:5000/api/planTygodnia?weekNumber=${weekNumber}}`, { withCredentials: true })
                 .then(res => {
                     setPracownikData(res.data);
                 })
@@ -210,8 +211,9 @@ export default function PlanTygodniaPage() {
                 setAvailableGroups(res.data.grupy.map(group => ({ name: group.Zleceniodawca, id: group.id })));
             })
             .catch(err => console.error(err));
-    
-        Axios.get('http://localhost:5000/api/planTygodnia', { withCredentials: true })
+
+
+        Axios.get(`http://localhost:5000/api/planTygodnia?weekNumber=${weekNumber}`, { withCredentials: true })
             .then(res => {
                 const data = res.data;
                 setPracownikData(data);
@@ -361,9 +363,11 @@ export default function PlanTygodniaPage() {
                     <div className="h-full">
                         <div className="h-full flex flex-col justify-around">
                             <div className="flex flex-row gap-32 items-center">
-                                <div className="flex items-center space-x-2">
-                                    <p className="text-lg font-bold">Tydzień {getWeekNumber(currentDate)} : {formatWeek(currentDate)}</p>
-                                </div>
+                            <div className="flex items-center space-x-2">
+                                <Button icon="pi pi-arrow-left" className="p-button-outlined" onClick={previousWeek} />
+                                <p className="text-lg font-bold">Tydzień {getWeekNumber(currentDate)} : {formatWeek(currentDate)}</p>
+                                <Button icon="pi pi-arrow-right" iconPos="right" className="p-button-outlined" onClick={nextWeek} />
+                            </div>
                             </div>
                             <div>
                                 <span>Grupa</span>
