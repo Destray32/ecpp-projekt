@@ -8,14 +8,14 @@ export default function PojazdyPage() {
     const [tableData, setTableData] = React.useState([]);
 
     useEffect(() => {
-        axios.get("http://localhost:5000/api/pojazdy", { withCredentials: true })
+        axios.get("http://47.76.209.242:5000/api/pojazdy", { withCredentials: true })
         .then((response) => {
             setTableData(response.data.pojazdy);
         });
     }, []);
     
     const handleDelete = (id) => {
-        axios.delete(`http://localhost:5000/api/pojazdy/${id}`, { withCredentials: true })
+        axios.delete(`http://47.76.209.242:5000/api/pojazdy/${id}`, { withCredentials: true })
         .then((response) => {
             console.log(response);
             setTableData((prevData) => prevData.filter((item) => item.id !== id));

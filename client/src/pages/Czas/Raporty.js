@@ -21,7 +21,7 @@ export default function RaportyPage() {
     
 
     useEffect(() => {
-        axios.get('http://localhost:5000/api/raporty', { withCredentials: true })
+        axios.get('http://47.76.209.242:5000/api/raporty', { withCredentials: true })
             .then((response) => {
                 const projekty = response.data;
                 const projektyOptions = projekty.map(projekt => ({ label: projekt.nazwa, value: projekt.id }));
@@ -47,7 +47,7 @@ export default function RaportyPage() {
             endDate,
         };
 
-        axios.get('http://localhost:5000/api/generujRaport', { params }, { withCredentials: true })
+        axios.get('http://47.76.209.242:5000/api/generujRaport', { params }, { withCredentials: true })
             .then((response) => {
                 console.log(response.data);
             })

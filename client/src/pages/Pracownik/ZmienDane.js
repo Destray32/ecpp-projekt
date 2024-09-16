@@ -14,7 +14,7 @@ export default function ZmienDanePage() {
     const [pojazd, setPojazd] = useState([]);
 
     useEffect(() => {
-        axios.get('http://localhost:5000/api/mojedane', { withCredentials: true })
+        axios.get('http://47.76.209.242:5000/api/mojedane', { withCredentials: true })
             .then(res => {
                 console.log(res.data);
                 form.setFieldsValue({
@@ -51,7 +51,7 @@ export default function ZmienDanePage() {
                 console.log(err);
             });
 
-        axios.get('http://localhost:5000/api/pracownik/firmy', { withCredentials: true })
+        axios.get('http://47.76.209.242:5000/api/pracownik/firmy', { withCredentials: true })
             .then(res => {
                 setFirma(res.data);
             })
@@ -59,7 +59,7 @@ export default function ZmienDanePage() {
                 console.log(err);
             });
 
-        axios.get('http://localhost:5000/api/pracownik/grupy', { withCredentials: true })
+        axios.get('http://47.76.209.242:5000/api/pracownik/grupy', { withCredentials: true })
             .then(res => {
                 setGrupa(res.data);
             })
@@ -67,7 +67,7 @@ export default function ZmienDanePage() {
                 console.log(err);
             });
 
-        axios.get('http://localhost:5000/api/pracownik/pojazdy', { withCredentials: true })
+        axios.get('http://47.76.209.242:5000/api/pracownik/pojazdy', { withCredentials: true })
             .then(res => {
                 setPojazd(res.data);
             })
@@ -78,7 +78,7 @@ export default function ZmienDanePage() {
 
     const handleSubmit = (values) => {
         console.log(values);
-        axios.put(`http://localhost:5000/api/pracownik/zmienMoje`, values, { withCredentials: true })
+        axios.put(`http://47.76.209.242:5000/api/pracownik/zmienMoje`, values, { withCredentials: true })
             .then(res => {
                 console.log(res);
             })

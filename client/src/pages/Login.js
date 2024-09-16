@@ -25,7 +25,7 @@ export default function LoginPage() {
 
     const fetchCompanies = async () => {
         try {
-            const response = await axios.get('http://localhost:5000/api/companies');
+            const response = await axios.get('http://47.76.209.242:5000/api/companies');
             setAvailableCompanies(response.data);
         }
         catch (error) {
@@ -35,7 +35,7 @@ export default function LoginPage() {
 
     const fetchLogins = async () => {
         try {
-            const response = await axios.get('http://localhost:5000/api/logins');
+            const response = await axios.get('http://47.76.209.242:5000/api/logins');
             setAvailableLogins(response.data);
         }
         catch (error) {
@@ -46,7 +46,7 @@ export default function LoginPage() {
     const loginHandler = async (event) => {
         event.preventDefault();
         try {
-            const response = await axios.post('http://localhost:5000/api/logowanie', { firma, login, password }, { withCredentials: true });
+            const response = await axios.post('http://47.76.209.242:5000/api/logowanie', { firma, login, password }, { withCredentials: true });
             
             console.log(response.data.message);
 
@@ -61,7 +61,7 @@ export default function LoginPage() {
             const testFirma = 'PC Husbyggen';
             const login = 'twachala';
             const testPassword = 'tomek1';
-            const response = await axios.post('http://localhost:5000/api/logowanie', { firma: testFirma, login, password: testPassword }, { withCredentials: true });
+            const response = await axios.post('http://47.76.209.242:5000/api/logowanie', { firma: testFirma, login, password: testPassword }, { withCredentials: true });
 
             navigate('/home');
         } catch (error) {

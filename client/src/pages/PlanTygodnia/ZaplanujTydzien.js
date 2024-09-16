@@ -46,7 +46,7 @@ export default function ZaplanujTydzienPage() {
     };
 
     const handleZaplanuj = () => {
-        Axios.post('http://localhost:5000/api/planTygodnia/zaplanuj', { withCredentials: true }, {
+        Axios.post('http://47.76.209.242:5000/api/planTygodnia/zaplanuj', { withCredentials: true }, {
             dataOd: format(startOfWeek(currentDate, { weekStartsOn: 1 }), 'dd.MM.yyyy'),
             dataDo: format(addWeeks(startOfWeek(currentDate, { weekStartsOn: 1 }), 1), 'dd.MM.yyyy'),
             nazwisko: naziwsko,
@@ -67,7 +67,7 @@ export default function ZaplanujTydzienPage() {
 
     const handleUsun = (index) => {
         console.log('Usun', index);
-        Axios.delete(`http://localhost:5000/api/planTygodnia/zaplanuj?id=${index}`, { withCredentials: true })
+        Axios.delete(`http://47.76.209.242:5000/api/planTygodnia/zaplanuj?id=${index}`, { withCredentials: true })
             .then((response) => {
                 console.log(response.data);
             });
@@ -75,7 +75,7 @@ export default function ZaplanujTydzienPage() {
 
     useEffect(() => {
         // pobiernie grup
-        Axios.get('http://localhost:5000/api/grupy', { withCredentials: true })
+        Axios.get('http://47.76.209.242:5000/api/grupy', { withCredentials: true })
             .then((response) => {
                 setAvailableGroups(response.data);
             });
@@ -85,7 +85,7 @@ export default function ZaplanujTydzienPage() {
 
     useEffect(() => {
         // pobieranie planow w danym tygodniu
-        Axios.get(`http://localhost:5000/api/planTygodnia/zaplanuj?
+        Axios.get(`http://47.76.209.242:5000/api/planTygodnia/zaplanuj?
             from=${format(startOfWeek(currentDate, { weekStartsOn: 1 }), 'dd.MM.yyyy')}
             &to=${format(addWeeks(startOfWeek(currentDate, { weekStartsOn: 1 }), 1), 'dd.MM.yyyy')}`,
             { withCredentials: true })
