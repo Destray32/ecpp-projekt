@@ -12,16 +12,19 @@ const EmployeeDropdown = ({ onEmployeeSelect, scheduledEmployees }) => {
     fetchOptions();
   }, [scheduledEmployees]);
 
-  const fetchOptions = () => {
-    Promise.all([
-      Axios.get('http://localhost:5000/api/pracownik/pojazdy', { withCredentials: true }),
-      Axios.get('http://localhost:5000/api/pracownicy', { withCredentials: true })
-    ])
-    .then(([vehiclesRes, employeesRes]) => {
+  const fetchOptions = async () => {
+    try {
+      const [employeesRes, vehiclesRes] = await Promise.all([
+        Axios.get('http://localhost:5000/api/pracownicy', { withCredentials: true }),
+        Axios.get('http://localhost:5000/api/pracownik/pojazdy', { withCredentials: true })
+      ]);
+
       const VehiclesArray = Array.isArray(vehiclesRes.data) ? vehiclesRes.data : [];
-      const filteredVehicles = VehiclesArray.map((vehicle) => ({
+      const filteredVehicles = VehiclesArray
+      .filter((vehicle) => !scheduledEmployees.includes(vehicle.idPojazdy))
+      .map((vehicle) => ({
         label: `${vehicle.Nr_rejestracyjny}`,
-        value: vehicle.idPojazdy,
+        value: `vehicle-${vehicle.idPojazdy}`,
         type: 'vehicle',
       }));
 
@@ -31,27 +34,25 @@ const EmployeeDropdown = ({ onEmployeeSelect, scheduledEmployees }) => {
         .filter((employee) => !scheduledEmployeesArray.includes(employee.id))
         .map((employee) => ({
           label: `${employee.name} ${employee.surname}`,
-          value: employee.id,
+          value: `employee-${employee.id}`, 
           type: 'employee',
           weeklyPlan: employee.weeklyPlan,
           vacationGroup: employee.vacationGroup,
         }));
 
-      setOptions([...filteredVehicles, ...filteredEmployees]);
+      setOptions([...filteredEmployees, ...filteredVehicles]);
 
-      // Ensure that selectedItems only contains valid options
+
       const validSelectedItems = selectedItems.filter((item) =>
         [...filteredVehicles, ...filteredEmployees].some((opt) => opt.value === item)
       );
       setSelectedItems(validSelectedItems);
-    })
-    .catch((err) => {
+    } catch (err) {
       console.error("Error fetching data:", err);
-    });
+    }
   };
 
   const handleSelectionChange = (e) => {
-    console.log('Selected items:', e.value); // Debugging log
     setSelectedItems(e.value);
     onEmployeeSelect(e.value);
   };
@@ -73,10 +74,10 @@ const EmployeeDropdown = ({ onEmployeeSelect, scheduledEmployees }) => {
         options={options}
         onChange={handleSelectionChange}
         optionLabel="label"
-        placeholder="Select..."
+        placeholder=""
         className="w-96"
         display="chip"
-        itemTemplate={itemTemplate} // Custom rendering for each item
+        itemTemplate={itemTemplate}
       />
     </div>
   );

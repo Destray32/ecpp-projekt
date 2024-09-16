@@ -45,8 +45,9 @@ export default function ZaplanujTydzienPage() {
             { withCredentials: true })
             .then((response) => {
                 setPlany(response.data);
-                const scheduledEmployees = response.data.map(plan => plan.pracownikId);
+                const scheduledEmployees = response.data.map(plan => plan.pracownikId || plan.pojazdId);
                 setScheduledEmployees(scheduledEmployees);
+                
             })
             .catch((error) => {
                 console.log(error);
@@ -179,7 +180,7 @@ export default function ZaplanujTydzienPage() {
                                 <tr key={item.id} className="border-b even:bg-gray-200 odd:bg-gray-300">
                                     <td className="border-r">{formatDate(item.data_od)}</td>
                                     <td className="border-r">{formatDate(item.data_do)}</td>
-                                    <td className="border-r">{item.nazwisko}</td>
+                                    <td className="border-r">{item.nazwisko ? item.nazwisko : item.pojazd || 'No Data'}</td>
                                     <td className="border-r">{item.imie}</td>
                                     <td className="border-r">{item.Zleceniodawca}</td>
                                     <td className="border-r">{item.Opis}</td>
