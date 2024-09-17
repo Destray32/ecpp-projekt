@@ -1,7 +1,7 @@
 const { format } = require('date-fns');
 
 function GetPlany(req, res, db) {
-    const { from, to } = req.query;
+    const { from, to, group } = req.query;
 
     let sql = `SELECT
         p.idPlan_Tygodnia_V AS id,
@@ -13,23 +13,26 @@ function GetPlany(req, res, db) {
         dane.nazwisko,
         grupa.Zleceniodawca,
         pojazd.idPojazdy AS pojazdId,
-        pojazd.Nr_rejestracyjny AS pojazd
+        pojazd.Nr_rejestracyjny AS pojazd,
+        p.m_value
     FROM Plan_Tygodnia_V p
     LEFT JOIN Pracownik prac ON p.Pracownik_idPracownik = prac.idPracownik
     LEFT JOIN Dane_osobowe dane ON prac.FK_Dane_osobowe = dane.idDane_osobowe
     LEFT JOIN Grupa_urlopowa grupa ON p.Grupa_urlopowa_idGrupa_urlopowa = grupa.idGrupa_urlopowa
     LEFT JOIN Pojazdy pojazd ON p.Pojazdy_idPojazdy = pojazd.idPojazdy
-    `;
+    WHERE 1=1`;
 
-    const sqlParts = [];
     const values = [];
 
     if (from && to) {
-        sqlParts.push('WHERE p.data_od >= ? AND p.data_do <= ?');
+        sql += ' AND p.data_od >= ? AND p.data_do <= ?';
         values.push(from, to);
     }
 
-    sql += ' ' + sqlParts.join(' ');
+    if (group) {
+        sql += ' AND grupa.Zleceniodawca = ?';
+        values.push(group);
+    }
 
     db.query(sql, values, (err, result) => {
         if (err) {

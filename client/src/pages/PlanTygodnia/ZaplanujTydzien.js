@@ -44,8 +44,18 @@ export default function ZaplanujTydzienPage() {
         Axios.get(`http://localhost:5000/api/planTygodnia/zaplanuj?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`,
             { withCredentials: true })
             .then((response) => {
-                setPlany(response.data);
-                const scheduledEmployees = response.data.map(plan => plan.pracownikId || plan.pojazdId);
+                const sortedData = response.data.sort((a, b) => {
+                    if (a.pracownikId && !b.pracownikId) {
+                        return -1;
+                    } else if (!a.pracownikId && b.pracownikId) {
+                        return 1;
+                    }
+                    return 0; 
+                });
+            
+                setPlany(sortedData);
+            
+                const scheduledEmployees = sortedData.map(plan => plan.pracownikId || plan.pojazdId);
                 setScheduledEmployees(scheduledEmployees);
                 
             })

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Dropdown } from "primereact/dropdown";
 import { Button } from "primereact/button";
-import { format, startOfWeek, addWeeks, subWeeks, getWeek } from 'date-fns';
+import { format, startOfWeek, addWeeks, subWeeks, getWeek, set } from 'date-fns';
 import Axios from "axios";
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -23,7 +23,9 @@ export default function PlanTygodniaPage() {
     const [selectedM4, setSelectedM4] = useState([]);
     const [selectedM5, setSelectedM5] = useState([]);
 
-    const weekNumber = getWeek(currentDate, { weekStartsOn: 1 });
+    const from = format(startOfWeek(currentDate, { weekStartsOn: 1 }), 'yyyy-MM-dd');
+    const to = format(addWeeks(startOfWeek(currentDate, { weekStartsOn: 1 }), 1), 'yyyy-MM-dd');
+
 
     const previousWeek = () => {
         setCurrentDate(subWeeks(currentDate, 1));
@@ -111,6 +113,7 @@ export default function PlanTygodniaPage() {
     }
 
     const handleUsunZaznaczone = () => {
+        console.log("Usuwane:", selectedRowIds);
         Axios.delete('http://localhost:5000/api/planTygodnia', {
             withCredentials: true,
             data: {
@@ -135,7 +138,6 @@ export default function PlanTygodniaPage() {
             groupId: grupaPrzenies
         };
     
-        console.log("Przenoszone:", payload);
     
         Axios.put('http://localhost:5000/api/planTygodnia', payload, { withCredentials: true })
             .then(res => {
@@ -149,7 +151,16 @@ export default function PlanTygodniaPage() {
     const handleSkopiuj = () => {
         Axios.get('http://localhost:5000/api/planTygodnia?previous=true', { withCredentials: true })
             .then(res => {
-                const newData = res.data;
+                let newData = res.data;
+
+                // Update the week number in the newData (assuming there's a 'week' field)
+                newData = newData.map(item => {
+                    return {
+                        ...item,
+                        tydzienRoku: getWeekNumber() // Here you change the week to 39 or current week dynamically
+                    };
+                });
+
                 setPracownikData(prevData => {
                     const combinedData = [
                         ...prevData,
@@ -157,53 +168,30 @@ export default function PlanTygodniaPage() {
                     ];
                     return combinedData;
                 });
-    
-                const newSelectedM1 = [];
-                const newSelectedM2 = [];
-                const newSelectedM3 = [];
-                const newSelectedM4 = [];
-                const newSelectedM5 = [];
-    
-                newData.forEach(item => {
-                    const roles = item.M1_5 ? item.M1_5.split(',') : [];
-                    if (roles.includes('M1')) newSelectedM1.push(item.id);
-                    if (roles.includes('M2')) newSelectedM2.push(item.id);
-                    if (roles.includes('M3')) newSelectedM3.push(item.id);
-                    if (roles.includes('M4')) newSelectedM4.push(item.id);
-                    if (roles.includes('M5')) newSelectedM5.push(item.id);
-                });
-    
-                setSelectedM1(prevSelectedM1 => [...new Set([...prevSelectedM1, ...newSelectedM1])]);
-                setSelectedM2(prevSelectedM2 => [...new Set([...prevSelectedM2, ...newSelectedM2])]);
-                setSelectedM3(prevSelectedM3 => [...new Set([...prevSelectedM3, ...newSelectedM3])]);
-                setSelectedM4(prevSelectedM4 => [...new Set([...prevSelectedM4, ...newSelectedM4])]);
-                setSelectedM5(prevSelectedM5 => [...new Set([...prevSelectedM5, ...newSelectedM5])]);
-            })
-            .catch(err => console.error(err));
+                })
+                .catch(err => console.error(err));
     }
 
     // obsługa zmiany grupy w dropdownie
     const handleChangeGroupFilter = (e) => {
-        if (e.value) {
-            setGroup(e.value);
-            Axios.get(`http://localhost:5000/api/planTygodnia?group=${e.value.name}`, { withCredentials: true })
-                .then(res => {
-                    setPracownikData(res.data);
-                })
-                .catch(err => console.error(err));
-        } else {
-            setGroup(null);
-            Axios.get(`http://localhost:5000/api/planTygodnia?weekNumber=${weekNumber}}`, { withCredentials: true })
-                .then(res => {
-                    setPracownikData(res.data);
-                })
-                .catch(err => console.error(err));
+        const selectedGroup = e.value;
+        setGroup(selectedGroup);
+        
+        let url = `http://localhost:5000/api/planTygodnia/zaplanuj?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
+        if (selectedGroup) {
+            url += `&group=${encodeURIComponent(selectedGroup.name)}`;
         }
+        
+        Axios.get(url, { withCredentials: true })
+            .then(res => {
+                setPracownikData(res.data);
+            })
+            .catch(err => console.error(err));
     };
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [currentDate]);
 
     const fetchData = () => {
         Axios.get('http://localhost:5000/api/grupy', { withCredentials: true })
@@ -213,11 +201,19 @@ export default function PlanTygodniaPage() {
             .catch(err => console.error(err));
 
 
-        Axios.get(`http://localhost:5000/api/planTygodnia?weekNumber=${weekNumber}`, { withCredentials: true })
+        Axios.get(`http://localhost:5000/api/planTygodnia/zaplanuj?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`, { withCredentials: true })
             .then(res => {
                 const data = res.data;
-                setPracownikData(data);
-    
+                const sortedData = data.sort((a, b) => {
+                    if (a.pracownikId && !b.pracownikId) {
+                        return -1;
+                    } else if (!a.pracownikId && b.pracownikId) {
+                        return 1;
+                    }
+                    return 0; 
+                });
+                setPracownikData(sortedData);
+                
                 const m1 = [];
                 const m2 = [];
                 const m3 = [];
@@ -225,13 +221,14 @@ export default function PlanTygodniaPage() {
                 const m5 = [];
     
                 data.forEach((item) => {
-                    const roles = item.M1_5 ? item.M1_5.split(',') : [];
-                    if (roles.includes('M1')) m1.push(item.id);
-                    if (roles.includes('M2')) m2.push(item.id);
-                    if (roles.includes('M3')) m3.push(item.id);
-                    if (roles.includes('M4')) m4.push(item.id);
-                    if (roles.includes('M5')) m5.push(item.id);
+                    const roles = item.m_value ? item.m_value.split(',') : [];
+                    if (roles.includes('m1')) m1.push(item.id);
+                    if (roles.includes('m2')) m2.push(item.id);
+                    if (roles.includes('m3')) m3.push(item.id);
+                    if (roles.includes('m4')) m4.push(item.id);
+                    if (roles.includes('m5')) m5.push(item.id);
                 });
+                
     
                 setSelectedM1(m1);
                 setSelectedM2(m2);
@@ -240,6 +237,7 @@ export default function PlanTygodniaPage() {
                 setSelectedM5(m5);
             })
             .catch(err => console.error(err));
+
     };
 
     // funkcja do obsługi zmiany stanu checkboxa w pierwszej kolumnie
@@ -263,103 +261,20 @@ export default function PlanTygodniaPage() {
             M1_5: selectedM,
         }, { withCredentials: true })
             .then((res) => {
+                fetchData();
             })
             .catch((err) => {
                 console.error('Error updating employee:', err);
             });
     };
 
-    const handleSelectAll = (columnIndex) => {
-        switch (columnIndex) {
-            case 4:
-                setSelectedM1(prevSelectedM1 =>
-                    prevSelectedM1.length === pracownikData.length ? [] : pracownikData.map((_, i) => i)
-                );
-                break;
-            case 5:
-                setSelectedM2(prevSelectedM2 =>
-                    prevSelectedM2.length === pracownikData.length ? [] : pracownikData.map((_, i) => i)
-                );
-                break;
-            case 6:
-                setSelectedM3(prevSelectedM3 =>
-                    prevSelectedM3.length === pracownikData.length ? [] : pracownikData.map((_, i) => i)
-                );
-                break;
-            case 7:
-                setSelectedM4(prevSelectedM4 =>
-                    prevSelectedM4.length === pracownikData.length ? [] : pracownikData.map((_, i) => i)
-                );
-                break;
-            case 8:
-                setSelectedM5(prevSelectedM5 =>
-                    prevSelectedM5.length === pracownikData.length ? [] : pracownikData.map((_, i) => i)
-                );
-                break;
-            default:
-                break;
-        }
-    };
 
-    // funkcja do obsługi zmiany stanu checkboxa w kolumnach M1-M5
-    // przepraszam za wielki switch ;_;
-    const handleColumnCheckboxChange = (columnIndex, employeeId) => {
-        switch (columnIndex) {
-            case 4:
-                setSelectedM1(prevSelectedM1 => {
-                    if (prevSelectedM1.includes(employeeId)) {
-                        return prevSelectedM1.filter(id => id !== employeeId);
-                    } else {
-                        return [...prevSelectedM1, employeeId];
-                    }
-                });
-                break;
-            case 5:
-                setSelectedM2(prevSelectedM2 => {
-                    if (prevSelectedM2.includes(employeeId)) {
-                        return prevSelectedM2.filter(id => id !== employeeId);
-                    } else {
-                        return [...prevSelectedM2, employeeId];
-                    }
-                });
-                break;
-            case 6:
-                setSelectedM3(prevSelectedM3 => {
-                    if (prevSelectedM3.includes(employeeId)) {
-                        return prevSelectedM3.filter(id => id !== employeeId);
-                    } else {
-                        return [...prevSelectedM3, employeeId];
-                    }
-                });
-                break;
-            case 7:
-                setSelectedM4(prevSelectedM4 => {
-                    if (prevSelectedM4.includes(employeeId)) {
-                        return prevSelectedM4.filter(id => id !== employeeId);
-                    } else {
-                        return [...prevSelectedM4, employeeId];
-                    }
-                });
-                break;
-            case 8:
-                setSelectedM5(prevSelectedM5 => {
-                    if (prevSelectedM5.includes(employeeId)) {
-                        return prevSelectedM5.filter(id => id !== employeeId);
-                    } else {
-                        return [...prevSelectedM5, employeeId];
-                    }
-                });
-                break;
-            default:
-                break;
-        }
-    };
 
     return (
         <main>
             <div className="w-auto h-auto m-2 p-3 bg-amber-100 outline outline-1
             outline-gray-500 flex flex-row items-center space-x-4">
-                <div className="w-3/4 h-72 flex flex-col space-y-2 items-start">
+                <div className="w-3/4 h-40 flex flex-col space-y-2 items-start">
                     <div className="h-full">
                         <div className="h-full flex flex-col justify-around">
                             <div className="flex flex-row gap-32 items-center">
@@ -395,13 +310,13 @@ export default function PlanTygodniaPage() {
                                     <th className="border-r"></th>
                                     <th className="border-r">Nazwisko</th>
                                     <th className="border-r">Imię</th>
-                                    <th className="border-r">Grupa</th>
-                                    <th className="border-r" onClick={() => handleSelectAll(4)}>M1</th>
-                                    <th className="border-r" onClick={() => handleSelectAll(5)}>M2</th>
-                                    <th className="border-r" onClick={() => handleSelectAll(6)}>M3</th>
-                                    <th className="border-r" onClick={() => handleSelectAll(7)}>M4</th>
-                                    <th className="border-r" onClick={() => handleSelectAll(8)}>M5</th>
-                                    <th className="border-r">Opis</th>
+                                    <th className="border-r w-1/5">Grupa</th>
+                                    <th className="border-r">M1</th>
+                                    <th className="border-r">M2</th>
+                                    <th className="border-r">M3</th>
+                                    <th className="border-r">M4</th>
+                                    <th className="border-r">M5</th>
+                                    <th className="border-r w-1/4">Opis</th>
                                 </tr>
                             </thead>
                             <tbody className="text-center">
@@ -414,45 +329,45 @@ export default function PlanTygodniaPage() {
                                                 onChange={() => handleRowCheckboxChange(item.id)}
                                             />
                                         </td>
-                                        <td className="border-r">{item.surname}</td>
-                                        <td className="border-r">{item.name}</td>
-                                        <td className="border-r">{item.vacationGroup}</td>
+                                        <td className="border-r">{item.nazwisko ? item.nazwisko : item.pojazd || 'No Data'}</td>
+                                        <td className="border-r">{item.imie}</td>
+                                        <td className="border-r">{item.Zleceniodawca}</td>
+                                        <td className="border-r">
+                                        <input
+                                            type="radio"
+                                            checked={item.m_value === 'm1'}
+                                            onChange={() => handleRadioChange(item.id, 'm1')}
+                                        />
+                                        </td>
                                         <td className="border-r">
                                             <input
                                                 type="radio"
-                                                checked={item.M1_5 === 'M1'}
-                                                onChange={() => handleRadioChange(item.id, 'M1')}
+                                                checked={item.m_value === 'm2'}
+                                                onChange={() => handleRadioChange(item.id, 'm2')}
                                             />
                                         </td>
                                         <td className="border-r">
                                             <input
                                                 type="radio"
-                                                checked={item.M1_5 === 'M2'}
-                                                onChange={() => handleRadioChange(item.id, 'M2')}
+                                                checked={item.m_value === 'm3'}
+                                                onChange={() => handleRadioChange(item.id, 'm3')}
                                             />
                                         </td>
                                         <td className="border-r">
                                             <input
                                                 type="radio"
-                                                checked={item.M1_5 === 'M3'}
-                                                onChange={() => handleRadioChange(item.id, 'M3')}
+                                                checked={item.m_value === 'm4'}
+                                                onChange={() => handleRadioChange(item.id, 'm4')}
                                             />
                                         </td>
                                         <td className="border-r">
                                             <input
                                                 type="radio"
-                                                checked={item.M1_5 === 'M4'}
-                                                onChange={() => handleRadioChange(item.id, 'M4')}
+                                                checked={item.m_value === 'm5'}
+                                                onChange={() => handleRadioChange(item.id, 'm5')}
                                             />
                                         </td>
-                                        <td className="border-r">
-                                            <input
-                                                type="radio"
-                                                checked={item.M1_5 === 'M5'}
-                                                onChange={() => handleRadioChange(item.id, 'M5')}
-                                            />
-                                        </td>
-                                        <td className="border-r">{item.description}</td>
+                                        <td className="border-r">{item.Opis}</td>
                                     </tr>
                                 ))}
                             </tbody>

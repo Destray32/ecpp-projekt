@@ -3,7 +3,6 @@ const db = require('../../../server');
 function PrzeniesWpisPlan(req, res) {
     const { ids, groupId } = req.body;
 
-    console.log('ids:', ids);
 
     if (!Array.isArray(ids) || typeof groupId !== 'number') {
         return res.status(400).send('Invalid input');
@@ -12,9 +11,9 @@ function PrzeniesWpisPlan(req, res) {
     const idsList = ids.join(',');
 
     const query = `
-        UPDATE informacje_o_firmie
-        SET FK_idGrupa_urlopowa = ?
-        WHERE idInformacje_o_firmie IN (${idsList})
+        UPDATE Plan_Tygodnia_V
+        SET Grupa_urlopowa_idGrupa_urlopowa = ?
+        WHERE idPlan_Tygodnia_V IN (${idsList})
     `;
 
     db.query(query, [groupId], (error, results) => {

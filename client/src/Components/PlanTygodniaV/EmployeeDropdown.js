@@ -77,6 +77,7 @@ const EmployeeDropdown = ({ onEmployeeSelect, scheduledEmployees }) => {
         placeholder=""
         className="w-96"
         display="chip"
+        emptyMessage='Brak dostępnych pracowników/pojazdów'
         itemTemplate={itemTemplate}
       />
     </div>

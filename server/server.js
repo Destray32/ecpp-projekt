@@ -91,7 +91,6 @@ const PobierzDodaneProjekty = require('./api/Czas/CzasPracy/czas.czaspracy.proje
 const UsunDodatkowyProject = require('./api/Czas/CzasPracy/czas.czaspracy.usun');
 
 // Plan Tygodnia
-const PlanTygodniaPlan = require('./api/PlanTygodnia/plantygodnia.plan.planTygodnia');
 const DostepneGrupy = require('./api/Grupy/grupy.dostepnegrupy');
 const DrukujGrupe = require('./api/PlanTygodnia/plantygodnia.plan.drukujGrupe');
 const PrzeniesWpisPlan = require('./api/PlanTygodnia/plantygodnia.plan.przenies');
