@@ -12,6 +12,7 @@ function GetPlany(req, res, db) {
         dane.imie,
         dane.nazwisko,
         grupa.Zleceniodawca,
+        grupa.idGrupa_urlopowa AS grupaId,
         pojazd.idPojazdy AS pojazdId,
         pojazd.Nr_rejestracyjny AS pojazd,
         p.m_value

@@ -1,22 +1,16 @@
-const db = require('../../../server');
-
-function UsunWpisPlan(req, res) {
+function UsunWpisPlan(req, res,db ) {
     const { id } = req.body;
-    console.log('id:', id);
 
     if (!Array.isArray(id) || id.length === 0) {
         return res.status(400).json({ error: 'Invalid input: ids must be a non-empty array' });
     }
 
     const idPlaceholders = id.map(() => '?').join(',');
-    console.log('idPlaceholders:', idPlaceholders);
+
     const sql = `
-        UPDATE informacje_o_firmie i
-        JOIN pracownik p ON p.FK_Informacje_o_firmie = i.idInformacje_o_firmie
-        SET i.Plan_TygodniaV = 0
-        WHERE p.idPracownik IN (${idPlaceholders})
+        DELETE FROM Plan_Tygodnia_V
+        WHERE idPlan_Tygodnia_V IN (${idPlaceholders})
     `;
-    console.log('sql:', sql);
 
     db.query(sql, id, (error, results) => {
         if (error) {

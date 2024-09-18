@@ -54,9 +54,23 @@ export default function ZaplanujTydzienPage() {
                 });
             
                 setPlany(sortedData);
+
+                const employees = [];
+                const vehicles = [];
             
-                const scheduledEmployees = sortedData.map(plan => plan.pracownikId || plan.pojazdId);
-                setScheduledEmployees(scheduledEmployees);
+                sortedData.forEach(plan => {
+                    if (plan.pracownikId) {
+                        employees.push({ id: plan.pracownikId });
+                    } else if (plan.pojazdId) {
+                        vehicles.push({ idPojazdy: plan.pojazdId });
+                    }
+                });
+            
+                const formattedEmployees = Array.from(new Set(employees.map(e => e.id))).map(id => ({ id }));
+                const formattedVehicles = Array.from(new Set(vehicles.map(v => v.idPojazdy))).map(idPojazdy => ({ idPojazdy }));
+            
+                setScheduledEmployees({ employees: formattedEmployees, vehicles: formattedVehicles });
+            
                 
             })
             .catch((error) => {
@@ -80,8 +94,8 @@ export default function ZaplanujTydzienPage() {
             pracownicy: selectedEmployees,
             grupa: wybranaGrupa,
             opis: opis
-        }, { withCredentials: true
-        }).then((response) => {
+        }, { withCredentials: true})
+        .then((response) => {
             fetchPlany();
             setSelectedEmployees([]);
             notification.success({
@@ -146,7 +160,6 @@ export default function ZaplanujTydzienPage() {
                         <span>Pracownik</span>
                         <EmployeeDropdown 
                             onEmployeeSelect={handleEmployeeSelect} 
-                            selectedGroup={wybranaGrupa}
                             scheduledEmployees={scheduledEmployees}
                         />
                         <div className="flex flex-row items-center gap-8">

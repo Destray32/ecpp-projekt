@@ -264,13 +264,12 @@ app.get('/api/czas/projekty/dodane', (req, res) => {
 /////////////////////////////////////////
 
 // PLAN TYGODNIA "V" > PLAN TYGODNIA //
+app.post('/api/planTygodniaPrev', (req, res) => {
+    PracownicyPoprzedniTydz(req, res, db);
+});
 app.route('/api/planTygodnia')
     .get((req, res) => {
-        if (req.query.previous) {
-            PracownicyPoprzedniTydz(req, res, db);
-        } else {
             PlanTygodniaPlan(req, res, db);
-        }
     })
     .put((req, res) => {
         PrzeniesWpisPlan(req, res, db);

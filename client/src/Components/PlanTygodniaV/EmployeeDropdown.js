@@ -10,28 +10,33 @@ const EmployeeDropdown = ({ onEmployeeSelect, scheduledEmployees }) => {
 
   useEffect(() => {
     fetchOptions();
-  }, [scheduledEmployees]);
+  }, [scheduledEmployees]); // Ensure fetchOptions runs whenever scheduledEmployees changes
 
   const fetchOptions = async () => {
     try {
+      // Fetch both employees and vehicles
       const [employeesRes, vehiclesRes] = await Promise.all([
         Axios.get('http://localhost:5000/api/pracownicy', { withCredentials: true }),
         Axios.get('http://localhost:5000/api/pracownik/pojazdy', { withCredentials: true })
       ]);
-
+  
       const VehiclesArray = Array.isArray(vehiclesRes.data) ? vehiclesRes.data : [];
+      const EmployeesArray = Array.isArray(employeesRes.data) ? employeesRes.data : [];
+      const scheduledEmployeesArray = scheduledEmployees || { employees: [], vehicles: [] };
+      const scheduledEmployeeIds = new Set((scheduledEmployeesArray.employees || []).map(e => e.id));
+      const scheduledVehicleIds = new Set((scheduledEmployeesArray.vehicles || []).map(v => v.idPojazdy));
+  
       const filteredVehicles = VehiclesArray
-      .filter((vehicle) => !scheduledEmployees.includes(vehicle.idPojazdy))
-      .map((vehicle) => ({
-        label: `${vehicle.Nr_rejestracyjny}`,
-        value: `vehicle-${vehicle.idPojazdy}`,
-        type: 'vehicle',
-      }));
-
-      const scheduledEmployeesArray = Array.isArray(scheduledEmployees) ? scheduledEmployees : [];
-      const filteredEmployees = employeesRes.data
-        .filter((employee) => employee.weeklyPlan)
-        .filter((employee) => !scheduledEmployeesArray.includes(employee.id))
+        .filter((vehicle) => !scheduledVehicleIds.has(vehicle.idPojazdy))
+        .map((vehicle) => ({
+          label: `${vehicle.Nr_rejestracyjny}`,
+          value: `vehicle-${vehicle.idPojazdy}`,
+          type: 'vehicle',
+        }));
+  
+      const filteredEmployees = EmployeesArray
+        .filter((employee) => employee.weeklyPlan) 
+        .filter((employee) => !scheduledEmployeeIds.has(employee.id))
         .map((employee) => ({
           label: `${employee.name} ${employee.surname}`,
           value: `employee-${employee.id}`, 
@@ -39,18 +44,19 @@ const EmployeeDropdown = ({ onEmployeeSelect, scheduledEmployees }) => {
           weeklyPlan: employee.weeklyPlan,
           vacationGroup: employee.vacationGroup,
         }));
-
-      setOptions([...filteredEmployees, ...filteredVehicles]);
-
-
+  
+      const combinedOptions = [...filteredEmployees, ...filteredVehicles];
+      setOptions(combinedOptions);
+  
       const validSelectedItems = selectedItems.filter((item) =>
-        [...filteredVehicles, ...filteredEmployees].some((opt) => opt.value === item)
+        combinedOptions.some((opt) => opt.value === item)
       );
       setSelectedItems(validSelectedItems);
     } catch (err) {
       console.error("Error fetching data:", err);
     }
   };
+  
 
   const handleSelectionChange = (e) => {
     setSelectedItems(e.value);
@@ -74,7 +80,7 @@ const EmployeeDropdown = ({ onEmployeeSelect, scheduledEmployees }) => {
         options={options}
         onChange={handleSelectionChange}
         optionLabel="label"
-        placeholder=""
+        placeholder="Wybierz pracownika/pojazd"
         className="w-96"
         display="chip"
         emptyMessage='Brak dostępnych pracowników/pojazdów'

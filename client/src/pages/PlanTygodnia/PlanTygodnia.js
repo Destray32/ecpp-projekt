@@ -5,6 +5,7 @@ import { format, startOfWeek, addWeeks, subWeeks, getWeek, set } from 'date-fns'
 import Axios from "axios";
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { notification } from 'antd';
 
 import AmberBox from "../../Components/AmberBox";
 
@@ -17,11 +18,6 @@ export default function PlanTygodniaPage() {
     const [pracownikData, setPracownikData] = useState([]);
     const [selectedRowIds, setSelectedRowIds] = useState([]);
     const [currentDate, setCurrentDate] = useState(new Date());
-    const [selectedM1, setSelectedM1] = useState([]);
-    const [selectedM2, setSelectedM2] = useState([]);
-    const [selectedM3, setSelectedM3] = useState([]);
-    const [selectedM4, setSelectedM4] = useState([]);
-    const [selectedM5, setSelectedM5] = useState([]);
 
     const from = format(startOfWeek(currentDate, { weekStartsOn: 1 }), 'yyyy-MM-dd');
     const to = format(addWeeks(startOfWeek(currentDate, { weekStartsOn: 1 }), 1), 'yyyy-MM-dd');
@@ -112,19 +108,18 @@ export default function PlanTygodniaPage() {
         generatePDF();
     }
 
-    const handleUsunZaznaczone = () => {
-        console.log("Usuwane:", selectedRowIds);
-        Axios.delete('http://localhost:5000/api/planTygodnia', {
-            withCredentials: true,
-            data: {
-                id: selectedRowIds
-            }
-        })
-        .then(res => {
+    const handleUsunZaznaczone = async () => {
+        try {
+            await Axios.delete('http://localhost:5000/api/planTygodnia', {
+                withCredentials: true,
+                data: { id: selectedRowIds }
+            });
             fetchData();
-        })
-        .catch(err => console.error(err));
-    }
+        } catch (err) {
+            console.error(err);
+        }
+    };
+    
     
     // obsługa przyciusku przeniesienia zaznaczonych pracowników do innej grupy
     const handlePrzeniesZaznaczone = () => {
@@ -138,60 +133,70 @@ export default function PlanTygodniaPage() {
             groupId: grupaPrzenies
         };
     
-    
         Axios.put('http://localhost:5000/api/planTygodnia', payload, { withCredentials: true })
             .then(res => {
                 fetchData();
+                setSelectedRowIds([]);
             })
             .catch(err => {
                 console.error("Error transferring selected employees:", err);
             });
     };
 
-    const handleSkopiuj = () => {
-        Axios.get('http://localhost:5000/api/planTygodnia?previous=true', { withCredentials: true })
-            .then(res => {
-                let newData = res.data;
+    const handleSkopiuj = async () => {
+        try {
+            const previousWeekStart = format(subWeeks(startOfWeek(currentDate, { weekStartsOn: 1 }), 1), 'yyyy-MM-dd');
+            const previousWeekEnd = format(startOfWeek(currentDate, { weekStartsOn: 1 }), 'yyyy-MM-dd');
+    
+            const [currentWeekResponse, previousWeekResponse] = await Promise.all([
+                Axios.get(`http://localhost:5000/api/planTygodnia/zaplanuj?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`, { withCredentials: true }),
+                Axios.get(`http://localhost:5000/api/planTygodnia/zaplanuj?from=${encodeURIComponent(previousWeekStart)}&to=${encodeURIComponent(previousWeekEnd)}`, { withCredentials: true })
+            ]);
 
-                // Update the week number in the newData (assuming there's a 'week' field)
-                newData = newData.map(item => {
-                    return {
-                        ...item,
-                        tydzienRoku: getWeekNumber() // Here you change the week to 39 or current week dynamically
-                    };
-                });
+            const currentWeekData = currentWeekResponse.data;
+            let previusWeek = previousWeekResponse.data;
+    
+            const currentPracownikIds = new Set(currentWeekData.map(item => item.pracownikId));
+            const currentPojazdIds = new Set(currentWeekData.map(item => item.pojazdId));
+    
+            previusWeek = previusWeek.filter(item => 
+                !currentPracownikIds.has(item.pracownikId) && 
+                !currentPojazdIds.has(item.pojazdId)
+            );
+    
+            previusWeek = previusWeek.map(item => ({
+                ...item,
+                tydzienRoku: getWeekNumber(currentDate),
+                data_od: format(startOfWeek(currentDate, { weekStartsOn: 1 }), 'yyyy-MM-dd'),
+                data_do: format(addWeeks(startOfWeek(currentDate, { weekStartsOn: 1 }), 1), 'yyyy-MM-dd')
+            }));
 
-                setPracownikData(prevData => {
-                    const combinedData = [
-                        ...prevData,
-                        ...newData.filter(newItem => !prevData.some(existingItem => existingItem.id === newItem.id))
-                    ];
-                    return combinedData;
-                });
-                })
-                .catch(err => console.error(err));
-    }
-
-    // obsługa zmiany grupy w dropdownie
+            await Axios.post('http://localhost:5000/api/planTygodniaPrev', previusWeek, { withCredentials: true });    
+            fetchData();
+            notification.success({
+                message: 'Sukces',
+                description: 'Dane zostały skopiowane z poprzedniego tygodnia',
+                placement: 'topRight',
+            });
+        } catch (err) {
+            notification.error({
+                message: 'Błąd',
+                description: 'Nie udało się skopiować danych z poprzedniego tygodnia/brak danych do skopiowania',
+                placement: 'topRight',
+            });
+        }
+    };
+    
     const handleChangeGroupFilter = (e) => {
         const selectedGroup = e.value;
         setGroup(selectedGroup);
-        
-        let url = `http://localhost:5000/api/planTygodnia/zaplanuj?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
-        if (selectedGroup) {
-            url += `&group=${encodeURIComponent(selectedGroup.name)}`;
-        }
-        
-        Axios.get(url, { withCredentials: true })
-            .then(res => {
-                setPracownikData(res.data);
-            })
-            .catch(err => console.error(err));
+    
+        fetchData();
     };
 
     useEffect(() => {
         fetchData();
-    }, [currentDate]);
+    }, [currentDate, pracownikData]);
 
     const fetchData = () => {
         Axios.get('http://localhost:5000/api/grupy', { withCredentials: true })
@@ -199,9 +204,9 @@ export default function PlanTygodniaPage() {
                 setAvailableGroups(res.data.grupy.map(group => ({ name: group.Zleceniodawca, id: group.id })));
             })
             .catch(err => console.error(err));
-
-
-        Axios.get(`http://localhost:5000/api/planTygodnia/zaplanuj?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`, { withCredentials: true })
+    
+        const url = `http://localhost:5000/api/planTygodnia/zaplanuj?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}${group ? `&group=${encodeURIComponent(group.name)}` : ''}`;
+        Axios.get(url, { withCredentials: true })
             .then(res => {
                 const data = res.data;
                 const sortedData = data.sort((a, b) => {
@@ -213,31 +218,8 @@ export default function PlanTygodniaPage() {
                     return 0; 
                 });
                 setPracownikData(sortedData);
-                
-                const m1 = [];
-                const m2 = [];
-                const m3 = [];
-                const m4 = [];
-                const m5 = [];
-    
-                data.forEach((item) => {
-                    const roles = item.m_value ? item.m_value.split(',') : [];
-                    if (roles.includes('m1')) m1.push(item.id);
-                    if (roles.includes('m2')) m2.push(item.id);
-                    if (roles.includes('m3')) m3.push(item.id);
-                    if (roles.includes('m4')) m4.push(item.id);
-                    if (roles.includes('m5')) m5.push(item.id);
-                });
-                
-    
-                setSelectedM1(m1);
-                setSelectedM2(m2);
-                setSelectedM3(m3);
-                setSelectedM4(m4);
-                setSelectedM5(m5);
             })
             .catch(err => console.error(err));
-
     };
 
     // funkcja do obsługi zmiany stanu checkboxa w pierwszej kolumnie
