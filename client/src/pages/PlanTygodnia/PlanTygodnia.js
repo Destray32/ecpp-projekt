@@ -201,7 +201,9 @@ export default function PlanTygodniaPage() {
     const fetchData = () => {
         Axios.get('http://localhost:5000/api/grupy', { withCredentials: true })
             .then(res => {
-                setAvailableGroups(res.data.grupy.map(group => ({ name: group.Zleceniodawca, id: group.id })));
+                const groups = res.data.grupy;
+                const filteredGroups = groups.filter(group => group.Plan_tygodniaV === 1);
+                setAvailableGroups(filteredGroups.map(group => ({ name: group.Zleceniodawca, id: group.id })));
             })
             .catch(err => console.error(err));
     

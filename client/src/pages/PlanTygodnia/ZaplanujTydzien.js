@@ -127,8 +127,9 @@ export default function ZaplanujTydzienPage() {
     useEffect(() => {
         Axios.get('http://localhost:5000/api/grupy', { withCredentials: true })
             .then((response) => {
-                const grupy = response.data.grupy;
-                setZleceniodawcy(grupy.map((zleceniodawca) => ({
+                const groups = response.data.grupy;
+                const filteredGroups = groups.filter(group => group.Plan_tygodniaV === 1);
+                setZleceniodawcy(filteredGroups.map((zleceniodawca) => ({
                     label: zleceniodawca.Zleceniodawca,
                     value: zleceniodawca.id
                 })));
