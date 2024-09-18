@@ -282,6 +282,9 @@ export default function CzasPracyPage() {
         let hasMissingStartEndBreak = false; // stan dla sprawdzania czy godziny sa ustawione dla dodatkowych projektow ale nie ma start, end, lub break
         let dayHourMismatch = false; // stan dla sprawdzania czy godziny przypisane do projektow zgadzaja sie z godzinami pracy
 
+        const projectNames = additionalProjects.map(project => project.label);
+        const duplicateProjects = projectNames.filter((name, index) => projectNames.indexOf(name) !== index); // sprawdzanie czy nie zostal 2 razy ten sam projekt dodany
+
         const formattedAdditionalProjects = additionalProjects.map(project => ({
             ...project,
             totalHours: calculateProjectTotal(project, daysOfWeek),
@@ -335,25 +338,27 @@ export default function CzasPracyPage() {
             const dayName = format(day, 'EEEE', { locale: pl });
             const formattedDate = format(day, 'yyyy-MM-dd');
             const dailyHours = hours[formattedDate] || {};
+        
+            const breakHours = dailyHours.break ? parseFloat(dailyHours.break.split(":")[0]) : 0;
             
             const totalDayHours = dailyHours.end && dailyHours.start ? 
-                parseFloat(dailyHours.end.split(":")[0]) - parseFloat(dailyHours.start.split(":")[0]) - parseFloat(dailyHours.break.split(":")[0]) 
+                parseFloat(dailyHours.end.split(":")[0]) - parseFloat(dailyHours.start.split(":")[0]) - breakHours 
                 : 0;
-    
+        
             let projectDayHours = 0;
-    
+        
             additionalProjects.forEach(project => {
                 const projectData = project.hours[formattedDate];
                 if (projectData?.hoursWorked) {
                     projectDayHours += parseFloat(projectData.hoursWorked);
                 }
             });
-    
+        
             if (totalDayHours !== projectDayHours) {
                 dayHourMismatch = true;
                 console.log(`Różnica w godzinach dla ${dayName}. Godziny pracy: ${totalDayHours}, godziny w dodatkowych projektach: ${projectDayHours}`);
             }
-        });
+        });        
 
         if (hasMissingFields) {
             notification.error({
@@ -377,6 +382,15 @@ export default function CzasPracyPage() {
             notification.error({
                 message: 'Różnica w godzinach',
                 description: 'Suma godzin pracy nie zgadza się z sumą godzin w dodatkowych projektach',
+                placement: 'topRight',
+            });
+            return;
+        }
+        
+        if (duplicateProjects.length > 0) {
+            notification.error({
+                message: 'Zduplikowane projekty',
+                description: `Ten sam projekt został dodany więcej niż raz'`,
                 placement: 'topRight',
             });
             return;
