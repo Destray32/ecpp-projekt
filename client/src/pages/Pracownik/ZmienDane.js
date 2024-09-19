@@ -6,6 +6,17 @@ import axios from 'axios';
 import dayjs from 'dayjs';
 
 import DaneBox from '../../Components/DaneBox';
+import {
+    requiredField,
+    validatePassword,
+    validateConfirmPasssword,
+    polishPhoneValidation,
+    swedishPhoneValidation,
+    validatePESEL,
+    validateNIP,
+    validateEmail,
+    universalFieldValidation
+} from '../../utils/validationRules';
 
 export default function ZmienDanePage() {
     const [form] = Form.useForm();
@@ -113,89 +124,176 @@ export default function ZmienDanePage() {
                     <div className="w-full flex flex-row justify-center items-center">
                         <DaneBox name="Zmiana danych">
                             <div className="flex flex-col">
-                                <Form.Item label="Nazwisko" name="surename" rules={[{ required: true, message: 'Wprowadź nazwisko' }]}>
+                                <Form.Item
+                                    label="Nazwisko"
+                                    name="surename"
+                                    rules={[requiredField('Wprowadź nazwisko'), universalFieldValidation('surname')]}
+                                >
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Imię" name="name" rules={[{ required: true, message: 'Wprowadź imię' }]}>
+                                <Form.Item
+                                    label="Imię"
+                                    name="name"
+                                    rules={[requiredField('Wprowadź imię'), universalFieldValidation('name')]}
+                                >
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Data urodzenia" name="brithday" rules={[{ required: true, message: 'Wprowadź datę urodzenia' }]}>
+                                <Form.Item
+                                    label="Data urodzenia"
+                                    name="brithday"
+                                    rules={[requiredField('Wprowadź datę urodzenia')]}
+                                >
                                     <DatePicker />
                                 </Form.Item>
-                                <Form.Item label="PESEL" name="pesel">
+                                <Form.Item
+                                    label="PESEL"
+                                    name="pesel"
+                                    rules={[validatePESEL]}
+                                >
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Ulica / Nr domu" name="street" rules={[{ required: true, message: 'Wprowadź ulicę' }]}>
+                                <Form.Item
+                                    label="Ulica / Nr domu"
+                                    name="street"
+                                    rules={[requiredField('Wprowadź ulicę')]}
+                                >
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Kod pocztowy" name="zip" rules={[{ required: true, message: 'Wprowadź kod pocztowy' }]}>
+                                <Form.Item
+                                    label="Kod pocztowy"
+                                    name="zip"
+                                    rules={[requiredField('Wprowadź kod pocztowy')]}
+                                >
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Miasto" name="city" rules={[{ required: true, message: 'Wprowadź miasto' }]}>
+                                <Form.Item
+                                    label="Miasto"
+                                    name="city"
+                                    rules={[requiredField('Wprowadź miasto'),
+                                        universalFieldValidation('city')]}
+                                >
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Kraj" name="country" rules={[{ required: true, message: 'Wprowadź kraj' }]}>
+                                <Form.Item
+                                    label="Kraj"
+                                    name="country"
+                                    rules={[requiredField('Wprowadź kraj'),
+                                        universalFieldValidation('country')]}
+                                >
                                     <Input />
                                 </Form.Item>
                             </div>
                             <div className="flex flex-col">
-                                <Form.Item label="Firma" name="company" rules={[{ required: true, message: 'Wybierz firmę' }]}>
+                                <Form.Item
+                                    label="Firma"
+                                    name="company"
+                                    rules={[requiredField('Wybierz firmę')]}
+                                >
                                     <Select>
                                         {firma.map(f => (
                                             <Select.Option key={f.idFirma} value={f.idFirma}>{f.Nazwa_firmy}</Select.Option>
                                         ))}
                                     </Select>
                                 </Form.Item>
-                                <Form.Item label="Telefon w Polsce" name="phone1" rules={[{ required: true, message: 'Wprowadź telefon' }]}>
+                                <Form.Item
+                                    label="Telefon w Polsce"
+                                    name="phone1"
+                                    rules={[requiredField('Wprowadź telefon'), polishPhoneValidation]}
+                                >
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Telefon w Szwecji" name="phone2" rules={[{ required: true, message: 'Wprowadź telefon' }]}>
+                                <Form.Item
+                                    label="Telefon w Szwecji"
+                                    name="phone2"
+                                    rules={[swedishPhoneValidation]}
+                                >
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Email" name="email">
+                                <Form.Item
+                                    label="Email"
+                                    name="email"
+                                    rules={[validateEmail]}
+                                >
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Osoba kontaktowa" name="relative1" rules={[{ required: true, message: 'Wprowadź osobę kontaktową' }]}>
+                                <Form.Item
+                                    label="Osoba kontaktowa"
+                                    name="relative1"
+                                    rules={[requiredField('Wprowadź osobę kontaktową'),
+                                    universalFieldValidation('relative')]}
+                                >
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Kontakt (wypadek)" name="relative2">
+                                <Form.Item
+                                    label="Kontakt (wypadek)"
+                                    name="relative2"
+                                    rules={[universalFieldValidation('relative')]}
+                                >
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="NIP" name="NIP">
+                                <Form.Item
+                                    label="NIP"
+                                    name="NIP"
+                                    rules={[validateNIP]}
+                                >
                                     <Input />
                                 </Form.Item>
                             </div>
                             <div className="flex flex-col">
                                 <div className="flex flex-col">
-                                    <Form.Item label="Data zatrudnienia" name="startDate" rules={[{ required: true, message: 'Wprowadź datę zatrudnienia' }]}>
+                                    <Form.Item
+                                        label="Data zatrudnienia"
+                                        name="startDate"
+                                        rules={[requiredField('Wprowadź datę zatrudnienia')]}
+                                    >
                                         <DatePicker />
                                     </Form.Item>
-                                    <Form.Item label="Data zakończenia" name="endDate">
+                                    <Form.Item
+                                        label="Data zakończenia"
+                                        name="endDate"
+                                    >
                                         <DatePicker />
                                     </Form.Item>
-                                    <Form.Item label="Kod wynagrodzenia" name="paycheckCode">
+                                    <Form.Item
+                                        label="Kod wynagrodzenia"
+                                        name="paycheckCode"
+                                    >
                                         <Input />
                                     </Form.Item>
                                 </div>
                                 <div className="flex flex-col">
-                                    <Form.Item label="Pojazd" name="vehicle">
+                                    <Form.Item
+                                        label="Pojazd"
+                                        name="vehicle"
+                                    >
                                         <Select>
                                             {pojazd.map(p => (
                                                 <Select.Option key={p.idPojazdy} value={p.idPojazdy}>{p.Nr_rejestracyjny}</Select.Option>
                                             ))}
                                         </Select>
                                     </Form.Item>
-                                    <Form.Item label="Grupa urlopowa" name="vacationGroup">
+                                    <Form.Item
+                                        label="Grupa urlopowa"
+                                        name="vacationGroup"
+                                    >
                                         <Select>
                                             {grupa.map(g => (
                                                 <Select.Option key={g.idGrupa_urlopowa} value={g.idGrupa_urlopowa}>{g.Zleceniodawca}</Select.Option>
                                             ))}
                                         </Select>
                                     </Form.Item>
-                                    <Form.Item label="Plan tygodnia 'V'?" name="weeklyPlan" valuePropName="checked">
+                                    <Form.Item
+                                        label="Plan tygodnia 'V'?"
+                                        name="weeklyPlan"
+                                        valuePropName="checked"
+                                    >
                                         <Checkbox />
                                     </Form.Item>
-                                    <Form.Item label="Drukować urlop?" name="printVacation" valuePropName="checked">
+                                    <Form.Item
+                                        label="Drukować urlop?"
+                                        name="printVacation"
+                                        valuePropName="checked"
+                                    >
                                         <Checkbox />
                                     </Form.Item>
                                 </div>
@@ -205,13 +303,25 @@ export default function ZmienDanePage() {
                     <div className="w-full flex flex-row justify-center items-center">
                         <DaneBox name="Informacje o użytkowniku">
                             <div className="h-48 flex flex-col justify-center">
-                                <Form.Item label="Nazwa użytkownika" name="login" rules={[{ required: true, message: 'Wprowadź nazwę użytkownika' }]}>
+                                <Form.Item
+                                    label="Nazwa użytkownika"
+                                    name="login"
+                                    rules={[requiredField('Wprowadź nazwę użytkownika')]}
+                                >
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Konto aktywne" name="active" valuePropName="checked">
+                                <Form.Item
+                                    label="Konto aktywne"
+                                    name="active"
+                                    valuePropName="checked"
+                                >
                                     <Checkbox />
                                 </Form.Item>
-                                <Form.Item label="Rola" name="role" rules={[{ required: true, message: 'Wybierz rolę' }]}>
+                                <Form.Item
+                                    label="Rola"
+                                    name="role"
+                                    rules={[requiredField('Wybierz rolę')]}
+                                >
                                     <Radio.Group>
                                         <Radio value={1}>Admin</Radio>
                                         <Radio value={2}>Kierownik</Radio>
@@ -229,10 +339,18 @@ export default function ZmienDanePage() {
                         </DaneBox>
                         <DaneBox name="Hasło">
                             <div className="h-48 flex flex-col justify-center">
-                                <Form.Item label="Nowe hasło" name="newPassword">
+                                <Form.Item
+                                    label="Nowe hasło"
+                                    name="newPassword"
+                                    rules={[validatePassword]}
+                                >
                                     <Input.Password />
                                 </Form.Item>
-                                <Form.Item label="Potwierdź hasło" name="confirmPassword">
+                                <Form.Item
+                                    label="Potwierdź hasło"
+                                    name="confirmPassword"
+                                    rules={[validateConfirmPasssword(form.getFieldValue)]}
+                                >
                                     <Input.Password />
                                 </Form.Item>
                             </div>

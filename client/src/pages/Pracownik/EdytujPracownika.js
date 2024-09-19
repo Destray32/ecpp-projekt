@@ -6,6 +6,13 @@ import axios from 'axios';
 import dayjs from 'dayjs';
 
 import DaneBox from '../../Components/DaneBox';
+import { validatePassword, 
+    validateConfirmPasssword, 
+    swedishPhoneValidation, 
+    polishPhoneValidation, requiredField, 
+    universalFieldValidation, validatePESEL, 
+    validateNIP, validateEmail } 
+from '../../utils/validationRules';
 
 export default function EdytujPracownikaPage() {
     const [form] = Form.useForm();
@@ -115,16 +122,16 @@ export default function EdytujPracownikaPage() {
                     <div className="w-full flex flex-row justify-center items-center">
                         <DaneBox name="Zmiana danych">
                             <div className="flex flex-col">
-                                <Form.Item label="Nazwisko" name="surename" rules={[{ required: true, message: 'Wprowadź nazwisko' }]}>
+                                <Form.Item label="Nazwisko" name="surename" rules={[{ required: true, message: 'Wprowadź nazwisko' }, universalFieldValidation('surname')]}>
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Imię" name="name" rules={[{ required: true, message: 'Wprowadź imię' }]}>
+                                <Form.Item label="Imię" name="name" rules={[{ required: true, message: 'Wprowadź imię' }, universalFieldValidation('name')]}>
                                     <Input />
                                 </Form.Item>
                                 <Form.Item label="Data urodzenia" name="brithday" rules={[{ required: true, message: 'Wprowadź datę urodzenia' }]}>
                                     <DatePicker />
                                 </Form.Item>
-                                <Form.Item label="PESEL" name="pesel">
+                                <Form.Item label="PESEL" name="pesel" rules={[validatePESEL]}>
                                     <Input />
                                 </Form.Item>
                                 <Form.Item label="Ulica / Nr domu" name="street" rules={[{ required: true, message: 'Wprowadź ulicę' }]}>
@@ -133,10 +140,10 @@ export default function EdytujPracownikaPage() {
                                 <Form.Item label="Kod pocztowy" name="zip" rules={[{ required: true, message: 'Wprowadź kod pocztowy' }]}>
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Miasto" name="city" rules={[{ required: true, message: 'Wprowadź miasto' }]}>
+                                <Form.Item label="Miasto" name="city" rules={[{ required: true, message: 'Wprowadź miasto' }, universalFieldValidation('city')]}>
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Kraj" name="country" rules={[{ required: true, message: 'Wprowadź kraj' }]}>
+                                <Form.Item label="Kraj" name="country" rules={[{ required: true, message: 'Wprowadź kraj' }, universalFieldValidation('country')]}>
                                     <Input />
                                 </Form.Item>
                             </div>
@@ -148,22 +155,22 @@ export default function EdytujPracownikaPage() {
                                         ))}
                                     </Select>
                                 </Form.Item>
-                                <Form.Item label="Telefon w Polsce" name="phone1" rules={[{ required: true, message: 'Wprowadź telefon' }]}>
+                                <Form.Item label="Telefon w Polsce" name="phone1" rules={[polishPhoneValidation, requiredField('Wprowadź telefon w Polsce')]}>
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Telefon w Szwecji" name="phone2" rules={[{ required: true, message: 'Wprowadź telefon' }]}>
+                                <Form.Item label="Telefon w Szwecji" name="phone2" rules={[swedishPhoneValidation, requiredField('Wprowadź telefon w Szwecji')]}>
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Email" name="email">
+                                <Form.Item label="Email" name="email" rules={[validateEmail]}>
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Osoba kontaktowa" name="relative1" rules={[{ required: true, message: 'Wprowadź osobę kontaktową' }]}>
+                                <Form.Item label="Osoba kontaktowa" name="relative1" rules={[{ required: true, message: 'Wprowadź osobę kontaktową' }, universalFieldValidation('text')]}>
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Kontakt (wypadek)" name="relative2">
+                                <Form.Item label="Kontakt (wypadek)" name="relative2" rules={[universalFieldValidation('text')]}>
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="NIP" name="NIP">
+                                <Form.Item label="NIP" name="NIP" rules={[validateNIP]}>
                                     <Input />
                                 </Form.Item>
                             </div>
@@ -231,10 +238,10 @@ export default function EdytujPracownikaPage() {
                         </DaneBox>
                         <DaneBox name="Hasło">
                             <div className="h-48 flex flex-col justify-center">
-                                <Form.Item label="Nowe hasło" name="newPassword">
+                                <Form.Item label="Nowe hasło" name="newPassword" rules={[validatePassword]}>
                                     <Input.Password />
                                 </Form.Item>
-                                <Form.Item label="Potwierdź hasło" name="confirmPassword">
+                                <Form.Item label="Potwierdź hasło" name="confirmPassword" rules={[validateConfirmPasssword(form.getFieldValue)]}>
                                     <Input.Password />
                                 </Form.Item>
                             </div>
