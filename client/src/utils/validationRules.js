@@ -1,13 +1,22 @@
 
+// globalny kill switch do debugowania walidacji (zwraca zawsze sukces)
+const debugMode = false;
+
 export const requiredField = (msg) => {
     return {
         required: true,
         message: msg,
+        validator: (_, value) => {
+            if (debugMode) return Promise.resolve();
+            if (value) return Promise.resolve();
+            return Promise.reject(new Error(msg));
+        },
     };
 };
 
 export const validatePassword = {
     validator: (_, value) => {
+        if (debugMode) return Promise.resolve();
         if (value && value.length >= 6) {
             return Promise.resolve();
         }
@@ -17,6 +26,7 @@ export const validatePassword = {
 
 export const validateConfirmPasssword = (getFieldValue) => ({
     validator(_, value) {
+        if (debugMode) return Promise.resolve();
         if (!value || getFieldValue('newPassword') === value) {
             return Promise.resolve();
         }
@@ -28,21 +38,43 @@ export const validateConfirmPasssword = (getFieldValue) => ({
 export const polishPhoneValidation = {
     pattern: /^[0-9]{9}$/,
     message: 'Enter a valid Polish phone number (9 digits)',
+    validator: (_, value) => {
+        if (debugMode) return Promise.resolve();
+        if (value && polishPhoneValidation.pattern.test(value)) {
+            return Promise.resolve();
+        }
+        return Promise.reject(new Error(polishPhoneValidation.message));
+    },
 };
 
 export const swedishPhoneValidation = {
     pattern: /^[0-9]{9,10}$/,
     message: 'Enter a valid Swedish phone number (9-10 digits)',
+    validator: (_, value) => {
+        if (debugMode) return Promise.resolve();
+        if (value && swedishPhoneValidation.pattern.test(value)) {
+            return Promise.resolve();
+        }
+        return Promise.reject(new Error(swedishPhoneValidation.message));
+    },
 };
 
 export const universalFieldValidation = (fieldName) => ({
     pattern: /^[A-Za-zÀ-ÖØ-öø-ÿ\s'-]+$/,
     max: 50,
     message: `Enter a valid ${fieldName} (max 50 characters)`,
+    validator: (_, value) => {
+        if (debugMode) return Promise.resolve();
+        if (value && universalFieldValidation(fieldName).pattern.test(value) && value.length <= universalFieldValidation(fieldName).max) {
+            return Promise.resolve();
+        }
+        return Promise.reject(new Error(universalFieldValidation(fieldName).message));
+    },
 });
 
 export const validatePESEL = {
     validator: (_, value) => {
+        if (debugMode) return Promise.resolve();
         if (!value) return Promise.resolve();
 
         const peselPattern = /^[0-9]{11}$/;
@@ -85,6 +117,7 @@ export const validatePESEL = {
 
 export const validateNIP = {
     validator: (_, value) => {
+        if (debugMode) return Promise.resolve();
         if (!value) return Promise.resolve();
 
         const nipPattern = /^[0-9]{10}$/;
@@ -113,6 +146,7 @@ export const validateNIP = {
 
 export const validateEmail = {
     validator: (_, value) => {
+        if (debugMode) return Promise.resolve();
         if (!value) return Promise.resolve();
 
         const emailPattern = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
