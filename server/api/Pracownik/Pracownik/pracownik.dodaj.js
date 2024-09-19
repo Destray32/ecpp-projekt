@@ -1,12 +1,44 @@
 const db = require('../../../server');
 const bcrypt = require('bcryptjs');
+const Joi = require('joi');
+
+const schema = Joi.object({
+    surname: Joi.string().required(),
+    name: Joi.string().required(),
+    birthday: Joi.date().required(),
+    pesel: Joi.string().allow(null),
+    street: Joi.string().required(),
+    zip: Joi.string().required(),
+    city: Joi.string().required(),
+    country: Joi.string().required(),
+    company: Joi.number().required(),
+    phone1: Joi.string().required(),
+    phone2: Joi.string().allow(null),
+    email: Joi.string().required(),
+    relative1: Joi.string().required(),
+    relative2: Joi.string().allow(null),
+    NIP: Joi.string().allow(null),
+    startDate: Joi.date().required(),
+    endDate: Joi.date().allow(null),
+    paycheckCode: Joi.string().allow(null),
+    vehicle: Joi.number().allow(null),
+    vacationGroup: Joi.number().required(),
+    weeklyPlan: Joi.boolean().allow(null),
+    printVacation: Joi.boolean().allow(null),
+    login: Joi.string().required(),
+    active: Joi.boolean().allow(null),
+    role: Joi.number().required(),
+    newPassword: Joi.string().required(),
+    confirmPassword: Joi.string().required()
+});
+
 
 function DodajPracownika(req, res) {
     console.log(req.body);
     const {
-        surename,
+        surname,
         name,
-        brithday,
+        birthday,
         pesel,
         street,
         zip,
@@ -32,6 +64,12 @@ function DodajPracownika(req, res) {
         newPassword,
         confirmPassword
     } = req.body;
+
+    const { error } = schema.validate(req.body);
+    if (error) {
+        console.error('Validation error:', error.details[0].message);
+        return res.status(400).json({ error: error.details[0].message });
+    }
 
     console.log('newPassword:', newPassword);
     console.log('confirmPassword:', confirmPassword);
@@ -65,8 +103,8 @@ function DodajPracownika(req, res) {
         `;
         const valuesDaneOsobowe = [
             name,
-            surename,
-            new Date(brithday).toISOString().slice(0, 19).replace('T', ' '),
+            surname,
+            new Date(birthday).toISOString().slice(0, 19).replace('T', ' '),
             pesel,
             street,
             zip,

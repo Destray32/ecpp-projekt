@@ -161,7 +161,7 @@ export default function EdytujPracownikaPage() {
                                 <Form.Item label="Telefon w Szwecji" name="phone2" rules={[swedishPhoneValidation, requiredField('Wprowadź telefon w Szwecji')]}>
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Email" name="email" rules={[validateEmail]}>
+                                <Form.Item label="Email" name="email" rules={[validateEmail, requiredField("Prosze podać email")]}>
                                     <Input />
                                 </Form.Item>
                                 <Form.Item label="Osoba kontaktowa" name="relative1" rules={[{ required: true, message: 'Wprowadź osobę kontaktową' }, universalFieldValidation('text')]}>

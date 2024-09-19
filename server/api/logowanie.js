@@ -1,6 +1,7 @@
 const db = require('../../server');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const Joi = require('joi');
 const { RateLimiterMemory } = require('rate-limiter-flexible');
 
 const rateLimiter = new RateLimiterMemory({
@@ -10,12 +11,26 @@ const rateLimiter = new RateLimiterMemory({
     blockDuration: 300, // blok na 300 sekund (5 minut)
 });
 
+// schemat walidacji danych wejsciowych
+const schema = Joi.object({
+    firma: Joi.string().required(),
+    login: Joi.string().required(),
+    password: Joi.string().required(),
+});
+
 async function logowanie(req, res) {
     const clientIp = req.ip;
 
     try {
         await rateLimiter.consume(clientIp);
+        
+        // walidacja przy użyciu joi - jeśli dane są niepoprawne, zwróć błąd 400
         const { firma, login, password } = req.body;
+        const { error } = schema.validate({ firma, login, password });
+        if (error) {
+            console.error('Validation error:', error.details[0].message);
+            return res.status(400).json({ error: error.details[0].message });
+        }
 
         const query = `
         SELECT p.idPracownik, p.Haslo, f.Nazwa_firmy

@@ -172,7 +172,7 @@ export default function DodajPracownikaPage() {
                                 <Form.Item
                                     label="Email"
                                     name="email"
-                                    rules={[validateEmail]}
+                                    rules={[validateEmail, requiredField('Wprowadź email')]}
                                 >
                                     <Input />
                                 </Form.Item>
