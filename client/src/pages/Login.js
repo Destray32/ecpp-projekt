@@ -3,6 +3,7 @@ import { Dropdown } from 'primereact/dropdown';
 import { Password } from 'primereact/password';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { Alert, notification } from 'antd';
 
 import "primereact/resources/themes/lara-light-cyan/theme.css";
 
@@ -66,6 +67,13 @@ export default function LoginPage() {
             navigate('/home');
         } catch (error) {
             console.error(error);
+            console.log(error.response.data);
+            if (error.response.status === 429) {
+                notification.error({
+                    message: 'Za dużo prób',
+                    description: `Za dużo prób logowania. Spróbuj ponownie za ${error.response.data['retryAfter']} sekund.`,
+                });
+            }
         }
     };
 
