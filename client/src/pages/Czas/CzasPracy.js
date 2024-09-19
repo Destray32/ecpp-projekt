@@ -283,7 +283,6 @@ export default function CzasPracyPage() {
         let dayHourMismatch = false; // stan dla sprawdzania czy godziny przypisane do projektow zgadzaja sie z godzinami pracy
 
         const projectNames = additionalProjects.map(project => project.label);
-        const duplicateProjects = projectNames.filter((name, index) => projectNames.indexOf(name) !== index); // sprawdzanie czy nie zostal 2 razy ten sam projekt dodany
 
         const formattedAdditionalProjects = additionalProjects.map(project => ({
             ...project,
@@ -382,15 +381,6 @@ export default function CzasPracyPage() {
             notification.error({
                 message: 'Różnica w godzinach',
                 description: 'Suma godzin pracy nie zgadza się z sumą godzin w dodatkowych projektach',
-                placement: 'topRight',
-            });
-            return;
-        }
-        
-        if (duplicateProjects.length > 0) {
-            notification.error({
-                message: 'Zduplikowane projekty',
-                description: `Ten sam projekt został dodany więcej niż raz'`,
                 placement: 'topRight',
             });
             return;

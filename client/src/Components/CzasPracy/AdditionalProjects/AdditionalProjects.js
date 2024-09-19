@@ -78,6 +78,16 @@ const AdditionalProjects = ({
         }
 
         try {
+            // przeszukujemy dodatkowe projekty i sprawdzamy czy projekt już istnieje
+            const existingProject = additionalProjects.find(project => project.projekt === Projekty);
+            if (existingProject) { // warunek sprawdzający czy projekt już istnieje
+                notification.error({
+                    message: "Błąd",
+                    description: "Projekt już istnieje",
+                });
+                return;
+            }
+
             const response = await Axios.post("http://localhost:5000/api/czas/projekt", {
                 pracownikName: loggedUserName,
                 projektyName: Projekty,
