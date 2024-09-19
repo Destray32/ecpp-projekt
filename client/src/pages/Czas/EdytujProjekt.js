@@ -1,26 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import AmberBox from "../../Components/AmberBox";
-import { Input, Select, Button, AutoComplete } from "antd";
+import { Form, Input, Select, Button, AutoComplete } from "antd";
 import Axios from "axios";
+import AmberBox from "../../Components/AmberBox";
+import { 
+    requiredField, 
+    universalFieldValidation
+} from "../../utils/validationRules";
 
 const { Option } = Select;
 
 export default function EdytujProjektPage() {
+    const [form] = Form.useForm();
     const [availableGroups, setAvailableGroups] = useState([]);
     const [availableProjects, setAvailableProjects] = useState([]);
     const { id } = useParams();
-
-    const [form, setForm] = useState({
-        firma: '1',
-        zleceniodawca: '',
-        nazwa: '',
-        kodProjektu: '',
-        ulica: '',
-        miejscowosc: '',
-        kodPocztowy: '',
-        kraj: ''
-    });
 
     const fetchGroups = () => {
         Axios.get("http://localhost:5000/api/grupy", { withCredentials: true })
@@ -55,7 +49,7 @@ export default function EdytujProjektPage() {
             .then((response) => {
                 if (response.data && Array.isArray(response.data) && response.data.length > 0) {
                     const project = response.data[0];
-                    setForm({
+                    form.setFieldsValue({
                         firma: project.Firma_idFirma || '1',
                         zleceniodawca: project.Grupa_urlopowa_idGrupa_urlopowa || '',
                         nazwa: project.NazwaKod_Projektu || '',
@@ -77,10 +71,10 @@ export default function EdytujProjektPage() {
         fetchGroups();
         fetchProjects();
         fetchProjectData(id);
-    }, [id]);
+    }, [id, form]);
 
-    const handleSave = () => {
-        Axios.put(`http://localhost:5000/api/czas/edytujProjekt/${id}`, form, { 
+    const handleSave = (values) => {
+        Axios.put(`http://localhost:5000/api/czas/edytujProjekt/${id}`, values, { 
             withCredentials: true 
         })
         .then(res => {
@@ -91,59 +85,53 @@ export default function EdytujProjektPage() {
         });
     };
 
-    const handleChange = (value, field) => {
-        setForm(prevState => ({
-            ...prevState,
-            [field]: value
-        }));
-    };
-
     return (
         <div>
             <div className="w-auto h-auto bg-blue-700 outline outline-1 outline-black flex flex-row items-center space-x-4 m-2 p-3 text-white">
                 <p>Edytuj projekt</p>
             </div>
             <AmberBox>
-                <div className="flex flex-col items-center space-y-8 p-4 w-full">
-
-                    <div className="w-full md:w-6/12 lg:w-4/12">
-                        <label htmlFor="firma">Firma</label>
-                        <Select
-                            onChange={(value) => handleChange(value, 'firma')}
-                            className="w-full"
-                            value={form.firma}
-                            showSearch
-                            allowClear
-                        >
-                            <Option key={1} value={1}>
-                                PC Husbyggen
-                            </Option>
+                <Form
+                    form={form}
+                    onFinish={handleSave}
+                    layout="vertical"
+                    className="flex flex-col items-center space-y-8 p-4 w-full"
+                >
+                    <Form.Item
+                        name="firma"
+                        label="Firma"
+                        className="w-full md:w-6/12 lg:w-4/12"
+                        rules={[requiredField("Firma jest wymagana")]}
+                    >
+                        <Select showSearch allowClear>
+                            <Option key={1} value={1}>PC Husbyggen</Option>
                         </Select>
-                    </div>
+                    </Form.Item>
 
-                    <div className="w-full md:w-6/12 lg:w-4/12">
-                        <label htmlFor="zleceniodawca">Zleceniodawca</label>
-                        <Select
-                            onChange={(value) => handleChange(value, 'zleceniodawca')}
-                            className="w-full"
-                            value={form.zleceniodawca}
-                            showSearch
-                            allowClear
-                        >
+                    <Form.Item
+                        name="zleceniodawca"
+                        label="Zleceniodawca"
+                        className="w-full md:w-6/12 lg:w-4/12"
+                        rules={[requiredField("Zleceniodawca jest wymagany")]}
+                    >
+                        <Select showSearch allowClear>
                             {availableGroups.map((group) => (
                                 <Option key={group.value} value={group.value}>
                                     {group.name}
                                 </Option>
                             ))}
                         </Select>
-                    </div>
+                    </Form.Item>
 
-                    <div className="w-full md:w-6/12 lg:w-4/12">
-                        <label htmlFor="nazwa">Nazwa/Kod Projektu</label>
+                    <Form.Item
+                        name="nazwa"
+                        label="Nazwa/Kod Projektu"
+                        className="w-full md:w-6/12 lg:w-4/12"
+                        rules={[
+                            requiredField("Nazwa/Kod Projektu jest wymagany")
+                        ]}
+                    >
                         <AutoComplete
-                            onChange={(value) => handleChange(value, 'nazwa')}
-                            className="w-full"
-                            value={form.nazwa}
                             options={availableProjects.map(project => ({
                                 value: project.value,
                                 label: project.name
@@ -154,35 +142,51 @@ export default function EdytujProjektPage() {
                             }
                             allowClear
                         />
-                    </div>
+                    </Form.Item>
 
-                    <div className="w-full md:w-6/12 lg:w-4/12">
-                        <label htmlFor="ulica">Ulica</label>
-                        <Input onChange={(e) => handleChange(e.target.value, 'ulica')} value={form.ulica} />
-                    </div>
+                    <Form.Item
+                        name="ulica"
+                        label="Ulica"
+                        className="w-full md:w-6/12 lg:w-4/12"
+                    >
+                        <Input />
+                    </Form.Item>
 
-                    <div className="w-full md:w-6/12 lg:w-4/12">
-                        <label htmlFor="miejscowosc">Miejscowość</label>
-                        <Input onChange={(e) => handleChange(e.target.value, 'miejscowosc')} value={form.miejscowosc} />
-                    </div>
+                    <Form.Item
+                        name="miejscowosc"
+                        label="Miejscowość"
+                        className="w-full md:w-6/12 lg:w-4/12"
+                        rules={[universalFieldValidation("Miejscowość")]}
+                    >
+                        <Input />
+                    </Form.Item>
 
-                    <div className="w-full md:w-6/12 lg:w-4/12">
-                        <label htmlFor="kodPocztowy">Kod pocztowy</label>
-                        <Input onChange={(e) => handleChange(e.target.value, 'kodPocztowy')} value={form.kodPocztowy} />
-                    </div>
+                    <Form.Item
+                        name="kodPocztowy"
+                        label="Kod pocztowy"
+                        className="w-full md:w-6/12 lg:w-4/12"
+                    >
+                        <Input />
+                    </Form.Item>
 
-                    <div className="w-full md:w-6/12 lg:w-4/12">
-                        <label htmlFor="kraj">Kraj</label>
-                        <Input onChange={(e) => handleChange(e.target.value, 'kraj')} value={form.kraj} />
-                    </div>
+                    <Form.Item
+                        name="kraj"
+                        label="Kraj"
+                        className="w-full md:w-6/12 lg:w-4/12"
+                        rules={[universalFieldValidation("Kraj")]}
+                    >
+                        <Input />
+                    </Form.Item>
 
-                    <div className="flex space-x-4 mt-8">
-                        <Button type="primary" onClick={handleSave}>Zapisz</Button>
-                        <Link to="/home/projekty">
-                            <Button>Anuluj</Button>
-                        </Link>
-                    </div>
-                </div>
+                    <Form.Item>
+                        <div className="flex space-x-4 mt-8">
+                            <Button type="primary" htmlType="submit">Zapisz</Button>
+                            <Link to="/home/projekty">
+                                <Button>Anuluj</Button>
+                            </Link>
+                        </div>
+                    </Form.Item>
+                </Form>
             </AmberBox>
         </div>
     );
