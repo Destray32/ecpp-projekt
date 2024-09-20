@@ -33,14 +33,6 @@ async function logowanie(req, res) {
             return res.status(400).json({ error: error.details[0].message });
         }
 
-        // sanitizacja danych wejściowych
-        // 
-        // wychodze z założenia że potencjalny atakujący będzie atakował najbardziej
-        // pierwszą stronę czyli logowanie, więc tutaj robie walidacje
-        const firmaSanitized = xss(firma);
-        const loginSanitized = xss(login);
-        const passwordSanitized = xss(password);
-
         const query = `
         SELECT p.idPracownik, p.Haslo, f.Nazwa_firmy
         FROM pracownik p
@@ -48,7 +40,7 @@ async function logowanie(req, res) {
         JOIN firma f ON i.FK_idFirma = f.idFirma
         WHERE p.Nazwa_uzytkownika = ?
     `;
-        const values = [loginSanitized];
+        const values = [login];
 
         db.query(query, values, async (err, result) => {
             if (err) {
@@ -62,11 +54,11 @@ async function logowanie(req, res) {
 
             const user = result[0];
 
-            if (user.Nazwa_firmy !== firmaSanitized) {
+            if (user.Nazwa_firmy !== firma) {
                 return res.status(401).json({ error: 'Wrong login or company name' });
             }
 
-            const isPasswordValid = await bcrypt.compare(passwordSanitized, user.Haslo);
+            const isPasswordValid = await bcrypt.compare(password, user.Haslo);
 
             if (!isPasswordValid) {
                 return res.status(401).json({ error: 'Wrong login or password' });
