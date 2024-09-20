@@ -14,7 +14,7 @@ const schema = Joi.object({
     company: Joi.number().required(),
     phone1: Joi.string().required(),
     phone2: Joi.string().allow(null),
-    email: Joi.string().required(),
+    email: Joi.string().email().required(),
     relative1: Joi.string().required(),
     relative2: Joi.string().allow(null),
     NIP: Joi.string().allow(null),
@@ -28,8 +28,8 @@ const schema = Joi.object({
     login: Joi.string().required(),
     active: Joi.boolean().allow(null),
     role: Joi.number().required(),
-    newPassword: Joi.string().required(),
-    confirmPassword: Joi.string().required()
+    newPassword: Joi.string().min(6).required(),
+    confirmPassword: Joi.string().min(6).required()
 });
 
 

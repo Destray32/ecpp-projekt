@@ -54,6 +54,13 @@ export default function LoginPage() {
             navigate('/home');
         } catch (error) {
             console.error(error);
+            console.log(error.response.data);
+            if (error.response.status === 429) {
+                notification.error({
+                    message: 'Za dużo prób',
+                    description: `Za dużo prób logowania. Spróbuj ponownie za ${error.response.data['retryAfter']} sekund.`,
+                });
+            }
         }
     };
 

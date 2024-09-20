@@ -1,5 +1,36 @@
 const db = require('../../../server');
 const jwt = require('jsonwebtoken');
+const Joi = require('joi');
+const bcrypt = require('bcryptjs');
+
+const schema = Joi.object({
+    surename: Joi.string().required(),
+    name: Joi.string().required(),
+    brithday: Joi.date().required(),
+    pesel: Joi.string().allow(null),
+    street: Joi.string().required(),
+    zip: Joi.string().required(),
+    city: Joi.string().required(),
+    country: Joi.string().required(),
+    phone1: Joi.string().required(),
+    phone2: Joi.string().allow(null),
+    email: Joi.string().email().required(),
+    relative1: Joi.string().required(),
+    relative2: Joi.string().allow(null),
+    NIP: Joi.string().allow(null),
+    startDate: Joi.date().required(),
+    endDate: Joi.date().allow(null),
+    paycheckCode: Joi.string().allow(null),
+    vehicle: Joi.number().allow(null),
+    vacationGroup: Joi.number().required(),
+    weeklyPlan: Joi.boolean().allow(null),
+    printVacation: Joi.boolean().allow(null),
+    login: Joi.string().required(),
+    active: Joi.boolean().allow(null),
+    role: Joi.number().required(),
+    newPassword: Joi.string().min(6).allow(null),
+    company: Joi.number().required()
+});
 
 function EdytujPracownika(req, res) {
     const token = req.cookies.token;
@@ -47,6 +78,44 @@ function EdytujPracownika(req, res) {
         newPassword,
         company
     } = req.body;
+
+    // ten sposób na walidacje też działa i nie wiem czy nie lepszy od walidowania 
+    // całego req.body jak w innym pliku
+    const { error } = schema.validate({
+        surename,
+        name,
+        brithday,
+        pesel,
+        street,
+        zip,
+        city,
+        country,
+        phone1,
+        phone2,
+        email,
+        relative1,
+        relative2,
+        NIP,
+        startDate,
+        endDate,
+        paycheckCode,
+        vehicle,
+        vacationGroup,
+        weeklyPlan,
+        printVacation,
+        login,
+        active,
+        role,
+        newPassword,
+        company
+    });
+
+    if (error) {
+        console.error('Validation error:', error);
+        return res.status(400).json({ error: error.details[0].message });
+    }
+
+    const hashedPassword = bcrypt.hashSync(newPassword, 10);
 
     db.beginTransaction(error => {
         if (error) {
@@ -146,7 +215,7 @@ function EdytujPracownika(req, res) {
                         login,
                         active ? 'Aktywne' : 'Nieaktywne',
                         role === 1 ? 'Administrator' : role === 2 ? 'Majster' : role === 3 ? 'Pracownik' : 'Gosc',
-                        newPassword,
+                        hashedPassword,
                         idPracownik
                     ];
                 } else {
