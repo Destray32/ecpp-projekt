@@ -30,6 +30,7 @@ import VacationPlanner from './Components/VacationPlanner copy';
 import EdytujGrupePage from './pages/Czas/EdytujGrupe';
 
 import PDFLayoutEwidencja from './Components/PDFLayoutEwidencjaCzasu';
+import WeeklyReport from './Components/CzasPracy/WeeklyReport';
 
 
 function App() {
@@ -38,7 +39,7 @@ function App() {
       <Routes>
         <Route path="/" element={<LoginPage />} />
         <Route path="/test" element={<VacationPlanner />} />
-        <Route path="/test2" element={<PDFLayoutEwidencja month={2}/>} />
+        <Route path="/test2" element={<WeeklyReport/>} />
         <Route path="/home" element={<HomePage />}>
           <Route path="pracownik" element={<PracownikPage />} />
           <Route path="zmien-dane" element={<ZmienDanePage />} />

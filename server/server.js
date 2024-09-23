@@ -45,7 +45,7 @@ const NODE_ENV = process.env.NODE_ENV;
 const db = mysql.createConnection({
     host: 'localhost',
     user: 'root',
-    password: 'root',
+    password: '',
     database: 'mydb'
 });
 
