@@ -18,6 +18,7 @@ export default function RaportyPage() {
     const [availablePracownicy, setAvailablePracownicy] = useState([]);
     const [ignorujDaty, setIgnorujDaty] = useState(false);
     const [selectedRow, setSelectedRow] = useState(null);
+    const [wybranyRaport, setWybranyRaport] = useState(null);
     
 
     useEffect(() => {
@@ -77,6 +78,31 @@ export default function RaportyPage() {
             przejscieDoInterfejsuFirma();
         } else {
             przejscieDoInterfejsuPracownik();
+        }
+
+        switch (rowName) {
+            case "Sprawozdanie z działalności - szczegółowe":
+                console.log("Sprawozdanie z działalności - szczegółowe");
+                setWybranyRaport("Spraowzadnie z działalności - szczegółowe");
+                break;
+            case "Sprawozdanie z działalności - podsumowanie":
+                console.log("Sprawozdanie z działalności - podsumowanie");
+                setWybranyRaport("Sprawozdanie z działalności - podsumowanie");
+                break;
+            case "Analiza świadczeń pracowniczych":
+                console.log("Analiza świadczeń pracowniczych");
+                setWybranyRaport("Analiza świadczeń pracowniczych");
+                break;
+            case "Pracownik Analiza czasu - działalność":
+                console.log("Pracownik Analiza czasu - działalność");
+                setWybranyRaport("Pracownik Analiza czasu - działalność");
+                break;
+            case "Ewidencja czasu pracy":
+                console.log("Ewidencja czasu pracy");
+                setWybranyRaport("Ewidencja czasu pracy");
+                break;
+            default:
+                break;
         }
     };
 
