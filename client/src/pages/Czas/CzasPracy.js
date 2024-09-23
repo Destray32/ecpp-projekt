@@ -518,43 +518,46 @@ export default function CzasPracyPage() {
           },
           tableWidth: 'wrap',
         });
-      
+
         // ----- Druga tabelka -----
-        const headers = ['', ...daysOfWeek.map((day) => format(day, 'dd.MM'))];
-      
-        const rows = [
-          ['Rozpoczecie', ...daysOfWeek.map((day) => hours[format(day, 'yyyy-MM-dd')]?.start || '-')],
-          ['Przerwa', ...daysOfWeek.map((day) => hours[format(day, 'yyyy-MM-dd')]?.break || '-')],
-          ['Zakonczenie', ...daysOfWeek.map((day) => hours[format(day, 'yyyy-MM-dd')]?.end || '-')],
-          ['Razem (godz.)', ...daysOfWeek.map((day) => {
-            const dayHours = hours[format(day, 'yyyy-MM-dd')] || { start: '', break: '', end: '' };
-            const dailyTotal = calculateDailyTotal(dayHours);
-            return dailyTotal ? `${dailyTotal} godz.` : '-';
-          })],
+        const polishWeekdays = ['Pon', 'Wto', 'Sro', 'Czw', 'Pia', 'Sob', 'Nie'];
+        const headers = ['', ...daysOfWeek.map((day, index) =>
+            `${polishWeekdays[index]}\n${format(day, 'dd')}`)
         ];
-      
+
+        const rows = [
+            ['Rozpoczecie', ...daysOfWeek.map((day) => hours[format(day, 'yyyy-MM-dd')]?.start || '-')],
+            ['Przerwa', ...daysOfWeek.map((day) => hours[format(day, 'yyyy-MM-dd')]?.break || '-')],
+            ['Zakonczenie', ...daysOfWeek.map((day) => hours[format(day, 'yyyy-MM-dd')]?.end || '-')],
+            ['Razem (godz.)', ...daysOfWeek.map((day) => {
+                const dayHours = hours[format(day, 'yyyy-MM-dd')] || { start: '', break: '', end: '' };
+                const dailyTotal = calculateDailyTotal(dayHours);
+                return dailyTotal ? `${dailyTotal} godz.` : '-';
+            })],
+        ];
+
         const weeklyTotal = calculateWeeklyTotal(hours, daysOfWeek);
-    
+
         doc.autoTable({
-          startY: doc.lastAutoTable.finalY + 15,
-          head: [headers],
-          body: rows,
-          styles: { cellPadding: 3, fontSize: 10 },
-          theme: 'grid',
-          tableWidth: 'wrap',
+            startY: doc.lastAutoTable.finalY + 15,
+            head: [headers],
+            body: rows,
+            styles: { cellPadding: 3, fontSize: 10 },
+            theme: 'grid',
+            headStyles: { cellPadding: 2, fontSize: 8 },
         });
-      
+
         // ten weekly total pod tabelka
         doc.setFontSize(12);
         doc.text(`Razem:${weeklyTotal} godz.`, 14, doc.lastAutoTable.finalY + 10);
       
         // sygnatury
         doc.setFontSize(10);
-        doc.text('____________________', 14, doc.internal.pageSize.height - 20);
-        doc.text(`${'Tu zalogowana osoba?'}`, 14, doc.internal.pageSize.height - 15);
-        doc.text(`${new Date().toLocaleString()}`, 14, doc.internal.pageSize.height - 10);
-        doc.text('____________________', doc.internal.pageSize.width - 60, doc.internal.pageSize.height - 20);
-        doc.text('Szef', doc.internal.pageSize.width - 60, doc.internal.pageSize.height - 15);
+        doc.text('____________________', 14, doc.internal.pageSize.height - 30);
+        doc.text(`${'Tu zalogowana osoba?'}`, 14, doc.internal.pageSize.height - 25);
+        doc.text(`${new Date().toLocaleString()}`, 14, doc.internal.pageSize.height - 20);
+        doc.text('____________________', doc.internal.pageSize.width - 60, doc.internal.pageSize.height - 30);
+        doc.text('Szef', doc.internal.pageSize.width - 60, doc.internal.pageSize.height - 25);
       
         doc.save(`Raport_Tydzien_${weekNumber}.pdf`);
       };
