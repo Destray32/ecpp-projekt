@@ -152,38 +152,47 @@ export default function PlanTygodniaPage() {
                 Axios.get(`http://localhost:5000/api/planTygodnia/zaplanuj?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`, { withCredentials: true }),
                 Axios.get(`http://localhost:5000/api/planTygodnia/zaplanuj?from=${encodeURIComponent(previousWeekStart)}&to=${encodeURIComponent(previousWeekEnd)}`, { withCredentials: true })
             ]);
-
+    
             const currentWeekData = currentWeekResponse.data;
-            let previusWeek = previousWeekResponse.data;
+            const previousWeekData = previousWeekResponse.data;
     
-            const currentPracownikIds = new Set(currentWeekData.map(item => item.pracownikId));
-            const currentPojazdIds = new Set(currentWeekData.map(item => item.pojazdId));
+            const currentIds = new Set(currentWeekData.map(item => `${item.pracownikId || ''}-${item.pojazdId || ''}`));
     
-            previusWeek = previusWeek.filter(item => 
-                !currentPracownikIds.has(item.pracownikId) && 
-                !currentPojazdIds.has(item.pojazdId)
-            );
-    
-            previusWeek = previusWeek.map(item => ({
+
+            const newEntries = previousWeekData.filter(item => {
+                const itemId = `${item.pracownikId || ''}-${item.pojazdId || ''}`;
+                return !currentIds.has(itemId);
+            });
+
+            const entriesToAdd = newEntries.map(item => ({
                 ...item,
                 tydzienRoku: getWeekNumber(currentDate),
                 data_od: format(startOfWeek(currentDate, { weekStartsOn: 1 }), 'yyyy-MM-dd'),
                 data_do: format(addWeeks(startOfWeek(currentDate, { weekStartsOn: 1 }), 1), 'yyyy-MM-dd')
             }));
-
-            await Axios.post('http://localhost:5000/api/planTygodniaPrev', previusWeek, { withCredentials: true });    
-            fetchData();
-            notification.success({
-                message: 'Sukces',
-                description: 'Dane zostały skopiowane z poprzedniego tygodnia',
-                placement: 'topRight',
-            });
+    
+            if (entriesToAdd.length > 0) {
+                await Axios.post('http://localhost:5000/api/planTygodniaPrev', entriesToAdd, { withCredentials: true }); 
+                fetchData();
+                notification.success({
+                    message: 'Sukces',
+                    description: `Dodano ${entriesToAdd.length} nowych wpisów z poprzedniego tygodnia`,
+                    placement: 'topRight',
+                });
+            } else {
+                notification.info({
+                    message: 'Informacja',
+                    description: 'Brak nowych wpisów do dodania z poprzedniego tygodnia',
+                    placement: 'topRight',
+                });
+            }
         } catch (err) {
             notification.error({
                 message: 'Błąd',
-                description: 'Nie udało się skopiować danych z poprzedniego tygodnia/brak danych do skopiowania',
+                description: 'Wystąpił problem podczas kopiowania danych z poprzedniego tygodnia',
                 placement: 'topRight',
             });
+            console.error(err);
         }
     };
     
