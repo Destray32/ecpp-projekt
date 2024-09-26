@@ -33,7 +33,7 @@ const WeekNavigation = ({ currentDate, setCurrentDate, Pracownik, setPracownik, 
                             <p className="text-lg font-bold">Tydzień {getWeek(currentDate, { weekStartsOn: 1 })} : {formatWeek(currentDate)}</p>
                             <Button icon="pi pi-arrow-right" iconPos="right" className="p-button-outlined" onClick={nextWeek} />
                         </div>
-                        <span className="text-lg font-bold">Status: {statusTyg}</span>
+                        <span className={`text-lg font-bold ${statusTyg === "Otwarty" ? "text-green-600" : "text-red-600"}`}>{statusTyg}</span>
                         <Dropdown
                             value={Pracownik}
                             onChange={(e) => setPracownik(e.value)}

@@ -25,7 +25,7 @@ function ListaPracownikow(req, res) {
             informacje_o_firmie iof ON p.FK_Informacje_o_firmie = iof.idInformacje_o_firmie
         JOIN 
             Firma f ON iof.FK_idFirma = f.idFirma
-        JOIN 
+        LEFT JOIN 
             grupa_urlopowa gu ON iof.FK_idGrupa_urlopowa = gu.idGrupa_urlopowa
         WHERE
             p.Archiwum = 0;

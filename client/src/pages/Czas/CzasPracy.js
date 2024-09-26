@@ -11,6 +11,7 @@ import TimeInputs from "../../Components/CzasPracy/TimeInputs";
 import AdditionalProjects from "../../Components/CzasPracy/AdditionalProjects/AdditionalProjects";
 import ActionButtons from "../../Components/CzasPracy/ActionButtons";
 import { generateWeek, formatWeek, calculateWeeklyTotal, calculateProjectTotal, calculateDailyTotal } from '../../utils/dateUtils';
+import { font } from "../../fonts/OpenSans-Regular-normal";
 
 export default function CzasPracyPage() {
     const [userType, setUserType] = useState(null);
@@ -487,6 +488,8 @@ export default function CzasPracyPage() {
 
     const handleDrukujRaport = async () => {
         const doc = new jsPDF();
+
+        doc.setFont("OpenSans-Regular", "normal");
       
         // ----- pierwsza ala "tabelka" -----
         const weekNumber = getWeek(currentDate, { locale: pl });
@@ -517,6 +520,7 @@ export default function CzasPracyPage() {
             3: { cellWidth: 60 },
           },
           tableWidth: 'wrap',
+          styles: { font: 'OpenSans-Regular', fontStyle: 'normal' },
         });
 
         // ----- Druga tabelka -----
@@ -526,9 +530,9 @@ export default function CzasPracyPage() {
         ];
 
         const rows = [
-            ['Rozpoczecie', ...daysOfWeek.map((day) => hours[format(day, 'yyyy-MM-dd')]?.start || '-')],
+            ['Rozpoczęcie', ...daysOfWeek.map((day) => hours[format(day, 'yyyy-MM-dd')]?.start || '-')],
             ['Przerwa', ...daysOfWeek.map((day) => hours[format(day, 'yyyy-MM-dd')]?.break || '-')],
-            ['Zakonczenie', ...daysOfWeek.map((day) => hours[format(day, 'yyyy-MM-dd')]?.end || '-')],
+            ['Zakończenie', ...daysOfWeek.map((day) => hours[format(day, 'yyyy-MM-dd')]?.end || '-')],
             ['Razem (godz.)', ...daysOfWeek.map((day) => {
                 const dayHours = hours[format(day, 'yyyy-MM-dd')] || { start: '', break: '', end: '' };
                 const dailyTotal = calculateDailyTotal(dayHours);
@@ -542,14 +546,14 @@ export default function CzasPracyPage() {
             startY: doc.lastAutoTable.finalY + 15,
             head: [headers],
             body: rows,
-            styles: { cellPadding: 3, fontSize: 10 },
+            styles: { cellPadding: 3, fontSize: 10, font: 'OpenSans-Regular', fontStyle: 'normal' },
             theme: 'grid',
             headStyles: { cellPadding: 2, fontSize: 8 },
         });
 
         // ten weekly total pod tabelka
         doc.setFontSize(12);
-        doc.text(`Razem:${weeklyTotal} godz.`, 14, doc.lastAutoTable.finalY + 10);
+        doc.text(`Razem: ${weeklyTotal} godz.`, 14, doc.lastAutoTable.finalY + 10);
       
         // sygnatury
         doc.setFontSize(10);

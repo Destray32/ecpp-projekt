@@ -4,8 +4,11 @@ import { Form, DatePicker, Input, Checkbox, Radio, Select, ConfigProvider, Butto
 import plPL from 'antd/lib/locale/pl_PL';
 import axios from 'axios';
 import dayjs from 'dayjs';
+import 'dayjs/locale/pl';
 
 import DaneBox from '../../Components/DaneBox';
+
+dayjs.locale('pl');
 
 export default function EdytujPracownikaPage() {
     const [form] = Form.useForm();
@@ -47,7 +50,7 @@ export default function EdytujPracownikaPage() {
                 form.setFieldsValue({
                     surename: res.data.surename,
                     name: res.data.name,
-                    brithday: dayjs(res.data.brithday, 'DD.MM.YYYY'),
+                    brithday: dayjs(res.data.birthday, 'DD.MM.YYYY'),
                     pesel: res.data.pesel,
                     street: res.data.street,
                     zip: res.data.zip,
@@ -122,9 +125,9 @@ export default function EdytujPracownikaPage() {
                                     <Input />
                                 </Form.Item>
                                 <Form.Item label="Data urodzenia" name="brithday" rules={[{ required: true, message: 'Wprowadź datę urodzenia' }]}>
-                                    <DatePicker />
+                                    <DatePicker format="DD.MM.YYYY" />
                                 </Form.Item>
-                                <Form.Item label="PESEL" name="pesel">
+                                <Form.Item label="PESEL" name="pesel" rules={[{ required: true, message: 'Wprowadź PESEL' }]}>
                                     <Input />
                                 </Form.Item>
                                 <Form.Item label="Ulica / Nr domu" name="street" rules={[{ required: true, message: 'Wprowadź ulicę' }]}>
@@ -151,16 +154,16 @@ export default function EdytujPracownikaPage() {
                                 <Form.Item label="Telefon w Polsce" name="phone1" rules={[{ required: true, message: 'Wprowadź telefon' }]}>
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Telefon w Szwecji" name="phone2" rules={[{ required: true, message: 'Wprowadź telefon' }]}>
+                                <Form.Item label="Telefon w Szwecji" name="phone2">
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Email" name="email">
+                                <Form.Item label="Email" name="email" rules={[{ required: true, message: 'Wprowadź email' }]}>
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Osoba kontaktowa" name="relative1" rules={[{ required: true, message: 'Wprowadź osobę kontaktową' }]}>
+                                <Form.Item label="Osoba kontaktowa" name="relative1">
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Kontakt (wypadek)" name="relative2">
+                                <Form.Item label="Kontakt (wypadek)" name="relative2" rules={[{ required: true, message: 'Wprowadź kontakt' }]}>
                                     <Input />
                                 </Form.Item>
                                 <Form.Item label="NIP" name="NIP">
@@ -170,10 +173,10 @@ export default function EdytujPracownikaPage() {
                             <div className="flex flex-col">
                                 <div className="flex flex-col">
                                     <Form.Item label="Data zatrudnienia" name="startDate" rules={[{ required: true, message: 'Wprowadź datę zatrudnienia' }]}>
-                                        <DatePicker />
+                                        <DatePicker format="DD.MM.YYYY" />
                                     </Form.Item>
                                     <Form.Item label="Data zakończenia" name="endDate">
-                                        <DatePicker />
+                                        <DatePicker format="DD.MM.YYYY" />
                                     </Form.Item>
                                     <Form.Item label="Kod wynagrodzenia" name="paycheckCode">
                                         <Input />

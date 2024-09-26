@@ -40,6 +40,7 @@ const EditableCell = ({
                         style={{ margin: 0 }}
                         name={title}
                         rules={[{ required: true, message: `${title} is required.` }]}
+                        className="min-w-36"
                     >
                         <Select
                             ref={inputRef}

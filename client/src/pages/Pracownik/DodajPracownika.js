@@ -2,9 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Form, DatePicker, Input, Checkbox, Radio, Select, ConfigProvider, Button } from 'antd';
 import plPL from 'antd/lib/locale/pl_PL';
+import dayjs from 'dayjs';
+import 'dayjs/locale/pl';
 import axios from 'axios';
 
 import DaneBox from '../../Components/DaneBox';
+
+dayjs.locale('pl');
 
 export default function DodajPracownikaPage() {
     const [form] = Form.useForm();
@@ -82,9 +86,9 @@ export default function DodajPracownikaPage() {
                                     <Input />
                                 </Form.Item>
                                 <Form.Item label="Data urodzenia" name="brithday" rules={[{ required: true, message: 'Wprowadź datę urodzenia' }]}>
-                                    <DatePicker />
+                                    <DatePicker format="DD.MM.YYYY" />
                                 </Form.Item>
-                                <Form.Item label="PESEL" name="pesel">
+                                <Form.Item label="PESEL" name="pesel" rules={[{ required: true, message: 'Wprowadź PESEL' }]}>
                                     <Input />
                                 </Form.Item>
                                 <Form.Item label="Ulica / Nr domu" name="street" rules={[{ required: true, message: 'Wprowadź ulicę' }]}>
@@ -93,7 +97,7 @@ export default function DodajPracownikaPage() {
                                 <Form.Item label="Kod pocztowy" name="zip" rules={[{ required: true, message: 'Wprowadź kod pocztowy' }]}>
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Miasto" name="city" rules={[{ required: true, message: 'Wprowadź miasto' }]}>
+                                <Form.Item label="Miejscowość" name="city" rules={[{ required: true, message: 'Wprowadź miejscowość' }]}>
                                     <Input />
                                 </Form.Item>
                                 <Form.Item label="Kraj" name="country" rules={[{ required: true, message: 'Wprowadź kraj' }]}>
@@ -111,16 +115,16 @@ export default function DodajPracownikaPage() {
                                 <Form.Item label="Telefon w Polsce" name="phone1" rules={[{ required: true, message: 'Wprowadź telefon' }]}>
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Telefon w Szwecji" name="phone2" rules={[{ required: true, message: 'Wprowadź telefon' }]}>
+                                <Form.Item label="Telefon w Szwecji" name="phone2">
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Email" name="email">
+                                <Form.Item label="Email" name="email" rules={[{ required: true, message: 'Wprowadź email' }]}>
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Osoba kontaktowa" name="relative1" rules={[{ required: true, message: 'Wprowadź osobę kontaktową' }]}>
+                                <Form.Item label="Krewni" name="relative1">
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Kontakt (wypadek)" name="relative2">
+                                <Form.Item label="Kontakt (wypadek)" name="relative2" rules={[{ required: true, message: 'Wprowadź kontakt' }]}>
                                     <Input />
                                 </Form.Item>
                                 <Form.Item label="NIP" name="NIP">
@@ -130,10 +134,10 @@ export default function DodajPracownikaPage() {
                             <div className="flex flex-col">
                                 <div className="flex flex-col">
                                     <Form.Item label="Data zatrudnienia" name="startDate" rules={[{ required: true, message: 'Wprowadź datę zatrudnienia' }]}>
-                                        <DatePicker />
+                                        <DatePicker format="DD.MM.YYYY" />
                                     </Form.Item>
                                     <Form.Item label="Data zakończenia" name="endDate">
-                                        <DatePicker />
+                                        <DatePicker format="DD.MM.YYYY" />
                                     </Form.Item>
                                     <Form.Item label="Kod wynagrodzenia" name="paycheckCode">
                                         <Input />
@@ -147,10 +151,10 @@ export default function DodajPracownikaPage() {
                                             ))}
                                         </Select>
                                     </Form.Item>
-                                    <Form.Item label="Grupa urlopowa" name="vacationGroup" rules={[{ required: true, message: 'Wybierz grupę urlopową' }]}>
+                                    <Form.Item label="Grupa urlopowa" name="vacationGroup">
                                         <Select>
                                             {grupa.map(g => (
-                                            <Select.Option key={g.idGrupa_urlopowa} value={g.idGrupa_urlopowa}>{g.Grupa_urlopowacol}</Select.Option>
+                                            <Select.Option key={g.idGrupa_urlopowa} value={g.idGrupa_urlopowa}>{g.Zleceniodawca}</Select.Option>
                                             ))}
                                         </Select>
                                     </Form.Item>

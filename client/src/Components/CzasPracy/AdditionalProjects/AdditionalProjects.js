@@ -60,8 +60,10 @@ const AdditionalProjects = ({
             );
     
             setFilteredProjekty(filteredProjekty);
+            setProjekty(null);
         } else {
             setFilteredProjekty([]);
+            setProjekty(null);
         }
     }, [Firma, Zleceniodawca, dostepneProjekty]);
 
@@ -188,7 +190,6 @@ const AdditionalProjects = ({
                                 autoComplete="off"
                                 className="p-2"
                                 filter
-                                showClear
                                 disabled={statusTyg === "Zamkniety"}
                             />
                         </div>
