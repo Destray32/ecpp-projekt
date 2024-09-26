@@ -401,11 +401,11 @@ app.get('/api/samochody', (req, res) => {
 
 // CZAS > RAPORTY //
 app.get('/api/raporty', (req, res) => {
-    PobierzRaporty(req, res);
+    PobierzRaporty(req, res, db);
 });
 
 app.get('/api/generujRaport', (req, res) => {
-    GenerujRaport(req, res);
+    GenerujRaport(req, res, db);
 });
 /////////////////////////////////////////
 

@@ -4,6 +4,13 @@ import { Button } from 'primereact/button';
 import { Dropdown } from 'primereact/dropdown';
 import { Checkbox } from "primereact/checkbox";
 import axios from "axios";
+import 'jspdf-autotable';
+import PDF_PracownikAnalizaCzasu from "../../Components/Raporty/PDF_PracownikAnalizaCzasu";
+import PDF_AnalizaSwiadczenPracowniczych from "../../Components/Raporty/PDF_AnalizaSwiadczenPracowniczych";
+import PDF_SprawozdanieSzczegolowe from "../../Components/Raporty/PDF_SprawozdanieSzczegolowe";
+import PDF_SprawozdaniePodsumowanie from "../../Components/Raporty/PDF_SprawozdaniePodsumowanie";
+import { notification } from "antd";
+
 
 export default function RaportyPage() {
     const [startDate, setStartDate] = useState('');
@@ -19,44 +26,122 @@ export default function RaportyPage() {
     const [ignorujDaty, setIgnorujDaty] = useState(false);
     const [selectedRow, setSelectedRow] = useState(null);
     const [wybranyRaport, setWybranyRaport] = useState(null);
-    
+    const [raport, setRaport] = useState([]);
+
 
     useEffect(() => {
-        axios.get('http://localhost:5000/api/raporty', { withCredentials: true })
-            .then((response) => {
-                const projekty = response.data;
-                const projektyOptions = projekty.map(projekt => ({ label: projekt.nazwa, value: projekt.id }));
-                setProjektyOptions(projektyOptions);
-            })
-            .catch((error) => {
-                console.log(error);
-            });
+        fetchProjektyPracownicy();
     }, []);
 
+    useEffect(() => {
+        if (Projekt && !projektyOptions.some(p => p.value === Projekt)) {
+            setProjekt(null);
+        }
+    }, [projektyOptions, Projekt]);
+
+    useEffect(() => {
+        fetchProjektyAndRaport();
+    }, [startDate, endDate, ignorujDaty]);
+
+    const fetchProjektyPracownicy = async () => {
+        try {
+            const response = await axios.get('http://localhost:5000/api/pracownicy', { withCredentials: true });
+            const pracownicy = response.data;
+            const pracownicyOptions = pracownicy.map(pracownik => ({ label: `${pracownik.name} ${pracownik.surname}`, value: pracownik.id }));
+            setAvailablePracownicy(pracownicyOptions);
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    const fetchProjektyAndRaport = () => {
+        Promise.all([
+            axios.get("http://localhost:5000/api/czas/projekty", { withCredentials: true }),
+            axios.get('http://localhost:5000/api/generujRaport', { withCredentials: true })
+        ])
+        .then(([projektyResponse, raportResponse]) => {
+            const projekty = projektyResponse.data.projekty.map(projekt => ({
+                label: projekt.NazwaKod_Projektu,
+                value: projekt.id,
+            }));
+            
+            const raportData = raportResponse.data.raport;
+            setRaport(raportData);
+    
+            let filteredProjekty = projekty;
+    
+            if (!ignorujDaty && startDate && endDate) {
+                const startDateObj = new Date(startDate);
+                const endDateObj = new Date(endDate);
+    
+                const projectsInDateRange = new Set(
+                    raportData
+                        .filter(entry => {
+                            const [day, month, year] = entry.Data.split('.');
+                            const entryDate = new Date(year, month - 1, day);
+                            return entryDate >= startDateObj && entryDate <= endDateObj;
+                        })
+                        .map(entry => entry.ProjektID)
+                );
+    
+                filteredProjekty = projekty.filter(projekt => 
+                    projectsInDateRange.has(projekt.value)
+                );
+            }
+    
+            setProjektyOptions(filteredProjekty);
+            
+            if (Projekt && !filteredProjekty.some(p => p.value === Projekt)) {
+                setProjekt(null);
+            }
+        })
+        .catch((error) => {
+            console.error(error);
+            notification.error({
+                message: 'Błąd',
+                description: 'Nie udało się pobrać danych projektów i raportów',
+                placement: 'topRight',
+            });
+        });
+    };
+
+
+
     const handleGenerateReport = () => {
-        if (!Projekt) {
-            alert("Nie wybrano projektu.");
+        if (!wybranyRaport || 
+            (['Sprawozdanie z działalności - szczegółowe', 'Sprawozdanie z działalności - podsumowanie'].includes(wybranyRaport) && !Projekt) ||
+            (['Analiza świadczeń pracowniczych', 'Pracownik Analiza czasu - działalność'].includes(wybranyRaport) && !pracownik) ||
+            (!ignorujDaty && (!startDate || !endDate))) {
+            
+            notification.info({
+                message: 'Informacja',
+                description: 'Wypełnij wszystkie wymagane pola',
+                placement: 'topRight',
+            });
             return;
         }
 
-        const userId = [1];
-
-        const params = {
-            user: userId,
-            projectId: Projekt,
-            startDate,
-            endDate,
-        };
-
-        axios.get('http://localhost:5000/api/generujRaport', { params }, { withCredentials: true })
-            .then((response) => {
-                console.log(response.data);
-            })
-            .catch((error) => {
-                console.log(error);
-            });
+                switch (wybranyRaport) {
+                    case "Sprawozdanie z działalności - szczegółowe":
+                        console.log(Projekt);
+                        PDF_SprawozdanieSzczegolowe(raport, startDate, endDate, Projekt);
+                        break;
+                    case "Sprawozdanie z działalności - podsumowanie":
+                        PDF_SprawozdaniePodsumowanie(raport, startDate, endDate, Projekt);
+                        break;
+                    case "Analiza świadczeń pracowniczych":
+                        PDF_AnalizaSwiadczenPracowniczych(raport, startDate, endDate, pracownik);
+                        break;
+                    case "Pracownik Analiza czasu - działalność":
+                        PDF_PracownikAnalizaCzasu(raport, startDate, endDate, pracownik);
+                        break;
+                    default:
+                        break;
+                }
+            
     };
 
+            
     const handleGenerateWszystkie = () => {
         // Implementation for generating all reports
     };
@@ -83,7 +168,7 @@ export default function RaportyPage() {
         switch (rowName) {
             case "Sprawozdanie z działalności - szczegółowe":
                 console.log("Sprawozdanie z działalności - szczegółowe");
-                setWybranyRaport("Spraowzadnie z działalności - szczegółowe");
+                setWybranyRaport("Sprawozdanie z działalności - szczegółowe");
                 break;
             case "Sprawozdanie z działalności - podsumowanie":
                 console.log("Sprawozdanie z działalności - podsumowanie");
@@ -91,15 +176,13 @@ export default function RaportyPage() {
                 break;
             case "Analiza świadczeń pracowniczych":
                 console.log("Analiza świadczeń pracowniczych");
+                setIgnorujDaty(false);
                 setWybranyRaport("Analiza świadczeń pracowniczych");
                 break;
             case "Pracownik Analiza czasu - działalność":
                 console.log("Pracownik Analiza czasu - działalność");
+                setIgnorujDaty(false);
                 setWybranyRaport("Pracownik Analiza czasu - działalność");
-                break;
-            case "Ewidencja czasu pracy":
-                console.log("Ewidencja czasu pracy");
-                setWybranyRaport("Ewidencja czasu pracy");
                 break;
             default:
                 break;
@@ -116,29 +199,74 @@ export default function RaportyPage() {
                 <p>Opcje</p>
             </div>
             <AmberBox>
-                <div className="flex flex-row items-center justify-center space-x-4 w-full">
+                <div className="flex flex-col items-center justify-center space-y-4 w-full">
                     <p>Wybierz okres raportowania</p>
-                    <input type="date" className="p-2.5 rounded" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-                    <input type="date" className="p-2.5 rounded" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                    
+                    <div className="flex flex-row items-center space-x-4">
+                    <input
+                        type="date"
+                        className="p-2.5 rounded"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        disabled={ignorujDaty}
+                    />
+                    <input
+                        type="date"
+                        className="p-2.5 rounded"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        disabled={ignorujDaty}
+                    />
+                    </div>
 
                     {interfaceFirma && (
-                        <div>
-                            <Checkbox inputId="firma" checked={ignorujDaty} onChange={() => setIgnorujDaty(!ignorujDaty)} />
+                        <div className="flex items-center">
+                            <Checkbox
+                                inputId="firma"
+                                checked={ignorujDaty}
+                                onChange={() => setIgnorujDaty(!ignorujDaty)}
+                            />
                             <span className="ml-2">Ignoruj daty</span>
                         </div>
                     )}
 
-                    <Dropdown value={Projekt} options={projektyOptions} onChange={(e) => setProjekt(e.value)} showClear placeholder="Wybierz projekt" />
-                    
                     {interfacePracownik && (
-                        <Dropdown value={pracownik} options={availablePracownicy} onChange={(e) => setPracownik(e.value)} showClear placeholder="Wybierz pracownika" />
+                        <Dropdown
+                            value={pracownik}
+                            options={availablePracownicy}
+                            onChange={(e) => setPracownik(e.value)}
+                            showClear
+                            placeholder="Wybierz pracownika"
+                        />
                     )}
 
-                    <Button onClick={handleGenerateReport} label="Generuj raport" className="p-button-outlined border-2 p-2.5 bg-white text-black" />
-                    
-                    {interfaceFirma && (
-                        <Button onClick={handleGenerateWszystkie} label="Generuj wszystkie" className="p-button-outlined border-2 p-2.5 bg-white text-black" />
-                    )}
+                    <div className="flex flex-col items-center space-y-4">
+                        {interfaceFirma && (
+                            <Dropdown
+                                value={Projekt}
+                                options={projektyOptions}
+                                onChange={(e) => setProjekt(e.value)}
+                                showClear
+                                placeholder="Wybierz projekt"
+                            />
+                        )}
+                        
+                        <div className="flex flex-row items-center space-x-4">
+                            <Button
+                                onClick={handleGenerateReport}
+                                label="Generuj raport"
+                                className="p-button-outlined border-2 p-2.5 bg-white text-black stable-button"
+                            />
+                            
+                            {interfaceFirma && (
+                                <Button
+                                    onClick={handleGenerateWszystkie}
+                                    label="Generuj wszystkie"
+                                    className="p-button-outlined border-2 p-2.5 bg-white text-black stable-button"
+                                />
+                            )}
+                        </div>
+                    </div>
                 </div>
             </AmberBox>
             <div className="w-auto h-auto bg-blue-700 outline outline-1 outline-black flex flex-row items-center space-x-4 m-2 p-3 text-white">
@@ -179,15 +307,10 @@ export default function RaportyPage() {
                                 Pracownik Analiza czasu - działalność
                             </td>
                         </tr>
-                        <tr className={`border-b hover:underline even:bg-gray-200 odd:bg-gray-300 ${showRaportyPracownik ? "" : "hidden"}`}>
-                            <td onClick={() => handleRowClick("Ewidencja czasu pracy")}
-                                className="border-r" style={getRowStyle("Ewidencja czasu pracy")}>
-                                Ewidencja czasu pracy
-                            </td>
-                        </tr>
+    
                     </tbody>
                 </table>
             </div>
         </div>
     );
-}
+}    

@@ -50,7 +50,7 @@ const AdditionalProjectRow = React.memo(({
                         className="text-red-500 font-bold border-collapse border border-red-500 p-1 rounded"
                         disabled={statusTyg === "Zamkniety"}
                     >
-                        Delete
+                        Usuń
                     </button>
                 </div>
                 <div className="flex-1 grid grid-cols-7 gap-1">
