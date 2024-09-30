@@ -1,5 +1,4 @@
 const express = require('express');
-const path = require('path');
 const app = express();
 app.use(express.json());
 const port = 5000;
@@ -19,8 +18,6 @@ app.use(cookieParser());
 
 app.use(express.json({ type: 'application/json; charset=utf-8' }));
 app.use(express.urlencoded({ extended: true, parameterLimit: 10000, charset: 'utf-8' }));
-
-app.use(express.static(path.join(__dirname, '../client/build')));
 
 // JWT middleware
 const authenticateJWT = (req, res, next) => {
@@ -45,22 +42,18 @@ const authenticateJWT = (req, res, next) => {
 const JWT_SECRET = process.env.JWT_SECRET;
 const NODE_ENV = process.env.NODE_ENV;
 
-const db = mysql.createConnection({
+const pool = mysql.createPool({
     host: 'localhost',
     user: 'root',
     password: 'root',
-    database: 'mydb'
+    database: 'mydb',
+    waitForConnections: true,
+    connectionLimit: 30,
+    queueLimit: 0
 });
 
-db.connect((err) => {
-    if (err) {
-        console.log(err);
-    } else {
-        console.log('Connected to MySQL');
-    }
-});
 
-module.exports = db;
+module.exports = pool;
 
 // api importy z folderu api
 // Logowanie
@@ -197,7 +190,7 @@ app.get('/api/imie', (req, res) => {
 // PRACOWNIK > PRACOWNIK //
 app.route('/api/pracownicy')
     .get((req, res) => {
-        ListaPracownikow(req, res, db);
+        ListaPracownikow(req, res, pool);
     })
     .post((req, res) => {
         DodajPracownika(req, res);
@@ -239,139 +232,139 @@ app.put('/api/pracownik/zmienMoje', (req, res) => {
 /////////////////////////////////////////
 
 app.get('/api/logi', authenticateJWT, (req, res) => {
-    PobierzLogi(req, res, db);
+    PobierzLogi(req, res, pool);
 }
 );
 
 // CZAS > CZAS PRACY //
 app.route('/api/czas')
     .get((req, res) => {
-        PobierzCzasPracy(req, res, db);
+        PobierzCzasPracy(req, res, pool);
     })
     .post((req, res) => {
-        ZapiszCzasPracy(req, res, db);
+        ZapiszCzasPracy(req, res, pool);
     });
 
 app.route('/api/czas/projekt')
     .post((req, res) => {
-        GetCzasProjekt(req, res, db);
+        GetCzasProjekt(req, res, pool);
     });
 
 app.delete('/api/czas/projekt/:id', (req, res) => {
-    UsunDodatkowyProject(req, res, db);
+    UsunDodatkowyProject(req, res, pool);
 });
 
 app.get('/api/czas/projekty/dodane', (req, res) => {
-    PobierzDodaneProjekty(req, res, db);
+    PobierzDodaneProjekty(req, res, pool);
 });
 /////////////////////////////////////////
 
 // PLAN TYGODNIA "V" > PLAN TYGODNIA //
 app.post('/api/planTygodniaPrev', (req, res) => {
-    PracownicyPoprzedniTydz(req, res, db);
+    PracownicyPoprzedniTydz(req, res, pool);
 });
 app.route('/api/planTygodnia')
     .get((req, res) => {
-            PlanTygodniaPlan(req, res, db);
+            PlanTygodniaPlan(req, res, pool);
     })
     .put((req, res) => {
-        PrzeniesWpisPlan(req, res, db);
+        PrzeniesWpisPlan(req, res, pool);
     })
     .delete((req, res) => {
-        UsunWpisPlan(req, res, db);
+        UsunWpisPlan(req, res, pool);
     });
 
 app.get('/api/planTygodnia/drukuj', (req, res) => {
-    DrukujGrupe(req, res, db);
+    DrukujGrupe(req, res, pool);
 });
 
 app.put('/api/planTygodnia/:employeeId', (req, res ) => {
-    AktualizujM1_5(req, res, db);
+    AktualizujM1_5(req, res, pool);
 });
 /////////////////////////////////////////
 
 // PLAN TYGODNIA "V" > ZAPLANUJ //
 app.route('/api/planTygodnia/zaplanuj')
     .get((req, res) => {
-        GetPlany(req, res, db);
+        GetPlany(req, res, pool);
     })
     .post((req, res) => {
-        DodajZaplanuj(req, res, db);
+        DodajZaplanuj(req, res, pool);
     })
     .delete((req, res) => {
-        UsunPlan(req, res, db);
+        UsunPlan(req, res, pool);
     });
 /////////////////////////////////////////
 
 
 // CZAS > PROJEKTY //
 app.get('/api/czas/projekty', (req, res) => {
-    GetProjekty(req, res, db);
+    GetProjekty(req, res, pool);
 });
 app.post('/api/czas/projekty', (req, res) => {
-    DodajNowyProjekt(req, res, db);
+    DodajNowyProjekt(req, res, pool);
 });
 app.post('/api/czas/grupa', (req, res) => {
-    DodajNowaGrupe(req, res, db);
+    DodajNowaGrupe(req, res, pool);
 });
 app.get('/api/czas/szukaj', (req, res) => {
-    SzukajProjekt(req, res, db);
+    SzukajProjekt(req, res, pool);
 });
 app.put('/api/czas/przeniesAkt', (req, res) => {
-    PrzeniesAkt(req, res, db);
+    PrzeniesAkt(req, res, pool);
 });
 app.put('/api/czas/przeniesNieakt', (req, res) => {
-    PrzeniesNieakt(req, res, db);
+    PrzeniesNieakt(req, res, pool);
 });
 app.delete('/api/czas/usun', (req, res) => {
-    UsunProjekt(req, res, db);
+    UsunProjekt(req, res, pool);
 });
 app.get('/api/czas/projekty/:id', (req, res) => {
-    PobierzProjekt(req, res, db);
+    PobierzProjekt(req, res, pool);
 });
 app.put('/api/czas/edytujProjekt/:id', (req, res) => {
-    EdytujProjekt(req, res, db);
+    EdytujProjekt(req, res, pool);
 });
 app.get('/api/czas/pobierzGrupe/:id', (req, res) => {
-    PobierzGrupe(req, res, db);
+    PobierzGrupe(req, res, pool);
 });
 app.put('/api/czas/edytujGrupe/:id', (req, res) => {
-    EdytujGrupe(req, res, db);
+    EdytujGrupe(req, res, pool);
 });
 /////////////////////////////////////////
 
 // CZAS > URLOPY //
 app.get('/api/urlopy', (req, res) => {
-    GetUrlopy(req, res, db);
+    GetUrlopy(req, res, pool);
 });
 app.post('/api/urlopy', (req, res) => {
-    DodajUrlop(req, res, db);
+    DodajUrlop(req, res, pool);
 });
 app.put('/api/urlopy', (req, res) => {
-    ZatwierdzUrlop(req, res, db);
+    ZatwierdzUrlop(req, res, pool);
 });
 app.delete('/api/urlopy', (req, res) => {
-    UsunUrlop(req, res, db);
+    UsunUrlop(req, res, pool);
 });
 // pobieranie danych dla drukowania pdf urlopow
 app.post('/api/urlopy/pdf', (req, res) => {
-    urlopyPdf(req, res, db);
+    urlopyPdf(req, res, pool);
 });
 app.put('/api/urlopy/:vacationId', (req, res) => {
-    EdytujUrlop(req, res, db);
+    EdytujUrlop(req, res, pool);
 });
 
 /////////////////////////////////////////
 
 // CZAS > TYDZIEN //
 app.get('/api/tydzien/:numericWeek', (req, res) => {
-    GetTydzien(req, res, db);
+    GetTydzien(req, res, pool);
 });
 app.post('/api/tydzien', (req, res) => {
-    OtworzTydzienCzas(req, res, db);
+    OtworzTydzienCzas(req, res, pool);
 });
 app.delete('/api/tydzien', (req, res) => {
-    ZamknijTydzienCzas(req, res, db);
+    ZamknijTydzienCzas(req, res, pool);
 });
 
     // app.post((req, res) => {
@@ -385,20 +378,20 @@ app.delete('/api/tydzien', (req, res) => {
 // CZAS > POJAZDY //
 app.route('/api/pojazdy')
     .get((req, res) => {
-        PobierzPojazdy(req, res, db);
+        PobierzPojazdy(req, res, pool);
     })
     .post((req, res) => {
-        DodajPojazd(req, res, db);
+        DodajPojazd(req, res, pool);
     });
 
 app.delete('/api/pojazdy/:id', (req, res) => {
-    UsunPojazd(req, res, db);
+    UsunPojazd(req, res, pool);
 });
 /////////////////////////////////////////
 
 // CZAS > SPRAWDZ SAMOCHOD //
 app.get('/api/samochody', (req, res) => {
-    PobierzSamochody(req, res, db);
+    PobierzSamochody(req, res, pool);
 });
 /////////////////////////////////////////
 
@@ -454,19 +447,15 @@ app.post('/api/czas/archiwum/przywroc', (req, res) => {
 
 // pobieranie grup z bazy danych
 app.get('/api/grupy', (req, res) => {
-    DostepneGrupy(req, res, db);
+    DostepneGrupy(req, res, pool);
 });
 
 app.delete('/api/grupy/:id', (req, res) => {
-    UsuwanieGrupy(req, res, db);
+    UsuwanieGrupy(req, res, pool);
 });
 
 app.get('/api/firmy', (req, res) => {
-    PobierzDostepneFirmy(req, res, db);
-});
-
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
+    PobierzDostepneFirmy(req, res, pool);
 });
 
 app.listen(port, () => {

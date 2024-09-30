@@ -22,7 +22,7 @@ export default function OgloszeniaPage() {
     }, []);
 
     const fetchUserAccountType = () => {
-        axios.get('http://47.76.209.242:5000/api/imie', { withCredentials: true })
+        axios.get('http://localhost:5000/api/imie', { withCredentials: true })
             .then(response => {
                 setAccountType(response.data.accountType);
             })
@@ -32,7 +32,7 @@ export default function OgloszeniaPage() {
     };
 
     const fetchOgloszenia = () => {
-        axios.get('http://47.76.209.242:5000/api/ogloszenia', { withCredentials: true })
+        axios.get('http://localhost:5000/api/ogloszenia', { withCredentials: true })
             .then((response) => {
                 const ogloszenia = response.data.map(ogloszenie => ({
                     id: ogloszenie.idOgloszenia,
@@ -50,7 +50,7 @@ export default function OgloszeniaPage() {
     };
 
     const fetchPracownicy = () => {
-        axios.get('http://47.76.209.242:5000/api/ogloszenia/pracownicy', { withCredentials: true })
+        axios.get('http://localhost:5000/api/ogloszenia/pracownicy', { withCredentials: true })
             .then((response) => {
                 setPracownicy(response.data);
             })
@@ -60,7 +60,7 @@ export default function OgloszeniaPage() {
     };
 
     const fetchGrupy = () => {
-        axios.get('http://47.76.209.242:5000/api/ogloszenia/grupy', { withCredentials: true })
+        axios.get('http://localhost:5000/api/ogloszenia/grupy', { withCredentials: true })
             .then((response) => {
                 setGrupy(response.data);
             })
@@ -90,7 +90,7 @@ export default function OgloszeniaPage() {
                 osoby: values.osoby || []
             };
 
-            axios.post('http://47.76.209.242:5000/api/ogloszenia', postData, { withCredentials: true })
+            axios.post('http://localhost:5000/api/ogloszenia', postData, { withCredentials: true })
                 .then(() => {
                     fetchOgloszenia();
                     setIsModalOpen(false);
@@ -120,7 +120,7 @@ export default function OgloszeniaPage() {
 
     const handleDeleteOk = () => {
         if (itemToDelete) {
-            axios.delete(`http://47.76.209.242:5000/api/ogloszenia/${itemToDelete}`, { withCredentials: true })
+            axios.delete(`http://localhost:5000/api/ogloszenia/${itemToDelete}`, { withCredentials: true })
                 .then(() => {
                     fetchOgloszenia();
                     setConfirmDeleteVisible(false);
@@ -136,7 +136,7 @@ export default function OgloszeniaPage() {
     };
 
     const markAsRead = (announcementId) => {
-        axios.post('http://47.76.209.242:5000/api/ogloszenia/przeczytane', { idOgloszenia: announcementId }, { withCredentials: true })
+        axios.post('http://localhost:5000/api/ogloszenia/przeczytane', { idOgloszenia: announcementId }, { withCredentials: true })
           .then(response => {
             if (response.status === 200) {
               fetchOgloszenia();

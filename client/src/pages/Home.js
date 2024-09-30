@@ -18,7 +18,7 @@ export default function HomePage() {
 
     const handleLogout = async () => {
         try {
-            await axios.post('http://47.76.209.242:5000/api/logout', {}, { withCredentials: true });
+            await axios.post('http://localhost:5000/api/logout', {}, { withCredentials: true });
             navigate('/');
         } catch (error) {
             console.error(error);
@@ -27,7 +27,7 @@ export default function HomePage() {
 
     const checkTokenValidity = async () => {
         try {
-            await axios.get('http://47.76.209.242:5000/api/check-token', { withCredentials: true });
+            await axios.get('http://localhost:5000/api/check-token', { withCredentials: true });
         } catch (error) {
             if (error.response && error.response.status === 401) {
                 navigate('/');
@@ -37,7 +37,7 @@ export default function HomePage() {
 
     const getImie = async () => {
         try {
-            const response = await axios.get('http://47.76.209.242:5000/api/imie', { withCredentials: true });
+            const response = await axios.get('http://localhost:5000/api/imie', { withCredentials: true });
             const { name, surename } = response.data;
             setImie(`${name} ${surename}`);
         } catch (error) {
@@ -47,7 +47,7 @@ export default function HomePage() {
 
     const getBadgeCount = async () => {
         try {
-            const response = await axios.get('http://47.76.209.242:5000/api/ogloszenia/count', { withCredentials: true });
+            const response = await axios.get('http://localhost:5000/api/ogloszenia/count', { withCredentials: true });
             setBadgeCount(response.data.count);
         } catch (error) {
             console.error(error);
@@ -62,7 +62,7 @@ export default function HomePage() {
         getBadgeCount();
 
         // const handlePageUnload = () => {
-        //     navigator.sendBeacon('http://47.76.209.242:5000/api/zamkniecieStrony');
+        //     navigator.sendBeacon('http://localhost:5000/api/zamkniecieStrony');
         // };
 
         // window.addEventListener('beforeunload', handlePageUnload);
@@ -80,7 +80,7 @@ export default function HomePage() {
     // useEffect(() => {
     //     const unlisten = navigate((location, action) => {
     //         if (action === 'POP') {
-    //             navigator.sendBeacon('http://47.76.209.242:5000/api/zamkniecieStrony');
+    //             navigator.sendBeacon('http://localhost:5000/api/zamkniecieStrony');
     //         }
     //     });
 

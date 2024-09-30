@@ -77,7 +77,7 @@ export default function CzasPracyPage() {
     //#region fetching
     const fetchUserId = async () => {
         try {
-        await Axios.get("http://47.76.209.242:5000/api/pracownicy", { withCredentials: true })
+        await Axios.get("http://localhost:5000/api/pracownicy", { withCredentials: true })
             .then((response) => {
                 //console.log(response.data);
                 const userId = response.data.find(pracownik => `${pracownik.name} ${pracownik.surname}` === Pracownik).id;
@@ -92,7 +92,7 @@ export default function CzasPracyPage() {
     };
 
     const fetchZalogowanyUzytkownik = () => {
-        Axios.get("http://47.76.209.242:5000/api/imie", { withCredentials: true })
+        Axios.get("http://localhost:5000/api/imie", { withCredentials: true })
             .then((response) => {
                 const fullName = `${response.data.name} ${response.data.surename}`;
                 setPracownik(fullName);
@@ -104,7 +104,7 @@ export default function CzasPracyPage() {
     };
 
     const fetchPojazdy = () => {
-        Axios.get("http://47.76.209.242:5000/api/pojazdy", { withCredentials: true })
+        Axios.get("http://localhost:5000/api/pojazdy", { withCredentials: true })
             .then((response) => {
                 setSamochody(response.data.pojazdy.map(pojazd => ({ label: pojazd.numerRejestracyjny, value: pojazd.numerRejestracyjny })));
             })
@@ -114,7 +114,7 @@ export default function CzasPracyPage() {
     }
 
     const fetchPracownicy = () => {
-        Axios.get("http://47.76.209.242:5000/api/pracownicy", { withCredentials: true })
+        Axios.get("http://localhost:5000/api/pracownicy", { withCredentials: true })
             .then((response) => {
                 setPracownicy(response.data.map(pracownik => ({ label: `${pracownik.name} ${pracownik.surname}`, value: `${pracownik.name} ${pracownik.surname}` })));
             })
@@ -124,7 +124,7 @@ export default function CzasPracyPage() {
     }
 
     const fetchFirmy = () => {
-        Axios.get("http://47.76.209.242:5000/api/firmy", { withCredentials: true })
+        Axios.get("http://localhost:5000/api/firmy", { withCredentials: true })
             .then((response) => {
                 setFirmy(response.data.map(firma => ({ label: firma.Nazwa_firmy, value: firma.idFirma })));
             })
@@ -134,7 +134,7 @@ export default function CzasPracyPage() {
     }
     
     const fetchZleceniodawcy = () => {
-        Axios.get("http://47.76.209.242:5000/api/grupy", { withCredentials: true })
+        Axios.get("http://localhost:5000/api/grupy", { withCredentials: true })
             .then((response) => {
                 setZleceniodawcy(response.data.grupy.map(zleceniodawca => ({
                     label: zleceniodawca.Zleceniodawca,
@@ -147,7 +147,7 @@ export default function CzasPracyPage() {
     }
     
     const fetchProjekty = () => {
-        Axios.get("http://47.76.209.242:5000/api/czas/projekty", { withCredentials: true })
+        Axios.get("http://localhost:5000/api/czas/projekty", { withCredentials: true })
             .then((response) => {
                 setDostepneProjekty(response.data.projekty.map(projekt => ({
                     label: projekt.NazwaKod_Projektu,
@@ -165,7 +165,7 @@ export default function CzasPracyPage() {
         try {
             const weekData = getWeek(date, { weekStartsOn: 1 });
             const year = date.getFullYear();
-            const response = await Axios.get("http://47.76.209.242:5000/api/czas", {
+            const response = await Axios.get("http://localhost:5000/api/czas", {
                 withCredentials: true,
                 params: {
                     pracownikName: employeeName,
@@ -189,7 +189,7 @@ export default function CzasPracyPage() {
             const weekData = getWeek(date, { weekStartsOn: 1 });
             const year = date.getFullYear();
 
-            const response = await Axios.get("http://47.76.209.242:5000/api/czas/projekty/dodane", {
+            const response = await Axios.get("http://localhost:5000/api/czas/projekty/dodane", {
                 withCredentials: true,
                 params: {
                     pracownikName: employeeName,
@@ -244,7 +244,7 @@ export default function CzasPracyPage() {
     const fetchStatusTygodnia = async () => {
     try {
         const weekData = getWeek(currentDate, { weekStartsOn: 1 });
-        const response = await Axios.get(`http://47.76.209.242:5000/api/tydzien/${weekData}`, {
+        const response = await Axios.get(`http://localhost:5000/api/tydzien/${weekData}`, {
             withCredentials: true
         });
 
@@ -392,7 +392,7 @@ export default function CzasPracyPage() {
         }
 
         try {
-            const response = await Axios.post("http://47.76.209.242:5000/api/czas", {
+            const response = await Axios.post("http://localhost:5000/api/czas", {
                 pracownikName: Pracownik,
                 projektyName: Projekty,
                 weekData: getWeek(currentDate, { weekStartsOn: 1 }),
@@ -439,7 +439,7 @@ export default function CzasPracyPage() {
         } else {
             try {
                 fetchUserId();
-                const response = await Axios.delete("http://47.76.209.242:5000/api/tydzien", {
+                const response = await Axios.delete("http://localhost:5000/api/tydzien", {
                     data: {
                     tydzienRoku: getWeek(currentDate, { weekStartsOn: 1 }),
                     pracownikId: currentUserId,
@@ -465,7 +465,7 @@ export default function CzasPracyPage() {
     const handleOtworzTydzien = async () => {
         try {
             fetchUserId();
-            const response = await Axios.post("http://47.76.209.242:5000/api/tydzien", {
+            const response = await Axios.post("http://localhost:5000/api/tydzien", {
                 tydzienRoku: getWeek(currentDate, { weekStartsOn: 1 }),
                 pracownikId: currentUserId,
                 year: currentDate.getFullYear(),
