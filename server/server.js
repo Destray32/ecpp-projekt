@@ -237,10 +237,10 @@ app.route('/api/pracownik/:id')
     .get((req, res) => {
         PobierzPracownika(req, res);
     })
-    .delete((req, res) => {
+    .delete(authorizeRole('Administrator'), (req, res) => {
         UsunPracownika(req, res);
     })
-    .put((req, res) => {
+    .put(authorizeRole('Administrator'), (req, res) => {
         EdytujPracownika(req, res);
     });
 
@@ -281,7 +281,7 @@ app.get('/api/czas/projekty/dodane', (req, res) => {
 /////////////////////////////////////////
 
 // PLAN TYGODNIA "V" > PLAN TYGODNIA //
-app.post('/api/planTygodniaPrev', (req, res) => {
+app.post('/api/planTygodniaPrev', authorizeRole('Administrator'), (req, res) => {
     PracownicyPoprzedniTydz(req, res, pool);
 });
 app.route('/api/planTygodnia')
@@ -295,7 +295,7 @@ app.route('/api/planTygodnia')
         UsunWpisPlan(req, res, pool);
     });
 
-app.get('/api/planTygodnia/drukuj', (req, res) => {
+app.get('/api/planTygodnia/drukuj', authorizeRole('Administrator'), (req, res) => {
     DrukujGrupe(req, res, pool);
 });
 
@@ -325,31 +325,31 @@ app.get('/api/czas/projekty', (req, res) => {
 app.post('/api/czas/projekty', authorizeRole('Administrator'), (req, res) => {
     DodajNowyProjekt(req, res, pool);
 });
-app.post('/api/czas/grupa', (req, res) => {
+app.post('/api/czas/grupa', authorizeRole('Administrator'), (req, res) => {
     DodajNowaGrupe(req, res, pool);
 });
 app.get('/api/czas/szukaj', (req, res) => {
     SzukajProjekt(req, res, pool);
 });
-app.put('/api/czas/przeniesAkt', (req, res) => {
+app.put('/api/czas/przeniesAkt', authorizeRole('Administrator'), (req, res) => {
     PrzeniesAkt(req, res, pool);
 });
-app.put('/api/czas/przeniesNieakt', (req, res) => {
+app.put('/api/czas/przeniesNieakt', authorizeRole('Administrator'), (req, res) => {
     PrzeniesNieakt(req, res, pool);
 });
-app.delete('/api/czas/usun', (req, res) => {
+app.delete('/api/czas/usun', authorizeRole('Administrator'), (req, res) => {
     UsunProjekt(req, res, pool);
 });
 app.get('/api/czas/projekty/:id', (req, res) => {
     PobierzProjekt(req, res, pool);
 });
-app.put('/api/czas/edytujProjekt/:id', (req, res) => {
+app.put('/api/czas/edytujProjekt/:id', authorizeRole('Administrator'), (req, res) => {
     EdytujProjekt(req, res, pool);
 });
 app.get('/api/czas/pobierzGrupe/:id', (req, res) => {
     PobierzGrupe(req, res, pool);
 });
-app.put('/api/czas/edytujGrupe/:id', (req, res) => {
+app.put('/api/czas/edytujGrupe/:id', authorizeRole('Administrator'), (req, res) => {
     EdytujGrupe(req, res, pool);
 });
 /////////////////////////////////////////
@@ -384,7 +384,7 @@ app.get('/api/tydzien/:numericWeek', (req, res) => {
 app.post('/api/tydzien', (req, res) => {
     OtworzTydzienCzas(req, res, pool);
 });
-app.delete('/api/tydzien', (req, res) => {
+app.delete('/api/tydzien', authorizeRole('Administrator'), (req, res) => {
     ZamknijTydzienCzas(req, res, pool);
 });
 
@@ -405,7 +405,7 @@ app.route('/api/pojazdy')
         DodajPojazd(req, res, pool);
     });
 
-app.delete('/api/pojazdy/:id', (req, res) => {
+app.delete('/api/pojazdy/:id', authorizeRole('Administrator'), (req, res) => {
     UsunPojazd(req, res, pool);
 });
 /////////////////////////////////////////
@@ -471,7 +471,7 @@ app.get('/api/grupy', (req, res) => {
     DostepneGrupy(req, res, pool);
 });
 
-app.delete('/api/grupy/:id', (req, res) => {
+app.delete('/api/grupy/:id', authorizeRole('Administrator'), (req, res) => {
     UsuwanieGrupy(req, res, pool);
 });
 
