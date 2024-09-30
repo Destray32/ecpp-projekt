@@ -78,7 +78,17 @@ const AdditionalProjects = ({
         }
 
         try {
-            const response = await Axios.post("http://47.76.209.242:5000/api/czas/projekt", {
+            // przeszukujemy dodatkowe projekty i sprawdzamy czy projekt już istnieje
+            const existingProject = additionalProjects.find(project => project.projekt === Projekty);
+            if (existingProject) { // warunek sprawdzający czy projekt już istnieje
+                notification.error({
+                    message: "Błąd",
+                    description: "Projekt już istnieje",
+                });
+                return;
+            }
+
+            const response = await Axios.post("http://localhost:5000/api/czas/projekt", {
                 pracownikName: loggedUserName,
                 projektyName: Projekty,
                 weekData: weekData,
@@ -136,6 +146,21 @@ const AdditionalProjects = ({
     };
 
     const handleDeleteProject = (projectId) => {
+        // na podstawie id projektu ustawionego poprzez uuid4 wchodzimy do tego projektu i
+        // wyciągamy wszystkie id nadesłane z bazy dla każdego dzien_projekty i usuwamy
+        additionalProjects.forEach(project => {
+            if (project.id === projectId) {
+                console.log(project);
+                Object.values(project.hours).forEach(async hour => {
+                    try {
+                        await Axios.delete(`http://localhost:5000/api/czas/projekt/${hour.id}`, { withCredentials: true });
+                    } catch (error) {
+                        console.error("Error deleting project", error);
+                    }
+                });
+            }
+        });
+
         setAdditionalProjects(prevProjects =>
             prevProjects.filter(project => project.id !== projectId)
         );

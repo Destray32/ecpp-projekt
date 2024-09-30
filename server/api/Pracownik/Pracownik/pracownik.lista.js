@@ -11,6 +11,7 @@ function ListaPracownikow(req, res) {
             f.Nazwa_firmy AS company,
             do.TelefonPolska AS phone1,
             do.TelefonSzwecja AS phone2,
+            iof.Plan_TygodniaV as weeklyPlan,
             do.Email AS email,
             (SELECT CONCAT(do2.Imie, ' ', do2.Nazwisko) 
             FROM dane_osobowe do2 

@@ -34,7 +34,7 @@ const authenticateJWT = (req, res, next) => {
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
         if (err) {
             console.log('Token verification failed:', err);
-            return res.status(403).json({ error: 'Forbidden' });
+            return res.redirect('/');
         }
 
         req.user = user;
@@ -91,9 +91,9 @@ const ZapiszCzasPracy = require('./api/Czas/CzasPracy/czas.czaspracy.zapisz');
 const PobierzCzasPracy = require('./api/Czas/CzasPracy/czas.czaspracy.pobierz');
 const GetCzasProjekt = require('./api/Czas/CzasPracy/czas.czaspracy.getCzasProjekt');
 const PobierzDodaneProjekty = require('./api/Czas/CzasPracy/czas.czaspracy.projektyDodane');
+const UsunDodatkowyProject = require('./api/Czas/CzasPracy/czas.czaspracy.usun');
 
 // Plan Tygodnia
-const PlanTygodniaPlan = require('./api/PlanTygodnia/plantygodnia.plan.planTygodnia');
 const DostepneGrupy = require('./api/Grupy/grupy.dostepnegrupy');
 const DrukujGrupe = require('./api/PlanTygodnia/plantygodnia.plan.drukujGrupe');
 const PrzeniesWpisPlan = require('./api/PlanTygodnia/plantygodnia.plan.przenies');
@@ -257,29 +257,32 @@ app.route('/api/czas/projekt')
         GetCzasProjekt(req, res, db);
     });
 
+app.delete('/api/czas/projekt/:id', (req, res) => {
+    UsunDodatkowyProject(req, res, db);
+});
+
 app.get('/api/czas/projekty/dodane', (req, res) => {
     PobierzDodaneProjekty(req, res, db);
 });
 /////////////////////////////////////////
 
 // PLAN TYGODNIA "V" > PLAN TYGODNIA //
+app.post('/api/planTygodniaPrev', (req, res) => {
+    PracownicyPoprzedniTydz(req, res, db);
+});
 app.route('/api/planTygodnia')
     .get((req, res) => {
-        if (req.query.previous) {
-            PracownicyPoprzedniTydz(req, res);
-        } else {
-            PlanTygodniaPlan(req, res);
-        }
+            PlanTygodniaPlan(req, res, db);
     })
     .put((req, res) => {
-        PrzeniesWpisPlan(req, res);
+        PrzeniesWpisPlan(req, res, db);
     })
     .delete((req, res) => {
-        UsunWpisPlan(req, res);
+        UsunWpisPlan(req, res, db);
     });
 
 app.get('/api/planTygodnia/drukuj', (req, res) => {
-    DrukujGrupe(req, res);
+    DrukujGrupe(req, res, db);
 });
 
 app.put('/api/planTygodnia/:employeeId', (req, res ) => {
@@ -290,13 +293,13 @@ app.put('/api/planTygodnia/:employeeId', (req, res ) => {
 // PLAN TYGODNIA "V" > ZAPLANUJ //
 app.route('/api/planTygodnia/zaplanuj')
     .get((req, res) => {
-        GetPlany(req, res);
+        GetPlany(req, res, db);
     })
     .post((req, res) => {
-        DodajZaplanuj(req, res);
+        DodajZaplanuj(req, res, db);
     })
     .delete((req, res) => {
-        UsunPlan(req, res);
+        UsunPlan(req, res, db);
     });
 /////////////////////////////////////////
 

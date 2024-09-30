@@ -1,6 +1,4 @@
-const db = require('../../../server');
-
-function UsunWpisPlan(req, res) {
+function UsunWpisPlan(req, res,db ) {
     const { id } = req.body;
 
     if (!Array.isArray(id) || id.length === 0) {
@@ -8,20 +6,17 @@ function UsunWpisPlan(req, res) {
     }
 
     const idPlaceholders = id.map(() => '?').join(',');
+
     const sql = `
-        UPDATE informacje_o_firmie i
-        JOIN pracownik p ON p.FK_Informacje_o_firmie = i.idInformacje_o_firmie
-        SET i.Plan_TygodniaV = 0
-        WHERE p.idPracownik IN (${idPlaceholders})
+        DELETE FROM Plan_Tygodnia_V
+        WHERE idPlan_Tygodnia_V IN (${idPlaceholders})
     `;
 
     db.query(sql, id, (error, results) => {
         if (error) {
             console.error('Error executing query:', error);
-            res.status(500).json({ error: 'An error occurred while updating records.' });
-            return;
+            return res.status(500).json({ error: 'An error occurred while updating records.', details: error.message });
         }
-        res.json({ message: 'Records updated successfully' });
     });
 }
 

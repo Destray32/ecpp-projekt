@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { format, startOfWeek, addWeeks, addDays, subWeeks, getWeek, set } from 'date-fns';
+import { format, startOfWeek, addWeeks, endOfWeek, addDays, subWeeks, getWeek, set } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { v4 as uuidv4 } from 'uuid';
 import { Alert, notification } from 'antd';
 import Axios from "axios";
+import jsPDF from 'jspdf';
 
 import WeekNavigation from "../../Components/CzasPracy/WeekNavigation";
 import TimeInputs from "../../Components/CzasPracy/TimeInputs";
 import AdditionalProjects from "../../Components/CzasPracy/AdditionalProjects/AdditionalProjects";
 import ActionButtons from "../../Components/CzasPracy/ActionButtons";
-import { generateWeek, formatWeek, calculateWeeklyTotal, calculateProjectTotal } from '../../utils/dateUtils';
+import { generateWeek, formatWeek, calculateWeeklyTotal, calculateProjectTotal, calculateDailyTotal } from '../../utils/dateUtils';
 
 export default function CzasPracyPage() {
     const [userType, setUserType] = useState(null);
@@ -40,6 +41,10 @@ export default function CzasPracyPage() {
         fetchZleceniodawcy();
         fetchProjekty();
     }, []);
+
+    useEffect(() => {
+        console.log("Pracownik", Pracownik);
+    }, [Pracownik]);
 
     useEffect(() => {
         setDaysOfWeek(generateWeek(startOfCurrentWeek));
@@ -282,6 +287,8 @@ export default function CzasPracyPage() {
         let hasMissingStartEndBreak = false; // stan dla sprawdzania czy godziny sa ustawione dla dodatkowych projektow ale nie ma start, end, lub break
         let dayHourMismatch = false; // stan dla sprawdzania czy godziny przypisane do projektow zgadzaja sie z godzinami pracy
 
+        const projectNames = additionalProjects.map(project => project.label);
+
         const formattedAdditionalProjects = additionalProjects.map(project => ({
             ...project,
             totalHours: calculateProjectTotal(project, daysOfWeek),
@@ -335,25 +342,27 @@ export default function CzasPracyPage() {
             const dayName = format(day, 'EEEE', { locale: pl });
             const formattedDate = format(day, 'yyyy-MM-dd');
             const dailyHours = hours[formattedDate] || {};
+        
+            const breakHours = dailyHours.break ? parseFloat(dailyHours.break.split(":")[0]) : 0;
             
             const totalDayHours = dailyHours.end && dailyHours.start ? 
-                parseFloat(dailyHours.end.split(":")[0]) - parseFloat(dailyHours.start.split(":")[0]) - parseFloat(dailyHours.break.split(":")[0]) 
+                parseFloat(dailyHours.end.split(":")[0]) - parseFloat(dailyHours.start.split(":")[0]) - breakHours 
                 : 0;
-    
+        
             let projectDayHours = 0;
-    
+        
             additionalProjects.forEach(project => {
                 const projectData = project.hours[formattedDate];
                 if (projectData?.hoursWorked) {
                     projectDayHours += parseFloat(projectData.hoursWorked);
                 }
             });
-    
+        
             if (totalDayHours !== projectDayHours) {
                 dayHourMismatch = true;
                 console.log(`Różnica w godzinach dla ${dayName}. Godziny pracy: ${totalDayHours}, godziny w dodatkowych projektach: ${projectDayHours}`);
             }
-        });
+        });        
 
         if (hasMissingFields) {
             notification.error({
@@ -475,6 +484,85 @@ export default function CzasPracyPage() {
             console.error(error);
         }
     }
+
+    const handleDrukujRaport = async () => {
+        const doc = new jsPDF();
+      
+        // ----- pierwsza ala "tabelka" -----
+        const weekNumber = getWeek(currentDate, { locale: pl });
+        const dateStart = format(startOfWeek(currentDate, { weekStartsOn: 1 }), 'dd.MM.yyyy');
+        const dateEnd = format(endOfWeek(currentDate, { weekStartsOn: 1 }), 'dd.MM.yyyy');
+        const status = statusTygodnia.charAt(0).toUpperCase() + statusTygodnia.slice(1);
+        const userName = `${Pracownik}`;
+      
+        const firstTableData = [
+          ['Tydzien ' + weekNumber, `${dateStart} -${dateEnd}`, status, userName],
+        ];
+      
+        // odstep od gory
+        doc.setFontSize(12);
+        doc.text('Raport Tygodniowy', 14, 15);
+        doc.setFontSize(10);
+      
+        doc.autoTable({
+          startY: 20,
+          theme: 'plain',
+          styles: { cellPadding: 3, fontSize: 10 },
+          head: [['', '', '', '']],
+          body: firstTableData,
+          columnStyles: {
+            0: { cellWidth: 40 },
+            1: { cellWidth: 60 },
+            2: { cellWidth: 40 },
+            3: { cellWidth: 60 },
+          },
+          tableWidth: 'wrap',
+        });
+
+        // ----- Druga tabelka -----
+        const polishWeekdays = ['Pon', 'Wto', 'Sro', 'Czw', 'Pia', 'Sob', 'Nie'];
+        const headers = ['', ...daysOfWeek.map((day, index) =>
+            `${polishWeekdays[index]}\n${format(day, 'dd')}`)
+        ];
+
+        const rows = [
+            ['Rozpoczecie', ...daysOfWeek.map((day) => hours[format(day, 'yyyy-MM-dd')]?.start || '-')],
+            ['Przerwa', ...daysOfWeek.map((day) => hours[format(day, 'yyyy-MM-dd')]?.break || '-')],
+            ['Zakonczenie', ...daysOfWeek.map((day) => hours[format(day, 'yyyy-MM-dd')]?.end || '-')],
+            ['Razem (godz.)', ...daysOfWeek.map((day) => {
+                const dayHours = hours[format(day, 'yyyy-MM-dd')] || { start: '', break: '', end: '' };
+                const dailyTotal = calculateDailyTotal(dayHours);
+                return dailyTotal ? `${dailyTotal} godz.` : '-';
+            })],
+        ];
+
+        const weeklyTotal = calculateWeeklyTotal(hours, daysOfWeek);
+
+        doc.autoTable({
+            startY: doc.lastAutoTable.finalY + 15,
+            head: [headers],
+            body: rows,
+            styles: { cellPadding: 3, fontSize: 10 },
+            theme: 'grid',
+            headStyles: { cellPadding: 2, fontSize: 8 },
+        });
+
+        // ten weekly total pod tabelka
+        doc.setFontSize(12);
+        doc.text(`Razem:${weeklyTotal} godz.`, 14, doc.lastAutoTable.finalY + 10);
+      
+        // sygnatury
+        doc.setFontSize(10);
+        doc.text('____________________', 14, doc.internal.pageSize.height - 30);
+        doc.text(`${'Tu zalogowana osoba?'}`, 14, doc.internal.pageSize.height - 25);
+        doc.text(`${new Date().toLocaleString()}`, 14, doc.internal.pageSize.height - 20);
+        doc.text('____________________', doc.internal.pageSize.width - 60, doc.internal.pageSize.height - 30);
+        doc.text('Szef', doc.internal.pageSize.width - 60, doc.internal.pageSize.height - 25);
+      
+        doc.save(`Raport_Tydzien_${weekNumber}.pdf`);
+      };
+      
+      
     //#endregion
 
     //#region Render
@@ -513,7 +601,7 @@ export default function CzasPracyPage() {
                 currentDate={currentDate}
                 statusTyg={statusTygodnia}
             />
-            <ActionButtons handleSave={handleSave} handleCloseWeek={handleZamknijTydzien} handleOpenWeek={handleOtworzTydzien} statusTyg={statusTygodnia} userType={userType} />
+            <ActionButtons handleSave={handleSave} handleCloseWeek={handleZamknijTydzien} handleOpenWeek={handleOtworzTydzien} handlePrintReport={handleDrukujRaport} statusTyg={statusTygodnia} userType={userType} />
         </div>
     );
     //#endregion

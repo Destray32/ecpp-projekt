@@ -11,6 +11,7 @@ function DostepneGrupy(req, res, db) {
                 Zleceniodawca: row.Zleceniodawca,
                 Cennik: row.Cennik,
                 Stawka: row.Stawka,
+                Plan_tygodniaV: row.Plan_tygodniaV,
             }));
             res.status(200).send({ grupy: formattedRows });
         }
