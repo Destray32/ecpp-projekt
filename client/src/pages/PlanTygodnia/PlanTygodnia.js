@@ -205,7 +205,7 @@ export default function PlanTygodniaPage() {
 
     useEffect(() => {
         fetchData();
-    }, [currentDate, pracownikData]);
+    }, [currentDate]);
 
     const fetchData = () => {
         Axios.get('http://localhost:5000/api/grupy', { withCredentials: true })
