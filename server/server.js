@@ -35,23 +35,39 @@ const authenticateJWT = (req, res, next) => {
         }
 
         req.user = user;
+        req.user.role = user.role;
         next();
     });
 };
 
+// middleware do autoryzacji endpointów na podstawie roli użytkownika
+const authorizeRole = (role) => {
+    return (req, res, next) => {
+        if (req.user && req.user.role === role) {
+            next();
+        } else {
+            res.status(403).json({ error: 'Forbidden' });
+        }
+    };
+};
+
+
 const JWT_SECRET = process.env.JWT_SECRET;
 const NODE_ENV = process.env.NODE_ENV;
 
+// zmiana architektury bazy danych z jednego persistance połączenia na pulę połączeń
+// zmiana ta pozwala na lepsze zarządzanie połączeniami szczególnie w przypadku wersji już produkcyjnej
+//
+// https://sidorares.github.io/node-mysql2/docs#using-connection-pools
 const pool = mysql.createPool({
     host: 'localhost',
     user: 'root',
-    password: 'root',
+    password: '',
     database: 'mydb',
     waitForConnections: true,
     connectionLimit: 30,
     queueLimit: 0
 });
-
 
 module.exports = pool;
 
@@ -192,7 +208,7 @@ app.route('/api/pracownicy')
     .get((req, res) => {
         ListaPracownikow(req, res, pool);
     })
-    .post((req, res) => {
+    .post(authorizeRole('Administrator'), (req, res) => {
         DodajPracownika(req, res);
     });
 
@@ -231,7 +247,7 @@ app.put('/api/pracownik/zmienMoje', (req, res) => {
 });
 /////////////////////////////////////////
 
-app.get('/api/logi', authenticateJWT, (req, res) => {
+app.get('/api/logi', authenticateJWT, authorizeRole('Administrator'), (req, res) => {
     PobierzLogi(req, res, pool);
 }
 );
@@ -264,13 +280,13 @@ app.post('/api/planTygodniaPrev', (req, res) => {
     PracownicyPoprzedniTydz(req, res, pool);
 });
 app.route('/api/planTygodnia')
-    .get((req, res) => {
+    .get(authorizeRole('Administrator'), (req, res) => {
             PlanTygodniaPlan(req, res, pool);
     })
-    .put((req, res) => {
+    .put(authorizeRole('Administrator'), (req, res) => {
         PrzeniesWpisPlan(req, res, pool);
     })
-    .delete((req, res) => {
+    .delete(authorizeRole('Administrator'), (req, res) => {
         UsunWpisPlan(req, res, pool);
     });
 
@@ -278,20 +294,20 @@ app.get('/api/planTygodnia/drukuj', (req, res) => {
     DrukujGrupe(req, res, pool);
 });
 
-app.put('/api/planTygodnia/:employeeId', (req, res ) => {
+app.put('/api/planTygodnia/:employeeId', authorizeRole('Administrator'), (req, res ) => {
     AktualizujM1_5(req, res, pool);
 });
 /////////////////////////////////////////
 
 // PLAN TYGODNIA "V" > ZAPLANUJ //
 app.route('/api/planTygodnia/zaplanuj')
-    .get((req, res) => {
+    .get(authorizeRole('Administrator'), (req, res) => {
         GetPlany(req, res, pool);
     })
-    .post((req, res) => {
+    .post(authorizeRole('Administrator'), (req, res) => {
         DodajZaplanuj(req, res, pool);
     })
-    .delete((req, res) => {
+    .delete(authorizeRole('Administrator'), (req, res) => {
         UsunPlan(req, res, pool);
     });
 /////////////////////////////////////////
@@ -301,7 +317,7 @@ app.route('/api/planTygodnia/zaplanuj')
 app.get('/api/czas/projekty', (req, res) => {
     GetProjekty(req, res, pool);
 });
-app.post('/api/czas/projekty', (req, res) => {
+app.post('/api/czas/projekty', authorizeRole('Administrator'), (req, res) => {
     DodajNowyProjekt(req, res, pool);
 });
 app.post('/api/czas/grupa', (req, res) => {
@@ -380,7 +396,7 @@ app.route('/api/pojazdy')
     .get((req, res) => {
         PobierzPojazdy(req, res, pool);
     })
-    .post((req, res) => {
+    .post(authorizeRole('Administrator'), (req, res) => {
         DodajPojazd(req, res, pool);
     });
 
@@ -397,11 +413,11 @@ app.get('/api/samochody', (req, res) => {
 
 // CZAS > RAPORTY //
 app.get('/api/raporty', (req, res) => {
-    PobierzRaporty(req, res, db);
+    PobierzRaporty(req, res, pool);
 });
 
 app.get('/api/generujRaport', (req, res) => {
-    GenerujRaport(req, res, db);
+    GenerujRaport(req, res, pool);
 });
 /////////////////////////////////////////
 

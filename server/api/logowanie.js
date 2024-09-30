@@ -6,7 +6,7 @@ async function Logowanie(req, res) {
     const { firma, login, password } = req.body;
 
     const query = `
-        SELECT p.idPracownik, p.Haslo, f.Nazwa_firmy
+        SELECT p.idPracownik, p.Haslo, f.Nazwa_firmy, p.Typ_konta
         FROM pracownik p
         JOIN informacje_o_firmie i ON p.FK_Informacje_o_firmie = i.idInformacje_o_firmie
         JOIN firma f ON i.FK_idFirma = f.idFirma
@@ -36,7 +36,7 @@ async function Logowanie(req, res) {
             return res.status(401).json({ error: 'Wrong login or password' });
         }
 
-        const token = jwt.sign({ id: user.idPracownik }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        const token = jwt.sign({ id: user.idPracownik, role: user.Typ_konta }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
         res.cookie('token', token, {
             httpOnly: true,
