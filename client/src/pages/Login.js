@@ -47,7 +47,7 @@ export default function LoginPage() {
         event.preventDefault();
         try {
             const response = await axios.post('http://localhost:5000/api/logowanie', { firma, login, password }, { withCredentials: true });
-            
+
             console.log(response.data.message);
 
             navigate('/home');
@@ -87,16 +87,16 @@ export default function LoginPage() {
                     </div>
                     <div className='card flex flex-col drop-shadow-lg w-full'>
                         <Password value={password} onChange={(e) => setPassword(e.target.value)} feedback={false} toggleMask placeholder="Hasło"
-                             inputClassName='w-full md:w-14rem h-[3rem] p-2'
-                             pt={{ iconField: { root: { className: 'w-full md:w-14rem ' } } }}
-                             />
+                            inputClassName='w-full md:w-14rem h-[3rem] p-2'
+                            pt={{ iconField: { root: { className: 'w-full md:w-14rem ' } } }}
+                        />
                     </div>
                     <div className='flex justify-center'>
                         <button className='bg-primary text-white p-2 rounded-md w-1/2'>Zaloguj</button>
                         <button type='button' onClick={testLoginHandler} className='bg-secondary bg-blue-400 text-white p-2 rounded-md w-1/2 ml-4'>Skip</button>
                     </div>
                 </form>
-                
+
             </div>
         </main>
     )
