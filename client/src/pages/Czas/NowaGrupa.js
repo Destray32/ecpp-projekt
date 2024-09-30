@@ -59,17 +59,17 @@ export default function NowaGrupaPage() {
             </div>
             <AmberBox>
                 <div className="flex flex-col items-center space-y-8 p-4 w-full">
-                    <FloatLabel className="w-full md:w-6/12 lg:w-4/12">
+                    <FloatLabel className="w-6/12 lg:w-4/12">
                         <InputText onChange={handleZleceniodawca} id="zleceniodawca" type="text" className="w-full" />
                         <label htmlFor="zleceniodawca">Zleceniodawca</label>
                     </FloatLabel>
                     
-                    <FloatLabel className="w-full md:w-6/12 lg:w-4/12">
+                    <FloatLabel className="w-6/12 lg:w-4/12">
                         <InputText onChange={handleCennik} id="cennik" type="text" className="w-full" />
                         <label htmlFor="cennik">Cennik</label>
                     </FloatLabel>
                     
-                    <FloatLabel className="w-full md:w-6/12 lg:w-4/12">
+                    <FloatLabel className="w-6/12 lg:w-4/12">
                         <InputText onChange={handleStawka} id="stawka" type="text" className="w-full" />
                         <label htmlFor="stawka">Stawka/km</label>
                     </FloatLabel>

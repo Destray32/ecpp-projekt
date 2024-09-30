@@ -106,7 +106,7 @@ export default function EdytujProjektPage() {
             <AmberBox>
                 <div className="flex flex-col items-center space-y-8 p-4 w-full">
 
-                    <div className="w-full md:w-6/12 lg:w-4/12">
+                    <div className="w-6/12 lg:w-4/12">
                         <label htmlFor="firma">Firma</label>
                         <Select
                             onChange={(value) => handleChange(value, 'firma')}
@@ -121,7 +121,7 @@ export default function EdytujProjektPage() {
                         </Select>
                     </div>
 
-                    <div className="w-full md:w-6/12 lg:w-4/12">
+                    <div className="w-6/12 lg:w-4/12">
                         <label htmlFor="zleceniodawca">Zleceniodawca</label>
                         <Select
                             onChange={(value) => handleChange(value, 'zleceniodawca')}
@@ -138,7 +138,7 @@ export default function EdytujProjektPage() {
                         </Select>
                     </div>
 
-                    <div className="w-full md:w-6/12 lg:w-4/12">
+                    <div className="w-6/12 lg:w-4/12">
                         <label htmlFor="nazwa">Nazwa/Kod Projektu</label>
                         <AutoComplete
                             onChange={(value) => handleChange(value, 'nazwa')}
@@ -156,22 +156,22 @@ export default function EdytujProjektPage() {
                         />
                     </div>
 
-                    <div className="w-full md:w-6/12 lg:w-4/12">
+                    <div className="w-6/12 lg:w-4/12">
                         <label htmlFor="ulica">Ulica</label>
                         <Input onChange={(e) => handleChange(e.target.value, 'ulica')} value={form.ulica} />
                     </div>
 
-                    <div className="w-full md:w-6/12 lg:w-4/12">
+                    <div className="w-6/12 lg:w-4/12">
                         <label htmlFor="miejscowosc">Miejscowość</label>
                         <Input onChange={(e) => handleChange(e.target.value, 'miejscowosc')} value={form.miejscowosc} />
                     </div>
 
-                    <div className="w-full md:w-6/12 lg:w-4/12">
+                    <div className="w-6/12 lg:w-4/12">
                         <label htmlFor="kodPocztowy">Kod pocztowy</label>
                         <Input onChange={(e) => handleChange(e.target.value, 'kodPocztowy')} value={form.kodPocztowy} />
                     </div>
 
-                    <div className="w-full md:w-6/12 lg:w-4/12">
+                    <div className="w-6/12 lg:w-4/12">
                         <label htmlFor="kraj">Kraj</label>
                         <Input onChange={(e) => handleChange(e.target.value, 'kraj')} value={form.kraj} />
                     </div>

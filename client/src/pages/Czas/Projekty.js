@@ -106,11 +106,10 @@ export default function ProjektyPage() {
                             <p className="mr-6">Filtr</p>
                             <Dropdown value={filtr} onChange={(e) => setFiltr(e.value)} options={["Aktywny","Zamkniety","Wszystkie"]} editable placeholder="Filtrowanie"
                                 autoComplete="off"
-                                className="w-3/12 p-2"
+                                className="w-3/12 p-2 mr-10"
                                 filter
                             />
-                            <Button onClick={handleSzukaj} label="Szukaj" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-32" />
-                            <div>
+                            <div className="flex flex-row items-center">
                                 <Button onClick={handlePrzeniesAktyw} label="Przenieś do aktywnych" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2" />
                                 <Button onClick={handlePrzeniesNieaktyw} label="Przenieś do nieaktywnych" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2" />
                             </div>
@@ -125,7 +124,7 @@ export default function ProjektyPage() {
                     </div>
                 </div>
             </AmberBox>
-            <div className="w-full md:w-auto bg-gray-300 h-full m-2 outline outline-1 outline-gray-500">
+            <div className="w-auto bg-gray-300 h-full m-2 outline outline-1 outline-gray-500">
                 <table className="w-full">
                     <thead className="bg-blue-700 text-white">
                         <tr>

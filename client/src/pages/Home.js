@@ -145,7 +145,7 @@ export default function HomePage() {
                         )}
                     </div>
                 </nav>
-                <main className=""> {/* to jest główna treść, ten biały box na stronie */}
+                <main className="w-full max-xl:min-w-[1350px] ">
                     <GorneMenu setMenu={setMenu}/>
                     <Outlet />
                 </main>

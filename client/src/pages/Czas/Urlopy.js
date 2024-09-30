@@ -552,7 +552,7 @@ export default function UrlopyPage() {
                 <div className="w-full h-2/5 flex flex-col space-y-2 items-start">
                     <div className="w-full h-2/6">
                         <div className="w-full flex flex-row items-center p-4">
-                            <div className="flex flex-col w-2/12 p-4">
+                            <div className="flex flex-col w-4/12 p-4">
                                 <p className="text-sm text-gray-600 mb-2">Dodaj urlop dla:</p>
                                 <Dropdown
                                     value={UrlopDla}
@@ -566,7 +566,7 @@ export default function UrlopyPage() {
                                     showClear
                                 />
                             </div>
-                            <div className="flex flex-col w-2/12 p-4">
+                            <div className="flex flex-col w-4/12 p-4">
                                 <p className="text-sm text-gray-600 mb-2">Status:</p>
                                 <Dropdown
                                     value={Status}
@@ -583,11 +583,11 @@ export default function UrlopyPage() {
                         </div>
                     </div>
                     <div className="w-full flex flex-row space-x-4 p-4 ml-4">
-                        <div className="flex flex-col w-full md:w-1/12">
+                        <div className="flex flex-col w-2/12">
                             <p className="text-sm text-gray-600 mb-2">Urlop od:</p>
                             <InputText id="UrlopOd" value={urlopOd} onChange={(e) => setUrlopOd(e.target.value)} type="date" />
                         </div>
-                        <div className="flex flex-col w-full md:w-1/12">
+                        <div className="flex flex-col w-2/12 ">
                             <p className="text-sm text-gray-600 mb-2">Urlop do:</p>
                             <InputText id="UrlopDo" value={urlopDo} onChange={(e) => setUrlopDo(e.target.value)} type="date" />
                         </div>
@@ -637,7 +637,7 @@ export default function UrlopyPage() {
             </div>
             </div>
 
-            <div className="w-full md:w-auto bg-gray-300 h-full m-2 outline outline-1 outline-gray-500">
+            <div className="w-auto bg-gray-300 h-full m-2 outline outline-1 outline-gray-500">
                 <table className="w-full">
                     <ApprovedTable/>
                 </table>
@@ -667,7 +667,7 @@ export default function UrlopyPage() {
                     <Button label="Drukuj" onClick={handlePdfDownloadClick} />
                 </div>
             </AmberBox>
-            <div className="w-full md:w-auto bg-gray-300 h-full m-2 outline outline-1 outline-gray-500">
+            <div className="w-auto bg-gray-300 h-full m-2 outline outline-1 outline-gray-500">
                 <table className="w-full">
                     <RemainingTable />
                 </table>
