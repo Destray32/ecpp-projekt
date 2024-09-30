@@ -41,6 +41,11 @@ const authenticateJWT = (req, res, next) => {
 };
 
 // middleware do autoryzacji endpointów na podstawie roli użytkownika
+//
+// użycie:
+// app.get('/api/protected', authorizeRole('Administrator') <----- tutaj typ konta z bazy danych z tabeli "pracownik", (req, res) => {
+//     res.json({ message: 'Protected endpoint' });
+// });
 const authorizeRole = (role) => {
     return (req, res, next) => {
         if (req.user && req.user.role === role) {

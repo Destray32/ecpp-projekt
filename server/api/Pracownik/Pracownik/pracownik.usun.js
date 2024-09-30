@@ -2,34 +2,44 @@ const db = require('../../../server');
 
 function UsunPracownika(req, res) {
     const id = req.params.id;
-    
-    db.beginTransaction(error => {
+
+    db.getConnection((error, connection) => {
         if (error) {
-            console.error('Error starting transaction:', error);
-            return res.status(500).json({ error: 'Database transaction error' });
+            console.error('Error getting connection from pool:', error);
+            return res.status(500).json({ error: 'Database connection error' });
         }
 
-        const query = `UPDATE pracownik SET Archiwum = 1 WHERE idPracownik = ?;`;
-        
-        const values = [id];
-
-        db.query(query, values, (error, result) => {
+        connection.beginTransaction(error => {
             if (error) {
-                console.error('Error deleting employee:', error);
-                return db.rollback(() => {
-                    res.status(500).json({ error: 'Database error' });
-                });
+                console.error('Error starting transaction:', error);
+                connection.release();
+                return res.status(500).json({ error: 'Database transaction error' });
             }
 
-            db.commit(error => {
+            const query = `UPDATE pracownik SET Archiwum = 1 WHERE idPracownik = ?;`;
+            const values = [id];
+
+            connection.query(query, values, (error, result) => {
                 if (error) {
-                    console.error('Error committing transaction:', error);
-                    return db.rollback(() => {
+                    console.error('Error deleting employee:', error);
+                    return connection.rollback(() => {
+                        connection.release();
                         res.status(500).json({ error: 'Database error' });
                     });
                 }
 
-                res.json({ message: 'Employee deleted' });
+                connection.commit(error => {
+                    if (error) {
+                        console.error('Error committing transaction:', error);
+                        return connection.rollback(() => {
+                            connection.release();
+                            res.status(500).json({ error: 'Database error' });
+                        });
+                    }
+
+                    connection.release();
+                    res.json({ message: 'Employee deleted' });
+                });
             });
         });
     });
