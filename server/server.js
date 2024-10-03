@@ -240,7 +240,7 @@ app.route('/api/pracownik/:id')
     .delete(authorizeRole('Administrator'), (req, res) => {
         UsunPracownika(req, res);
     })
-    .put(authorizeRole('Administrator'), (req, res) => {
+    .put((req, res) => {
         EdytujPracownika(req, res);
     });
 
@@ -281,12 +281,12 @@ app.get('/api/czas/projekty/dodane', (req, res) => {
 /////////////////////////////////////////
 
 // PLAN TYGODNIA "V" > PLAN TYGODNIA //
-app.post('/api/planTygodniaPrev', authorizeRole('Administrator'), (req, res) => {
+app.post('/api/planTygodniaPrev', (req, res) => {
     PracownicyPoprzedniTydz(req, res, pool);
 });
 app.route('/api/planTygodnia')
-    .get(authorizeRole('Administrator'), (req, res) => {
-            PlanTygodniaPlan(req, res, pool);
+    .get((req, res) => {
+        PlanTygodniaPlan(req, res, pool);
     })
     .put(authorizeRole('Administrator'), (req, res) => {
         PrzeniesWpisPlan(req, res, pool);
@@ -295,7 +295,7 @@ app.route('/api/planTygodnia')
         UsunWpisPlan(req, res, pool);
     });
 
-app.get('/api/planTygodnia/drukuj', authorizeRole('Administrator'), (req, res) => {
+app.get('/api/planTygodnia/drukuj', (req, res) => {
     DrukujGrupe(req, res, pool);
 });
 
@@ -306,7 +306,7 @@ app.put('/api/planTygodnia/:employeeId', authorizeRole('Administrator'), (req, r
 
 // PLAN TYGODNIA "V" > ZAPLANUJ //
 app.route('/api/planTygodnia/zaplanuj')
-    .get(authorizeRole('Administrator'), (req, res) => {
+    .get((req, res) => {
         GetPlany(req, res, pool);
     })
     .post(authorizeRole('Administrator'), (req, res) => {
@@ -378,10 +378,10 @@ app.put('/api/urlopy/:vacationId', (req, res) => {
 /////////////////////////////////////////
 
 // CZAS > TYDZIEN //
-app.get('/api/tydzien/:numericWeek', (req, res) => {
+app.get('/api/tydzien/:numericWeek', authorizeRole('Administrator'), (req, res) => {
     GetTydzien(req, res, pool);
 });
-app.post('/api/tydzien', (req, res) => {
+app.post('/api/tydzien', authorizeRole('Administrator'), (req, res) => {
     OtworzTydzienCzas(req, res, pool);
 });
 app.delete('/api/tydzien', authorizeRole('Administrator'), (req, res) => {

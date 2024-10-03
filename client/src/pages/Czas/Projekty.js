@@ -7,10 +7,24 @@ import { Link } from "react-router-dom";
 import { Checkbox } from 'primereact/checkbox';
 import Axios from "axios";
 
+import checkUserType from "../../utils/accTypeUtils";
+
 export default function ProjektyPage() {
     const [filtr, setFiltr] = useState('Wszystkie');
     const [selectedItems, setSelectedItems] = useState([]);
     const [data, setData] = useState([]);
+    const [typKonta, setTypKonta] = useState('');
+    const [isAdmin, setIsAdmin] = useState(false);
+
+    useEffect(() => {
+        checkUserType(setTypKonta);
+    }, []);
+
+    useEffect(() => {
+        if (typKonta === 'Administrator') {
+            setIsAdmin(true);
+        }
+    }, [typKonta]);
 
     const handleCheckboxChange = (id) => {
         setSelectedItems(prevState =>
@@ -54,9 +68,9 @@ export default function ProjektyPage() {
                 setData([]);
             });
     };
-    
+
     const handlePrzeniesAktyw = () => {
-        Axios.put("http://localhost:5000/api/czas/przeniesAkt", 
+        Axios.put("http://localhost:5000/api/czas/przeniesAkt",
             { ids: selectedItems.map((id) => id) },
             { withCredentials: true }
         )
@@ -69,7 +83,7 @@ export default function ProjektyPage() {
     };
 
     const handlePrzeniesNieaktyw = () => {
-        Axios.put("http://localhost:5000/api/czas/przeniesNieakt", 
+        Axios.put("http://localhost:5000/api/czas/przeniesNieakt",
             { ids: selectedItems.map((id) => id) },
             { withCredentials: true }
         )
@@ -83,7 +97,7 @@ export default function ProjektyPage() {
 
     const fetchProjects = () => {
         Axios.get("http://localhost:5000/api/czas/projekty", { withCredentials: true })
-                .then((response) => {
+            .then((response) => {
                 if (response.data && Array.isArray(response.data.projekty)) {
                     setData(response.data.projekty);
                 } else {
@@ -96,7 +110,7 @@ export default function ProjektyPage() {
                 setData([]);
             });
     };
-    
+
     return (
         <div>
             <AmberBox>
@@ -104,7 +118,7 @@ export default function ProjektyPage() {
                     <div className="w-full h-2/6">
                         <div className="w-full flex flex-row items-center p-4">
                             <p className="mr-6">Filtr</p>
-                            <Dropdown value={filtr} onChange={(e) => setFiltr(e.value)} options={["Aktywny","Zamkniety","Wszystkie"]} editable placeholder="Filtrowanie"
+                            <Dropdown value={filtr} onChange={(e) => setFiltr(e.value)} options={["Aktywny", "Zamkniety", "Wszystkie"]} editable placeholder="Filtrowanie"
                                 autoComplete="off"
                                 className="w-3/12 p-2"
                                 filter
@@ -117,9 +131,12 @@ export default function ProjektyPage() {
                             <Link to="/home/grupy-projektow">
                                 <Button label="Grupy projektów" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2" />
                             </Link>
-                            <Link to="/home/nowy-projekt">
-                                <Button label="Dodaj nowy projekt" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2" />
-                            </Link>
+                            {isAdmin && (
+                                <Link to="/home/nowy-projekt">
+                                    <Button label="Dodaj nowy projekt"
+                                        className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2" />
+                                </Link>
+                            )}
 
                         </div>
                     </div>
@@ -139,33 +156,33 @@ export default function ProjektyPage() {
                     <tbody className="text-center">
                         {data.map((projekty, index) => {
                             const statusClass = projekty.Status === 'Aktywny'
-                            ? 'text-green-500'
-                            : 'text-red-500';
+                                ? 'text-green-500'
+                                : 'text-red-500';
                             return (
-                            <tr key={projekty.id} className="border-b even:bg-gray-200 odd:bg-gray-300">
-                                <td className="border-r">
-                                    <Checkbox
-                                        inputId={`cb-${projekty.id}`}
-                                        checked={selectedItems.includes(projekty.id)}
-                                        onChange={() => handleCheckboxChange(projekty.id)}
-                                    />
-                                </td>
-                                <td className="border-r">{index +1}</td>
-                                <td className="border-r">{projekty.NazwaKod_Projektu}</td>
-                                <td className={`border-r ${statusClass}`}>{projekty.Status}</td>
-                                <td>
-                                    <Link to={`/home/projekt/${projekty.id}`}>
-                                        <Button
-                                            label="Edytuj"
-                                            className="bg-blue-700 text-white p-1 m-0.5"
+                                <tr key={projekty.id} className="border-b even:bg-gray-200 odd:bg-gray-300">
+                                    <td className="border-r">
+                                        <Checkbox
+                                            inputId={`cb-${projekty.id}`}
+                                            checked={selectedItems.includes(projekty.id)}
+                                            onChange={() => handleCheckboxChange(projekty.id)}
                                         />
-                                    </Link>
-                                    <Button
-                                        onClick={() => handleDelete(projekty.id)}
-                                        label="Usuń"
-                                        className="bg-red-500 text-white p-1 m-0.5" />
-                                </td>
-                            </tr>
+                                    </td>
+                                    <td className="border-r">{index + 1}</td>
+                                    <td className="border-r">{projekty.NazwaKod_Projektu}</td>
+                                    <td className={`border-r ${statusClass}`}>{projekty.Status}</td>
+                                    <td>
+                                        <Link to={`/home/projekt/${projekty.id}`}>
+                                            <Button
+                                                label="Edytuj"
+                                                className="bg-blue-700 text-white p-1 m-0.5"
+                                            />
+                                        </Link>
+                                        <Button
+                                            onClick={() => handleDelete(projekty.id)}
+                                            label="Usuń"
+                                            className="bg-red-500 text-white p-1 m-0.5" />
+                                    </td>
+                                </tr>
                             );
                         })}
                     </tbody>

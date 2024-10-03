@@ -11,6 +11,8 @@ import PDF_SprawozdanieSzczegolowe from "../../Components/Raporty/PDF_Sprawozdan
 import PDF_SprawozdaniePodsumowanie from "../../Components/Raporty/PDF_SprawozdaniePodsumowanie";
 import { notification } from "antd";
 
+import checkUserType from "../../utils/accTypeUtils";
+
 
 export default function RaportyPage() {
     const [startDate, setStartDate] = useState('');
@@ -27,6 +29,18 @@ export default function RaportyPage() {
     const [selectedRow, setSelectedRow] = useState(null);
     const [wybranyRaport, setWybranyRaport] = useState(null);
     const [raport, setRaport] = useState([]);
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [accountType, setAccountType] = useState('');
+
+    useEffect(() => {
+        checkUserType(setAccountType);
+    }, []);
+
+    useEffect(() => {
+        if (accountType === 'Administrator') {
+            setIsAdmin(true);
+        }
+    }, [accountType]);
 
 
     useEffect(() => {
@@ -273,7 +287,8 @@ export default function RaportyPage() {
                 <p>Raporty</p>
             </div>
             <div className="w-full md:w-auto bg-gray-300 h-full m-2 outline outline-1 outline-gray-500">
-                <table className="w-full">
+                {isAdmin && (
+                    <table className="w-full">
                     <tbody className="text-left cursor-pointer">
                         <tr className="border-b hover:underline even:bg-gray-200 odd:bg-gray-300"
                             onClick={() => setShowRaportyFirma(!showRaportyFirma)}>
@@ -307,9 +322,32 @@ export default function RaportyPage() {
                                 Pracownik Analiza czasu - działalność
                             </td>
                         </tr>
-    
                     </tbody>
                 </table>
+                )}
+
+                {!isAdmin && (
+                    <table className="w-full">
+                    <tbody className="text-left cursor-pointer">
+                        <tr className="border-b hover:underline even:bg-gray-200 odd:bg-gray-300"
+                            onClick={() => setShowRaportyPracownik(!showRaportyPracownik)}>
+                            <th className="border-r">Raporty dla pracownika</th>
+                        </tr>
+                        <tr className={`border-b hover:underline even:bg-gray-200 odd:bg-gray-300 ${showRaportyPracownik ? "" : "hidden"}`}>
+                            <td onClick={() => handleRowClick("Analiza świadczeń pracowniczych")}
+                                className="border-r" style={getRowStyle("Analiza świadczeń pracowniczych")}>
+                                Analiza świadczeń pracowniczych
+                            </td>
+                        </tr>
+                        <tr className={`border-b hover:underline even:bg-gray-200 odd:bg-gray-300 ${showRaportyPracownik ? "" : "hidden"}`}>
+                            <td onClick={() => handleRowClick("Pracownik Analiza czasu - działalność")}
+                                className="border-r" style={getRowStyle("Pracownik Analiza czasu - działalność")}>
+                                Pracownik Analiza czasu - działalność
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                    )}
             </div>
         </div>
     );

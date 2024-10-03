@@ -78,15 +78,15 @@ export default function CzasPracyPage() {
     //#region fetching
     const fetchUserId = async () => {
         try {
-        await Axios.get("http://localhost:5000/api/pracownicy", { withCredentials: true })
-            .then((response) => {
-                //console.log(response.data);
-                const userId = response.data.find(pracownik => `${pracownik.name} ${pracownik.surname}` === Pracownik).id;
-                setCurrentUserId(userId);
-            })
-            .catch((error) => {
-                console.error(error);
-            });
+            await Axios.get("http://localhost:5000/api/pracownicy", { withCredentials: true })
+                .then((response) => {
+                    //console.log(response.data);
+                    const userId = response.data.find(pracownik => `${pracownik.name} ${pracownik.surname}` === Pracownik).id;
+                    setCurrentUserId(userId);
+                })
+                .catch((error) => {
+                    console.error(error);
+                });
         } catch (error) {
             console.error(error);
         }
@@ -133,7 +133,7 @@ export default function CzasPracyPage() {
                 console.error(error);
             });
     }
-    
+
     const fetchZleceniodawcy = () => {
         Axios.get("http://localhost:5000/api/grupy", { withCredentials: true })
             .then((response) => {
@@ -146,7 +146,7 @@ export default function CzasPracyPage() {
                 console.error(error);
             });
     }
-    
+
     const fetchProjekty = () => {
         Axios.get("http://localhost:5000/api/czas/projekty", { withCredentials: true })
             .then((response) => {
@@ -243,28 +243,28 @@ export default function CzasPracyPage() {
     };
 
     const fetchStatusTygodnia = async () => {
-    try {
-        const weekData = getWeek(currentDate, { weekStartsOn: 1 });
-        const response = await Axios.get(`http://localhost:5000/api/tydzien/${weekData}`, {
-            withCredentials: true
-        });
+        try {
+            const weekData = getWeek(currentDate, { weekStartsOn: 1 });
+            const response = await Axios.get(`http://localhost:5000/api/tydzien/${weekData}`, {
+                withCredentials: true
+            });
 
-        if (response.data && response.data.length) {
-            const userId = currentUserId;
+            if (response.data && response.data.length) {
+                const userId = currentUserId;
 
-            const userStatus = response.data.find(item => item.idPracownik === userId);
+                const userStatus = response.data.find(item => item.idPracownik === userId);
 
-            if (userStatus) {
-                setStatusTygodnia(userStatus.Status_tygodnia);
+                if (userStatus) {
+                    setStatusTygodnia(userStatus.Status_tygodnia);
+                } else {
+                    console.log("Brak statusu tygodnia dla użytkownika");
+                    setStatusTygodnia(null);
+                }
             } else {
-                console.log("Brak statusu tygodnia dla użytkownika");
                 setStatusTygodnia(null);
             }
-        } else {
-            setStatusTygodnia(null);
-        }
 
-        // if (response.data && response.data.status) {
+            // if (response.data && response.data.status) {
             //     if (response.data.status === "Zamknięty") {
             //         notification.error({
             //             message: 'Błąd',
@@ -274,10 +274,10 @@ export default function CzasPracyPage() {
             //     }
             // }
 
-    } catch (error) {
-        console.error("Error fetching week status", error);
-    }
-};
+        } catch (error) {
+            console.error("Error fetching week status", error);
+        }
+    };
     //#endregion
 
     //#region handlers
@@ -343,27 +343,27 @@ export default function CzasPracyPage() {
             const dayName = format(day, 'EEEE', { locale: pl });
             const formattedDate = format(day, 'yyyy-MM-dd');
             const dailyHours = hours[formattedDate] || {};
-        
+
             const breakHours = dailyHours.break ? parseFloat(dailyHours.break.split(":")[0]) : 0;
-            
-            const totalDayHours = dailyHours.end && dailyHours.start ? 
-                parseFloat(dailyHours.end.split(":")[0]) - parseFloat(dailyHours.start.split(":")[0]) - breakHours 
+
+            const totalDayHours = dailyHours.end && dailyHours.start ?
+                parseFloat(dailyHours.end.split(":")[0]) - parseFloat(dailyHours.start.split(":")[0]) - breakHours
                 : 0;
-        
+
             let projectDayHours = 0;
-        
+
             additionalProjects.forEach(project => {
                 const projectData = project.hours[formattedDate];
                 if (projectData?.hoursWorked) {
                     projectDayHours += parseFloat(projectData.hoursWorked);
                 }
             });
-        
+
             if (totalDayHours !== projectDayHours) {
                 dayHourMismatch = true;
                 console.log(`Różnica w godzinach dla ${dayName}. Godziny pracy: ${totalDayHours}, godziny w dodatkowych projektach: ${projectDayHours}`);
             }
-        });        
+        });
 
         if (hasMissingFields) {
             notification.error({
@@ -442,9 +442,9 @@ export default function CzasPracyPage() {
                 fetchUserId();
                 const response = await Axios.delete("http://localhost:5000/api/tydzien", {
                     data: {
-                    tydzienRoku: getWeek(currentDate, { weekStartsOn: 1 }),
-                    pracownikId: currentUserId,
-                    year: currentDate.getFullYear(),
+                        tydzienRoku: getWeek(currentDate, { weekStartsOn: 1 }),
+                        pracownikId: currentUserId,
+                        year: currentDate.getFullYear(),
                     },
                     withCredentials: true
                 });
@@ -490,37 +490,37 @@ export default function CzasPracyPage() {
         const doc = new jsPDF();
 
         doc.setFont("OpenSans-Regular", "normal");
-      
+
         // ----- pierwsza ala "tabelka" -----
         const weekNumber = getWeek(currentDate, { locale: pl });
         const dateStart = format(startOfWeek(currentDate, { weekStartsOn: 1 }), 'dd.MM.yyyy');
         const dateEnd = format(endOfWeek(currentDate, { weekStartsOn: 1 }), 'dd.MM.yyyy');
         const status = statusTygodnia.charAt(0).toUpperCase() + statusTygodnia.slice(1);
         const userName = `${Pracownik}`;
-      
+
         const firstTableData = [
-          ['Tydzien ' + weekNumber, `${dateStart} -${dateEnd}`, status, userName],
+            ['Tydzien ' + weekNumber, `${dateStart} -${dateEnd}`, status, userName],
         ];
-      
+
         // odstep od gory
         doc.setFontSize(12);
         doc.text('Raport Tygodniowy', 14, 15);
         doc.setFontSize(10);
-      
+
         doc.autoTable({
-          startY: 20,
-          theme: 'plain',
-          styles: { cellPadding: 3, fontSize: 10 },
-          head: [['', '', '', '']],
-          body: firstTableData,
-          columnStyles: {
-            0: { cellWidth: 40 },
-            1: { cellWidth: 60 },
-            2: { cellWidth: 40 },
-            3: { cellWidth: 60 },
-          },
-          tableWidth: 'wrap',
-          styles: { font: 'OpenSans-Regular', fontStyle: 'normal' },
+            startY: 20,
+            theme: 'plain',
+            styles: { cellPadding: 3, fontSize: 10 },
+            head: [['', '', '', '']],
+            body: firstTableData,
+            columnStyles: {
+                0: { cellWidth: 40 },
+                1: { cellWidth: 60 },
+                2: { cellWidth: 40 },
+                3: { cellWidth: 60 },
+            },
+            tableWidth: 'wrap',
+            styles: { font: 'OpenSans-Regular', fontStyle: 'normal' },
         });
 
         // ----- Druga tabelka -----
@@ -554,7 +554,7 @@ export default function CzasPracyPage() {
         // ten weekly total pod tabelka
         doc.setFontSize(12);
         doc.text(`Razem: ${weeklyTotal} godz.`, 14, doc.lastAutoTable.finalY + 10);
-      
+
         // sygnatury
         doc.setFontSize(10);
         doc.text('____________________', 14, doc.internal.pageSize.height - 30);
@@ -562,11 +562,11 @@ export default function CzasPracyPage() {
         doc.text(`${new Date().toLocaleString()}`, 14, doc.internal.pageSize.height - 20);
         doc.text('____________________', doc.internal.pageSize.width - 60, doc.internal.pageSize.height - 30);
         doc.text('Szef', doc.internal.pageSize.width - 60, doc.internal.pageSize.height - 25);
-      
+
         doc.save(`Raport_Tydzien_${weekNumber}.pdf`);
-      };
-      
-      
+    };
+
+
     //#endregion
 
     //#region Render

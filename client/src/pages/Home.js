@@ -6,6 +6,7 @@ import axios from 'axios';
 
 import GorneMenu from '../Components/GorneMenu';
 import ButtonLewy from '../Components/ButtonLeweMenu';
+import checkUserType from '../utils/accTypeUtils';
 
 export default function HomePage() {
     const [data, setData] = useState([]);
@@ -15,6 +16,18 @@ export default function HomePage() {
     const navigate = useNavigate();
     const location = useLocation();
     const [badgeCount, setBadgeCount] = useState(0);
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [accountType, setAccountType] = useState('');
+
+    useEffect(() => {
+        checkUserType(setAccountType);
+    }, []);
+
+    useEffect(() => {
+        if (accountType === 'Administrator') {
+            setIsAdmin(true);
+        }
+    }, [accountType]);
 
     const handleLogout = async () => {
         try {
@@ -114,7 +127,9 @@ export default function HomePage() {
                         {menu === "Pracownik" && (
                             <>
                                 <ButtonLewy link="pracownik" nazwa='Pracownik' />
-                                <ButtonLewy link="logowanie" nazwa='Logowanie' />
+                                {isAdmin && (
+                                    <ButtonLewy link="logowanie" nazwa='Logowanie' />
+                                )}
                                 <ButtonLewy nazwa='Wyloguj' onClick={handleLogout} />
                             </>
                         )}
@@ -122,15 +137,17 @@ export default function HomePage() {
                             <>
                                 <ButtonLewy link="czas" nazwa='Czas Pracy' />
                                 <ButtonLewy nazwa='Administracja' onClick={toggleSubMenu} />
-                                    {showSubMenu && (
-                                        <div className='ml-5 space-y-2'>
-                                            <ButtonLewy link="projekty" nazwa='Projekty' />
-                                            <ButtonLewy link="urlopy" nazwa='Urlopy' />
-                                            <ButtonLewy link="pojazdy" nazwa='Pojazdy' />
-                                            <ButtonLewy link="archiwum" nazwa='Archiwum' />
-                                        </div>
-                                    )}
-                                <ButtonLewy link="tydzien" nazwa='Tydzien' />
+                                {showSubMenu && (
+                                    <div className='ml-5 space-y-2'>
+                                        <ButtonLewy link="projekty" nazwa='Projekty' />
+                                        <ButtonLewy link="urlopy" nazwa='Urlopy' />
+                                        <ButtonLewy link="pojazdy" nazwa='Pojazdy' />
+                                        <ButtonLewy link="archiwum" nazwa='Archiwum' />
+                                    </div>
+                                )}
+                                {isAdmin && (
+                                    <ButtonLewy link="admin" nazwa='Admin' />
+                                )}
                                 <ButtonLewy link="raporty" nazwa='Raporty' />
                                 <ButtonLewy link="sprawdzsamochod" nazwa='Sprawdź samochód' />
                                 <ButtonLewy nazwa='Wyloguj' onClick={handleLogout} />
@@ -139,14 +156,16 @@ export default function HomePage() {
                         {menu === "PlanTygodnia" && (
                             <>
                                 <ButtonLewy link="plan" nazwa='Plan Tygodnia' />
+                                {isAdmin && (
                                 <ButtonLewy link="zaplanuj" nazwa='Zaplanuj Tydzień' />
+                                )}
                                 <ButtonLewy nazwa='Wyloguj' onClick={handleLogout} />
                             </>
                         )}
                     </div>
                 </nav>
                 <main className=""> {/* to jest główna treść, ten biały box na stronie */}
-                    <GorneMenu setMenu={setMenu}/>
+                    <GorneMenu setMenu={setMenu} />
                     <Outlet />
                 </main>
             </div>

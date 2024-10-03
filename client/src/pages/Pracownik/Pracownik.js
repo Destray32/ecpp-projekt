@@ -10,6 +10,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
 import EditableCell from '../../Components/EditableCells';
+import checkUserType from "../../utils/accTypeUtils";
 
 import { font } from "../../fonts/OpenSans-Regular-normal";
 
@@ -25,6 +26,18 @@ export default function PracownikPage() {
   const [firms, setFirms] = useState([]);
   const [groups, setGroups] = useState([]);
   const searchInput = useRef(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [accountType, setAccountType] = useState('');
+
+  useEffect(() => {
+    checkUserType(setAccountType);
+  }, []);
+
+  useEffect(() => {
+    if (accountType === 'Administrator') {
+      setIsAdmin(true);
+    }
+  }, [accountType]);
 
   const showConfirmModal = (id) => {
     setDeleteId(id);
@@ -204,6 +217,7 @@ export default function PracownikPage() {
       title: 'Akcje',
       key: 'action',
       render: (text, record) => (
+        isAdmin &&
         <span>
           <Link to={`/home/edytuj-pracownika/${record.id}`}>
             <Button className="bg-blue-500 text-white p-1 mx-1">Edytuj</Button>
@@ -251,7 +265,7 @@ export default function PracownikPage() {
       console.log(error);
     }
   };
-  
+
   const fetchGroups = async () => {
     try {
       const response = await axios.get("http://localhost:5000/api/pracownik/grupy", { withCredentials: true });
@@ -266,18 +280,18 @@ export default function PracownikPage() {
 
   const handleSave = async (id, field, value) => {
     try {
-        await axios.put(
-            `http://localhost:5000/api/pracownik/komorka/${id}`,
-            { field: field, value: value },
-            { withCredentials: true }
-        );
-        setTableData(prevData => prevData.map(item =>
-            item.id === id ? { ...item, [field]: value } : item
-        ));
+      await axios.put(
+        `http://localhost:5000/api/pracownik/komorka/${id}`,
+        { field: field, value: value },
+        { withCredentials: true }
+      );
+      setTableData(prevData => prevData.map(item =>
+        item.id === id ? { ...item, [field]: value } : item
+      ));
     } catch (error) {
-        console.error('Update failed:', error);
+      console.error('Update failed:', error);
     }
-};
+  };
 
 
   const printPDF = () => {
@@ -324,7 +338,7 @@ export default function PracownikPage() {
 
   const handleTableChange = (pagination, filters, sorter) => {
     let sortedData = [...tableData];
-  
+
     if (sorter.order) {
       sortedData.sort((a, b) => {
         if (sorter.order === 'ascend') {
@@ -333,7 +347,7 @@ export default function PracownikPage() {
         return sorter.field === 'name' ? b.name.localeCompare(a.name) : b.surname.localeCompare(a.surname);
       });
     }
-  
+
     const appliedFilters = filters || {};
     const filteredDataFromTable = sortedData.filter(item => {
       return Object.keys(appliedFilters).every(key => {
@@ -348,7 +362,7 @@ export default function PracownikPage() {
         return true;
       });
     });
-  
+
     setFilteredData(filteredDataFromTable);
   };
 
@@ -362,10 +376,14 @@ export default function PracownikPage() {
               <Link to="/home/zmien-dane">
                 <Button label="Zmień swoje dane" className="bg-white outline outline-1 outline-gray-500 p-2 mx-2" />
               </Link>
-              <Link to="/home/dodaj-pracownika">
-                <Button label="Dodaj pracownika" className="bg-white outline outline-1 outline-gray-500 p-2 mx-2" />
-              </Link>
-              <Button onClick={printPDF} label="Drukuj listę" className="bg-white outline outline-1 outline-gray-500 p-2 mx-2" />
+              {isAdmin && (
+                <Link to="/home/dodaj-pracownika">
+                  <Button label="Dodaj pracownika" className="bg-white outline outline-1 outline-gray-500 p-2 mx-2" />
+                </Link>
+              )}
+              {isAdmin && (
+                <Button onClick={printPDF} label="Drukuj listę" className="bg-white outline outline-1 outline-gray-500 p-2 mx-2" />
+              )}
             </div>
           </div>
         </div>

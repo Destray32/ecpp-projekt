@@ -8,6 +8,7 @@ import 'jspdf-autotable';
 import { notification } from 'antd';
 
 import AmberBox from "../../Components/AmberBox";
+import checkUserType from "../../utils/accTypeUtils";
 
 import "primereact/resources/themes/lara-light-cyan/theme.css";
 
@@ -18,6 +19,18 @@ export default function PlanTygodniaPage() {
     const [pracownikData, setPracownikData] = useState([]);
     const [selectedRowIds, setSelectedRowIds] = useState([]);
     const [currentDate, setCurrentDate] = useState(new Date());
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [accountType, setAccountType] = useState('');
+
+    useEffect(() => {
+        checkUserType(setAccountType);
+    }, []);
+
+    useEffect(() => {
+        if (accountType === 'Administrator') {
+            setIsAdmin(true);
+        }
+    }, [accountType]);
 
     const from = format(startOfWeek(currentDate, { weekStartsOn: 1 }), 'yyyy-MM-dd');
     const to = format(addWeeks(startOfWeek(currentDate, { weekStartsOn: 1 }), 1), 'yyyy-MM-dd');
@@ -367,6 +380,7 @@ export default function PlanTygodniaPage() {
                         </table>
                     </div>
                 </div>
+                {isAdmin && (
                 <div id="prawa" className="flex flex-col gap-5 mr-2">
                     <AmberBox>
                         <div className="mx-auto flex flex-col justify-between items-center p-4 ">
@@ -401,6 +415,7 @@ export default function PlanTygodniaPage() {
                         </div>
                     </AmberBox>
                 </div>
+                )}
             </div>
         </main>
     )
