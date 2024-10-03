@@ -286,7 +286,7 @@ export default function RaportyPage() {
             <div className="w-auto h-auto bg-blue-700 outline outline-1 outline-black flex flex-row items-center space-x-4 m-2 p-3 text-white">
                 <p>Raporty</p>
             </div>
-            <div className="w-full md:w-auto bg-gray-300 h-full m-2 outline outline-1 outline-gray-500">
+            <div className="w-auto bg-gray-300 h-full m-2 outline outline-1 outline-gray-500">
                 {isAdmin && (
                     <table className="w-full">
                     <tbody className="text-left cursor-pointer">

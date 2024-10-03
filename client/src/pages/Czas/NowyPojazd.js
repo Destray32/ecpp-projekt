@@ -31,17 +31,17 @@ export default function NowyPojazdPage() {
             </div>
             <AmberBox>
                 <div className="flex flex-col items-center space-y-8 p-4 w-full">
-                    <FloatLabel className="w-full md:w-6/12 lg:w-4/12">
+                    <FloatLabel className="w-6/12 lg:w-4/12">
                         <InputText id="nrrej" type="text" className="w-full" value={vehicle.numerRejestracyjny} onChange={(e) => setVehicle({ ...vehicle, numerRejestracyjny: e.target.value })} />
                         <label htmlFor="nrrej">Numer rejestracyjny</label>
                     </FloatLabel>
                     
-                    <FloatLabel className="w-full md:w-6/12 lg:w-4/12">
+                    <FloatLabel className="w-6/12 lg:w-4/12">
                         <InputText id="marka" type="text" className="w-full" value={vehicle.marka} onChange={(e) => setVehicle({ ...vehicle, marka: e.target.value })} />
                         <label htmlFor="marka">Marka</label>
                     </FloatLabel>
                     
-                    <FloatLabel className="w-full md:w-6/12 lg:w-4/12">
+                    <FloatLabel className="w-6/12 lg:w-4/12">
                         <InputText id="uwagi" type="text" className="w-full" value={vehicle.uwagi} onChange={(e) => setVehicle({ ...vehicle, uwagi: e.target.value })} />
                         <label htmlFor="uwagi">Uwagi</label>
                     </FloatLabel>

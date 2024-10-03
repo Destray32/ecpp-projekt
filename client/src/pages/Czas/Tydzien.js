@@ -193,26 +193,24 @@ export default function TydzienPage() {
         <div>
             <AmberBox>
                 <div className="flex flex-col items-center space-y-8 p-4 w-full">
-                    <div className="flex flex-row items-center">
-                        <div className="flex flex-row items-center">
-                            <p className="mr-2">Wybierz tydzień:</p>
-                            <input type="week" value={selectedWeek} onChange={handleWeekChange} />
-                            <div className="ml-4">
-                                <p>
-                                    {weekRange.start && weekRange.end ? ` ${weekRange.start} - ${weekRange.end}` : 'Wybierz tydzień, aby zobaczyć przedział dni'}
-                                </p>
-                            </div>
-                            <Button label="Otwórz tydzień" onClick={handleOtworz}
-                                className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 ml-6" />
-                            <Button label="Zamknij tydzień" onClick={handleZamknij}
-                                className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 ml-6" />
-                            <Button label="Drukuj" onClick={handleDrukuj}
-                                className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 ml-6" />
+                    <div className="flex flex-row items-center justify-evenly w-full space-x-2">
+                        <p className="">Wybierz tydzień:</p>
+                        <input type="week" value={selectedWeek} onChange={handleWeekChange} />
+                        <div className="">
+                            <p>
+                                {weekRange.start && weekRange.end ? ` ${weekRange.start} - ${weekRange.end}` : 'Wybierz tydzień, aby zobaczyć przedział dni'}
+                            </p>
                         </div>
+                        <Button label="Otwórz tydzień" onClick={handleOtworz}
+                            className="p-button-outlined border-2 p-1 bg-white" />
+                        <Button label="Zamknij tydzień" onClick={handleZamknij}
+                            className="p-button-outlined border-2 p-1 bg-white" />
+                        <Button label="Drukuj" onClick={handleDrukuj}
+                            className="p-button-outlined border-2 p-1 bg-white" />
                     </div>
                 </div>
             </AmberBox>
-            <div className="w-full md:w-auto bg-gray-300 h-full m-2 outline outline-1 outline-gray-500">
+            <div className="w-auto bg-gray-300 h-full m-2 outline outline-1 outline-gray-500">
                 <table className="w-full">
                     <thead className="bg-blue-700 text-white">
                         <tr>

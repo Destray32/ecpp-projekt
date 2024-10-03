@@ -52,7 +52,7 @@ export default function PojazdyPage() {
                     </div>
                 </div>
             </AmberBox>
-            <div className="w-full md:w-auto bg-gray-300 h-full m-2 outline outline-1 outline-gray-500">
+            <div className="w-auto bg-gray-300 h-full m-2 outline outline-1 outline-gray-500">
                 <table className="w-full">
                     <thead className="bg-blue-700 text-white">
                         <tr>

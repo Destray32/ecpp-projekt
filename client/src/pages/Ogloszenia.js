@@ -13,6 +13,7 @@ export default function OgloszeniaPage() {
     const [grupy, setGrupy] = useState([]);
     const [form] = Form.useForm();
     const [accountType, setAccountType] = useState(null);
+    const [openAnnouncementId, setOpenAnnouncementId] = useState(null);
 
     useEffect(() => {
         fetchUserAccountType();
@@ -147,6 +148,10 @@ export default function OgloszeniaPage() {
           });
       };
 
+    const toggleAnnouncementDetails = (id) => {
+        setOpenAnnouncementId(openAnnouncementId === id ? null : id);
+    };
+
     return (
         <div className='w-full h-auto flex flex-col items-start justify-start p-2'>
             <div className='w-full h-15 flex flex-row items-start justify-between bg-amber-100 outline outline-1 outline-gray-500 p-2'>
@@ -206,15 +211,24 @@ export default function OgloszeniaPage() {
             <div className='w-full mt-4'>
                 {ogloszenia.length > 0 ? (
                     ogloszenia.map((ogloszenie) => (
-                        <div key={ogloszenie.id} className={`w-auto p-2 border-b border-gray-300 relative ${ogloszenie.przeczytane ? '' : 'bg-orange-100'}`} onClick={() => markAsRead(ogloszenie.id)}>
-                            {accountType === 'Administrator' || accountType === 'Majster' ? (
-                                <CloseOutlined className='text-red-600 text-2xl absolute top-2 right-2 cursor-pointer' onClick={() => showDeleteConfirm(ogloszenie.id)} />
-                            ) : null}
-                            <h2 className='text-xl font-bold'>{ogloszenie.tytul}</h2>
-                            <p className='break-all'>{ogloszenie.tresc}</p>
-                            <p className='text-gray-600'>
-                                <strong>Do:</strong> {ogloszenie.grupa.length > 0 ? ogloszenie.grupa.join(', ') : 'Brak'} | {ogloszenie.osoby.length > 0 ? ogloszenie.osoby.join(', ') : 'Brak'}
-                            </p>
+                        <div key={ogloszenie.id} className={`w-auto p-2 border-b border-gray-300 relative ${ogloszenie.przeczytane ? '' : 'bg-orange-100'}`}>
+                            <h2
+                                className='text-xl font-bold cursor-pointer'
+                                onClick={() => toggleAnnouncementDetails(ogloszenie.id)}
+                            >
+                                {ogloszenie.tytul}
+                            </h2>
+                            {openAnnouncementId === ogloszenie.id && (
+                                <div>
+                                    <p className='break-all'>{ogloszenie.tresc}</p>
+                                    <p className='text-gray-600'>
+                                        <strong>Do:</strong> {ogloszenie.grupa.length > 0 ? ogloszenie.grupa.join(', ') : 'Brak'} | {ogloszenie.osoby.length > 0 ? ogloszenie.osoby.join(', ') : 'Brak'}
+                                    </p>
+                                    {accountType === 'Administrator' || accountType === 'Majster' ? (
+                                        <CloseOutlined className='text-red-600 text-2xl absolute top-2 right-2 cursor-pointer' onClick={() => showDeleteConfirm(ogloszenie.id)} />
+                                    ) : null}
+                                </div>
+                            )}
                         </div>
                     ))
                 ) : (
