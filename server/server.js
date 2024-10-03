@@ -378,13 +378,13 @@ app.put('/api/urlopy/:vacationId', (req, res) => {
 /////////////////////////////////////////
 
 // CZAS > TYDZIEN //
-app.get('/api/tydzien/:numericWeek', authorizeRole('Administrator'), (req, res) => {
+app.get('/api/tydzien/:numericWeek', (req, res) => {
     GetTydzien(req, res, pool);
 });
-app.post('/api/tydzien', authorizeRole('Administrator'), (req, res) => {
+app.post('/api/tydzien', (req, res) => {
     OtworzTydzienCzas(req, res, pool);
 });
-app.delete('/api/tydzien', authorizeRole('Administrator'), (req, res) => {
+app.delete('/api/tydzien', (req, res) => {
     ZamknijTydzienCzas(req, res, pool);
 });
 
