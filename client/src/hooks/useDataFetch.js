@@ -13,11 +13,11 @@ export const useDataFetch = () => {
         const fetchData = async () => {
             try {
                 const [pracownicyRes, firmyRes, zleceniodawcyRes, projektyRes, samochodyRes] = await Promise.all([
-                    Axios.get("http://localhost:5000/api/pracownicy"),
-                    Axios.get("http://localhost:5000/api/firmy"),
-                    Axios.get("http://localhost:5000/api/grupy"),
-                    Axios.get("http://localhost:5000/api/czas/projekty"),
-                    Axios.get("http://localhost:5000/api/pojazdy")
+                    Axios.get("http://47.76.209.242:5000/api/pracownicy"),
+                    Axios.get("http://47.76.209.242:5000/api/firmy"),
+                    Axios.get("http://47.76.209.242:5000/api/grupy"),
+                    Axios.get("http://47.76.209.242:5000/api/czas/projekty"),
+                    Axios.get("http://47.76.209.242:5000/api/pojazdy")
                 ]);
 
                 setPracownicy(pracownicyRes.data.map(p => ({ label: `${p.name} ${p.surname}`, value: `${p.name} ${p.surname}` })));

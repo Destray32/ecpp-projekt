@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const app = express();
 app.use(express.json());
 const port = 5000;
@@ -9,12 +10,14 @@ const cookieParser = require('cookie-parser');
 
 require('dotenv').config();
 
-app.use(cors({
-    origin: 'http://localhost:3000',
-    credentials: true
-}));
+// app.use(cors({
+//     origin: 'http://47.76.209.242:3000',
+//     credentials: true
+// }));
 
 app.use(cookieParser());
+
+app.use(express.static(path.join(__dirname, '../client/build')));
 
 app.use(express.json({ type: 'application/json; charset=utf-8' }));
 app.use(express.urlencoded({ extended: true, parameterLimit: 10000, charset: 'utf-8' }));
@@ -67,7 +70,7 @@ const NODE_ENV = process.env.NODE_ENV;
 const pool = mysql.createPool({
     host: 'localhost',
     user: 'root',
-    password: '',
+    password: 'root',
     database: 'mydb',
     waitForConnections: true,
     connectionLimit: 30,
@@ -479,7 +482,11 @@ app.get('/api/firmy', (req, res) => {
     PobierzDostepneFirmy(req, res, pool);
 });
 
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
+});
+
 app.listen(port, () => {
-    console.log(`Server listening at http://localhost:${port}`);
+    console.log(`Server listening at http://47.76.209.242:${port}`);
 }
 );

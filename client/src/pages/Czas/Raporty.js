@@ -59,7 +59,7 @@ export default function RaportyPage() {
 
     const fetchProjektyPracownicy = async () => {
         try {
-            const response = await axios.get('http://localhost:5000/api/pracownicy', { withCredentials: true });
+            const response = await axios.get('http://47.76.209.242:5000/api/pracownicy', { withCredentials: true });
             const pracownicy = response.data;
             const pracownicyOptions = pracownicy.map(pracownik => ({ label: `${pracownik.name} ${pracownik.surname}`, value: pracownik.id }));
             setAvailablePracownicy(pracownicyOptions);
@@ -70,8 +70,8 @@ export default function RaportyPage() {
 
     const fetchProjektyAndRaport = () => {
         Promise.all([
-            axios.get("http://localhost:5000/api/czas/projekty", { withCredentials: true }),
-            axios.get('http://localhost:5000/api/generujRaport', { withCredentials: true })
+            axios.get("http://47.76.209.242:5000/api/czas/projekty", { withCredentials: true }),
+            axios.get('http://47.76.209.242:5000/api/generujRaport', { withCredentials: true })
         ])
         .then(([projektyResponse, raportResponse]) => {
             const projekty = projektyResponse.data.projekty.map(projekt => ({

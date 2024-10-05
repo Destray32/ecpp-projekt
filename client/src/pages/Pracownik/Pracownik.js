@@ -57,7 +57,7 @@ export default function PracownikPage() {
   };
 
   const handleDelete = (id) => {
-    axios.delete(`http://localhost:5000/api/pracownik/${id}`, { withCredentials: true })
+    axios.delete(`http://47.76.209.242:5000/api/pracownik/${id}`, { withCredentials: true })
       .then((response) => {
         console.log(response);
         fetchEmployees();
@@ -246,7 +246,7 @@ export default function PracownikPage() {
 
   const fetchEmployees = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/pracownicy", { withCredentials: true });
+      const response = await axios.get("http://47.76.209.242:5000/api/pracownicy", { withCredentials: true });
       setTableData(response.data);
       console.log(response.data);
     } catch (error) {
@@ -256,7 +256,7 @@ export default function PracownikPage() {
 
   const fetchFirms = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/pracownik/firmy", { withCredentials: true });
+      const response = await axios.get("http://47.76.209.242:5000/api/pracownik/firmy", { withCredentials: true });
       setFirms(response.data.map(firm => ({
         id: firm.idFirma,
         name: firm.Nazwa_firmy
@@ -268,7 +268,7 @@ export default function PracownikPage() {
 
   const fetchGroups = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/pracownik/grupy", { withCredentials: true });
+      const response = await axios.get("http://47.76.209.242:5000/api/pracownik/grupy", { withCredentials: true });
       setGroups(response.data.map(group => ({
         id: group.idGrupa_urlopowa,
         name: group.Zleceniodawca
@@ -281,7 +281,7 @@ export default function PracownikPage() {
   const handleSave = async (id, field, value) => {
     try {
       await axios.put(
-        `http://localhost:5000/api/pracownik/komorka/${id}`,
+        `http://47.76.209.242:5000/api/pracownik/komorka/${id}`,
         { field: field, value: value },
         { withCredentials: true }
       );

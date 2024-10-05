@@ -108,7 +108,7 @@ export default function PlanTygodniaPage() {
 
 
     const handleDrukujGrupe = () => {
-        Axios.get(`http://localhost:5000/api/planTygodnia/drukuj?group=${group.name}`, { withCredentials: true })
+        Axios.get(`http://47.76.209.242:5000/api/planTygodnia/drukuj?group=${group.name}`, { withCredentials: true })
             .then(res => {
                 console.log(res.data);
             })
@@ -123,7 +123,7 @@ export default function PlanTygodniaPage() {
 
     const handleUsunZaznaczone = async () => {
         try {
-            await Axios.delete('http://localhost:5000/api/planTygodnia', {
+            await Axios.delete('http://47.76.209.242:5000/api/planTygodnia', {
                 withCredentials: true,
                 data: { id: selectedRowIds }
             });
@@ -146,7 +146,7 @@ export default function PlanTygodniaPage() {
             groupId: grupaPrzenies
         };
     
-        Axios.put('http://localhost:5000/api/planTygodnia', payload, { withCredentials: true })
+        Axios.put('http://47.76.209.242:5000/api/planTygodnia', payload, { withCredentials: true })
             .then(res => {
                 fetchData();
                 setSelectedRowIds([]);
@@ -162,8 +162,8 @@ export default function PlanTygodniaPage() {
             const previousWeekEnd = format(startOfWeek(currentDate, { weekStartsOn: 1 }), 'yyyy-MM-dd');
     
             const [currentWeekResponse, previousWeekResponse] = await Promise.all([
-                Axios.get(`http://localhost:5000/api/planTygodnia/zaplanuj?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`, { withCredentials: true }),
-                Axios.get(`http://localhost:5000/api/planTygodnia/zaplanuj?from=${encodeURIComponent(previousWeekStart)}&to=${encodeURIComponent(previousWeekEnd)}`, { withCredentials: true })
+                Axios.get(`http://47.76.209.242:5000/api/planTygodnia/zaplanuj?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`, { withCredentials: true }),
+                Axios.get(`http://47.76.209.242:5000/api/planTygodnia/zaplanuj?from=${encodeURIComponent(previousWeekStart)}&to=${encodeURIComponent(previousWeekEnd)}`, { withCredentials: true })
             ]);
     
             const currentWeekData = currentWeekResponse.data;
@@ -185,7 +185,7 @@ export default function PlanTygodniaPage() {
             }));
     
             if (entriesToAdd.length > 0) {
-                await Axios.post('http://localhost:5000/api/planTygodniaPrev', entriesToAdd, { withCredentials: true }); 
+                await Axios.post('http://47.76.209.242:5000/api/planTygodniaPrev', entriesToAdd, { withCredentials: true }); 
                 fetchData();
                 notification.success({
                     message: 'Sukces',
@@ -221,7 +221,7 @@ export default function PlanTygodniaPage() {
     }, [currentDate]);
 
     const fetchData = () => {
-        Axios.get('http://localhost:5000/api/grupy', { withCredentials: true })
+        Axios.get('http://47.76.209.242:5000/api/grupy', { withCredentials: true })
             .then(res => {
                 const groups = res.data.grupy;
                 const filteredGroups = groups.filter(group => group.Plan_tygodniaV === 1);
@@ -229,7 +229,7 @@ export default function PlanTygodniaPage() {
             })
             .catch(err => console.error(err));
     
-        const url = `http://localhost:5000/api/planTygodnia/zaplanuj?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}${group ? `&group=${encodeURIComponent(group.name)}` : ''}`;
+        const url = `http://47.76.209.242:5000/api/planTygodnia/zaplanuj?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}${group ? `&group=${encodeURIComponent(group.name)}` : ''}`;
         Axios.get(url, { withCredentials: true })
             .then(res => {
                 const data = res.data;
@@ -263,7 +263,7 @@ export default function PlanTygodniaPage() {
         );
         setPracownikData(updatedData);
     
-        Axios.put(`http://localhost:5000/api/planTygodnia/${employeeId}`, {
+        Axios.put(`http://47.76.209.242:5000/api/planTygodnia/${employeeId}`, {
             M1_5: selectedM,
         }, { withCredentials: true })
             .then((res) => {

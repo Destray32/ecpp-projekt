@@ -16,8 +16,8 @@ const EmployeeDropdown = ({ onEmployeeSelect, scheduledEmployees }) => {
     try {
       // Fetch both employees and vehicles
       const [employeesRes, vehiclesRes] = await Promise.all([
-        Axios.get('http://localhost:5000/api/pracownicy', { withCredentials: true }),
-        Axios.get('http://localhost:5000/api/pracownik/pojazdy', { withCredentials: true })
+        Axios.get('http://47.76.209.242:5000/api/pracownicy', { withCredentials: true }),
+        Axios.get('http://47.76.209.242:5000/api/pracownik/pojazdy', { withCredentials: true })
       ]);
   
       const VehiclesArray = Array.isArray(vehiclesRes.data) ? vehiclesRes.data : [];
