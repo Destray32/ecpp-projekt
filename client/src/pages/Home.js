@@ -162,7 +162,7 @@ export default function HomePage() {
                                     </div>
                                 )}
                                     {isAdmin && (
-                                    <ButtonLewy link="admin" nazwa='Admin' onClick={closeMobileMenu} />
+                                        <ButtonLewy link="tydzien" nazwa='Tydzien' onClick={closeMobileMenu} />
                                     )}
                                 <ButtonLewy link="raporty" nazwa='Raporty' onClick={closeMobileMenu} />
                                     <ButtonLewy link="sprawdzsamochod" nazwa='Sprawdź samochód' onClick={closeMobileMenu} />
