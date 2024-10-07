@@ -15,6 +15,13 @@ require('dotenv').config();
 //     credentials: true
 // }));
 
+app.use(cors({
+    origin: function(origin, callback) {
+        return callback(null, true);
+    },
+    credentials: true
+}));
+
 app.use(cookieParser());
 
 app.use(express.static(path.join(__dirname, '../client/build')));
