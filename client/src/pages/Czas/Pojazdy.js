@@ -31,7 +31,6 @@ export default function PojazdyPage() {
     const handleDelete = (id) => {
         axios.delete(`http://localhost:5000/api/pojazdy/${id}`, { withCredentials: true })
             .then((response) => {
-                console.log(response);
                 setTableData((prevData) => prevData.filter((item) => item.id !== id));
             });
     }

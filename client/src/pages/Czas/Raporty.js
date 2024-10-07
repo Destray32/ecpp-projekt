@@ -12,6 +12,7 @@ import PDF_SprawozdaniePodsumowanie from "../../Components/Raporty/PDF_Sprawozda
 import { notification } from "antd";
 
 import checkUserType from "../../utils/accTypeUtils";
+import { add } from "date-fns";
 
 
 export default function RaportyPage() {
@@ -137,7 +138,6 @@ export default function RaportyPage() {
 
                 switch (wybranyRaport) {
                     case "Sprawozdanie z działalności - szczegółowe":
-                        console.log(Projekt);
                         PDF_SprawozdanieSzczegolowe(raport, startDate, endDate, Projekt);
                         break;
                     case "Sprawozdanie z działalności - podsumowanie":
@@ -157,7 +157,26 @@ export default function RaportyPage() {
 
             
     const handleGenerateWszystkie = () => {
-        // Implementation for generating all reports
+        if(!ignorujDaty && (!startDate || !endDate)) {
+            notification.info({
+                message: 'Informacja',
+                description: 'Wypełnij wszystkie wymagane pola',
+                placement: 'topRight',
+            });
+            return;
+        }	
+
+        switch (wybranyRaport) {
+            case "Sprawozdanie z działalności - szczegółowe":
+                PDF_SprawozdanieSzczegolowe(raport, startDate, endDate);
+                console.log(raport);
+                break;
+            case "Sprawozdanie z działalności - podsumowanie":
+                PDF_SprawozdaniePodsumowanie(raport, startDate, endDate);
+                break;
+            default:
+                break;
+        }
     };
 
     const przejscieDoInterfejsuFirma = () => {
@@ -223,6 +242,8 @@ export default function RaportyPage() {
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
                         disabled={ignorujDaty}
+                        
+                        
                     />
                     <input
                         type="date"
@@ -262,6 +283,7 @@ export default function RaportyPage() {
                                 onChange={(e) => setProjekt(e.value)}
                                 showClear
                                 placeholder="Wybierz projekt"
+                                emptyMessage="Brak projektów"
                             />
                         )}
                         
