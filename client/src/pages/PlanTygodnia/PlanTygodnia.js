@@ -6,6 +6,10 @@ import Axios from "axios";
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { notification } from 'antd';
+import { Dialog } from "primereact/dialog";
+import { Checkbox } from "primereact/checkbox";
+
+import PDF_Drukujgrupe from "../../Components/PlanTygodniaV/PDF_Drukujgrupe";
 
 import AmberBox from "../../Components/AmberBox";
 import checkUserType from "../../utils/accTypeUtils";
@@ -21,6 +25,9 @@ export default function PlanTygodniaPage() {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [isAdmin, setIsAdmin] = useState(false);
     const [accountType, setAccountType] = useState('');
+    const [dialogVisible, setDialogVisible] = useState(false);
+    const [selectedGroups, setSelectedGroups] = useState([]);
+
 
     useEffect(() => {
         checkUserType(setAccountType);
@@ -44,58 +51,6 @@ export default function PlanTygodniaPage() {
         setCurrentDate(addWeeks(currentDate, 1));
     };
 
-    const generatePDF = () => {
-        const doc = new jsPDF();
-
-        doc.setFont("OpenSans-Regular", "normal");
-
-        const columns = [
-            { header: "Nazwisko", dataKey: "data" },
-            { header: "Imię", dataKey: "dane" },
-            { header: "Grupa", dataKey: "pojazd" },
-            { header: "M1", dataKey: "m1" },
-            { header: "M2", dataKey: "m2" },
-            { header: "M3", dataKey: "m3" },
-            { header: "M4", dataKey: "m4" },
-            { header: "M5", dataKey: "m5" },
-            { header: "Opis", dataKey: "opis" }
-        ];
-
-        const rows = pracownikData.map(item => ({
-            data: item.surname,
-            dane: item.name,
-            pojazd: item.vacationGroup,
-            m1: item.M1,
-            m2: item.M2,
-            m3: item.M3,
-            m4: item.M4,
-            m5: item.M5,
-            opis: item.description
-        }));
-
-        doc.autoTable({
-            head: [columns.map(col => col.header)],
-            body: rows.map(row => columns.map(col => row[col.dataKey])),
-            startY: 20,
-            theme: 'striped',
-            styles: {
-                font: "OpenSans-Regular",
-                halign: 'center'
-            },
-            headStyles: {
-                font: "OpenSans-Regular",
-                fontStyle: "bold"
-            }
-        });
-
-        doc.text("Grupa", 14, 10);
-        //doc.save("drukuj-grupe.pdf");
-        const pdfBlob = doc.output('blob');
-        const pdfURL = URL.createObjectURL(pdfBlob);
-
-        window.open(pdfURL, '_blank');
-    };
-
     const getWeekNumber = (date) => {
         return getWeek(date, { weekStartsOn: 1 });
     };
@@ -108,17 +63,42 @@ export default function PlanTygodniaPage() {
 
 
     const handleDrukujGrupe = () => {
-        Axios.get(`http://47.76.209.242:5000/api/planTygodnia/drukuj?group=${group.name}`, { withCredentials: true })
+        setDialogVisible(true); 
+    };
+
+    const handlePrintSelectedGroups = () => {
+        const url = `http://47.76.209.242:5000/api/planTygodnia/zaplanuj?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
+        Axios.get(url, { withCredentials: true })
             .then(res => {
-                console.log(res.data);
+                const Data = res.data;
+                const selectedGroupsData = Data.filter(item => selectedGroups.some(g => g.id === item.grupaId));
+                const sortedData = selectedGroupsData.sort((a, b) => {
+                    if (a.pracownikId && !b.pracownikId) {
+                        return -1;
+                    } else if (!a.pracownikId && b.pracownikId) {
+                        return 1;
+                    }
+                    return 0;
+                });
+                PDF_Drukujgrupe(sortedData, from, to);
+                setDialogVisible(false); 
             })
-            .catch(err => console.error(err));
-    }
+            .catch(err => {
+                console.error(err);
+            });
+    };
+
+    const handleGroupSelection = (group, checked) => {
+        const newSelectedGroups = checked
+            ? [...selectedGroups, group]
+            : selectedGroups.filter(g => g.id !== group.id);
+        setSelectedGroups(newSelectedGroups);
+    };
+
+
 
     const handleDrukuj = () => {
-        // logika drukowania na frontendzie
-        console.log('Drukuj');
-        generatePDF();
+        PDF_Drukujgrupe(pracownikData, from, to);
     }
 
     const handleUsunZaznaczone = async () => {
@@ -211,16 +191,22 @@ export default function PlanTygodniaPage() {
     
     const handleChangeGroupFilter = (e) => {
         const selectedGroup = e.value;
-        setGroup(selectedGroup);
     
-        fetchData();
+        if (!selectedGroup) {
+            setGroup(null);  
+            fetchData(null);    
+        } else {
+            setGroup(selectedGroup);
+            fetchData(selectedGroup);
+        }
     };
 
     useEffect(() => {
         fetchData();
     }, [currentDate]);
 
-    const fetchData = () => {
+    const fetchData = (selectedGroup = group) => {
+
         Axios.get('http://47.76.209.242:5000/api/grupy', { withCredentials: true })
             .then(res => {
                 const groups = res.data.grupy;
@@ -229,7 +215,9 @@ export default function PlanTygodniaPage() {
             })
             .catch(err => console.error(err));
     
-        const url = `http://47.76.209.242:5000/api/planTygodnia/zaplanuj?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}${group ? `&group=${encodeURIComponent(group.name)}` : ''}`;
+ 
+        const url = `http://47.76.209.242:5000/api/planTygodnia/zaplanuj?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}${selectedGroup ? `&group=${encodeURIComponent(selectedGroup.name)}` : ''}`;
+        
         Axios.get(url, { withCredentials: true })
             .then(res => {
                 const data = res.data;
@@ -239,12 +227,14 @@ export default function PlanTygodniaPage() {
                     } else if (!a.pracownikId && b.pracownikId) {
                         return 1;
                     }
-                    return 0; 
+                    return 0;
                 });
                 setPracownikData(sortedData);
             })
             .catch(err => console.error(err));
     };
+    
+    
 
     // funkcja do obsługi zmiany stanu checkboxa w pierwszej kolumnie
     const handleRowCheckboxChange = (employeeId) => {
@@ -303,6 +293,25 @@ export default function PlanTygodniaPage() {
                 <div className="flex gap-24">
                     <Button label="Drukuj grupe" className="bg-white w-[9rem] h-[3rem]"
                         text raised onClick={handleDrukujGrupe} />
+                    <Dialog header="Wybierz Grupy do Drukowania" visible={dialogVisible} style={{ width: '30vw' }}
+                        onHide={() => setDialogVisible(false)}>
+                        <div className="p-grid">
+                            {availableGroups.map((group) => (
+                                <div key={group.id} className="p-col-12">
+                                    <Checkbox
+                                        inputId={group.id}
+                                        value={group.name}
+                                        onChange={(e) => handleGroupSelection(group, e.checked)}
+                                        checked={selectedGroups.some(g => g.id === group.id)}
+                                    />
+                                    <label htmlFor={group.id} className="p-checkbox-label">{group.name}</label>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="p-grid">
+                            <Button label="Drukuj Wybrane" className="bg-white w-[9rem] h-[3rem]" text raised onClick={handlePrintSelectedGroups} />
+                        </div>
+                    </Dialog>
                     <Button label="Drukuj" className="bg-white w-[9rem] h-[3rem]"
                         text raised onClick={handleDrukuj} />
                 </div>

@@ -5,6 +5,17 @@ import { notification } from 'antd';
 const PDF_AnalizaSwiadczenPracowniczych = (raport, startDate, endDate, pracownik) => {
     const doc = new jsPDF('landscape', 'pt', 'a4');
 
+    const formatDate = (date) => {
+        const d = new Date(date);
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = String(d.getFullYear()).slice(-2);
+        return `${day}-${month}-${year}`;
+    };
+
+    const formattedStartDate = formatDate(startDate);
+    const formattedEndDate = formatDate(endDate);
+
     doc.setFont("OpenSans-Regular", "normal");
     doc.setFontSize(14);
     doc.setTextColor(0, 102, 204);
@@ -13,7 +24,7 @@ const PDF_AnalizaSwiadczenPracowniczych = (raport, startDate, endDate, pracownik
     doc.setFontSize(12);
     doc.setTextColor(50, 50, 50);
     const okresYPosition = 40; 
-    doc.text(`Okres: ${startDate} - ${endDate}`, 14, okresYPosition);
+    doc.text(`Okres: ${formattedStartDate} - ${formattedEndDate}`, 14, okresYPosition);
 
     const currentDate = new Date().toLocaleDateString('pl-PL');
     const pageWidth = doc.internal.pageSize.getWidth();
