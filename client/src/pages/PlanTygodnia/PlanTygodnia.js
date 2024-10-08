@@ -98,20 +98,33 @@ export default function PlanTygodniaPage() {
 
 
     const handleDrukuj = () => {
+        if(!pracownikData.length) {
+            notification.error({
+                message: 'Błąd',
+                description: 'Brak danych',
+                placement: 'topRight',
+            });
+            return;
+        }
         PDF_Drukujgrupe(pracownikData, from, to);
     }
 
     const handleUsunZaznaczone = async () => {
         try {
+            setPracownikData((prevData) => prevData.filter(item => !selectedRowIds.includes(item.id)));
+    
             await Axios.delete('http://localhost:5000/api/planTygodnia', {
                 withCredentials: true,
                 data: { id: selectedRowIds }
             });
             fetchData();
+            setSelectedRowIds([]);
+
         } catch (err) {
             console.error(err);
         }
     };
+    
     
     
     // obsługa przyciusku przeniesienia zaznaczonych pracowników do innej grupy
