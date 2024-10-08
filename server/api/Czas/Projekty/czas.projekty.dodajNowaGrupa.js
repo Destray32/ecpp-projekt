@@ -1,7 +1,7 @@
 function DodajGrupe(req, res, db) {
     const { zleceniodawca, cennik, stawka, czyPlanTygV } = req.body;
 
-    if (!zleceniodawca || !cennik || !stawka) {
+    if (!zleceniodawca) {
         return res.status(400).json({ message: 'Brak wymaganych danych' });
     }
 

@@ -11,14 +11,12 @@ export default function NowaGrupaPage() {
     const [planTygV, setPlanTygV] = useState(false);
     const [form, setForm] = useState({
         zleceniodawca: '',
-        cennik: '',
-        stawka: '',
+        cennik: null,
+        stawka: null,
         czyPlanTygV: 0
     });
 
     const handleSave = () => {
-        console.log('Saving data...', form);
-
         Axios.post('http://47.76.209.242:5000/api/czas/grupa', {
             zleceniodawca: form.zleceniodawca,
             cennik: form.cennik,
