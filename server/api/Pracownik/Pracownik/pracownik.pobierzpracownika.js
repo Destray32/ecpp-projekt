@@ -38,9 +38,9 @@ function PobierzPracownika(req, res) {
             informacje_o_firmie io ON p.FK_Informacje_o_firmie = io.idInformacje_o_firmie
         JOIN
             Firma f ON io.FK_idFirma = f.idFirma
-        JOIN
+        LEFT JOIN
             grupa_urlopowa gu ON io.FK_idGrupa_urlopowa = gu.idGrupa_urlopowa
-        JOIN
+        LEFT JOIN
             pojazdy poj ON io.FK_idPojazdy = poj.idPojazdy
         WHERE
             p.idPracownik = ?;
