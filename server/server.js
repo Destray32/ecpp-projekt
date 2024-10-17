@@ -83,6 +83,7 @@ const Companies = require('./api/companies');
 const Logins = require('./api/logins');
 const GetImie = require('./api/home.getImie');
 const ZamkniecieStrony = require('./api/zamkniecieStrony');
+const UzupelnoneDane = require('./api/uzupelnioneDane');
 
 // Grupy
 const UsuwanieGrupy = require('./api/Grupy/grupy.usuwaniegrupy');
@@ -206,6 +207,10 @@ app.get('/api/check-token', (req, res) => {
 
 app.get('/api/imie', (req, res) => {
     GetImie(req, res);
+});
+
+app.get('/api/dane-uzupelnione', (req, res) => {
+    UzupelnoneDane(req, res);
 });
 
 // PRACOWNIK > PRACOWNIK //

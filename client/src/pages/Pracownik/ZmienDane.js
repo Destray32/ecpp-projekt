@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Form, DatePicker, Input, Checkbox, Radio, Select, ConfigProvider, Button } from 'antd';
+import { Form, DatePicker, Input, Checkbox, Radio, Select, ConfigProvider, Button, notification } from 'antd';
 import plPL from 'antd/lib/locale/pl_PL';
 import axios from 'axios';
 import dayjs from 'dayjs';
@@ -23,7 +23,7 @@ export default function ZmienDanePage() {
                 form.setFieldsValue({
                     surename: res.data.surename,
                     name: res.data.name,
-                    brithday: dayjs(res.data.brithday, 'DD.MM.YYYY'),
+                    brithday: res.data.brithday ? dayjs(res.data.brithday, 'DD.MM.YYYY') : null,
                     pesel: res.data.pesel,
                     street: res.data.street,
                     zip: res.data.zip,
@@ -36,7 +36,7 @@ export default function ZmienDanePage() {
                     relative1: res.data.relative1,
                     relative2: res.data.relative2,
                     NIP: res.data.NIP,
-                    startDate: dayjs(res.data.startDate, 'DD.MM.YYYY'),
+                    startDate: res.data.startDate ? dayjs(res.data.startDate, 'DD.MM.YYYY') : null,
                     endDate: res.data.endDate ? dayjs(res.data.endDate, 'DD.MM.YYYY') : null,
                     paycheckCode: res.data.paycheckCode,
                     vehicle: res.data.vehicle,
@@ -84,6 +84,7 @@ export default function ZmienDanePage() {
         axios.put(`http://localhost:5000/api/pracownik/zmienMoje`, values, { withCredentials: true })
             .then(res => {
                 console.log(res);
+                notification.success({ message: 'Zapisano zmiany' });
             })
             .catch(err => {
                 console.log(err);
@@ -131,13 +132,13 @@ export default function ZmienDanePage() {
                                 <Form.Item label="Ulica / Nr domu" name="street" rules={[{ required: true, message: 'Wprowadź ulicę' }]}>
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Kod pocztowy" name="zip" rules={[{ required: true, message: 'Wprowadź kod pocztowy' }]}>
+                                <Form.Item label="Kod pocztowy" name="zip" rules={[{ required: true, message: 'Wprowadź kod pocztowy' }]} >
                                     <Input />
                                 </Form.Item>
                                 <Form.Item label="Miasto" name="city" rules={[{ required: true, message: 'Wprowadź miasto' }]}>
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Kraj" name="country" rules={[{ required: true, message: 'Wprowadź kraj' }]}>
+                                <Form.Item label="Kraj" name="country" >
                                     <Input />
                                 </Form.Item>
                             </div>

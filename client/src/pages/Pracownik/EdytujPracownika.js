@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Form, DatePicker, Input, Checkbox, Radio, Select, ConfigProvider, Button } from 'antd';
+import { Form, DatePicker, Input, Checkbox, Radio, Select, ConfigProvider, Button, notification } from 'antd';
 import plPL from 'antd/lib/locale/pl_PL';
 import axios from 'axios';
 import dayjs from 'dayjs';
@@ -86,6 +86,7 @@ export default function EdytujPracownikaPage() {
         axios.put(`http://localhost:5000/api/pracownik/${id}`, values, { withCredentials: true })
             .then(res => {
                 console.log(res);
+                notification.success({ message: 'Pomyślnie zaktualizowano pracownika' });
             })
             .catch(err => {
                 console.log(err);
@@ -139,7 +140,7 @@ export default function EdytujPracownikaPage() {
                                 <Form.Item label="Miasto" name="city" rules={[{ required: true, message: 'Wprowadź miasto' }]}>
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Kraj" name="country" rules={[{ required: true, message: 'Wprowadź kraj' }]}>
+                                <Form.Item label="Kraj" name="country" >
                                     <Input />
                                 </Form.Item>
                             </div>

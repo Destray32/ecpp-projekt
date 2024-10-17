@@ -150,6 +150,10 @@ export default function OgloszeniaPage() {
 
     const toggleAnnouncementDetails = (id) => {
         setOpenAnnouncementId(openAnnouncementId === id ? null : id);
+        const announcement = ogloszenia.find(ogloszenie => ogloszenie.id === id);
+        if (!announcement.przeczytane) {
+            markAsRead(id);
+        }
     };
 
     return (

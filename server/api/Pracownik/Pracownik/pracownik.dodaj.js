@@ -73,7 +73,7 @@ function DodajPracownika(req, res) {
             const valuesDaneOsobowe = [
                 name,
                 surename,
-                new Date(brithday).toISOString().slice(0, 19).replace('T', ' '),
+                brithday ? new Date(brithday).toISOString().slice(0, 19).replace('T', ' ') : null,
                 pesel,
                 street,
                 zip,

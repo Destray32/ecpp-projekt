@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import moment from 'moment';
-import { Button, Badge } from 'antd';
+import { Button, Badge, Modal } from 'antd';
 import { MenuOutlined } from '@ant-design/icons';
 import axios from 'axios';
 
@@ -31,6 +31,12 @@ export default function HomePage() {
         }
     }, [accountType]);
 
+    useEffect(() => {
+        if (location.pathname !== '/home/zmien-dane' && location.pathname !== '/home') {
+            daneUzupelnione();
+        }
+    }, [location.pathname]);
+
     const handleLogout = async () => {
         try {
             await axios.post('http://localhost:5000/api/logout', {}, { withCredentials: true });
@@ -49,6 +55,23 @@ export default function HomePage() {
             }
         }
     }
+
+    const daneUzupelnione = async () => {
+        try {
+            const response = await axios.get('http://localhost:5000/api/dane-uzupelnione', { withCredentials: true });
+            if (response.data === false && location.pathname !== '/home/zmien-dane') {
+                Modal.error({
+                    title: 'Uzupełnij dane',
+                    content: 'Aby móc kontynuować, uzupełnij swoje dane osobowe.',
+                    onOk: () => {
+                        navigate('/home/zmien-dane');
+                    }
+                });
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
 
     const getImie = async () => {
         try {
