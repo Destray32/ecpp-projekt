@@ -50,7 +50,7 @@ export default function LoginPage() {
 
             console.log(response.data.message);
 
-            navigate('/home');
+            navigate('/home/czas');
         } catch (error) {
             console.error(error);
         }
@@ -63,7 +63,7 @@ export default function LoginPage() {
             const testPassword = 'tomek1';
             const response = await axios.post('http://localhost:5000/api/logowanie', { firma: testFirma, login, password: testPassword }, { withCredentials: true });
 
-            navigate('/home');
+            navigate('/home/czas');
         } catch (error) {
             console.error(error);
         }

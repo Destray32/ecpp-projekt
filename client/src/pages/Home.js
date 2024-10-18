@@ -165,46 +165,46 @@ export default function HomePage() {
                         <div className="space-y-2 max-h-[80%]">
                             {menu === "Pracownik" && (
                                 <>
-                                    <ButtonLewy link="pracownik" nazwa='Pracownik' onClick={closeMobileMenu} />
+                                    <ButtonLewy link="pracownik" nazwa='Pracownik' onClick={closeMobileMenu} isActive={location.pathname === '/home/pracownik'} />
                                     {isAdmin && (
-                                    <ButtonLewy link="logowanie" nazwa='Logowanie' onClick={closeMobileMenu} />
+                                    <ButtonLewy link="logowanie" nazwa='Logowanie' onClick={closeMobileMenu} isActive={location.pathname === '/home/logowanie'} />
                                     )}
-                                <ButtonLewy nazwa='Wyloguj' onClick={() => { handleLogout(); closeMobileMenu(); }} />
+                                <ButtonLewy nazwa='Wyloguj' onClick={() => { handleLogout(); closeMobileMenu(); }} isActive={false} />
                                 </>
                             )}
                             {menu === "Czas" && (
                                 <>
-                                    <ButtonLewy link="czas" nazwa='Czas Pracy' onClick={closeMobileMenu} />
+                                    <ButtonLewy link="czas" nazwa='Czas Pracy' onClick={closeMobileMenu} isActive={location.pathname === '/home/czas'} />
                                     <ButtonLewy nazwa='Administracja' onClick={() => { toggleSubMenu(); }} />
                                 {showSubMenu && (
                                     <div className='ml-5 space-y-2'>
-                                        <ButtonLewy link="projekty" nazwa='Projekty' onClick={closeMobileMenu} />
-                                        <ButtonLewy link="urlopy" nazwa='Urlopy' onClick={closeMobileMenu} />
-                                        <ButtonLewy link="pojazdy" nazwa='Pojazdy' onClick={closeMobileMenu} />
-                                        <ButtonLewy link="archiwum" nazwa='Archiwum' onClick={closeMobileMenu} />
+                                        <ButtonLewy link="projekty" nazwa='Projekty' onClick={closeMobileMenu} isActive={location.pathname === '/home/projekty'} />
+                                        <ButtonLewy link="urlopy" nazwa='Urlopy' onClick={closeMobileMenu} isActive={location.pathname === '/home/urlopy'} />
+                                        <ButtonLewy link="pojazdy" nazwa='Pojazdy' onClick={closeMobileMenu} isActive={location.pathname === '/home/pojazdy'} />
+                                        <ButtonLewy link="archiwum" nazwa='Archiwum' onClick={closeMobileMenu} isActive={location.pathname === '/home/archiwum'} />
                                     </div>
                                 )}
                                     {isAdmin && (
-                                        <ButtonLewy link="tydzien" nazwa='Tydzien' onClick={closeMobileMenu} />
+                                        <ButtonLewy link="tydzien" nazwa='Tydzien' onClick={closeMobileMenu} isActive={location.pathname === '/home/tydzien'} />
                                     )}
-                                <ButtonLewy link="raporty" nazwa='Raporty' onClick={closeMobileMenu} />
-                                    <ButtonLewy link="sprawdzsamochod" nazwa='Sprawdź samochód' onClick={closeMobileMenu} />
-                                    <ButtonLewy nazwa='Wyloguj' onClick={() => { handleLogout(); closeMobileMenu(); }} />
+                                <ButtonLewy link="raporty" nazwa='Raporty' onClick={closeMobileMenu} isActive={location.pathname === '/home/raporty'} />
+                                    <ButtonLewy link="sprawdzsamochod" nazwa='Sprawdź samochód' onClick={closeMobileMenu} isActive={location.pathname === '/home/sprawdzsamochod'} />
+                                    <ButtonLewy nazwa='Wyloguj' onClick={() => { handleLogout(); closeMobileMenu(); }} isActive={false} />
                                 </>
                             )}
                             {menu === "PlanTygodnia" && (
                                 <>
-                                    <ButtonLewy link="plan" nazwa='Plan Tygodnia' onClick={closeMobileMenu} />
+                                    <ButtonLewy link="plan" nazwa='Plan Tygodnia' onClick={closeMobileMenu} isActive={location.pathname === '/home/plan'} />
                                     {isAdmin && (
-                                <ButtonLewy link="zaplanuj" nazwa='Zaplanuj Tydzień' onClick={closeMobileMenu} />
+                                <ButtonLewy link="zaplanuj" nazwa='Zaplanuj Tydzień' onClick={closeMobileMenu} isActive={location.pathname === '/home/zaplanuj'} />
                                     )}
-                                <ButtonLewy nazwa='Wyloguj' onClick={() => { handleLogout(); closeMobileMenu(); }} />
+                                <ButtonLewy nazwa='Wyloguj' onClick={() => { handleLogout(); closeMobileMenu(); }} isActive={false} />
                                 </>
                             )}
                         </div>
                     </nav>
                     <main className={`w-full min-w-[1250px]`}>
-                        <GorneMenu setMenu={setMenu}  />
+                        <GorneMenu setMenu={setMenu} activeMenu={menu} />
                         <Outlet />
                     </main>
                 </div>
