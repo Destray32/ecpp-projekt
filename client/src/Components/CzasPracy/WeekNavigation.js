@@ -30,7 +30,10 @@ const WeekNavigation = ({ currentDate, setCurrentDate, Pracownik, setPracownik, 
                     <div className="w-full flex flex-row items-center p-4 justify-between">
                         <div className="flex items-center space-x-2">
                             <Button icon="pi pi-arrow-left" className="p-button-outlined" onClick={previousWeek} />
-                            <p className="text-lg font-bold">Tydzień {getWeek(currentDate, { weekStartsOn: 1 })} : {formatWeek(currentDate)}</p>
+                            <div className="flex flex-col items-center space-y-0">
+                                <p>{formatWeek(currentDate)}</p>
+                                <p className="text-lg font-bold">Tydzień {getWeek(currentDate, { weekStartsOn: 1 })}</p>
+                            </div>
                             <Button icon="pi pi-arrow-right" iconPos="right" className="p-button-outlined" onClick={nextWeek} />
                         </div>
                         <span className={`text-lg font-bold ${statusTyg === "Otwarty" ? "text-green-600" : "text-red-600"}`}>{statusTyg}</span>

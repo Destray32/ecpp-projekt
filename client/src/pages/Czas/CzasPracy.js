@@ -30,6 +30,10 @@ export default function CzasPracyPage() {
     const [daysOfWeek, setDaysOfWeek] = useState(generateWeek(startOfWeek(new Date(), { weekStartsOn: 1 })));
     const [samochody, setSamochody] = useState([]);
     const [statusTygodnia, setStatusTygodnia] = useState(null);
+    const [przekroczoneGodziny, setPrzekroczoneGodziny] = useState(false);
+    const [isOver10h, setIsOver10h] = useState([
+        false, false, false, false, false, false, false
+    ]);
 
     const startOfCurrentWeek = startOfWeek(currentDate, { weekStartsOn: 1 });
 
@@ -392,6 +396,15 @@ export default function CzasPracyPage() {
             return;
         }
 
+        if (przekroczoneGodziny) {
+            notification.warning({
+                message: 'Przekroczone godziny',
+                description: `W dniach: ${daysOfWeek.filter((day, index) => isOver10h[index]).map(day => format(day, 'EEEE', { locale: pl })).join(', ')} przekroczono limit 10ciu godzin`,
+                placement: 'topRight',
+            });
+        }
+
+
         try {
             const response = await Axios.post("http://localhost:5000/api/czas", {
                 pracownikName: Pracownik,
@@ -586,6 +599,9 @@ export default function CzasPracyPage() {
                 hours={hours}
                 setHours={setHours}
                 statusTyg={statusTygodnia}
+                setPrzekroczone={setPrzekroczoneGodziny}
+                isOver10h={isOver10h}
+                setIsOver10h={setIsOver10h}
             />
             <AdditionalProjects
                 Firma={Firma}
