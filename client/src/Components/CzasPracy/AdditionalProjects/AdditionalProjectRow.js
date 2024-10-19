@@ -31,12 +31,13 @@ const AdditionalProjectRow = React.memo(({
     return (
         <div className="mt-4">
             <div className="flex items-center space-x-2">
-                <div className="w-1/3 flex flex-row justify-between">
+                <div className="w-1/3 flex flex-row justify-between translate-y-10">
                     <div className=''>
                         <span className=''>
                             <button
                                 onClick={() => onDelete(project.id)}
-                                className="text-red-500 font-bold border-collapse border border-red-500 p-1 rounded"
+                                className="text-red-500 font-bold border-collapse 
+                                border border-red-500 p-1 rounded"
                                 disabled={statusTyg === "Zamkniety"}
                             >
                                 Usuń
@@ -90,6 +91,7 @@ const AdditionalProjectRow = React.memo(({
                 </div>
                 <span>Razem: {projectTotal} godz.</span>
             </div>
+            <div className='h-[2px] w-full bg-szary mt-2'></div>
         </div>
     );
 });

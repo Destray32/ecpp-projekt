@@ -44,6 +44,17 @@ const AdditionalProjects = ({
     const [filteredProjekty, setFilteredProjekty] = useState([]);
     const [activeProject, setActiveProject] = useState(null);
     const [activeDate, setActiveDate] = useState(null);
+    const [additionalProjectsTotalTime, setAdditionalProjectsTotalTime] = useState(0.0);
+
+    useEffect(() => {
+        let total = 0.0;
+        additionalProjects.forEach(project => {
+            Object.values(project.hours).forEach(hour => {
+                total += parseFloat(hour.hoursWorked);
+            });
+        });
+        setAdditionalProjectsTotalTime(total);
+    }, [additionalProjects]);
 
 
     useEffect(() => {
@@ -259,6 +270,10 @@ const AdditionalProjects = ({
                             onActivate={handleProjectActivation}
                         />
                     ))}
+                    <div className='flex justify-between mt-4'>
+                        <div></div>
+                        <p className='font-bold'>Suma: {additionalProjectsTotalTime}:00</p>
+                    </div>
                     {/* Render additional fields if a project is active */}
                     {activeProject && activeDate && (
                         <div className='border border-gray-500 p-4 mt-2'>
