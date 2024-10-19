@@ -287,11 +287,6 @@ export default function CzasPracyPage() {
     //#region handlers
     const handleSave = async () => {
         const totalHours = calculateWeeklyTotal(hours, daysOfWeek);
-
-        let hasMissingFields = false; // stan dla sprawdzania czy brakuje pola w dodatkowych projektach
-        let hasMissingStartEndBreak = false; // stan dla sprawdzania czy godziny sa ustawione dla dodatkowych projektow ale nie ma start, end, lub break
-        let dayHourMismatch = false; // stan dla sprawdzania czy godziny przypisane do projektow zgadzaja sie z godzinami pracy
-
         const projectNames = additionalProjects.map(project => project.label);
 
         const formattedAdditionalProjects = additionalProjects.map(project => ({
@@ -316,6 +311,59 @@ export default function CzasPracyPage() {
                 };
             })
         }));
+
+
+        if (przekroczoneGodziny) {
+            notification.warning({
+                message: 'Przekroczone godziny',
+                description: `W dniach: ${daysOfWeek.filter((day, index) => isOver10h[index]).map(day => format(day, 'EEEE', { locale: pl })).join(', ')} przekroczono limit 10ciu godzin`,
+                placement: 'topRight',
+            });
+        }
+
+
+        try {
+            const response = await Axios.post("http://localhost:5000/api/czas", {
+                pracownikName: Pracownik,
+                projektyName: Projekty,
+                weekData: getWeek(currentDate, { weekStartsOn: 1 }),
+                year: currentDate.getFullYear(),
+                days: daysOfWeek.map(day => {
+                    const formattedDate = format(day, 'yyyy-MM-dd');
+                    const hoursData = hours[formattedDate] || {};
+
+                    return {
+                        dayOfWeek: format(day, 'EEEE', { locale: pl }),
+                        start: hoursData.start || "00:00",
+                        end: hoursData.end || "00:00",
+                        break: hoursData.break || "00:00",
+                    };
+                }),
+                totalHours: totalHours,
+                additionalProjects: formattedAdditionalProjects,
+            }, { withCredentials: true });
+
+            if (response.status === 200) {
+                notification.success({
+                    message: 'Success',
+                    description: 'Zapisano dane',
+                    placement: 'topRight',
+                });
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const handleZamknijTydzien = async () => {
+        
+        let hasMissingFields = false; // stan dla sprawdzania czy brakuje pola w dodatkowych projektach
+        let hasMissingStartEndBreak = false; // stan dla sprawdzania czy godziny sa ustawione dla dodatkowych projektow ale nie ma start, end, lub break
+        let dayHourMismatch = false; // stan dla sprawdzania czy godziny przypisane do projektow zgadzaja sie z godzinami pracy
+
+        const totalHours = calculateWeeklyTotal(hours, daysOfWeek);
+        let projectTotalHours = additionalProjects.map(project => calculateProjectTotal(project, daysOfWeek));
+        projectTotalHours = projectTotalHours.reduce((acc, curr) => acc + curr, 0);
 
         additionalProjects.forEach(project => {
             daysOfWeek.forEach(day => {
@@ -395,53 +443,6 @@ export default function CzasPracyPage() {
             });
             return;
         }
-
-        if (przekroczoneGodziny) {
-            notification.warning({
-                message: 'Przekroczone godziny',
-                description: `W dniach: ${daysOfWeek.filter((day, index) => isOver10h[index]).map(day => format(day, 'EEEE', { locale: pl })).join(', ')} przekroczono limit 10ciu godzin`,
-                placement: 'topRight',
-            });
-        }
-
-
-        try {
-            const response = await Axios.post("http://localhost:5000/api/czas", {
-                pracownikName: Pracownik,
-                projektyName: Projekty,
-                weekData: getWeek(currentDate, { weekStartsOn: 1 }),
-                year: currentDate.getFullYear(),
-                days: daysOfWeek.map(day => {
-                    const formattedDate = format(day, 'yyyy-MM-dd');
-                    const hoursData = hours[formattedDate] || {};
-
-                    return {
-                        dayOfWeek: format(day, 'EEEE', { locale: pl }),
-                        start: hoursData.start || "00:00",
-                        end: hoursData.end || "00:00",
-                        break: hoursData.break || "00:00",
-                    };
-                }),
-                totalHours: totalHours,
-                additionalProjects: formattedAdditionalProjects,
-            }, { withCredentials: true });
-
-            if (response.status === 200) {
-                notification.success({
-                    message: 'Success',
-                    description: 'Zapisano dane',
-                    placement: 'topRight',
-                });
-            }
-        } catch (error) {
-            console.error(error);
-        }
-    };
-
-    const handleZamknijTydzien = async () => {
-        const totalHours = calculateWeeklyTotal(hours, daysOfWeek);
-        let projectTotalHours = additionalProjects.map(project => calculateProjectTotal(project, daysOfWeek));
-        projectTotalHours = projectTotalHours.reduce((acc, curr) => acc + curr, 0);
 
         if (projectTotalHours !== totalHours) {
             notification.error({
