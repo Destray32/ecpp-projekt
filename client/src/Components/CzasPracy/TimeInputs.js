@@ -79,27 +79,59 @@ const TimeInputs = ({ daysOfWeek, hours, setHours, statusTyg, setPrzekroczone, i
     };
 
     const formatTimeValue = (value) => {
+        // usuwanie zer z przodu
         let cleanValue = value.replace(/\D/g, '');
+        
         let hours = '00';
         let minutes = '00';
-
-        if (cleanValue.length === 1) {
-            hours = cleanValue.padStart(2, '0');
-        } else if (cleanValue.length === 2) {
+        
+        if (cleanValue.length <= 2) {
+            // 1 lub 2 cyfry - godziny
             hours = cleanValue.padStart(2, '0');
         } else if (cleanValue.length === 3) {
+            // 3 cyfry - pierwsza to godziny, reszta to minuty
             hours = cleanValue.slice(0, 1).padStart(2, '0');
-            minutes = '30';
-        } else if (cleanValue.length === 4) {
+            minutes = cleanValue.slice(1, 3);
+        } else if (cleanValue.length >= 4) {
+            // 4 lub więcej cyfr - pierwsze dwie to godziny, reszta to minuty
             hours = cleanValue.slice(0, 2).padStart(2, '0');
-            minutes = '30';
+            minutes = cleanValue.slice(2, 4);
+        }
+        
+        let parsedHours = parseInt(hours, 10);
+        let parsedMinutes = parseInt(minutes, 10);
+        
+        if (isNaN(parsedHours) || parsedHours > 23) {
+            parsedHours = 23;
+        } else if (parsedHours < 0) {
+            parsedHours = 0;
         }
 
-        // Validate hours and minutes
-        if (parseInt(hours, 10) > 23) hours = '23';
-
+        if (isNaN(parsedMinutes)) {
+            parsedMinutes = 0;
+        } else if (parsedMinutes >= 0 && parsedMinutes < 15) {
+            parsedMinutes = 0;
+        } else if (parsedMinutes >= 15 && parsedMinutes < 45) {
+            parsedMinutes = 30;
+        } else if (parsedMinutes >= 45 && parsedMinutes < 60) {
+            parsedMinutes = 0;
+            parsedHours += 1;
+            if (parsedHours > 23) {
+                parsedHours = 23;
+            }
+        } else {
+            // poza zakresem => ustaw na 0
+            parsedMinutes = 0;
+        }
+        
+        // formatowanie
+        hours = parsedHours.toString().padStart(2, '0');
+        minutes = parsedMinutes.toString().padStart(2, '0');
+        
         return `${hours}:${minutes}`;
     };
+    
+    
 
     const handleTimeBlur = (day, type, value) => {
         const formattedValue = formatTimeValue(value);
