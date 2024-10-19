@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { format, getDay } from 'date-fns';
+import { format, getDay, set } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { calculateDailyTotal, calculateWeeklyTotal } from '../../utils/dateUtils';
 
@@ -24,10 +24,41 @@ import { calculateDailyTotal, calculateWeeklyTotal } from '../../utils/dateUtils
  * 
  * <TimeInputs daysOfWeek={daysOfWeek} hours={hours} setHours={setHours} />
  */
-const TimeInputs = ({ daysOfWeek, hours, setHours, statusTyg }) => {
+const TimeInputs = ({ daysOfWeek, hours, setHours, statusTyg, setPrzekroczone, isOver10h, setIsOver10h }) => {
     const [globalStart, setGlobalStart] = useState('');
     const [globalBreak, setGlobalBreak] = useState('');
     const [globalEnd, setGlobalEnd] = useState('');
+
+
+
+    useEffect(() => {
+        daysOfWeek.forEach(day => {
+            const dayKey = format(day, 'yyyy-MM-dd');
+            const dayHours = hours[dayKey];
+            const dailyTotal = calculateDailyTotal(dayHours);
+            if (dailyTotal > 10) {
+                setIsOver10h(prev => ({
+                    ...prev,
+                    [getDay(day)]: true
+                }));
+            } else {
+                setIsOver10h(prev => ({
+                    ...prev,
+                    [getDay(day)]: false
+                }));
+            }
+        });
+    }, [hours]);
+
+    useEffect(() => {
+        for (let i = 0; i < 7; i++) {
+            if (isOver10h[i]) {
+                setPrzekroczone(true);
+                return;
+            }
+        }
+        setPrzekroczone(false);
+    }, [isOver10h]);
 
     // resetuje globalne godziny pracy po zmianie dni tygodnia
     useEffect(() => {
@@ -153,7 +184,7 @@ const TimeInputs = ({ daysOfWeek, hours, setHours, statusTyg }) => {
                                 onChange={(e) => handleTimeInputChange(format(day, 'yyyy-MM-dd'), 'start', e.target.value)}
                                 onBlur={(e) => handleTimeBlur(format(day, 'yyyy-MM-dd'), 'start', e.target.value)}
                                 disabled={getDay(day) === 0 || statusTyg === "Zamkniety"}
-                                className="w-20 p-2 border border-gray-300 rounded"
+                                className={`w-20 p-2 border border-gray-300 rounded ${isOver10h[getDay(day)] ? 'bg-orange-300' : ''}`}
                                 placeholder="HH:MM"
                                 maxLength="5"
                             />
@@ -183,7 +214,7 @@ const TimeInputs = ({ daysOfWeek, hours, setHours, statusTyg }) => {
                                 onChange={(e) => handleTimeInputChange(format(day, 'yyyy-MM-dd'), 'break', e.target.value)}
                                 onBlur={(e) => handleTimeBlur(format(day, 'yyyy-MM-dd'), 'break', e.target.value)}
                                 disabled={getDay(day) === 0 || statusTyg === "Zamkniety"}
-                                className="w-20 p-2 border border-gray-300 rounded"
+                                className={`w-20 p-2 border border-gray-300 rounded ${isOver10h[getDay(day)] ? 'bg-orange-300' : ''}`}
                                 placeholder="HH:MM"
                                 maxLength="5"
                             />
@@ -213,7 +244,7 @@ const TimeInputs = ({ daysOfWeek, hours, setHours, statusTyg }) => {
                                 onChange={(e) => handleTimeInputChange(format(day, 'yyyy-MM-dd'), 'end', e.target.value)}
                                 onBlur={(e) => handleTimeBlur(format(day, 'yyyy-MM-dd'), 'end', e.target.value)}
                                 disabled={getDay(day) === 0 || statusTyg === "Zamkniety"}
-                                className="w-20 p-2 border border-gray-300 rounded"
+                                className={`w-20 p-2 border border-gray-300 rounded ${isOver10h[getDay(day)] ? 'bg-orange-300' : ''}`}
                                 placeholder="HH:MM"
                                 maxLength="5"
                             />
@@ -234,8 +265,12 @@ const TimeInputs = ({ daysOfWeek, hours, setHours, statusTyg }) => {
                     })}
                 </div>
 
-                <div className="text-right mt-6 font-bold self-end">
+                <div className={`text-right mt-6 font-bold self-end ${(calculateWeeklyTotal(hours, daysOfWeek) > 60) ? 'text-red-500' : 'text-black' }`}>
                     <p>Razem: {calculateWeeklyTotal(hours, daysOfWeek)} godz.</p>
+                    {(calculateWeeklyTotal(hours, daysOfWeek) > 60) ?
+                        <p className="text-xs"><strong>Pilne</strong> skontaktuj się z Olafem lub Pawłem</p>
+                        : null
+                    }
                 </div>
             </div>
         </div>
