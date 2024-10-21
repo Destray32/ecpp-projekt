@@ -384,6 +384,11 @@ export default function PracownikPage() {
               {isAdmin && (
                 <Button onClick={printPDF} label="Drukuj listę" className="bg-white outline outline-1 outline-gray-500 p-2 mx-2" />
               )}
+              {isAdmin && (
+                <Link to="/home/zablokowani-pracownicy">
+                <Button label="Zablokowani pracownicy" className="bg-white outline outline-1 outline-gray-500 p-2 mx-2" />
+                </Link>
+                )}
             </div>
           </div>
         </div>

@@ -100,6 +100,8 @@ const PobierzPracownicyFirme = require('./api/Pracownik/Pracownik/pacownik.pobie
 const PobierzPracownicyGrupy = require('./api/Pracownik/Pracownik/pracownik.pobierzgrupy');
 const PobierzPracownicyPojazd = require('./api/Pracownik/Pracownik/pracownik.pobierzpojazd');
 const KomorkaPracownika = require('./api/Pracownik/Pracownik/pracownik.komorka');
+const GetBlockedUsers = require('./api/Pracownik/Pracownik/pracownik.getBlockedUsers');
+const OdblokujPracownika = require('./api/Pracownik/Pracownik/pracownik.unblock');
 
 // Czas > Czas Pracy
 const ZapiszCzasPracy = require('./api/Czas/CzasPracy/czas.czaspracy.zapisz');
@@ -107,6 +109,8 @@ const PobierzCzasPracy = require('./api/Czas/CzasPracy/czas.czaspracy.pobierz');
 const GetCzasProjekt = require('./api/Czas/CzasPracy/czas.czaspracy.getCzasProjekt');
 const PobierzDodaneProjekty = require('./api/Czas/CzasPracy/czas.czaspracy.projektyDodane');
 const UsunDodatkowyProject = require('./api/Czas/CzasPracy/czas.czaspracy.usun');
+const SetWarnings = require('./api/Czas/CzasPracy/czas.czaspracy.setWarnings');
+const GetBlockStatus = require('./api/Czas/CzasPracy/czas.czaspracy.getBlockStatus');
 
 // Plan Tygodnia
 const DostepneGrupy = require('./api/Grupy/grupy.dostepnegrupy');
@@ -222,6 +226,14 @@ app.route('/api/pracownicy')
         DodajPracownika(req, res);
     });
 
+app.get('/api/pracownik/blocked', authorizeRole('Administrator'), (req, res) => {
+    GetBlockedUsers(req, res, pool);
+});
+
+app.put('/api/pracownik/unblock/:id', authorizeRole('Administrator'), (req, res) => {
+    OdblokujPracownika(req, res, pool);
+});
+
 app.get('/api/pracownik/firmy', (req, res) => {
     PobierzPracownicyFirme(req, res);
 });
@@ -269,6 +281,14 @@ app.route('/api/czas')
     })
     .post((req, res) => {
         ZapiszCzasPracy(req, res, pool);
+    });
+
+app.route('/api/czas/warnings')
+    .post((req, res) => {
+        SetWarnings(req, res, pool);
+    })
+    .get((req, res) => {
+        GetBlockStatus(req, res, pool);
     });
 
 app.route('/api/czas/projekt')

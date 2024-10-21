@@ -9,8 +9,11 @@ import { Modal } from 'antd';
  * @param {Function} props.handleCloseWeek - Funkcja obsługująca zamknięcie tygodnia
  * @param {Function} props.handleOpenWeek - Funkcja obsługująca otwarcie tygodnia
  * @param {Function} props.handlePrintReport - Funkcja obsługująca drukowanie raportu
+ * @param {string} props.statusTyg - Status tygodnia
+ * @param {string} props.userType - Typ użytkownika
+ * @param {boolean} props.blockStatus - Status blokady użytkownika - jeśli przekracza 60h w tygodniu czesto
  */
-const PrzyciskAkcji = ({ handleSave, handleCloseWeek, handleOpenWeek, handlePrintReport, statusTyg, userType }) => {
+const PrzyciskAkcji = ({ handleSave, handleCloseWeek, handleOpenWeek, handlePrintReport, statusTyg, userType, blockStatus }) => {
     const handleOpenModal = () => {
         Modal.confirm({
             title: 'Czy na pewno chcesz zamknąć tydzień?',
@@ -22,6 +25,7 @@ const PrzyciskAkcji = ({ handleSave, handleCloseWeek, handleOpenWeek, handlePrin
     };
 
     return (
+        blockStatus === false ?
         <div className="w-auto h-full m-2 p-3 bg-amber-100 outline outline-1 outline-gray-500 flex flex-col space-y-4">
             <div className="w-full h-2/5 flex flex-col space-y-2 items-start">
                 <div className="w-full h-2/6">
@@ -56,6 +60,7 @@ const PrzyciskAkcji = ({ handleSave, handleCloseWeek, handleOpenWeek, handlePrin
                 </div>
             </div>
         </div>
+        : null
     );
 };
 

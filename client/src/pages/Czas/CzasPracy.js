@@ -34,6 +34,7 @@ export default function CzasPracyPage() {
     const [isOver10h, setIsOver10h] = useState([
         false, false, false, false, false, false, false
     ]);
+    const [blockStatus, setBlockStatus] = useState(false);
 
     const startOfCurrentWeek = startOfWeek(currentDate, { weekStartsOn: 1 });
 
@@ -45,6 +46,7 @@ export default function CzasPracyPage() {
         fetchFirmy();
         fetchZleceniodawcy();
         fetchProjekty();
+        fetchBlockStatus();
     }, []);
 
     useEffect(() => {
@@ -70,6 +72,7 @@ export default function CzasPracyPage() {
         if (currentUserId) {
             fetchStatusTygodnia();
         }
+        fetchBlockStatus();
     }, [currentUserId, currentDate]);
 
     useEffect(() => {
@@ -80,6 +83,24 @@ export default function CzasPracyPage() {
     //#endregion
 
     //#region fetching
+    const fetchBlockStatus = async () => {
+        try {
+            const response = await Axios.get("http://localhost:5000/api/czas/warnings", {
+                withCredentials: true
+            });
+            setBlockStatus(false);
+        } catch (error) {
+            if (error.response && error.response.status === 403) {
+                notification.error({
+                    message: 'Konto zablokowane',
+                    description: 'Skontaktuj się z administratorem',
+                    placement: 'topRight',
+                });
+                setBlockStatus(true);
+            }
+        }
+    }
+
     const fetchUserId = async () => {
         try {
             await Axios.get("http://localhost:5000/api/pracownicy", { withCredentials: true })
@@ -356,7 +377,7 @@ export default function CzasPracyPage() {
     };
 
     const handleZamknijTydzien = async () => {
-        
+
         let hasMissingFields = false; // stan dla sprawdzania czy brakuje pola w dodatkowych projektach
         let hasMissingStartEndBreak = false; // stan dla sprawdzania czy godziny sa ustawione dla dodatkowych projektow ale nie ma start, end, lub break
         let dayHourMismatch = false; // stan dla sprawdzania czy godziny przypisane do projektow zgadzaja sie z godzinami pracy
@@ -454,6 +475,23 @@ export default function CzasPracyPage() {
         } else {
             try {
                 fetchUserId();
+                try {
+                    const warning_response = await Axios.post("http://localhost:5000/api/czas/warnings", {
+                        weeklyHours: totalHours,
+                        id: currentUserId,
+                    }, { withCredentials: true });
+
+                    if (warning_response.status === 403) {
+                        notification.error({
+                            message: 'Konto zablokowane',
+                            description: 'Skontaktuj się z administratorem',
+                            placement: 'topRight',
+                        });
+                    }
+                } catch (error) {
+                    console.error(error);
+                }
+
                 const response = await Axios.delete("http://localhost:5000/api/tydzien", {
                     data: {
                         tydzienRoku: getWeek(currentDate, { weekStartsOn: 1 }),
@@ -603,6 +641,7 @@ export default function CzasPracyPage() {
                 setPrzekroczone={setPrzekroczoneGodziny}
                 isOver10h={isOver10h}
                 setIsOver10h={setIsOver10h}
+                blockStatus={blockStatus}
             />
             <AdditionalProjects
                 Firma={Firma}
@@ -621,8 +660,16 @@ export default function CzasPracyPage() {
                 loggedUserName={Pracownik}
                 currentDate={currentDate}
                 statusTyg={statusTygodnia}
+                blockStatus={blockStatus}
             />
-            <ActionButtons handleSave={handleSave} handleCloseWeek={handleZamknijTydzien} handleOpenWeek={handleOtworzTydzien} handlePrintReport={handleDrukujRaport} statusTyg={statusTygodnia} userType={userType} />
+            <ActionButtons handleSave={handleSave} 
+            handleCloseWeek={handleZamknijTydzien} 
+            handleOpenWeek={handleOtworzTydzien} 
+            handlePrintReport={handleDrukujRaport} 
+            statusTyg={statusTygodnia} 
+            userType={userType} 
+            blockStatus={blockStatus}
+            />
         </div>
     );
     //#endregion
