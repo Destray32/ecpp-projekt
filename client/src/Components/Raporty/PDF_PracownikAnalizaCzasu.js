@@ -1,6 +1,5 @@
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-import { font } from "../../fonts/OpenSans-Regular-normal";
 import { notification } from 'antd';
 
 const convertDateFormat = (dateString) => {
@@ -10,8 +9,9 @@ const convertDateFormat = (dateString) => {
 
 const PDF_PracownikAnalizaCzasu = (raport, startDate, endDate, pracownik) => {
     const doc = new jsPDF('landscape', 'pt', 'a4');
+    doc.addFont('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-Regular.ttf', 'Roboto', 'normal');
+    doc.setFont('Roboto');
 
-    doc.setFont("OpenSans-Regular", "normal");
     doc.setFontSize(14);
     doc.setTextColor(0, 102, 204);
     doc.text("Pracownik Analiza czasu - działalność", 14, 20);
@@ -85,13 +85,15 @@ const PDF_PracownikAnalizaCzasu = (raport, startDate, endDate, pracownik) => {
                 fillColor: [238, 238, 223, 255], 
                 textColor: [0, 0, 0], 
                 lineColor: [0, 0, 0], 
+                font: 'Roboto'
             },
             styles: { 
                 cellPadding: 3,
                 fontSize: 11,
                 halign: 'center',
                 lineColor: [0, 0, 0],
-                lineWidth: 0.1
+                lineWidth: 0.1,
+                font: 'Roboto'
             },
             columnStyles: {
                 0: { cellWidth: 200, halign: 'left', overflow: 'linebreak' },
@@ -101,7 +103,7 @@ const PDF_PracownikAnalizaCzasu = (raport, startDate, endDate, pracownik) => {
             tableWidth: 'auto', 
             didDrawCell: (data) => {
                 if (data.section === 'body' && data.row.index === tableData.length - 1) {
-                    doc.setFont("helvetica", "bold");
+                    doc.setFont("Roboto");
                 }
             }
         });
