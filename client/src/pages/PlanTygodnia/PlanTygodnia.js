@@ -389,36 +389,36 @@ export default function PlanTygodniaPage() {
                                         <td className="border-r">
                                         <input
                                             type="radio"
-                                            checked={item.m_value === 'm1'}
-                                            onChange={() => handleRadioChange(item.id, 'm1')}
+                                            checked={item.m_value === 'M1'}
+                                            onChange={() => handleRadioChange(item.id, 'M1')}
                                         />
                                         </td>
                                         <td className="border-r">
                                             <input
                                                 type="radio"
-                                                checked={item.m_value === 'm2'}
-                                                onChange={() => handleRadioChange(item.id, 'm2')}
+                                                checked={item.m_value === 'M2'}
+                                                onChange={() => handleRadioChange(item.id, 'M2')}
                                             />
                                         </td>
                                         <td className="border-r">
                                             <input
                                                 type="radio"
-                                                checked={item.m_value === 'm3'}
-                                                onChange={() => handleRadioChange(item.id, 'm3')}
+                                                checked={item.m_value === 'M3'}
+                                                onChange={() => handleRadioChange(item.id, 'M3')}
                                             />
                                         </td>
                                         <td className="border-r">
                                             <input
                                                 type="radio"
-                                                checked={item.m_value === 'm4'}
-                                                onChange={() => handleRadioChange(item.id, 'm4')}
+                                                checked={item.m_value === 'M4'}
+                                                onChange={() => handleRadioChange(item.id, 'M4')}
                                             />
                                         </td>
                                         <td className="border-r">
                                             <input
                                                 type="radio"
-                                                checked={item.m_value === 'm5'}
-                                                onChange={() => handleRadioChange(item.id, 'm5')}
+                                                checked={item.m_value === 'M5'}
+                                                onChange={() => handleRadioChange(item.id, 'M5')}
                                             />
                                         </td>
                                         <td className="border-r">{item.Opis}</td>
