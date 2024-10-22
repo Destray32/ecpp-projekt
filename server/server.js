@@ -148,6 +148,7 @@ const EdytujUrlop = require('./api/Czas/Urlopy/czas.urlopy.edytujUrlop');
 const PobierzPojazdy = require('./api/Czas/Pojazdy/pojazdy.pobierz');
 const UsunPojazd = require('./api/Czas/Pojazdy/pojazdy.usun');
 const DodajPojazd = require('./api/Czas/Pojazdy/pojazdy.dodaj');
+const EdytujPojazd = require('./api/Czas/Pojazdy/pojazdy.edytuj');
 
 // Czas > Tydzien
 const GetTydzien = require('./api/Czas/Tydzien/czas.tydzien.getTydzien');
@@ -430,11 +431,19 @@ app.route('/api/pojazdy')
         DodajPojazd(req, res, pool);
     });
 
-app.delete('/api/pojazdy/:id', authorizeRole('Administrator'), (req, res) => {
-    UsunPojazd(req, res, pool);
-});
-/////////////////////////////////////////
 
+app.route('/api/pojazdy/:id')
+    .get(authorizeRole('Administrator'), (req, res) => {
+        PobierzPojazdy(req, res, pool);
+    })
+    .delete(authorizeRole('Administrator'), (req, res) => {
+        UsunPojazd(req, res, pool);
+    })
+    .put(authorizeRole('Administrator'), (req, res) => {
+        EdytujPojazd(req, res, pool);
+    });
+
+////////////////////////////////////////
 // CZAS > SPRAWDZ SAMOCHOD //
 app.get('/api/samochody', (req, res) => {
     PobierzSamochody(req, res, pool);

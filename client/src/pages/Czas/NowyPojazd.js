@@ -17,15 +17,17 @@ export default function NowyPojazdPage() {
     const handleSave = () => {
         axios.post("http://localhost:5000/api/pojazdy", vehicle, { withCredentials: true })
             .then((response) => {
-                console.log(response);
                 notification.success({ message: 'Pomyślnie dodano nowy pojazd' });
             })
             .catch((error) => {
-                console.log(error);
-                notification.error({ message: 'Błąd podczas dodawania pojazdu' });
-            }
-        );
+                if (error.response) {
+                    notification.error({ message: error.response.data });
+                } else {
+                    notification.error({ message: 'Wystąpił nieznany błąd' });
+                }
+            });
     }
+    
 
     return (
         <div>

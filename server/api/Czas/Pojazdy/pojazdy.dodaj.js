@@ -8,11 +8,13 @@ function DodajPojazd(req, res, db) {
 
     db.query(sql, (err, result) => {
         if (err) {
-            console.log(err);
-            res.status(400).send('Błąd dodawania pojazdu');
-        } else {
-            res.status(200).send('Dodano pojazd');
+            if (err.code === 'ER_DUP_ENTRY') {
+                return res.status(400).send('Pojazd o podanym numerze rejestracyjnym już istnieje');
+            }
+            console.log(err); 
+            return res.status(500).send('Błąd dodawania pojazdu');
         }
+        res.status(200).send('Dodano pojazd');
     });
 }
 
