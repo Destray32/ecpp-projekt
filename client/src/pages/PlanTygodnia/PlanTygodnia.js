@@ -33,6 +33,7 @@ export default function PlanTygodniaPage() {
         checkUserType(setAccountType);
     }, []);
 
+
     useEffect(() => {
         if (accountType === 'Administrator') {
             setIsAdmin(true);
@@ -204,7 +205,7 @@ export default function PlanTygodniaPage() {
     
     const handleChangeGroupFilter = (e) => {
         const selectedGroup = e.value;
-    
+
         if (!selectedGroup) {
             setGroup(null);  
             fetchData(null);    
@@ -246,6 +247,24 @@ export default function PlanTygodniaPage() {
             })
             .catch(err => console.error(err));
     };
+
+    const handleWheelScroll = (e) => {
+        const currentIndex = availableGroups.findIndex((g) => g.name === group?.name);
+        if (currentIndex !== -1) {
+            let nextIndex;
+            if (e.deltaY < 0) {
+                // Scroll up
+                nextIndex = currentIndex === 0 ? availableGroups.length - 1 : currentIndex - 1;
+            } else {
+                // Scroll down
+                nextIndex = (currentIndex + 1) % availableGroups.length;
+            }
+            const nextGroup = availableGroups[nextIndex];
+            setGroup(nextGroup);  // Update the selected group
+            fetchData(nextGroup);  // Fetch data for the new group
+        }
+    };
+    
     
     
 
@@ -293,13 +312,20 @@ export default function PlanTygodniaPage() {
                                 <Button icon="pi pi-arrow-right" iconPos="right" className="p-button-outlined" onClick={nextWeek} />
                             </div>
                             </div>
-                            <div>
-                                <span>Grupa</span>
-                                <Dropdown value={group} onChange={handleChangeGroupFilter}
-                                    options={availableGroups} optionLabel="name"
-                                    editable placeholder="Wybierz grupę" autoComplete='off'
-                                    showClear className="ml-4 md:w-14rem p-4" />
+                            <div className="dropdown-container" onWheel={handleWheelScroll}>
+                            <span>Grupa</span>
+                                <Dropdown 
+                                    value={group} 
+                                    onChange={handleChangeGroupFilter}
+                                    options={availableGroups} 
+                                    optionLabel="name"
+                                    placeholder="Wybierz grupę" 
+                                    autoComplete='off'
+                                    showClear 
+                                    className="ml-4 w-64 p-2"
+                                />
                             </div>
+
                         </div>
                     </div>
                 </div>
