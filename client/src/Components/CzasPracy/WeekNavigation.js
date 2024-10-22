@@ -3,6 +3,7 @@ import { Button } from 'primereact/button';
 import { Dropdown } from "primereact/dropdown";
 import { getWeek, subWeeks, addWeeks } from 'date-fns';
 import { formatWeek } from '../../utils/dateUtils';
+import { useRef } from 'react';
 
 /**
  * Komponent nawigacji tygodniowej.
@@ -22,6 +23,12 @@ import { formatWeek } from '../../utils/dateUtils';
 const WeekNavigation = ({ currentDate, setCurrentDate, Pracownik, setPracownik, pracownicy, userType, statusTyg }) => {
     const previousWeek = () => setCurrentDate(subWeeks(currentDate, 1));
     const nextWeek = () => setCurrentDate(addWeeks(currentDate, 1));
+    const dropdownRef = useRef(null);
+    const openDropdown = () => {
+            if (dropdownRef.current) {
+                dropdownRef.current.show(); // Programmatically open dropdown
+            }
+        };
 
     return (
         <div className="w-auto h-full m-2 p-3 bg-amber-100 outline outline-1 outline-gray-500 flex flex-col space-y-4">
@@ -37,17 +44,20 @@ const WeekNavigation = ({ currentDate, setCurrentDate, Pracownik, setPracownik, 
                             <Button icon="pi pi-arrow-right" iconPos="right" className="p-button-outlined" onClick={nextWeek} />
                         </div>
                         <span className={`text-lg font-bold ${statusTyg === "Otwarty" ? "text-green-600" : "text-red-600"}`}>{statusTyg}</span>
-                        <Dropdown
-                            value={Pracownik}
-                            onChange={(e) => setPracownik(e.value)}
-                            options={pracownicy}
-                            editable
-                            placeholder="Pracownik"
-                            autoComplete="off"
-                            className="w-3/12 p-2"
-                            disabled={userType === "Pracownik"}
-                            filter
-                        />
+                            <div className='w-3/12 p-2 ' onClick={openDropdown}>
+                                <Dropdown
+                                    ref={dropdownRef}
+                                    value={Pracownik}
+                                    onChange={(e) => setPracownik(e.value)}
+                                    options={pracownicy}
+                                    editable
+                                    placeholder="Pracownik"
+                                    autoComplete="off"
+                                    className="h-12 text-lg p-2"
+                                    disabled={userType === "Pracownik"}
+                                    filter
+                                />
+                            </div>
                     </div>
                 </div>
             </div>

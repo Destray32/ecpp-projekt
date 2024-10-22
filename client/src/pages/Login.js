@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Dropdown } from 'primereact/dropdown';
 import { Password } from 'primereact/password';
 import axios from 'axios';
@@ -17,11 +17,18 @@ export default function LoginPage() {
     const [firma, setFirma] = useState('');
     const [login, setLogin] = useState('');
     const [password, setPassword] = useState('');
+    const dropdownRef = useRef(null);
 
     useEffect(() => {
         fetchCompanies();
         fetchLogins();
     }, []);
+
+    const openDropdown = () => {
+            if (dropdownRef.current) {
+                dropdownRef.current.show(); 
+            }
+        };
 
     const fetchCompanies = async () => {
         try {
@@ -77,13 +84,24 @@ export default function LoginPage() {
         <main className='bg-primary min-h-screen flex items-center justify-center'>
             <div className='bg-white w-1/2 h-[20rem] rounded-lg drop-shadow-2xl'>
                 <form className='p-4 space-y-6 h-full' onSubmit={loginHandler}>
+                    {/* Wrapper div to handle click on entire dropdown */}
                     <div className='card flex flex-col drop-shadow-lg'>
-                        <Dropdown value={firma} onChange={(e) => setFirma(e.value)} options={availableCompanies} optionLabel="name"
-                            editable placeholder="Firma" autoComplete='off' className="w-full md:w-14rem p-4" />
+                        <div className="" onClick={openDropdown}>
+                            <Dropdown ref={dropdownRef} value={firma} onChange={(e) => setFirma(e.value)} 
+                                options={availableCompanies} optionLabel="name"
+                                editable placeholder="Firma" autoComplete='off'
+                                className="w-full md:w-14rem p-4" 
+                            />
+                        </div>
                     </div>
                     <div className='card flex flex-col drop-shadow-lg'>
-                        <Dropdown value={login} onChange={(e) => setLogin(e.value)} options={availableLogins} optionLabel="name"
-                            editable placeholder="Login" autoComplete='off' className="w-full md:w-14rem p-4" />
+                        <div className="" onClick={openDropdown}>
+                            <Dropdown ref={dropdownRef} value={login} onChange={(e) => setLogin(e.value)} 
+                                options={availableLogins} optionLabel="name"
+                                editable placeholder="Login" autoComplete='off' 
+                                className="w-full md:w-14rem p-4" 
+                            />
+                        </div>
                     </div>
                     <div className='card flex flex-col drop-shadow-lg w-full'>
                         <Password value={password} onChange={(e) => setPassword(e.target.value)} feedback={false} toggleMask placeholder="Hasło"
