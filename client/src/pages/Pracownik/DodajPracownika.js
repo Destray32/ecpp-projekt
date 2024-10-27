@@ -44,6 +44,7 @@ export default function DodajPracownikaPage() {
         form.setFieldsValue({
             active: true,
             role: 3,
+            company: firma[0]?.idFirma,
         });
     }, []);
 
@@ -112,8 +113,28 @@ export default function DodajPracownikaPage() {
                                 <Form.Item label="Ulica / Nr domu" name="street" >
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Kod pocztowy" name="zip" >
-                                    <Input />
+                                <Form.Item
+                                    label="Kod pocztowy"
+                                    name="zip"
+                                    rules={[
+                                        {
+                                            required: true,
+                                            message: 'Wprowadź kod pocztowy',
+                                            pattern: /^[0-9]{2}-[0-9]{3}$/,
+                                        },
+                                    ]}
+                                >
+                                    <Input
+                                        maxLength={6}
+                                        placeholder="00-000"
+                                        onChange={(e) => {
+                                            let value = e.target.value.replace(/\D/g, '');
+                                            if (value.length > 2) {
+                                                value = value.slice(0, 2) + '-' + value.slice(2, 5);
+                                            }
+                                            form.setFieldsValue({ zip: value });
+                                        }}
+                                    />
                                 </Form.Item>
                                 <Form.Item label="Miejscowość" name="city" >
                                     <Input />

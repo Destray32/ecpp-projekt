@@ -1,5 +1,6 @@
 const db = require('../../../server');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 
 function EdytujPracownika(req, res) {
     const token = req.cookies.token;
@@ -155,7 +156,7 @@ function EdytujPracownika(req, res) {
                             login,
                             active ? 'Aktywne' : 'Nieaktywne',
                             role === 1 ? 'Administrator' : role === 2 ? 'Majster' : role === 3 ? 'Pracownik' : 'Gosc',
-                            newPassword,
+                            newPassword ? bcrypt.hashSync(newPassword, 10) : null,
                             idPracownik
                         ];
                     } else {

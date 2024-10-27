@@ -134,8 +134,28 @@ export default function EdytujPracownikaPage() {
                                 <Form.Item label="Ulica / Nr domu" name="street" rules={[{ required: true, message: 'Wprowadź ulicę' }]}>
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Kod pocztowy" name="zip" rules={[{ required: true, message: 'Wprowadź kod pocztowy' }]}>
-                                    <Input />
+                                <Form.Item
+                                    label="Kod pocztowy"
+                                    name="zip"
+                                    rules={[
+                                        {
+                                            required: true,
+                                            message: 'Wprowadź kod pocztowy',
+                                            pattern: /^[0-9]{2}-[0-9]{3}$/,
+                                        },
+                                    ]}
+                                >
+                                    <Input
+                                        maxLength={6}
+                                        placeholder="00-000"
+                                        onChange={(e) => {
+                                            let value = e.target.value.replace(/\D/g, '');
+                                            if (value.length > 2) {
+                                                value = value.slice(0, 2) + '-' + value.slice(2, 5);
+                                            }
+                                            form.setFieldsValue({ zip: value });
+                                        }}
+                                    />
                                 </Form.Item>
                                 <Form.Item label="Miasto" name="city" rules={[{ required: true, message: 'Wprowadź miasto' }]}>
                                     <Input />

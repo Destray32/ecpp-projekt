@@ -7,6 +7,7 @@ import dayjs from 'dayjs';
 import 'dayjs/locale/pl';
 
 import DaneBox from '../../Components/DaneBox';
+import checkUserType from '../../utils/accTypeUtils';
 
 dayjs.locale('pl');
 
@@ -15,6 +16,7 @@ export default function ZmienDanePage() {
     const [firma, setFirma] = useState([]);
     const [grupa, setGrupa] = useState([]);
     const [pojazd, setPojazd] = useState([]);
+    const [accountType, setAccountType] = useState('');
 
     useEffect(() => {
         axios.get('http://localhost:5000/api/mojedane', { withCredentials: true })
@@ -77,6 +79,8 @@ export default function ZmienDanePage() {
             .catch(err => {
                 console.log(err);
             });
+
+        checkUserType(setAccountType);
     }, []);
 
     const handleSubmit = (values) => {
@@ -132,8 +136,28 @@ export default function ZmienDanePage() {
                                 <Form.Item label="Ulica / Nr domu" name="street" rules={[{ required: true, message: 'Wprowadź ulicę' }]}>
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Kod pocztowy" name="zip" rules={[{ required: true, message: 'Wprowadź kod pocztowy' }]} >
-                                    <Input />
+                                <Form.Item
+                                    label="Kod pocztowy"
+                                    name="zip"
+                                    rules={[
+                                        {
+                                            required: true,
+                                            message: 'Wprowadź kod pocztowy',
+                                            pattern: /^[0-9]{2}-[0-9]{3}$/,
+                                        },
+                                    ]}
+                                >
+                                    <Input
+                                        maxLength={6}
+                                        placeholder="00-000"
+                                        onChange={(e) => {
+                                            let value = e.target.value.replace(/\D/g, '');
+                                            if (value.length > 2) {
+                                                value = value.slice(0, 2) + '-' + value.slice(2, 5);
+                                            }
+                                            form.setFieldsValue({ zip: value });
+                                        }}
+                                    />
                                 </Form.Item>
                                 <Form.Item label="Miasto" name="city" rules={[{ required: true, message: 'Wprowadź miasto' }]}>
                                     <Input />
@@ -209,20 +233,24 @@ export default function ZmienDanePage() {
                     <div className="w-full flex flex-row justify-center items-center">
                         <DaneBox name="Informacje o użytkowniku">
                             <div className="h-48 flex flex-col justify-center">
-                                <Form.Item label="Nazwa użytkownika" name="login" rules={[{ required: true, message: 'Wprowadź nazwę użytkownika' }]}>
-                                    <Input />
-                                </Form.Item>
-                                <Form.Item label="Konto aktywne" name="active" valuePropName="checked">
-                                    <Checkbox />
-                                </Form.Item>
-                                <Form.Item label="Rola" name="role" rules={[{ required: true, message: 'Wybierz rolę' }]}>
-                                    <Radio.Group>
-                                        <Radio value={1}>Admin</Radio>
-                                        <Radio value={2}>Kierownik</Radio>
-                                        <Radio value={3}>Pracownik</Radio>
-                                        <Radio value={4}>Gość</Radio>
-                                    </Radio.Group>
-                                </Form.Item>
+                                {accountType === 'Administrator' ? (
+                                    <>
+                                        <Form.Item label="Nazwa użytkownika" name="login" rules={[{ required: true, message: 'Wprowadź nazwę użytkownika' }]}>
+                                            <Input />
+                                        </Form.Item>
+                                        <Form.Item label="Konto aktywne" name="active" valuePropName="checked">
+                                            <Checkbox />
+                                        </Form.Item>
+                                        <Form.Item label="Rola" name="role" rules={[{ required: true, message: 'Wybierz rolę' }]}>
+                                            <Radio.Group>
+                                                <Radio value={1}>Admin</Radio>
+                                                <Radio value={2}>Kierownik</Radio>
+                                                <Radio value={3}>Pracownik</Radio>
+                                                <Radio value={4}>Gość</Radio>
+                                            </Radio.Group>
+                                        </Form.Item>
+                                    </>
+                                ) : null}
                                 <div className="flex flex-row justify-center items-center space-x-4">
                                     <Button type="primary" htmlType="submit">Zapisz</Button>
                                     <Link to="/home/pracownik">
