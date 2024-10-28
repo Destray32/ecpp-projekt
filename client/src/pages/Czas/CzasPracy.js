@@ -85,7 +85,7 @@ export default function CzasPracyPage() {
     //#region fetching
     const fetchBlockStatus = async () => {
         try {
-            const response = await Axios.get("http://47.76.209.242/api/czas/warnings", {
+            const response = await Axios.get("http://47.76.209.242:5000/api/czas/warnings", {
                 withCredentials: true
             });
             setBlockStatus(false);
@@ -344,7 +344,7 @@ export default function CzasPracyPage() {
 
 
         try {
-            const response = await Axios.post("http://47.76.209.242/api/czas", {
+            const response = await Axios.post("http://47.76.209.242:5000/api/czas", {
                 pracownikName: Pracownik,
                 projektyName: Projekty,
                 weekData: getWeek(currentDate, { weekStartsOn: 1 }),
@@ -476,7 +476,7 @@ export default function CzasPracyPage() {
             try {
                 fetchUserId();
                 try {
-                    const warning_response = await Axios.post("http://47.76.209.242/api/czas/warnings", {
+                    const warning_response = await Axios.post("http://47.76.209.242:5000/api/czas/warnings", {
                         weeklyHours: totalHours,
                         id: currentUserId,
                     }, { withCredentials: true });
@@ -492,7 +492,7 @@ export default function CzasPracyPage() {
                     console.error(error);
                 }
 
-                const response = await Axios.delete("http://47.76.209.242/api/tydzien", {
+                const response = await Axios.delete("http://47.76.209.242:5000/api/tydzien", {
                     data: {
                         tydzienRoku: getWeek(currentDate, { weekStartsOn: 1 }),
                         pracownikId: currentUserId,

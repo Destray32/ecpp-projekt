@@ -58,7 +58,7 @@ export default function HomePage() {
 
     const daneUzupelnione = async () => {
         try {
-            const response = await axios.get('http://47.76.209.242/api/dane-uzupelnione', { withCredentials: true });
+            const response = await axios.get('http://47.76.209.242:5000/api/dane-uzupelnione', { withCredentials: true });
             if (response.data === false && location.pathname !== '/home/zmien-dane') {
                 Modal.error({
                     title: 'Uzupełnij dane',

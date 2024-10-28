@@ -48,7 +48,7 @@ export default function PojazdyPage() {
             setEditableRow(null); 
             console.log(editedData);
             
-            axios.put(`http://47.76.209.242/api/pojazdy/${id}`, editedData, { withCredentials: true })
+            axios.put(`http://47.76.209.242:5000/api/pojazdy/${id}`, editedData, { withCredentials: true })
                 .then((response) => {
                     setTableData((prevData) =>
                         prevData.map(item => (item.id === id ? { ...item, ...editedData } : item))
