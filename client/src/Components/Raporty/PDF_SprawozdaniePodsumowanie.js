@@ -4,6 +4,8 @@ import { notification } from 'antd';
 
 const PDF_SprawozdaniePodsumowanie = (raport, startDate, endDate, Projekt) => {
     const doc = new jsPDF('landscape', 'pt', 'a4');
+    doc.addFont('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-Regular.ttf', 'Roboto', 'normal');
+    doc.setFont('Roboto');
 
     // Group data by ProjektID
     const groupedByProject = raport.reduce((acc, row) => {
@@ -36,7 +38,6 @@ const PDF_SprawozdaniePodsumowanie = (raport, startDate, endDate, Projekt) => {
         if (index > 0) {
             doc.addPage(); // Add a new page for the next project
         }
-        doc.setFont("OpenSans-Regular", "normal");
         doc.setFontSize(14);
         doc.setTextColor(0, 102, 204);
         doc.text("Sprawozdanie z działalności - podsumowanie", 14, 20);
@@ -109,7 +110,7 @@ const PDF_SprawozdaniePodsumowanie = (raport, startDate, endDate, Projekt) => {
             return [
                 employee,
                 hours.toFixed(2),
-                "104.50", // Replace with actual calculation if necessary
+                "104.50", 
                 kilometry.toFixed(2),
                 parking.toFixed(2),
                 diety.toFixed(2),
@@ -117,24 +118,23 @@ const PDF_SprawozdaniePodsumowanie = (raport, startDate, endDate, Projekt) => {
             ];
         });
 
-        // Adding the summary row
         tableData.push([
-            'Suma: ', totalTime.toFixed(2), '', '', '', '', 'Suma: 0.00'  // Example "Suma" row, modify as per actual calculation logic
+            'Suma: ', totalTime.toFixed(2), '', '', '', '', 'Suma: 0.00' 
         ]);
 
-        // Generate the table
         doc.autoTable({
             startY: okresYPosition + 20,
             head: [['Pracownik', 'Czas', '1h=kr', 'Kilometry', 'Parking', 'Diety', 'Inne koszty']],
             body: tableData,
             theme: 'grid',
-            headStyles: { fillColor: [238, 238, 223], textColor: [0, 0, 0] },
+            headStyles: { fillColor: [238, 238, 223], textColor: [0, 0, 0], font: 'Roboto' },
             styles: {
                 cellPadding: 2,
                 fontSize: 11,
                 halign: 'center',
                 lineColor: [0, 0, 0],
-                lineWidth: 0.1
+                lineWidth: 0.1,
+                font: 'Roboto'
             },
             columnStyles: {
                 0: { cellWidth: 150, halign: 'center', overflow: 'linebreak' },

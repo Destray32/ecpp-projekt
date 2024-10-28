@@ -93,6 +93,7 @@ const Companies = require('./api/companies');
 const Logins = require('./api/logins');
 const GetImie = require('./api/home.getImie');
 const ZamkniecieStrony = require('./api/zamkniecieStrony');
+const UzupelnoneDane = require('./api/uzupelnioneDane');
 
 // Grupy
 const UsuwanieGrupy = require('./api/Grupy/grupy.usuwaniegrupy');
@@ -109,6 +110,8 @@ const PobierzPracownicyFirme = require('./api/Pracownik/Pracownik/pacownik.pobie
 const PobierzPracownicyGrupy = require('./api/Pracownik/Pracownik/pracownik.pobierzgrupy');
 const PobierzPracownicyPojazd = require('./api/Pracownik/Pracownik/pracownik.pobierzpojazd');
 const KomorkaPracownika = require('./api/Pracownik/Pracownik/pracownik.komorka');
+const GetBlockedUsers = require('./api/Pracownik/Pracownik/pracownik.getBlockedUsers');
+const OdblokujPracownika = require('./api/Pracownik/Pracownik/pracownik.unblock');
 
 // Czas > Czas Pracy
 const ZapiszCzasPracy = require('./api/Czas/CzasPracy/czas.czaspracy.zapisz');
@@ -116,6 +119,8 @@ const PobierzCzasPracy = require('./api/Czas/CzasPracy/czas.czaspracy.pobierz');
 const GetCzasProjekt = require('./api/Czas/CzasPracy/czas.czaspracy.getCzasProjekt');
 const PobierzDodaneProjekty = require('./api/Czas/CzasPracy/czas.czaspracy.projektyDodane');
 const UsunDodatkowyProject = require('./api/Czas/CzasPracy/czas.czaspracy.usun');
+const SetWarnings = require('./api/Czas/CzasPracy/czas.czaspracy.setWarnings');
+const GetBlockStatus = require('./api/Czas/CzasPracy/czas.czaspracy.getBlockStatus');
 
 // Plan Tygodnia
 const DostepneGrupy = require('./api/Grupy/grupy.dostepnegrupy');
@@ -153,6 +158,7 @@ const EdytujUrlop = require('./api/Czas/Urlopy/czas.urlopy.edytujUrlop');
 const PobierzPojazdy = require('./api/Czas/Pojazdy/pojazdy.pobierz');
 const UsunPojazd = require('./api/Czas/Pojazdy/pojazdy.usun');
 const DodajPojazd = require('./api/Czas/Pojazdy/pojazdy.dodaj');
+const EdytujPojazd = require('./api/Czas/Pojazdy/pojazdy.edytuj');
 
 // Czas > Tydzien
 const GetTydzien = require('./api/Czas/Tydzien/czas.tydzien.getTydzien');
@@ -218,6 +224,10 @@ app.get('/api/imie', (req, res) => {
     GetImie(req, res);
 });
 
+app.get('/api/dane-uzupelnione', (req, res) => {
+    UzupelnoneDane(req, res);
+});
+
 // PRACOWNIK > PRACOWNIK //
 app.route('/api/pracownicy')
     .get((req, res) => {
@@ -226,6 +236,14 @@ app.route('/api/pracownicy')
     .post(authorizeRole('Administrator'), (req, res) => {
         DodajPracownika(req, res);
     });
+
+app.get('/api/pracownik/blocked', authorizeRole('Administrator'), (req, res) => {
+    GetBlockedUsers(req, res, pool);
+});
+
+app.put('/api/pracownik/unblock/:id', authorizeRole('Administrator'), (req, res) => {
+    OdblokujPracownika(req, res, pool);
+});
 
 app.get('/api/pracownik/firmy', (req, res) => {
     PobierzPracownicyFirme(req, res);
@@ -274,6 +292,14 @@ app.route('/api/czas')
     })
     .post((req, res) => {
         ZapiszCzasPracy(req, res, pool);
+    });
+
+app.route('/api/czas/warnings')
+    .post((req, res) => {
+        SetWarnings(req, res, pool);
+    })
+    .get((req, res) => {
+        GetBlockStatus(req, res, pool);
     });
 
 app.route('/api/czas/projekt')
@@ -415,11 +441,19 @@ app.route('/api/pojazdy')
         DodajPojazd(req, res, pool);
     });
 
-app.delete('/api/pojazdy/:id', authorizeRole('Administrator'), (req, res) => {
-    UsunPojazd(req, res, pool);
-});
-/////////////////////////////////////////
 
+app.route('/api/pojazdy/:id')
+    .get(authorizeRole('Administrator'), (req, res) => {
+        PobierzPojazdy(req, res, pool);
+    })
+    .delete(authorizeRole('Administrator'), (req, res) => {
+        UsunPojazd(req, res, pool);
+    })
+    .put(authorizeRole('Administrator'), (req, res) => {
+        EdytujPojazd(req, res, pool);
+    });
+
+////////////////////////////////////////
 // CZAS > SPRAWDZ SAMOCHOD //
 app.get('/api/samochody', (req, res) => {
     PobierzSamochody(req, res, pool);

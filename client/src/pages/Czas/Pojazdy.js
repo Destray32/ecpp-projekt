@@ -10,6 +10,8 @@ export default function PojazdyPage() {
     const [tableData, setTableData] = React.useState([]);
     const [typKonta, setTypKonta] = React.useState('');
     const [isAdmin, setIsAdmin] = React.useState(false);
+    const [editableRow, setEditableRow] = React.useState(null);
+    const [editedData, setEditedData] = React.useState({});
 
     useEffect(() => {
         checkUserType(setTypKonta);
@@ -35,19 +37,59 @@ export default function PojazdyPage() {
             });
     }
 
+    const handleEdit = (id) => {
+        if (editableRow === id) {
+            // Ensure that editedData contains valid data before sending it
+            if (!editedData.numerRejestracyjny || !editedData.marka) {
+                alert("Numer rejestracyjny i Marka są wymagane.");
+                return; // Prevent sending incomplete data
+            }
+    
+            setEditableRow(null); 
+            console.log(editedData);
+            
+            axios.put(`http://47.76.209.242/api/pojazdy/${id}`, editedData, { withCredentials: true })
+                .then((response) => {
+                    setTableData((prevData) =>
+                        prevData.map(item => (item.id === id ? { ...item, ...editedData } : item))
+                    );
+                })
+                .catch(error => {
+                    console.error("Error updating vehicle:", error);
+                });
+        } else {
+            // Populate editedData with current item values
+            const currentItem = tableData.find(item => item.id === id);
+            setEditedData({
+                numerRejestracyjny: currentItem.numerRejestracyjny,
+                marka: currentItem.marka,
+                uwagi: currentItem.uwagi || "" // Default to empty string if uwagi is null
+            });
+            setEditableRow(id);
+        }
+    }
+    
+    
+    
+
+    const handleChange = (e, field) => {
+        const value = e.target.value;
+        setEditedData(prev => ({ ...prev, [field]: value }));
+    }
+
     return (
         <div>
             <AmberBox>
                 <div className="flex flex-row items-center p-4 w-full">
                     <p>Pojazdy</p>
                     <div className="ml-auto">
-                    {isAdmin && (
-                        <Link to="/home/nowy-pojazd">
-                            <Button
-                                label="Dodaj nowy pojazd"
-                                className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2" />
-                        </Link>
-                    )}
+                        {isAdmin && (
+                            <Link to="/home/nowy-pojazd">
+                                <Button
+                                    label="Dodaj nowy pojazd"
+                                    className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2" />
+                            </Link>
+                        )}
                     </div>
                 </div>
             </AmberBox>
@@ -66,11 +108,53 @@ export default function PojazdyPage() {
                         {tableData && tableData.map((item, index) => (
                             <tr key={item.id} className="border-b even:bg-gray-200 odd:bg-gray-300">
                                 <td className="border-r">{index + 1}</td>
-                                <td className="border-r">{item.numerRejestracyjny}</td>
-                                <td className="border-r">{item.marka}</td>
-                                <td className="border-r">{(item.uwagi === "" ? "Brak" : item.uwagi)}</td>
+                                <td className="border-r">
+                                    {editableRow === item.id ? (
+                                        <input
+                                            type="text"
+                                            value={editedData.numerRejestracyjny || item.numerRejestracyjny}
+                                            onChange={(e) => handleChange(e, 'numerRejestracyjny')}
+                                            className="border rounded p-1"
+                                        />
+                                    ) : (
+                                        item.numerRejestracyjny
+                                    )}
+                                </td>
+                                <td className="border-r">
+                                    {editableRow === item.id ? (
+                                        <input
+                                            type="text"
+                                            value={editedData.marka || item.marka}
+                                            onChange={(e) => handleChange(e, 'marka')}
+                                            className="border rounded p-1"
+                                        />
+                                    ) : (
+                                        item.marka
+                                    )}
+                                </td>
+                                <td className="border-r">
+                                    {editableRow === item.id ? (
+                                        <input
+                                            type="text"
+                                            value={editedData.uwagi || item.uwagi}
+                                            onChange={(e) => handleChange(e, 'uwagi')}
+                                            className="border rounded p-1"
+                                        />
+                                    ) : (
+                                        (item.uwagi === "" ? "Brak" : item.uwagi)
+                                    )}
+                                </td>
                                 <td>
-                                    <Button onClick={() => handleDelete(item.id)} icon="pi pi-trash" className="p-button-rounded p-button-danger p-button-text p-button-outlined" />
+                                    <Button
+                                        onClick={() => handleDelete(item.id)}
+                                        icon="pi pi-trash"
+                                        className="text-red-600 p-button-rounded p-button-danger p-button-text p-button-outlined"
+                                    />
+                                    <Button
+                                        onClick={() => handleEdit(item.id)}
+                                        icon={editableRow === item.id ? "pi pi-check" : "pi pi-pencil"}
+                                        className="p-button-rounded p-button-primary p-button-text p-button-outlined"
+                                    />
                                 </td>
                             </tr>
                         ))}
@@ -78,5 +162,5 @@ export default function PojazdyPage() {
                 </table>
             </div>
         </div>
-    )
+    );
 }

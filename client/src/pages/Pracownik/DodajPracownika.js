@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Form, DatePicker, Input, Checkbox, Radio, Select, ConfigProvider, Button } from 'antd';
+import { Form, DatePicker, Input, Checkbox, Radio, Select, ConfigProvider, Button, notification } from 'antd';
 import plPL from 'antd/lib/locale/pl_PL';
 import dayjs from 'dayjs';
 import 'dayjs/locale/pl';
@@ -40,6 +40,12 @@ export default function DodajPracownikaPage() {
             .catch(err => {
                 console.log(err);
             });
+
+        form.setFieldsValue({
+            active: true,
+            role: 3,
+            company: firma[0]?.idFirma,
+        });
     }, []);
 
     const handleSubmit = (values) => {
@@ -47,11 +53,24 @@ export default function DodajPracownikaPage() {
         axios.post('http://47.76.209.242:5000/api/pracownicy', values, { withCredentials: true })
             .then(res => {
                 console.log(res);
+                notification.success({ message: 'Dodano pracownika' });
             })
             .catch(err => {
                 console.log(err);
             });
     }
+
+    const onValuesChange = (changedValues, allValues) => {
+        const { surename, name } = allValues;
+
+        if (surename && name) {
+            const password = surename + name[0] + '123';
+            form.setFieldsValue({
+                newPassword: password,
+                confirmPassword: password,
+            });
+        }
+    };
 
     const formItemLayout = {
         labelCol: {
@@ -75,7 +94,7 @@ export default function DodajPracownikaPage() {
     return (
         <div>
             <ConfigProvider locale={plPL}>
-                <Form {...formItemLayout} form={form} onFinish={handleSubmit}>
+                <Form {...formItemLayout} form={form} onFinish={handleSubmit} onValuesChange={onValuesChange}>
                     <div className="w-full flex flex-row justify-center items-center">
                         <DaneBox name="Zmiana danych">
                             <div className="flex flex-col">
@@ -85,22 +104,42 @@ export default function DodajPracownikaPage() {
                                 <Form.Item label="Imię" name="name" rules={[{ required: true, message: 'Wprowadź imię' }]}>
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Data urodzenia" name="brithday" rules={[{ required: true, message: 'Wprowadź datę urodzenia' }]}>
+                                <Form.Item label="Data urodzenia" name="brithday" >
                                     <DatePicker format="DD.MM.YYYY" />
                                 </Form.Item>
-                                <Form.Item label="PESEL" name="pesel" rules={[{ required: true, message: 'Wprowadź PESEL' }]}>
+                                <Form.Item label="PESEL" name="pesel" >
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Ulica / Nr domu" name="street" rules={[{ required: true, message: 'Wprowadź ulicę' }]}>
+                                <Form.Item label="Ulica / Nr domu" name="street" >
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Kod pocztowy" name="zip" rules={[{ required: true, message: 'Wprowadź kod pocztowy' }]}>
+                                <Form.Item
+                                    label="Kod pocztowy"
+                                    name="zip"
+                                    rules={[
+                                        {
+                                            required: true,
+                                            message: 'Wprowadź kod pocztowy',
+                                            pattern: /^[0-9]{2}-[0-9]{3}$/,
+                                        },
+                                    ]}
+                                >
+                                    <Input
+                                        maxLength={6}
+                                        placeholder="00-000"
+                                        onChange={(e) => {
+                                            let value = e.target.value.replace(/\D/g, '');
+                                            if (value.length > 2) {
+                                                value = value.slice(0, 2) + '-' + value.slice(2, 5);
+                                            }
+                                            form.setFieldsValue({ zip: value });
+                                        }}
+                                    />
+                                </Form.Item>
+                                <Form.Item label="Miejscowość" name="city" >
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Miejscowość" name="city" rules={[{ required: true, message: 'Wprowadź miejscowość' }]}>
-                                    <Input />
-                                </Form.Item>
-                                <Form.Item label="Kraj" name="country" rules={[{ required: true, message: 'Wprowadź kraj' }]}>
+                                <Form.Item label="Kraj" name="country" >
                                     <Input />
                                 </Form.Item>
                             </div>
@@ -112,19 +151,19 @@ export default function DodajPracownikaPage() {
                                         ))}
                                     </Select>
                                 </Form.Item>
-                                <Form.Item label="Telefon w Polsce" name="phone1" rules={[{ required: true, message: 'Wprowadź telefon' }]}>
+                                <Form.Item label="Telefon w Polsce" name="phone1" >
                                     <Input />
                                 </Form.Item>
                                 <Form.Item label="Telefon w Szwecji" name="phone2">
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Email" name="email" rules={[{ required: true, message: 'Wprowadź email' }]}>
+                                <Form.Item label="Email" name="email" >
                                     <Input />
                                 </Form.Item>
                                 <Form.Item label="Krewni" name="relative1">
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Kontakt (wypadek)" name="relative2" rules={[{ required: true, message: 'Wprowadź kontakt' }]}>
+                                <Form.Item label="Kontakt (wypadek)" name="relative2" >
                                     <Input />
                                 </Form.Item>
                                 <Form.Item label="NIP" name="NIP">
@@ -144,14 +183,14 @@ export default function DodajPracownikaPage() {
                                     </Form.Item>
                                 </div>
                                 <div className="flex flex-col">
-                                    <Form.Item label="Pojazd" name="vehicle">
+                                    <Form.Item label="Pojazd" name="vehicle" rules={[{ required: true, message: 'Wybierz pojazd' }]}>
                                         <Select>
                                             {pojazd.map(p => (
                                                 <Select.Option key={p.idPojazdy} value={p.idPojazdy}>{p.Nr_rejestracyjny}</Select.Option>
                                             ))}
                                         </Select>
                                     </Form.Item>
-                                    <Form.Item label="Grupa urlopowa" name="vacationGroup">
+                                    <Form.Item label="Grupa urlopowa" name="vacationGroup" rules={[{ required: true, message: 'Wybierz grupę urlopową' }]} >
                                         <Select>
                                             {grupa.map(g => (
                                             <Select.Option key={g.idGrupa_urlopowa} value={g.idGrupa_urlopowa}>{g.Zleceniodawca}</Select.Option>
@@ -196,10 +235,10 @@ export default function DodajPracownikaPage() {
                         <DaneBox name="Hasło">
                             <div className="h-48 flex flex-col justify-center">
                                 <Form.Item label="Nowe hasło" name="newPassword" rules={[{ required: true, message: 'Wprowadź nowe hasło' }]}>
-                                    <Input.Password />
+                                    <Input />
                                 </Form.Item>
                                 <Form.Item label="Potwierdź hasło" name="confirmPassword" rules={[{ required: true, message: 'Potwierdź hasło' }]}>
-                                    <Input.Password />
+                                    <Input />
                                 </Form.Item>
                             </div>
                         </DaneBox>

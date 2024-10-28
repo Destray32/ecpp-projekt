@@ -30,6 +30,11 @@ export default function CzasPracyPage() {
     const [daysOfWeek, setDaysOfWeek] = useState(generateWeek(startOfWeek(new Date(), { weekStartsOn: 1 })));
     const [samochody, setSamochody] = useState([]);
     const [statusTygodnia, setStatusTygodnia] = useState(null);
+    const [przekroczoneGodziny, setPrzekroczoneGodziny] = useState(false);
+    const [isOver10h, setIsOver10h] = useState([
+        false, false, false, false, false, false, false
+    ]);
+    const [blockStatus, setBlockStatus] = useState(false);
 
     const startOfCurrentWeek = startOfWeek(currentDate, { weekStartsOn: 1 });
 
@@ -41,6 +46,7 @@ export default function CzasPracyPage() {
         fetchFirmy();
         fetchZleceniodawcy();
         fetchProjekty();
+        fetchBlockStatus();
     }, []);
 
     useEffect(() => {
@@ -66,6 +72,7 @@ export default function CzasPracyPage() {
         if (currentUserId) {
             fetchStatusTygodnia();
         }
+        fetchBlockStatus();
     }, [currentUserId, currentDate]);
 
     useEffect(() => {
@@ -76,6 +83,24 @@ export default function CzasPracyPage() {
     //#endregion
 
     //#region fetching
+    const fetchBlockStatus = async () => {
+        try {
+            const response = await Axios.get("http://47.76.209.242/api/czas/warnings", {
+                withCredentials: true
+            });
+            setBlockStatus(false);
+        } catch (error) {
+            if (error.response && error.response.status === 403) {
+                notification.error({
+                    message: 'Konto zablokowane',
+                    description: 'Skontaktuj się z administratorem',
+                    placement: 'topRight',
+                });
+                setBlockStatus(true);
+            }
+        }
+    }
+
     const fetchUserId = async () => {
         try {
             await Axios.get("http://47.76.209.242:5000/api/pracownicy", { withCredentials: true })
@@ -283,11 +308,6 @@ export default function CzasPracyPage() {
     //#region handlers
     const handleSave = async () => {
         const totalHours = calculateWeeklyTotal(hours, daysOfWeek);
-
-        let hasMissingFields = false; // stan dla sprawdzania czy brakuje pola w dodatkowych projektach
-        let hasMissingStartEndBreak = false; // stan dla sprawdzania czy godziny sa ustawione dla dodatkowych projektow ale nie ma start, end, lub break
-        let dayHourMismatch = false; // stan dla sprawdzania czy godziny przypisane do projektow zgadzaja sie z godzinami pracy
-
         const projectNames = additionalProjects.map(project => project.label);
 
         const formattedAdditionalProjects = additionalProjects.map(project => ({
@@ -312,6 +332,59 @@ export default function CzasPracyPage() {
                 };
             })
         }));
+
+
+        if (przekroczoneGodziny) {
+            notification.warning({
+                message: 'Przekroczone godziny',
+                description: `W dniach: ${daysOfWeek.filter((day, index) => isOver10h[index]).map(day => format(day, 'EEEE', { locale: pl })).join(', ')} przekroczono limit 10ciu godzin`,
+                placement: 'topRight',
+            });
+        }
+
+
+        try {
+            const response = await Axios.post("http://47.76.209.242/api/czas", {
+                pracownikName: Pracownik,
+                projektyName: Projekty,
+                weekData: getWeek(currentDate, { weekStartsOn: 1 }),
+                year: currentDate.getFullYear(),
+                days: daysOfWeek.map(day => {
+                    const formattedDate = format(day, 'yyyy-MM-dd');
+                    const hoursData = hours[formattedDate] || {};
+
+                    return {
+                        dayOfWeek: format(day, 'EEEE', { locale: pl }),
+                        start: hoursData.start || "00:00",
+                        end: hoursData.end || "00:00",
+                        break: hoursData.break || "00:00",
+                    };
+                }),
+                totalHours: totalHours,
+                additionalProjects: formattedAdditionalProjects,
+            }, { withCredentials: true });
+
+            if (response.status === 200) {
+                notification.success({
+                    message: 'Success',
+                    description: 'Zapisano dane',
+                    placement: 'topRight',
+                });
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const handleZamknijTydzien = async () => {
+
+        let hasMissingFields = false; // stan dla sprawdzania czy brakuje pola w dodatkowych projektach
+        let hasMissingStartEndBreak = false; // stan dla sprawdzania czy godziny sa ustawione dla dodatkowych projektow ale nie ma start, end, lub break
+        let dayHourMismatch = false; // stan dla sprawdzania czy godziny przypisane do projektow zgadzaja sie z godzinami pracy
+
+        const totalHours = calculateWeeklyTotal(hours, daysOfWeek);
+        let projectTotalHours = additionalProjects.map(project => calculateProjectTotal(project, daysOfWeek));
+        projectTotalHours = projectTotalHours.reduce((acc, curr) => acc + curr, 0);
 
         additionalProjects.forEach(project => {
             daysOfWeek.forEach(day => {
@@ -392,44 +465,6 @@ export default function CzasPracyPage() {
             return;
         }
 
-        try {
-            const response = await Axios.post("http://47.76.209.242:5000/api/czas", {
-                pracownikName: Pracownik,
-                projektyName: Projekty,
-                weekData: getWeek(currentDate, { weekStartsOn: 1 }),
-                year: currentDate.getFullYear(),
-                days: daysOfWeek.map(day => {
-                    const formattedDate = format(day, 'yyyy-MM-dd');
-                    const hoursData = hours[formattedDate] || {};
-
-                    return {
-                        dayOfWeek: format(day, 'EEEE', { locale: pl }),
-                        start: hoursData.start || "00:00",
-                        end: hoursData.end || "00:00",
-                        break: hoursData.break || "00:00",
-                    };
-                }),
-                totalHours: totalHours,
-                additionalProjects: formattedAdditionalProjects,
-            }, { withCredentials: true });
-
-            if (response.status === 200) {
-                notification.success({
-                    message: 'Success',
-                    description: 'Zapisano dane',
-                    placement: 'topRight',
-                });
-            }
-        } catch (error) {
-            console.error(error);
-        }
-    };
-
-    const handleZamknijTydzien = async () => {
-        const totalHours = calculateWeeklyTotal(hours, daysOfWeek);
-        let projectTotalHours = additionalProjects.map(project => calculateProjectTotal(project, daysOfWeek));
-        projectTotalHours = projectTotalHours.reduce((acc, curr) => acc + curr, 0);
-
         if (projectTotalHours !== totalHours) {
             notification.error({
                 message: 'Błąd',
@@ -440,7 +475,24 @@ export default function CzasPracyPage() {
         } else {
             try {
                 fetchUserId();
-                const response = await Axios.delete("http://47.76.209.242:5000/api/tydzien", {
+                try {
+                    const warning_response = await Axios.post("http://47.76.209.242/api/czas/warnings", {
+                        weeklyHours: totalHours,
+                        id: currentUserId,
+                    }, { withCredentials: true });
+
+                    if (warning_response.status === 403) {
+                        notification.error({
+                            message: 'Konto zablokowane',
+                            description: 'Skontaktuj się z administratorem',
+                            placement: 'topRight',
+                        });
+                    }
+                } catch (error) {
+                    console.error(error);
+                }
+
+                const response = await Axios.delete("http://47.76.209.242/api/tydzien", {
                     data: {
                         tydzienRoku: getWeek(currentDate, { weekStartsOn: 1 }),
                         pracownikId: currentUserId,
@@ -586,6 +638,10 @@ export default function CzasPracyPage() {
                 hours={hours}
                 setHours={setHours}
                 statusTyg={statusTygodnia}
+                setPrzekroczone={setPrzekroczoneGodziny}
+                isOver10h={isOver10h}
+                setIsOver10h={setIsOver10h}
+                blockStatus={blockStatus}
             />
             <AdditionalProjects
                 Firma={Firma}
@@ -604,8 +660,16 @@ export default function CzasPracyPage() {
                 loggedUserName={Pracownik}
                 currentDate={currentDate}
                 statusTyg={statusTygodnia}
+                blockStatus={blockStatus}
             />
-            <ActionButtons handleSave={handleSave} handleCloseWeek={handleZamknijTydzien} handleOpenWeek={handleOtworzTydzien} handlePrintReport={handleDrukujRaport} statusTyg={statusTygodnia} userType={userType} />
+            <ActionButtons handleSave={handleSave} 
+            handleCloseWeek={handleZamknijTydzien} 
+            handleOpenWeek={handleOtworzTydzien} 
+            handlePrintReport={handleDrukujRaport} 
+            statusTyg={statusTygodnia} 
+            userType={userType} 
+            blockStatus={blockStatus}
+            />
         </div>
     );
     //#endregion

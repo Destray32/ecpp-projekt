@@ -33,6 +33,7 @@ export default function PlanTygodniaPage() {
         checkUserType(setAccountType);
     }, []);
 
+
     useEffect(() => {
         if (accountType === 'Administrator') {
             setIsAdmin(true);
@@ -204,7 +205,7 @@ export default function PlanTygodniaPage() {
     
     const handleChangeGroupFilter = (e) => {
         const selectedGroup = e.value;
-    
+
         if (!selectedGroup) {
             setGroup(null);  
             fetchData(null);    
@@ -246,6 +247,24 @@ export default function PlanTygodniaPage() {
             })
             .catch(err => console.error(err));
     };
+
+    const handleWheelScroll = (e) => {
+        const currentIndex = availableGroups.findIndex((g) => g.name === group?.name);
+        if (currentIndex !== -1) {
+            let nextIndex;
+            if (e.deltaY < 0) {
+                // Scroll up
+                nextIndex = currentIndex === 0 ? availableGroups.length - 1 : currentIndex - 1;
+            } else {
+                // Scroll down
+                nextIndex = (currentIndex + 1) % availableGroups.length;
+            }
+            const nextGroup = availableGroups[nextIndex];
+            setGroup(nextGroup);  // Update the selected group
+            fetchData(nextGroup);  // Fetch data for the new group
+        }
+    };
+    
     
     
 
@@ -293,17 +312,24 @@ export default function PlanTygodniaPage() {
                                 <Button icon="pi pi-arrow-right" iconPos="right" className="p-button-outlined" onClick={nextWeek} />
                             </div>
                             </div>
-                            <div>
-                                <span>Grupa</span>
-                                <Dropdown value={group} onChange={handleChangeGroupFilter}
-                                    options={availableGroups} optionLabel="name"
-                                    editable placeholder="Wybierz grupę" autoComplete='off'
-                                    showClear className="ml-4 md:w-14rem p-4" />
+                            <div className="dropdown-container" onWheel={handleWheelScroll}>
+                            <span>Grupa</span>
+                                <Dropdown 
+                                    value={group} 
+                                    onChange={handleChangeGroupFilter}
+                                    options={availableGroups} 
+                                    optionLabel="name"
+                                    placeholder="Wybierz grupę" 
+                                    autoComplete='off'
+                                    showClear 
+                                    className="ml-4 w-64 p-2"
+                                />
                             </div>
+
                         </div>
                     </div>
                 </div>
-                <div className="flex gap-24">
+                <div className="flex gap-16">
                     <Button label="Drukuj grupe" className="bg-white w-[9rem] h-[3rem]"
                         text raised onClick={handleDrukujGrupe} />
                     <Dialog header="Wybierz Grupy do Drukowania" visible={dialogVisible} style={{ width: '30vw' }}
@@ -329,7 +355,7 @@ export default function PlanTygodniaPage() {
                         text raised onClick={handleDrukuj} />
                 </div>
             </div>
-            <div className="grid grid-cols-[3fr,1fr] gap-5">
+            <div className="grid grid-cols-[5fr,1fr]">
                 <div id="lewa" className="grid grid-cols-auto-fit gap-2.5 p-4">
                     <div className="outline outline-1 outline-gray-500">
                         <table className="w-full">
@@ -363,36 +389,36 @@ export default function PlanTygodniaPage() {
                                         <td className="border-r">
                                         <input
                                             type="radio"
-                                            checked={item.m_value === 'm1'}
-                                            onChange={() => handleRadioChange(item.id, 'm1')}
+                                            checked={item.m_value === 'M1'}
+                                            onChange={() => handleRadioChange(item.id, 'M1')}
                                         />
                                         </td>
                                         <td className="border-r">
                                             <input
                                                 type="radio"
-                                                checked={item.m_value === 'm2'}
-                                                onChange={() => handleRadioChange(item.id, 'm2')}
+                                                checked={item.m_value === 'M2'}
+                                                onChange={() => handleRadioChange(item.id, 'M2')}
                                             />
                                         </td>
                                         <td className="border-r">
                                             <input
                                                 type="radio"
-                                                checked={item.m_value === 'm3'}
-                                                onChange={() => handleRadioChange(item.id, 'm3')}
+                                                checked={item.m_value === 'M3'}
+                                                onChange={() => handleRadioChange(item.id, 'M3')}
                                             />
                                         </td>
                                         <td className="border-r">
                                             <input
                                                 type="radio"
-                                                checked={item.m_value === 'm4'}
-                                                onChange={() => handleRadioChange(item.id, 'm4')}
+                                                checked={item.m_value === 'M4'}
+                                                onChange={() => handleRadioChange(item.id, 'M4')}
                                             />
                                         </td>
                                         <td className="border-r">
                                             <input
                                                 type="radio"
-                                                checked={item.m_value === 'm5'}
-                                                onChange={() => handleRadioChange(item.id, 'm5')}
+                                                checked={item.m_value === 'M5'}
+                                                onChange={() => handleRadioChange(item.id, 'M5')}
                                             />
                                         </td>
                                         <td className="border-r">{item.Opis}</td>
@@ -403,10 +429,10 @@ export default function PlanTygodniaPage() {
                     </div>
                 </div>
                 {isAdmin && (
-                <div id="prawa" className="flex flex-col gap-5 mr-2">
+                <div id="prawa" className="flex flex-col mr-2">
                     <AmberBox>
                         <div className="mx-auto flex flex-col justify-between items-center p-4 ">
-                            <p>Przenieś zaznaczone do</p>
+                            <p className="text-center mb-2">Przenieś zaznaczone do</p>
                             <Dropdown
                                 value={grupaPrzenies}
                                 onChange={(e) => setGrupaPrzenies(e.value)}
@@ -424,14 +450,14 @@ export default function PlanTygodniaPage() {
                     </AmberBox>
                     <AmberBox>
                         <div className="mx-auto flex flex-col justify-between items-center p-4 ">
-                            <p>Skasuj zaznaczone</p>
+                            <p className="text-center mb-2">Skasuj zaznaczone</p>
                             <Button label="Usuń" className="bg-white w-[9rem] h-[3rem]"
                                 text raised onClick={handleUsunZaznaczone} />
                         </div>
                     </AmberBox>
                     <AmberBox>
                         <div className="mx-auto flex flex-col justify-between items-center p-4 ">
-                            <p>Skopiuj pracowników z poprzedniego tygodnia</p>
+                            <p className="text-center mb-2">Skopiuj pracowników z poprzedniego tygodnia</p>
                             <Button label="Skopiuj" className="bg-white w-[9rem] h-[3rem]"
                                 text raised onClick={handleSkopiuj} />
                         </div>

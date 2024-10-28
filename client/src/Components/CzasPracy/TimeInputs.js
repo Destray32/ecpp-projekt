@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { format, getDay } from 'date-fns';
+import { format, getDay, set } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { calculateDailyTotal, calculateWeeklyTotal } from '../../utils/dateUtils';
 
@@ -24,10 +24,41 @@ import { calculateDailyTotal, calculateWeeklyTotal } from '../../utils/dateUtils
  * 
  * <TimeInputs daysOfWeek={daysOfWeek} hours={hours} setHours={setHours} />
  */
-const TimeInputs = ({ daysOfWeek, hours, setHours, statusTyg }) => {
+const TimeInputs = ({ daysOfWeek, hours, setHours, statusTyg, setPrzekroczone, isOver10h, setIsOver10h, blockStatus }) => {
     const [globalStart, setGlobalStart] = useState('');
     const [globalBreak, setGlobalBreak] = useState('');
     const [globalEnd, setGlobalEnd] = useState('');
+
+
+
+    useEffect(() => {
+        daysOfWeek.forEach(day => {
+            const dayKey = format(day, 'yyyy-MM-dd');
+            const dayHours = hours[dayKey];
+            const dailyTotal = calculateDailyTotal(dayHours);
+            if (dailyTotal > 10) {
+                setIsOver10h(prev => ({
+                    ...prev,
+                    [getDay(day)]: true
+                }));
+            } else {
+                setIsOver10h(prev => ({
+                    ...prev,
+                    [getDay(day)]: false
+                }));
+            }
+        });
+    }, [hours]);
+
+    useEffect(() => {
+        for (let i = 0; i < 7; i++) {
+            if (isOver10h[i]) {
+                setPrzekroczone(true);
+                return;
+            }
+        }
+        setPrzekroczone(false);
+    }, [isOver10h]);
 
     // resetuje globalne godziny pracy po zmianie dni tygodnia
     useEffect(() => {
@@ -48,27 +79,59 @@ const TimeInputs = ({ daysOfWeek, hours, setHours, statusTyg }) => {
     };
 
     const formatTimeValue = (value) => {
+        // usuwanie zer z przodu
         let cleanValue = value.replace(/\D/g, '');
+        
         let hours = '00';
         let minutes = '00';
-
-        if (cleanValue.length === 1) {
-            hours = cleanValue.padStart(2, '0');
-        } else if (cleanValue.length === 2) {
+        
+        if (cleanValue.length <= 2) {
+            // 1 lub 2 cyfry - godziny
             hours = cleanValue.padStart(2, '0');
         } else if (cleanValue.length === 3) {
+            // 3 cyfry - pierwsza to godziny, reszta to minuty
             hours = cleanValue.slice(0, 1).padStart(2, '0');
-            minutes = '30';
-        } else if (cleanValue.length === 4) {
+            minutes = cleanValue.slice(1, 3);
+        } else if (cleanValue.length >= 4) {
+            // 4 lub więcej cyfr - pierwsze dwie to godziny, reszta to minuty
             hours = cleanValue.slice(0, 2).padStart(2, '0');
-            minutes = '30';
+            minutes = cleanValue.slice(2, 4);
+        }
+        
+        let parsedHours = parseInt(hours, 10);
+        let parsedMinutes = parseInt(minutes, 10);
+        
+        if (isNaN(parsedHours) || parsedHours > 23) {
+            parsedHours = 23;
+        } else if (parsedHours < 0) {
+            parsedHours = 0;
         }
 
-        // Validate hours and minutes
-        if (parseInt(hours, 10) > 23) hours = '23';
-
+        if (isNaN(parsedMinutes)) {
+            parsedMinutes = 0;
+        } else if (parsedMinutes >= 0 && parsedMinutes < 15) {
+            parsedMinutes = 0;
+        } else if (parsedMinutes >= 15 && parsedMinutes < 45) {
+            parsedMinutes = 30;
+        } else if (parsedMinutes >= 45 && parsedMinutes < 60) {
+            parsedMinutes = 0;
+            parsedHours += 1;
+            if (parsedHours > 23) {
+                parsedHours = 23;
+            }
+        } else {
+            // poza zakresem => ustaw na 0
+            parsedMinutes = 0;
+        }
+        
+        // formatowanie
+        hours = parsedHours.toString().padStart(2, '0');
+        minutes = parsedMinutes.toString().padStart(2, '0');
+        
         return `${hours}:${minutes}`;
     };
+    
+    
 
     const handleTimeBlur = (day, type, value) => {
         const formattedValue = formatTimeValue(value);
@@ -142,7 +205,7 @@ const TimeInputs = ({ daysOfWeek, hours, setHours, statusTyg }) => {
                             className="w-20 p-2 border border-gray-300 rounded"
                             placeholder="HH:MM"
                             maxLength="5"
-                            disabled={statusTyg === "Zamkniety"}
+                            disabled={statusTyg === "Zamkniety" || blockStatus}
                         />
                     </div>
                     {daysOfWeek.map((day, i) => (
@@ -152,8 +215,8 @@ const TimeInputs = ({ daysOfWeek, hours, setHours, statusTyg }) => {
                                 value={hours[format(day, 'yyyy-MM-dd')]?.start || ""}
                                 onChange={(e) => handleTimeInputChange(format(day, 'yyyy-MM-dd'), 'start', e.target.value)}
                                 onBlur={(e) => handleTimeBlur(format(day, 'yyyy-MM-dd'), 'start', e.target.value)}
-                                disabled={getDay(day) === 0 || statusTyg === "Zamkniety"}
-                                className="w-20 p-2 border border-gray-300 rounded"
+                                disabled={(getDay(day) === 0 || statusTyg === "Zamkniety") || blockStatus}
+                                className={`w-20 p-2 border border-gray-300 rounded ${isOver10h[getDay(day)] ? 'bg-orange-300' : ''}`}
                                 placeholder="HH:MM"
                                 maxLength="5"
                             />
@@ -172,7 +235,7 @@ const TimeInputs = ({ daysOfWeek, hours, setHours, statusTyg }) => {
                             className="w-20 p-2 border border-gray-300 rounded"
                             placeholder="HH:MM"
                             maxLength="5"
-                            disabled={statusTyg === "Zamkniety"}
+                            disabled={statusTyg === "Zamkniety" || blockStatus}
                         />
                     </div>
                     {daysOfWeek.map((day, i) => (
@@ -182,8 +245,8 @@ const TimeInputs = ({ daysOfWeek, hours, setHours, statusTyg }) => {
                                 value={hours[format(day, 'yyyy-MM-dd')]?.break || ""}
                                 onChange={(e) => handleTimeInputChange(format(day, 'yyyy-MM-dd'), 'break', e.target.value)}
                                 onBlur={(e) => handleTimeBlur(format(day, 'yyyy-MM-dd'), 'break', e.target.value)}
-                                disabled={getDay(day) === 0 || statusTyg === "Zamkniety"}
-                                className="w-20 p-2 border border-gray-300 rounded"
+                                disabled={(getDay(day) === 0 || statusTyg === "Zamkniety") || blockStatus}
+                                className={`w-20 p-2 border border-gray-300 rounded ${isOver10h[getDay(day)] ? 'bg-orange-300' : ''}`}
                                 placeholder="HH:MM"
                                 maxLength="5"
                             />
@@ -202,7 +265,7 @@ const TimeInputs = ({ daysOfWeek, hours, setHours, statusTyg }) => {
                             className="w-20 p-2 border border-gray-300 rounded"
                             placeholder="HH:MM"
                             maxLength="5"
-                            disabled={statusTyg === "Zamkniety"}
+                            disabled={statusTyg === "Zamkniety" || blockStatus}
                         />
                     </div>
                     {daysOfWeek.map((day, i) => (
@@ -212,8 +275,8 @@ const TimeInputs = ({ daysOfWeek, hours, setHours, statusTyg }) => {
                                 value={hours[format(day, 'yyyy-MM-dd')]?.end || ""}
                                 onChange={(e) => handleTimeInputChange(format(day, 'yyyy-MM-dd'), 'end', e.target.value)}
                                 onBlur={(e) => handleTimeBlur(format(day, 'yyyy-MM-dd'), 'end', e.target.value)}
-                                disabled={getDay(day) === 0 || statusTyg === "Zamkniety"}
-                                className="w-20 p-2 border border-gray-300 rounded"
+                                disabled={(getDay(day) === 0 || statusTyg === "Zamkniety") || blockStatus}
+                                className={`w-20 p-2 border border-gray-300 rounded ${isOver10h[getDay(day)] ? 'bg-orange-300' : ''}`}
                                 placeholder="HH:MM"
                                 maxLength="5"
                             />
@@ -234,8 +297,12 @@ const TimeInputs = ({ daysOfWeek, hours, setHours, statusTyg }) => {
                     })}
                 </div>
 
-                <div className="text-right mt-6 font-bold self-end">
+                <div className={`text-right mt-6 font-bold self-end ${(calculateWeeklyTotal(hours, daysOfWeek) > 60) ? 'text-red-500' : 'text-black' }`}>
                     <p>Razem: {calculateWeeklyTotal(hours, daysOfWeek)} godz.</p>
+                    {(calculateWeeklyTotal(hours, daysOfWeek) > 60) ?
+                        <p className="text-xs"><strong>Pilne</strong> skontaktuj się z Olafem lub Pawłem</p>
+                        : null
+                    }
                 </div>
             </div>
         </div>

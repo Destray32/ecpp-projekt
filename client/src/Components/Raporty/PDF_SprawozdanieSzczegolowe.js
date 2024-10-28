@@ -1,14 +1,16 @@
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-import { font } from "../../fonts/OpenSans-Regular-normal";
 
-const PDF_SzczegoloweDjsonalnosciPracownikow = (data, startDate, endDate, Projekt) => {
+const PDF_SzczegoloweDzialalnosciPracownikow = (data, startDate, endDate, Projekt) => {
     const doc = new jsPDF('p', 'pt', 'a4');
+
+    // Add Polish font support
+    doc.addFont('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-Regular.ttf', 'Roboto', 'normal');
+    doc.setFont('Roboto');
 
     // Filter data based on ProjektID if Projekt is provided
     const filteredData = Projekt ? data.filter(row => row.ProjektID === Projekt) : data;
 
-    doc.setFont("OpenSans-Regular", "normal");
     doc.setFontSize(14);
     doc.setTextColor(0, 102, 204);
     doc.text("Sprawozdanie z działalności - szczegółowe", 40, 40);
@@ -75,7 +77,7 @@ const PDF_SzczegoloweDjsonalnosciPracownikow = (data, startDate, endDate, Projek
                 return sum + (!isNaN(hoursWorked) ? hoursWorked : 0);
             }, 0);
 
-            rows.push([`Razem:`, '', totalHours.toFixed(2), '']);
+            rows.push(['Razem:', '', totalHours.toFixed(2), '']);
             return rows;
         });
 
@@ -88,12 +90,14 @@ const PDF_SzczegoloweDjsonalnosciPracownikow = (data, startDate, endDate, Projek
                 fillColor: [238, 238, 223],
                 textColor: [0, 0, 0],
                 lineColor: [0, 0, 0],
+                font: 'Roboto'  // Set font for header
             },
             styles: {
                 cellPadding: 2,
                 fontSize: 10,
                 lineColor: [0, 0, 0],
-                lineWidth: 0.1
+                lineWidth: 0.1,
+                font: 'Roboto'  // Set font for body
             },
             columnStyles: {
                 0: { cellWidth: 100 },
@@ -106,17 +110,16 @@ const PDF_SzczegoloweDjsonalnosciPracownikow = (data, startDate, endDate, Projek
                 if (data.section === 'body') {
                     const row = data.row.raw;
                     if (row[2] && !row[3]) {
-                        data.cell.styles.fontStyle = 'bold'; // Bold for the total row
+                        data.cell.styles.fontStyle = 'bold';
                     }
                 }
             }
         });
 
-        // Update yPosition for next table
-        yPosition = doc.autoTable.previous.finalY + 20; // Adjust space after the table
+        yPosition = doc.autoTable.previous.finalY + 20;
     }
 
     doc.save(`Sprawozdanie_z_dzialalnosci_szczegolowe_${Projekt || 'wszystkie'}.pdf`);
 };
 
-export default PDF_SzczegoloweDjsonalnosciPracownikow;
+export default PDF_SzczegoloweDzialalnosciPracownikow;

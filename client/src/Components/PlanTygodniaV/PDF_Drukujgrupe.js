@@ -10,14 +10,22 @@ const getWeekNumber = (date) => {
 
 const PDF_Drukujgrupe = (data, startDate, endDate) => {
     const doc = new jsPDF('portrait', 'pt', 'a4');
+    
+    // Add only the regular Roboto font
+    doc.addFont('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf', 'Roboto', 'normal');
 
     const year = new Date(startDate).getFullYear();
     const weekNumber = getWeekNumber(startDate); 
-    const marginLeft = 20; // Set left margin
+    const marginLeft = 20;
 
-    doc.setFont("Helvetica", "normal"); // Use default font
+    // Set font to Roboto
+    doc.setFont("Roboto", "normal");
     doc.setFontSize(14);
     doc.setTextColor(0, 102, 204);
+    
+    // Enable Unicode encoding
+    doc.setLanguage("pl");
+    
     doc.text(`${year}`, marginLeft, 40);
     doc.text(`V-${weekNumber}`, marginLeft, 60);
 
@@ -43,22 +51,20 @@ const PDF_Drukujgrupe = (data, startDate, endDate) => {
         return acc;
     }, {});
 
-    let finalY = 80; // Starting Y position
+    let finalY = 80;
     Object.keys(groups).forEach((groupId) => {
         const group = groups[groupId];
         const zleceniodawcaName = data.find(item => item.grupaId == groupId).Zleceniodawca;
 
-        // Draw line
         doc.setLineWidth(0.5);
         doc.line(marginLeft, finalY, doc.internal.pageSize.width - marginLeft, finalY);
-        finalY += 20; // Space after the line
+        finalY += 20;
 
- 
-        doc.setFontSize(16);
+        // Use larger font size instead of bold for headers
+        doc.setFontSize(18);
         doc.setTextColor(0, 0, 0);
-        doc.setFont("Helvetica", "bold"); // Use default bold font
-        doc.text(`${zleceniodawcaName}`, marginLeft, finalY);
-        finalY += 20; // Space after Zleceniodawca name
+        doc.text(zleceniodawcaName, marginLeft, finalY);
+        finalY += 20;
 
         const workersByMValue = {};
         group.workers.forEach(worker => {
@@ -71,8 +77,8 @@ const PDF_Drukujgrupe = (data, startDate, endDate) => {
         Object.keys(workersByMValue).sort().forEach(mValue => {
             const workersList = workersByMValue[mValue].join(', ');
             if (workersList) {
-                doc.setFontSize(14); 
-                doc.setTextColor(0, 0, 0); 
+                doc.setFontSize(14);
+                doc.setTextColor(0, 0, 0);
                 doc.text(`${mValue}, ${workersList}`, marginLeft, finalY);
                 finalY += 15;
             }
@@ -96,7 +102,7 @@ const PDF_Drukujgrupe = (data, startDate, endDate) => {
             }
         });
 
-        finalY += 20; // Space between groups
+        finalY += 20;
     });
 
     doc.save(`Plan_Grupy_${weekNumber}.pdf`);

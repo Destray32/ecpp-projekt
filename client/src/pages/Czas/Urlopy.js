@@ -65,8 +65,8 @@ export default function UrlopyPage() {
                             <tr>
                                 <th className="border-r px-2 py-1 w-12"></th>
                                 <th className="border-r px-2 py-1 w-32">Imię i nazwisko</th>
-                                <th className="border-r px-2 py-1 w-24">Urlop od</th>
-                                <th className="border-r px-2 py-1 w-24">Url do</th>
+                                <th className="border-r px-2 py-1 w-24">Od</th>
+                                <th className="border-r px-2 py-1 w-24">Do</th>
                                 <th className="border-r px-2 py-1 w-64">Komentarz</th>
                                 <th className="border-r px-2 py-1 w-24">Status</th>
                                 <th className="w-32"></th>
@@ -222,7 +222,7 @@ export default function UrlopyPage() {
 
                 // Otwarcie nowego okna z pdf-em
                 setTimeout(() => {
-                    window.open(`http://47.76.209.242:3000/test`, '_blank');
+                    window.open(`http://47.76.209.242:5000/test`, '_blank');
                 }, 1500);
 
             })

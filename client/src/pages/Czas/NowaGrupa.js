@@ -41,7 +41,8 @@ export default function NowaGrupaPage() {
     }
 
     const handleStawka = (e) => {
-        setForm(prev => ({ ...prev, stawka: e.target.value }));
+        let value = e.target.value.replace(',', '.');
+        setForm(prev => ({ ...prev, stawka: value }));
     }
 
     const handlePlanTygV = (e) => {

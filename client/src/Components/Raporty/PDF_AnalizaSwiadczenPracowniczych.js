@@ -4,6 +4,8 @@ import { notification } from 'antd';
 
 const PDF_AnalizaSwiadczenPracowniczych = (raport, startDate, endDate, pracownik) => {
     const doc = new jsPDF('landscape', 'pt', 'a4');
+    doc.addFont('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-Regular.ttf', 'Roboto', 'normal');
+    doc.setFont('Roboto');
 
     const formatDate = (date) => {
         const d = new Date(date);
@@ -16,7 +18,6 @@ const PDF_AnalizaSwiadczenPracowniczych = (raport, startDate, endDate, pracownik
     const formattedStartDate = formatDate(startDate);
     const formattedEndDate = formatDate(endDate);
 
-    doc.setFont("OpenSans-Regular", "normal");
     doc.setFontSize(14);
     doc.setTextColor(0, 102, 204);
     doc.text("Analiza świadczeń pracowniczych", 14, 20);
@@ -74,13 +75,14 @@ const PDF_AnalizaSwiadczenPracowniczych = (raport, startDate, endDate, pracownik
         head: [['Pracownik', 'Godziny', '1h=kr', 'Diety', 'Inne koszty', 'Suma']],
         body: tableData,
         theme: 'grid',
-        headStyles: { fillColor: [238, 238, 223], textColor: [0, 0, 0] },
+        headStyles: { fillColor: [238, 238, 223], textColor: [0, 0, 0], font: 'Roboto' },
         styles: {
             cellPadding: 2,
             fontSize: 11,
             halign: 'center',
             lineColor: [0, 0, 0],
-            lineWidth: 0.1
+            lineWidth: 0.1,
+            font: 'Roboto'
         },
         columnStyles: {
             0: { cellWidth: 172, halign: 'center', overflow: 'linebreak' },

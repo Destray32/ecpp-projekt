@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Form, DatePicker, Input, Checkbox, Radio, Select, ConfigProvider, Button } from 'antd';
+import { Form, DatePicker, Input, Checkbox, Radio, Select, ConfigProvider, Button, notification } from 'antd';
 import plPL from 'antd/lib/locale/pl_PL';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import 'dayjs/locale/pl';
 
 import DaneBox from '../../Components/DaneBox';
+import checkUserType from '../../utils/accTypeUtils';
 
 dayjs.locale('pl');
 
@@ -15,6 +16,7 @@ export default function ZmienDanePage() {
     const [firma, setFirma] = useState([]);
     const [grupa, setGrupa] = useState([]);
     const [pojazd, setPojazd] = useState([]);
+    const [accountType, setAccountType] = useState('');
 
     useEffect(() => {
         axios.get('http://47.76.209.242:5000/api/mojedane', { withCredentials: true })
@@ -23,7 +25,7 @@ export default function ZmienDanePage() {
                 form.setFieldsValue({
                     surename: res.data.surename,
                     name: res.data.name,
-                    brithday: dayjs(res.data.brithday, 'DD.MM.YYYY'),
+                    brithday: res.data.brithday ? dayjs(res.data.brithday, 'DD.MM.YYYY') : null,
                     pesel: res.data.pesel,
                     street: res.data.street,
                     zip: res.data.zip,
@@ -36,7 +38,7 @@ export default function ZmienDanePage() {
                     relative1: res.data.relative1,
                     relative2: res.data.relative2,
                     NIP: res.data.NIP,
-                    startDate: dayjs(res.data.startDate, 'DD.MM.YYYY'),
+                    startDate: res.data.startDate ? dayjs(res.data.startDate, 'DD.MM.YYYY') : null,
                     endDate: res.data.endDate ? dayjs(res.data.endDate, 'DD.MM.YYYY') : null,
                     paycheckCode: res.data.paycheckCode,
                     vehicle: res.data.vehicle,
@@ -77,6 +79,8 @@ export default function ZmienDanePage() {
             .catch(err => {
                 console.log(err);
             });
+
+        checkUserType(setAccountType);
     }, []);
 
     const handleSubmit = (values) => {
@@ -84,6 +88,7 @@ export default function ZmienDanePage() {
         axios.put(`http://47.76.209.242:5000/api/pracownik/zmienMoje`, values, { withCredentials: true })
             .then(res => {
                 console.log(res);
+                notification.success({ message: 'Zapisano zmiany' });
             })
             .catch(err => {
                 console.log(err);
@@ -131,13 +136,33 @@ export default function ZmienDanePage() {
                                 <Form.Item label="Ulica / Nr domu" name="street" rules={[{ required: true, message: 'Wprowadź ulicę' }]}>
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Kod pocztowy" name="zip" rules={[{ required: true, message: 'Wprowadź kod pocztowy' }]}>
-                                    <Input />
+                                <Form.Item
+                                    label="Kod pocztowy"
+                                    name="zip"
+                                    rules={[
+                                        {
+                                            required: true,
+                                            message: 'Wprowadź kod pocztowy',
+                                            pattern: /^[0-9]{2}-[0-9]{3}$/,
+                                        },
+                                    ]}
+                                >
+                                    <Input
+                                        maxLength={6}
+                                        placeholder="00-000"
+                                        onChange={(e) => {
+                                            let value = e.target.value.replace(/\D/g, '');
+                                            if (value.length > 2) {
+                                                value = value.slice(0, 2) + '-' + value.slice(2, 5);
+                                            }
+                                            form.setFieldsValue({ zip: value });
+                                        }}
+                                    />
                                 </Form.Item>
                                 <Form.Item label="Miasto" name="city" rules={[{ required: true, message: 'Wprowadź miasto' }]}>
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Kraj" name="country" rules={[{ required: true, message: 'Wprowadź kraj' }]}>
+                                <Form.Item label="Kraj" name="country" >
                                     <Input />
                                 </Form.Item>
                             </div>
@@ -208,20 +233,24 @@ export default function ZmienDanePage() {
                     <div className="w-full flex flex-row justify-center items-center">
                         <DaneBox name="Informacje o użytkowniku">
                             <div className="h-48 flex flex-col justify-center">
-                                <Form.Item label="Nazwa użytkownika" name="login" rules={[{ required: true, message: 'Wprowadź nazwę użytkownika' }]}>
-                                    <Input />
-                                </Form.Item>
-                                <Form.Item label="Konto aktywne" name="active" valuePropName="checked">
-                                    <Checkbox />
-                                </Form.Item>
-                                <Form.Item label="Rola" name="role" rules={[{ required: true, message: 'Wybierz rolę' }]}>
-                                    <Radio.Group>
-                                        <Radio value={1}>Admin</Radio>
-                                        <Radio value={2}>Kierownik</Radio>
-                                        <Radio value={3}>Pracownik</Radio>
-                                        <Radio value={4}>Gość</Radio>
-                                    </Radio.Group>
-                                </Form.Item>
+                                {accountType === 'Administrator' ? (
+                                    <>
+                                        <Form.Item label="Nazwa użytkownika" name="login" rules={[{ required: true, message: 'Wprowadź nazwę użytkownika' }]}>
+                                            <Input />
+                                        </Form.Item>
+                                        <Form.Item label="Konto aktywne" name="active" valuePropName="checked">
+                                            <Checkbox />
+                                        </Form.Item>
+                                        <Form.Item label="Rola" name="role" rules={[{ required: true, message: 'Wybierz rolę' }]}>
+                                            <Radio.Group>
+                                                <Radio value={1}>Admin</Radio>
+                                                <Radio value={2}>Kierownik</Radio>
+                                                <Radio value={3}>Pracownik</Radio>
+                                                <Radio value={4}>Gość</Radio>
+                                            </Radio.Group>
+                                        </Form.Item>
+                                    </>
+                                ) : null}
                                 <div className="flex flex-row justify-center items-center space-x-4">
                                     <Button type="primary" htmlType="submit">Zapisz</Button>
                                     <Link to="/home/pracownik">

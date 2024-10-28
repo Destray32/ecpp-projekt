@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Dropdown } from "primereact/dropdown";
 import { Button } from 'primereact/button';
+import { InputTextarea } from 'primereact/inputtextarea';
+import { InputText } from 'primereact/inputtext';
 import Axios from "axios";
 import { format, getWeek } from 'date-fns';
 import { notification } from 'antd';
@@ -35,18 +37,32 @@ const AdditionalProjects = ({
     Projekty, setProjekty, dostepneProjekty,
     additionalProjects, setAdditionalProjects,
     daysOfWeek, samochody, loggedUserName, currentDate,
-    statusTyg
+    statusTyg, blockStatus
 }) => {
     const [activeInput, setActiveInput] = useState(null);
     const [filteredZleceniodawcy, setFilteredZleceniodawcy] = useState([]);
     const [filteredProjekty, setFilteredProjekty] = useState([]);
+    const [activeProject, setActiveProject] = useState(null);
+    const [activeDate, setActiveDate] = useState(null);
+    const [additionalProjectsTotalTime, setAdditionalProjectsTotalTime] = useState(0.0);
+
+    useEffect(() => {
+        let total = 0.0;
+        additionalProjects.forEach(project => {
+            Object.values(project.hours).forEach(hour => {
+                total += parseFloat(hour.hoursWorked);
+            });
+        });
+        setAdditionalProjectsTotalTime(total);
+    }, [additionalProjects]);
+
 
     useEffect(() => {
         if (Firma) {
             const filteredZleceniodawcy = zleceniodawcy.filter(zleceniodawca =>
                 zleceniodawca.Firma_idFirma === Firma.value
             );
-    
+
             setFilteredZleceniodawcy(filteredZleceniodawcy);
         } else {
             setFilteredZleceniodawcy([]);
@@ -58,7 +74,7 @@ const AdditionalProjects = ({
             const filteredProjekty = dostepneProjekty.filter(projekt =>
                 projekt.Grupa_urlopowa_idGrupa_urlopowa === Zleceniodawca
             );
-    
+
             setFilteredProjekty(filteredProjekty);
             setProjekty(null);
         } else {
@@ -127,6 +143,12 @@ const AdditionalProjects = ({
         }
     };
 
+
+    const handleProjectActivation = (projectId, date) => {
+        setActiveProject(projectId);
+        setActiveDate(date);
+    };
+
     const handleInputChange = (projectId, date, value, field) => {
         setAdditionalProjects(prevProjects =>
             prevProjects.map(project => {
@@ -175,6 +197,7 @@ const AdditionalProjects = ({
     };
 
     return (
+        blockStatus === false ? (
         <div className="w-auto h-full m-2 p-3 bg-amber-100 outline outline-1 outline-gray-500 flex flex-col space-y-4">
             <div className="w-full flex flex-col space-y-2 items-start">
                 <div className="w-full">
@@ -245,12 +268,76 @@ const AdditionalProjects = ({
                             handleInputFocus={handleInputFocus}
                             samochody={samochody}
                             statusTyg={statusTyg}
+                            onActivate={handleProjectActivation}
                         />
                     ))}
+                    <div className='flex justify-between mt-4'>
+                        <div></div>
+                        <p className='font-bold'>Suma: {additionalProjectsTotalTime}:00</p>
+                    </div>
+                    {/* Render additional fields if a project is active */}
+                    {activeProject && activeDate && (
+                        <div className='border border-gray-500 p-4 mt-2'>
+                            <div className='grid grid-cols-[auto_1fr] gap-4 items-center'>
+                                <span className="text-right">Komentarz:</span>
+                                <InputTextarea
+                                    value={additionalProjects.find(p => p.id === activeProject)?.hours[activeDate]?.comment || ""}
+                                    onChange={(e) => handleInputChange(activeProject, activeDate, e.target.value, 'comment')}
+                                    className="w-full"
+                                    rows={3}
+                                    disabled={statusTyg === "Zamkniety"}
+                                />
+    
+                                <span className="text-right">Samochód:</span>
+                                <Dropdown
+                                    value={additionalProjects.find(p => p.id === activeProject)?.hours[activeDate]?.car || ""}
+                                    options={samochody}
+                                    onChange={(e) => handleInputChange(activeProject, activeDate, e.value, 'car')}
+                                    placeholder="Wybierz pojazd"
+                                    className="w-full"
+                                    showClear
+                                    disabled={statusTyg === "Zamkniety"}
+                                />
+    
+                                <span className="text-right">Parking:</span>
+                                <InputText
+                                    value={additionalProjects.find(p => p.id === activeProject)?.hours[activeDate]?.parking || ""}
+                                    onChange={(e) => handleInputChange(activeProject, activeDate, e.target.value, 'parking')}
+                                    className="w-full"
+                                    disabled={statusTyg === "Zamkniety"}
+                                />
+    
+                                <span className="text-right">Kilometry:</span>
+                                <InputText
+                                    value={additionalProjects.find(p => p.id === activeProject)?.hours[activeDate]?.km || ""}
+                                    onChange={(e) => handleInputChange(activeProject, activeDate, e.target.value, 'km')}
+                                    className="w-full"
+                                    disabled={statusTyg === "Zamkniety"}
+                                />
+    
+                                <span className="text-right">Diety:</span>
+                                <InputText
+                                    value={additionalProjects.find(p => p.id === activeProject)?.hours[activeDate]?.diet || ""}
+                                    onChange={(e) => handleInputChange(activeProject, activeDate, e.target.value, 'diet')}
+                                    className="w-full"
+                                    disabled={statusTyg === "Zamkniety"}
+                                />
+    
+                                <span className="text-right">Wypożyczanie narzędzi:</span>
+                                <InputText
+                                    value={additionalProjects.find(p => p.id === activeProject)?.hours[activeDate]?.tools || ""}
+                                    onChange={(e) => handleInputChange(activeProject, activeDate, e.target.value, 'tools')}
+                                    className="w-full"
+                                    disabled={statusTyg === "Zamkniety"}
+                                />
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
-    );
+        ) : null
+    );    
 };
 
 export default AdditionalProjects;

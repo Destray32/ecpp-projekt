@@ -1,5 +1,6 @@
 import React from "react";
 import AmberBox from "../../Components/AmberBox";
+import { notification } from 'antd';
 import { InputText } from 'primereact/inputtext';
 import { FloatLabel } from 'primereact/floatlabel';
 import { Button } from 'primereact/button';
@@ -16,13 +17,17 @@ export default function NowyPojazdPage() {
     const handleSave = () => {
         axios.post("http://47.76.209.242:5000/api/pojazdy", vehicle, { withCredentials: true })
             .then((response) => {
-                console.log(response);
+                notification.success({ message: 'Pomyślnie dodano nowy pojazd' });
             })
             .catch((error) => {
-                console.log(error);
-            }
-        );
+                if (error.response) {
+                    notification.error({ message: error.response.data });
+                } else {
+                    notification.error({ message: 'Wystąpił nieznany błąd' });
+                }
+            });
     }
+    
 
     return (
         <div>

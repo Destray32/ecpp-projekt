@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Form, DatePicker, Input, Checkbox, Radio, Select, ConfigProvider, Button } from 'antd';
+import { Form, DatePicker, Input, Checkbox, Radio, Select, ConfigProvider, Button, notification } from 'antd';
 import plPL from 'antd/lib/locale/pl_PL';
 import axios from 'axios';
 import dayjs from 'dayjs';
@@ -86,6 +86,7 @@ export default function EdytujPracownikaPage() {
         axios.put(`http://47.76.209.242:5000/api/pracownik/${id}`, values, { withCredentials: true })
             .then(res => {
                 console.log(res);
+                notification.success({ message: 'Pomyślnie zaktualizowano pracownika' });
             })
             .catch(err => {
                 console.log(err);
@@ -133,13 +134,33 @@ export default function EdytujPracownikaPage() {
                                 <Form.Item label="Ulica / Nr domu" name="street" rules={[{ required: true, message: 'Wprowadź ulicę' }]}>
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Kod pocztowy" name="zip" rules={[{ required: true, message: 'Wprowadź kod pocztowy' }]}>
-                                    <Input />
+                                <Form.Item
+                                    label="Kod pocztowy"
+                                    name="zip"
+                                    rules={[
+                                        {
+                                            required: true,
+                                            message: 'Wprowadź kod pocztowy',
+                                            pattern: /^[0-9]{2}-[0-9]{3}$/,
+                                        },
+                                    ]}
+                                >
+                                    <Input
+                                        maxLength={6}
+                                        placeholder="00-000"
+                                        onChange={(e) => {
+                                            let value = e.target.value.replace(/\D/g, '');
+                                            if (value.length > 2) {
+                                                value = value.slice(0, 2) + '-' + value.slice(2, 5);
+                                            }
+                                            form.setFieldsValue({ zip: value });
+                                        }}
+                                    />
                                 </Form.Item>
                                 <Form.Item label="Miasto" name="city" rules={[{ required: true, message: 'Wprowadź miasto' }]}>
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Kraj" name="country" rules={[{ required: true, message: 'Wprowadź kraj' }]}>
+                                <Form.Item label="Kraj" name="country" >
                                     <Input />
                                 </Form.Item>
                             </div>
