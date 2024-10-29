@@ -116,13 +116,6 @@ export default function DodajPracownikaPage() {
                                 <Form.Item
                                     label="Kod pocztowy"
                                     name="zip"
-                                    rules={[
-                                        {
-                                            required: true,
-                                            message: 'Wprowadź kod pocztowy',
-                                            pattern: /^[0-9]{2}-[0-9]{3}$/,
-                                        },
-                                    ]}
                                 >
                                     <Input
                                         maxLength={6}
