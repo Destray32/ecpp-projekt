@@ -231,34 +231,46 @@ export default function ZmienDanePage() {
                         </DaneBox>
                     </div>
                     <div className="w-full flex flex-row justify-center items-center">
-                        <DaneBox name="Informacje o użytkowniku">
-                            <div className="h-48 flex flex-col justify-center">
-                                {accountType === 'Administrator' ? (
-                                    <>
-                                        <Form.Item label="Nazwa użytkownika" name="login" rules={[{ required: true, message: 'Wprowadź nazwę użytkownika' }]}>
-                                            <Input />
-                                        </Form.Item>
-                                        <Form.Item label="Konto aktywne" name="active" valuePropName="checked">
-                                            <Checkbox />
-                                        </Form.Item>
-                                        <Form.Item label="Rola" name="role" rules={[{ required: true, message: 'Wybierz rolę' }]}>
-                                            <Radio.Group>
-                                                <Radio value={1}>Admin</Radio>
-                                                <Radio value={2}>Kierownik</Radio>
-                                                <Radio value={3}>Pracownik</Radio>
-                                                <Radio value={4}>Gość</Radio>
-                                            </Radio.Group>
-                                        </Form.Item>
-                                    </>
-                                ) : null}
-                                <div className="flex flex-row justify-center items-center space-x-4">
-                                    <Button type="primary" htmlType="submit">Zapisz</Button>
-                                    <Link to="/home/pracownik">
-                                        <Button type="primary">Anuluj</Button>
-                                    </Link>
-                                </div>
+                    <DaneBox name="Informacje o użytkowniku">
+                        <div className="h-48 flex flex-col justify-center">
+                            <Form.Item 
+                                label="Nazwa użytkownika" 
+                                name="login" 
+                                rules={[{ required: true, message: 'Wprowadź nazwę użytkownika' }]}
+                                style={{ display: accountType === 'Administrator' ? 'block' : 'none' }}
+                            >
+                                <Input />
+                            </Form.Item>
+                            <Form.Item 
+                                label="Konto aktywne" 
+                                name="active" 
+                                valuePropName="checked"
+                                style={{ display: accountType === 'Administrator' ? 'block' : 'none' }}
+                            >
+                                <Checkbox />
+                            </Form.Item>
+                            <Form.Item 
+                                label="Rola" 
+                                name="role" 
+                                rules={[{ required: true, message: 'Wybierz rolę' }]}
+                                style={{ display: accountType === 'Administrator' ? 'block' : 'none' }}
+                            >
+                                <Radio.Group>
+                                    <Radio value={1}>Admin</Radio>
+                                    <Radio value={2}>Kierownik</Radio>
+                                    <Radio value={3}>Pracownik</Radio>
+                                    <Radio value={4}>Gość</Radio>
+                                </Radio.Group>
+                            </Form.Item>
+                            
+                            <div className="flex flex-row justify-center items-center space-x-4">
+                                <Button type="primary" htmlType="submit">Zapisz</Button>
+                                <Link to="/home/pracownik">
+                                    <Button type="primary">Anuluj</Button>
+                                </Link>
                             </div>
-                        </DaneBox>
+                        </div>
+                    </DaneBox>
                         <DaneBox name="Hasło">
                             <div className="h-48 flex flex-col justify-center">
                                 <Form.Item label="Nowe hasło" name="newPassword">
