@@ -103,7 +103,7 @@ export default function LoginPage() {
                             />
                         </div>
                     </div>
-                    <div className='card flex flex-col drop-shadow-lg w-full'>
+                    <div id='password-oczko' className='card flex flex-col drop-shadow-lg w-full'>
                         <Password value={password} onChange={(e) => setPassword(e.target.value)} feedback={false} toggleMask placeholder="Hasło"
                             inputClassName='w-full md:w-14rem h-[3rem] p-2'
                             pt={{ iconField: { root: { className: 'w-full md:w-14rem ' } } }}
