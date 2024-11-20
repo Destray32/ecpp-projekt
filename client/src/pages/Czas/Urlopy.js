@@ -13,7 +13,7 @@ export default function UrlopyPage() {
     const [urlopOd, setUrlopOd] = useState('');
     const [urlopDo, setUrlopDo] = useState('');
     const [UrlopDla, setUrlopDla] = useState('');
-    const [Status, setStatus] = useState('');
+    const [Status, setStatus] = useState('Do zatwierdzenia');
     const [komentarz, setKomentarz] = useState('');
     const [filteredDane, setFilteredDane] = useState({ ApprovedUrlopy: {}, Pozostale: {} });
     const [pracownicy, setPracownicy] = useState([]);
@@ -78,7 +78,7 @@ export default function UrlopyPage() {
                                 <React.Fragment key={name}>
                                     <tr>
                                         <td colSpan="7" className="cursor-pointer bg-gray-100 hover:bg-gray-200">
-                                            <div className="flex items-center">
+                                            <div className="flex items-center"  onClick={() => handleGroupToggle(name, setExpandedGroups, expandedGroups)}>
                                                 <Checkbox
                                                     inputId={`cb-${name}`}
                                                     checked={groupSelections[name] || false}
@@ -88,7 +88,7 @@ export default function UrlopyPage() {
                                                         handleGroupCheckboxChange(name, setGroupSelections, groupSelections, setSelectedItems, data[name]);
                                                     }}
                                                 />
-                                                <p className="ml-2" onClick={() => handleGroupToggle(name, setExpandedGroups, expandedGroups)}>{name}</p>
+                                                <p className="ml-2">{name}</p>
                                                 <span className="ml-auto" onClick={() => handleGroupToggle(name, setExpandedGroups, expandedGroups)}>{expandedGroups[name] ? '−' : '+'}</span>
                                             </div>
                                         </td>
@@ -459,7 +459,7 @@ export default function UrlopyPage() {
     const handleDodaj = () => {
         Axios.post("http://localhost:5000/api/urlopy", {
             nazwisko_imie: UrlopDla,
-            status: Status ? Status : "Do zatwierdzenia",
+            status: Status,
             urlop_od: urlopOd,
             urlop_do: urlopDo,
             komentarz: komentarz,
@@ -585,11 +585,12 @@ export default function UrlopyPage() {
                                     value={UrlopDla}
                                     onChange={(e) => setUrlopDla(e.value)}
                                     options={pracownicy.map(pracownik => `${pracownik.surname} ${pracownik.name}`)}
-                                    editable
                                     placeholder="Pracownik"
                                     autoComplete="off"
-                                    className="p-2"
+                                    className="p-1"
                                     filter
+                                    filterInputAutoFocus
+                                    showFilterClear
                                     showClear
                                 />
                             </div>
@@ -599,11 +600,12 @@ export default function UrlopyPage() {
                                     value={Status}
                                     onChange={(e) => setStatus(e.value)}
                                     options={["Do zatwierdzenia", "Zatwierdzone", "Anulowane"]}
-                                    editable
                                     placeholder="Status"
                                     autoComplete="off"
-                                    className="p-2"
+                                    className="p-1"
                                     filter
+                                    filterInputAutoFocus
+                                    showFilterClear
                                     showClear
                                 />
                             </div>

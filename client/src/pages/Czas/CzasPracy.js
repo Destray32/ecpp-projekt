@@ -610,7 +610,7 @@ export default function CzasPracyPage() {
         // sygnatury
         doc.setFontSize(10);
         doc.text('____________________', 14, doc.internal.pageSize.height - 30);
-        doc.text(`${'Tu zalogowana osoba?'}`, 14, doc.internal.pageSize.height - 25);
+        doc.text(`${Pracownik}`, 14, doc.internal.pageSize.height - 25);
         doc.text(`${new Date().toLocaleString()}`, 14, doc.internal.pageSize.height - 20);
         doc.text('____________________', doc.internal.pageSize.width - 60, doc.internal.pageSize.height - 30);
         doc.text('Szef', doc.internal.pageSize.width - 60, doc.internal.pageSize.height - 25);

@@ -322,7 +322,10 @@ export default function PlanTygodniaPage() {
                                     placeholder="Wybierz grupę" 
                                     autoComplete='off'
                                     showClear 
-                                    className="ml-4 w-64 p-2"
+                                    className="ml-4 w-64 p-1"
+                                    filter
+                                    resetFilterOnHide
+                                    filterInputAutoFocus
                                 />
                             </div>
 
@@ -439,10 +442,12 @@ export default function PlanTygodniaPage() {
                                 options={availableGroups}
                                 optionLabel="name"
                                 optionValue="id"
-                                editable
                                 placeholder=""
                                 autoComplete='off'
-                                className="ml-4 md:w-14rem p-4"
+                                filter
+                                resetFilterOnHide
+                                filterInputAutoFocus
+                                className=" md:w-14rem p-1 w-full"
                             />
                             <Button label="Przenieś" className="bg-white w-[9rem] h-[3rem] mt-4"
                                 text raised onClick={handlePrzeniesZaznaczone} />

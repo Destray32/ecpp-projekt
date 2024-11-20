@@ -118,10 +118,12 @@ export default function ProjektyPage() {
                     <div className="w-full h-2/6">
                         <div className="w-full flex flex-row items-center p-4">
                             <p className="mr-6">Filtr</p>
-                            <Dropdown value={filtr} onChange={(e) => setFiltr(e.value)} options={["Aktywny", "Zamkniety", "Wszystkie"]} editable placeholder="Filtrowanie"
+                            <Dropdown value={filtr} onChange={(e) => setFiltr(e.value)} options={["Aktywny", "Zamkniety", "Wszystkie"]} placeholder="Filtrowanie"
                                 autoComplete="off"
-                                className="w-3/12 p-2 mr-10"
+                                className="w-3/12 mr-10"
                                 filter
+                                resetFilterOnHide
+                                filterInputAutoFocus
                             />
                             <div className="flex flex-row items-center">
                                 <Button onClick={handlePrzeniesAktyw} label="Przenieś do aktywnych" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2" />

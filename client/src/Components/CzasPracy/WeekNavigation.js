@@ -50,12 +50,13 @@ const WeekNavigation = ({ currentDate, setCurrentDate, Pracownik, setPracownik, 
                                     value={Pracownik}
                                     onChange={(e) => setPracownik(e.value)}
                                     options={pracownicy}
-                                    editable
                                     placeholder="Pracownik"
                                     autoComplete="off"
-                                    className="h-12 text-lg p-2"
+                                    className="w-3/4 text-lg p-1"
                                     disabled={userType === "Pracownik"}
                                     filter
+                                    resetFilterOnHide
+                                    filterInputAutoFocus
                                 />
                             </div>
                     </div>

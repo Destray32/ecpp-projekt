@@ -146,15 +146,14 @@ const VacationPlanner = () => {
         <div className="p-4">
             <h1 className="text-2xl font-bold mb-4">Plan urlopów {getYearLocalStorage()}</h1>
             <button onClick={downloadPDF} className="mb-4 p-2 bg-blue-500 text-white rounded">
-                Download as PDF
+                Pobierz PDF
             </button>
             <div ref={plannerRef} className="overflow-x-auto">
                 <table className="w-full border-collapse text-center">
                     <thead>
                         <tr>
-                            <th className="border p-2">Company</th>
-                            <th className="border p-2">Department</th>
-                            <th className="border p-2">Name</th>
+                            <th className="border p-2 w-1/12">Firma</th>
+                            <th className="border p-2 w-1/12">Imie i Nazwisko</th>
                             {renderHeader()}
                         </tr>
 
@@ -162,9 +161,8 @@ const VacationPlanner = () => {
                     <tbody>
                         {vacationData.map((employee, index) => (
                             <tr key={employee.id}>
-                                <td className="border p-2">{employee.company}</td>
-                                <td className="border p-2">{employee.department}</td>
-                                <td className="border p-2">{employee.name}</td>
+                                <td className="border p-2 w-1/12">PC Husbyggen</td>
+                                <td className="border p-2 w-1/12">{employee.name}</td>
                                 {renderVacationRow(employee)}
                             </tr>
                         ))}

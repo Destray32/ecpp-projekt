@@ -177,10 +177,13 @@ export default function ZaplanujTydzienPage() {
                             onChange={(e) => setWybranaGrupa(e.value)}
                             options={zleceniodawcy}
                             optionLabel="label"
-                            editable
+                            filter
+                            filterInputAutoFocus
+                            resetFilterOnHide
                             placeholder=""
                             autoComplete="off"
-                            className="md:w-14rem p-3"
+                            showClear
+                            className="md:w-14rem p-1 w-1/4"
                         />
                     </div>
                 </div>

@@ -271,6 +271,10 @@ export default function RaportyPage() {
                             options={availablePracownicy}
                             onChange={(e) => setPracownik(e.value)}
                             showClear
+                            filter
+                            className=""
+                            filterInputAutoFocus
+                            resetFilterOnHide
                             placeholder="Wybierz pracownika"
                         />
                     )}
@@ -284,6 +288,10 @@ export default function RaportyPage() {
                                 showClear
                                 placeholder="Wybierz projekt"
                                 emptyMessage="Brak projektów"
+                                filter
+                                className="w-3/4"
+                                filterInputAutoFocus
+                                resetFilterOnHide
                             />
                         )}
                         

@@ -208,12 +208,13 @@ const AdditionalProjects = ({
                                 value={Firma}
                                 onChange={(e) => setFirma(e.value)}
                                 options={firmy}
-                                editable
                                 placeholder="Firma"
                                 autoComplete="off"
-                                className="p-2"
+                                className="p-1"
                                 filter
+                                resetFilterOnHide
                                 disabled={statusTyg === "Zamkniety"}
+                                filterInputAutoFocus
                             />
                         </div>
                         <div className="flex flex-col w-3/12">
@@ -222,11 +223,12 @@ const AdditionalProjects = ({
                                 value={Zleceniodawca}
                                 onChange={(e) => setZleceniodawca(e.value)}
                                 options={filteredZleceniodawcy}
-                                editable
                                 placeholder="Zleceniodawca"
                                 autoComplete="off"
-                                className="p-2"
+                                className="p-1"
                                 filter
+                                resetFilterOnHide
+                                filterInputAutoFocus
                                 showClear
                                 disabled={statusTyg === "Zamkniety"}
                             />
@@ -237,11 +239,12 @@ const AdditionalProjects = ({
                                 value={Projekty}
                                 onChange={(e) => setProjekty(e.value)}
                                 options={filteredProjekty}
-                                editable
                                 placeholder="Projekty"
                                 autoComplete="off"
-                                className="p-2"
+                                className="p-1"
                                 filter
+                                resetFilterOnHide
+                                filterInputAutoFocus
                                 showClear
                                 disabled={statusTyg === "Zamkniety"}
                             />
