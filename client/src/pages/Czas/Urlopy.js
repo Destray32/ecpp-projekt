@@ -7,7 +7,7 @@ import { InputText } from 'primereact/inputtext';
 import { Checkbox } from 'primereact/checkbox';
 import Axios from "axios";
 import ZatwierdzWindow from '../../Components/Urlopy/ZatwierdzWindow';
-
+import { notification } from 'antd';
 
 export default function UrlopyPage() {
     const [urlopOd, setUrlopOd] = useState('');
@@ -20,6 +20,7 @@ export default function UrlopyPage() {
     const [dostepneGrupy, setDostepneGrupy] = useState([]);
     const [selectedGrupy, setSelectedGrupy] = useState({});
     const [selectedGrupyNazwa, setSelectedGrupyNazwa] = useState([]);
+    const [allGroupsSelected, setAllGroupsSelected] = useState(false);
     const [selectedWeek, setSelectedWeek] = useState(''); // state do tygodnia ale bez formatowania do pdf
     const [selectedWeekAndYear, setSelectedWeekAndYear] = useState([]); // state do tygodnia i roku dla pdf
     const [editingVacationId, setEditingVacationId] = useState(null);
@@ -228,6 +229,11 @@ export default function UrlopyPage() {
             })
             .catch((error) => {
                 console.error("There was an error fetching the data:", error);
+                notification.error({
+                    message: 'Błąd pobierania danych',
+                    description: 'Wystąpił błąd podczas pobierania danych do generowania PDF',
+                    placement: 'topRight'
+                });
             });
     };
 
@@ -263,6 +269,19 @@ export default function UrlopyPage() {
         }));
     };
 
+    const handleMasterCheckboxChange = () => {
+        const newState = !allGroupsSelected;
+        setAllGroupsSelected(newState);
+    
+        const updatedSelections = dostepneGrupy.reduce((acc, grupa) => {
+            acc[grupa.id] = newState;
+            return acc;
+        }, {});
+    
+        setSelectedGrupy(updatedSelections);
+    
+        setSelectedGrupyNazwa(newState ? dostepneGrupy.map(grupa => grupa.Zleceniodawca) : []);
+    };
 
     const handleGetPracownicy = () => {
         Axios.get("http://localhost:5000/api/pracownicy", { withCredentials: true })
@@ -361,8 +380,6 @@ export default function UrlopyPage() {
         }
     };
 
-
-
     const fetchUrlopy = () => {
         Axios.get("http://localhost:5000/api/urlopy", { withCredentials: true })
             .then((response) => {
@@ -442,7 +459,7 @@ export default function UrlopyPage() {
     const handleDodaj = () => {
         Axios.post("http://localhost:5000/api/urlopy", {
             nazwisko_imie: UrlopDla,
-            status: Status,
+            status: Status ? Status : "Do zatwierdzenia",
             urlop_od: urlopOd,
             urlop_do: urlopDo,
             komentarz: komentarz,
@@ -450,9 +467,19 @@ export default function UrlopyPage() {
         )
             .then(() => {
                 fetchUrlopy();
+                notification.success({
+                    message: 'Dodano urlop',
+                    description: `Dodano urlop dla ${UrlopDla}`,
+                    placement: 'topRight'
+                });
             })
             .catch((error) => {
                 console.error("There was an error adding the leave:", error.response.data);
+                notification.error({
+                    message: 'Błąd dodawania urlopu',
+                    description: error.response.data,
+                    placement: 'topRight'
+                });
             });
     };
 
@@ -643,18 +670,26 @@ export default function UrlopyPage() {
                 </table>
             </div>
             <AmberBox style={"justify-around bg-blue-500 text-white"}>
-                <div>
-                    {dostepneGrupy.map((grupa) => (
-                        <div key={grupa.id}>
-                            <Checkbox
-                                inputId={`grupa-${grupa.id}`}
-                                checked={selectedGrupy[grupa.id]}
-                                onChange={() => handleGrupaCheckboxChange(grupa.id, grupa.Zleceniodawca)}
-                            />
-                            <span className="ml-2">{grupa.Zleceniodawca}</span>
-                        </div>
-                    ))}
+            <div>
+                <div className="flex items-center">
+                    <Checkbox
+                        inputId="master-checkbox"
+                        checked={allGroupsSelected}
+                        onChange={handleMasterCheckboxChange}
+                    />
+                    <span className="ml-2 font-bold">Zaznacz wszystkie</span>
                 </div>
+                {dostepneGrupy.map((grupa) => (
+                    <div key={grupa.id}>
+                        <Checkbox
+                            inputId={`grupa-${grupa.id}`}
+                            checked={selectedGrupy[grupa.id] || false}
+                            onChange={() => handleGrupaCheckboxChange(grupa.id, grupa.Zleceniodawca)}
+                        />
+                        <span className="ml-2">{grupa.Zleceniodawca}</span>
+                    </div>
+                ))}
+            </div>
                 <Button label="Szukaj" onClick={handleSearch} />
                 <div className="flex flex-row items-center space-x-4">
                     <InputText

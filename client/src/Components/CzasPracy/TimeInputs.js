@@ -202,7 +202,7 @@ const TimeInputs = ({ daysOfWeek, hours, setHours, statusTyg, setPrzekroczone, i
                             value={globalStart}
                             onChange={(e) => handleGlobalStartChange(e.target.value)}
                             onBlur={(e) => handleGlobalTimeBlur(e.target.value, setGlobalStart, 'start')}
-                            className="w-20 p-2 border border-gray-300 rounded"
+                            className="w-16 p-2 border border-gray-300 rounded"
                             placeholder="HH:MM"
                             maxLength="5"
                             disabled={statusTyg === "Zamkniety" || blockStatus}
@@ -216,7 +216,7 @@ const TimeInputs = ({ daysOfWeek, hours, setHours, statusTyg, setPrzekroczone, i
                                 onChange={(e) => handleTimeInputChange(format(day, 'yyyy-MM-dd'), 'start', e.target.value)}
                                 onBlur={(e) => handleTimeBlur(format(day, 'yyyy-MM-dd'), 'start', e.target.value)}
                                 disabled={(getDay(day) === 0 || statusTyg === "Zamkniety") || blockStatus}
-                                className={`w-20 p-2 border border-gray-300 rounded ${isOver10h[getDay(day)] ? 'bg-orange-300' : ''}`}
+                                className={`w-16 p-2 border border-gray-300 rounded ${isOver10h[getDay(day)] ? 'bg-orange-300' : ''}`}
                                 placeholder="HH:MM"
                                 maxLength="5"
                             />
@@ -232,7 +232,7 @@ const TimeInputs = ({ daysOfWeek, hours, setHours, statusTyg, setPrzekroczone, i
                             value={globalBreak}
                             onChange={(e) => handleGlobalBreakChange(e.target.value)}
                             onBlur={(e) => handleGlobalTimeBlur(e.target.value, setGlobalBreak, 'break')}
-                            className="w-20 p-2 border border-gray-300 rounded"
+                            className="w-16 p-2 border border-gray-300 rounded"
                             placeholder="HH:MM"
                             maxLength="5"
                             disabled={statusTyg === "Zamkniety" || blockStatus}
@@ -246,7 +246,7 @@ const TimeInputs = ({ daysOfWeek, hours, setHours, statusTyg, setPrzekroczone, i
                                 onChange={(e) => handleTimeInputChange(format(day, 'yyyy-MM-dd'), 'break', e.target.value)}
                                 onBlur={(e) => handleTimeBlur(format(day, 'yyyy-MM-dd'), 'break', e.target.value)}
                                 disabled={(getDay(day) === 0 || statusTyg === "Zamkniety") || blockStatus}
-                                className={`w-20 p-2 border border-gray-300 rounded ${isOver10h[getDay(day)] ? 'bg-orange-300' : ''}`}
+                                className={`w-16 p-2 border border-gray-300 rounded ${isOver10h[getDay(day)] ? 'bg-orange-300' : ''}`}
                                 placeholder="HH:MM"
                                 maxLength="5"
                             />
@@ -262,7 +262,7 @@ const TimeInputs = ({ daysOfWeek, hours, setHours, statusTyg, setPrzekroczone, i
                             value={globalEnd}
                             onChange={(e) => handleGlobalEndChange(e.target.value)}
                             onBlur={(e) => handleGlobalTimeBlur(e.target.value, setGlobalEnd, 'end')}
-                            className="w-20 p-2 border border-gray-300 rounded"
+                            className="w-16 p-2 border border-gray-300 rounded"
                             placeholder="HH:MM"
                             maxLength="5"
                             disabled={statusTyg === "Zamkniety" || blockStatus}
@@ -276,7 +276,7 @@ const TimeInputs = ({ daysOfWeek, hours, setHours, statusTyg, setPrzekroczone, i
                                 onChange={(e) => handleTimeInputChange(format(day, 'yyyy-MM-dd'), 'end', e.target.value)}
                                 onBlur={(e) => handleTimeBlur(format(day, 'yyyy-MM-dd'), 'end', e.target.value)}
                                 disabled={(getDay(day) === 0 || statusTyg === "Zamkniety") || blockStatus}
-                                className={`w-20 p-2 border border-gray-300 rounded ${isOver10h[getDay(day)] ? 'bg-orange-300' : ''}`}
+                                className={`w-16 p-2 border border-gray-300 rounded ${isOver10h[getDay(day)] ? 'bg-orange-300' : ''}`}
                                 placeholder="HH:MM"
                                 maxLength="5"
                             />

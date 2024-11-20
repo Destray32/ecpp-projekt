@@ -1,6 +1,6 @@
 function DodajUrlop(req, res, db) {
     const { nazwisko_imie, status, urlop_od, urlop_do, komentarz } = req.body;
-    
+
     if (!nazwisko_imie) {
         return res.status(400).send('Imie i nazwisko są wymagane');
     }
@@ -21,7 +21,7 @@ function DodajUrlop(req, res, db) {
     db.query(getPracownikIdQuery, [imie, nazwisko], (err, result) => {
         if (err) {
             console.log(err);
-            return res.status(400).send('Błąd dodawania urlopu');
+            return res.status(400).send('Błąd pobierania pracownika');
         }
 
         if (result.length === 0) {
@@ -30,17 +30,37 @@ function DodajUrlop(req, res, db) {
 
         const pracownikId = result[0].idPracownik;
 
-        const insertUrlopQuery = `
-            INSERT INTO Urlopy (Imie, Nazwisko, Urlop_od, Urlop_do, Status, Komentarz, FK_idPracownik) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+        const checkOverlapQuery = `
+            SELECT * 
+            FROM Urlopy 
+            WHERE FK_idPracownik = ? AND (
+                (Urlop_od <= ? AND Urlop_do >= ?) OR 
+                (Urlop_od >= ? AND Urlop_od <= ?)
+            )
         `;
 
-        db.query(insertUrlopQuery, [imie, nazwisko, urlop_od, urlop_do, status, komentarz, pracownikId], (err, result) => {
+        db.query(checkOverlapQuery, [pracownikId, urlop_do, urlop_od, urlop_od, urlop_do], (err, overlapResult) => {
             if (err) {
                 console.log(err);
-                return res.status(400).send('Błąd dodawania urlopu');
+                return res.status(400).send('Błąd sprawdzania istniejącego urlopu');
             }
-            res.status(200).send("Dodano urlop");
+
+            if (overlapResult.length > 0) {
+                return res.status(400).send('Urlop w tym okresie już istnieje');
+            }
+
+            const insertUrlopQuery = `
+                INSERT INTO Urlopy (Imie, Nazwisko, Urlop_od, Urlop_do, Status, Komentarz, FK_idPracownik) 
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            `;
+
+            db.query(insertUrlopQuery, [imie, nazwisko, urlop_od, urlop_do, status, komentarz, pracownikId], (err, result) => {
+                if (err) {
+                    console.log(err);
+                    return res.status(400).send('Błąd dodawania urlopu');
+                }
+                res.status(200).send("Dodano urlop");
+            });
         });
     });
 }
