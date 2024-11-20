@@ -168,7 +168,7 @@ export default function ZmienDanePage() {
                             </div>
                             <div className="flex flex-col">
                                 <Form.Item label="Firma" name="company" rules={[{ required: true, message: 'Wybierz firmę' }]}>
-                                    <Select>
+                                    <Select disabled={accountType === 'Pracownik'}>
                                         {firma.map(f => (
                                             <Select.Option key={f.idFirma} value={f.idFirma}>{f.Nazwa_firmy}</Select.Option>
                                         ))}
@@ -196,35 +196,35 @@ export default function ZmienDanePage() {
                             <div className="flex flex-col">
                                 <div className="flex flex-col">
                                     <Form.Item label="Data zatrudnienia" name="startDate" rules={[{ required: true, message: 'Wprowadź datę zatrudnienia' }]}>
-                                        <DatePicker format="DD.MM.YYYY" />
+                                        <DatePicker format="DD.MM.YYYY" disabled={accountType === 'Pracownik'} />
                                     </Form.Item>
                                     <Form.Item label="Data zakończenia" name="endDate">
-                                        <DatePicker format="DD.MM.YYYY" />
+                                        <DatePicker format="DD.MM.YYYY" disabled={accountType === 'Pracownik'} />
                                     </Form.Item>
                                     <Form.Item label="Kod wynagrodzenia" name="paycheckCode">
-                                        <Input />
+                                        <Input disabled={accountType === 'Pracownik'} />
                                     </Form.Item>
                                 </div>
                                 <div className="flex flex-col">
                                     <Form.Item label="Pojazd" name="vehicle">
-                                        <Select>
+                                        <Select disabled={accountType === 'Pracownik'}>
                                             {pojazd.map(p => (
                                                 <Select.Option key={p.idPojazdy} value={p.idPojazdy}>{p.Nr_rejestracyjny}</Select.Option>
                                             ))}
                                         </Select>
                                     </Form.Item>
                                     <Form.Item label="Grupa urlopowa" name="vacationGroup">
-                                        <Select>
+                                        <Select disabled={accountType === 'Pracownik'}>
                                             {grupa.map(g => (
                                                 <Select.Option key={g.idGrupa_urlopowa} value={g.idGrupa_urlopowa}>{g.Zleceniodawca}</Select.Option>
                                             ))}
                                         </Select>
                                     </Form.Item>
                                     <Form.Item label="Plan tygodnia 'V'?" name="weeklyPlan" valuePropName="checked">
-                                        <Checkbox />
+                                        <Checkbox disabled={accountType === 'Pracownik'} />
                                     </Form.Item>
                                     <Form.Item label="Drukować urlop?" name="printVacation" valuePropName="checked">
-                                        <Checkbox />
+                                        <Checkbox disabled={accountType === 'Pracownik'} />
                                     </Form.Item>
                                 </div>
                             </div>

@@ -63,19 +63,6 @@ export default function LoginPage() {
         }
     };
 
-    const testLoginHandler = async () => {
-        try {
-            const testFirma = 'PC Husbyggen';
-            const login = 'twachala';
-            const testPassword = 'tomek1';
-            const response = await axios.post('http://localhost:5000/api/logowanie', { firma: testFirma, login, password: testPassword }, { withCredentials: true });
-
-            navigate('/home/czas');
-        } catch (error) {
-            console.error(error);
-        }
-    };
-
     // useEffect(() => {
     //     console.log(firma, login, password);
     // }, [firma, login, password]);
@@ -84,7 +71,6 @@ export default function LoginPage() {
         <main className='bg-primary min-h-screen flex items-center justify-center'>
             <div className='bg-white w-1/2 h-[20rem] rounded-lg drop-shadow-2xl'>
                 <form className='p-4 space-y-6 h-full' onSubmit={loginHandler}>
-                    {/* Wrapper div to handle click on entire dropdown */}
                     <div className='card flex flex-col drop-shadow-lg'>
                         <div className="" onClick={openDropdown}>
                             <Dropdown ref={dropdownRef} value={firma} onChange={(e) => setFirma(e.value)} 
@@ -111,7 +97,6 @@ export default function LoginPage() {
                     </div>
                     <div className='flex justify-center'>
                         <button className='bg-primary text-white p-2 rounded-md w-1/2'>Zaloguj</button>
-                        <button type='button' onClick={testLoginHandler} className='bg-secondary bg-blue-400 text-white p-2 rounded-md w-1/2 ml-4'>Skip</button>
                     </div>
                 </form>
 
