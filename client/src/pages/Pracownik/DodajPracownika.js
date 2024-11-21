@@ -176,14 +176,14 @@ export default function DodajPracownikaPage() {
                                     </Form.Item>
                                 </div>
                                 <div className="flex flex-col">
-                                    <Form.Item label="Pojazd" name="vehicle" rules={[{ required: true, message: 'Wybierz pojazd' }]}>
+                                    <Form.Item label="Pojazd" name="vehicle" >
                                         <Select>
                                             {pojazd.map(p => (
                                                 <Select.Option key={p.idPojazdy} value={p.idPojazdy}>{p.Nr_rejestracyjny}</Select.Option>
                                             ))}
                                         </Select>
                                     </Form.Item>
-                                    <Form.Item label="Grupa urlopowa" name="vacationGroup" rules={[{ required: true, message: 'Wybierz grupę urlopową' }]} >
+                                    <Form.Item label="Grupa urlopowa" name="vacationGroup" >
                                         <Select>
                                             {grupa.map(g => (
                                             <Select.Option key={g.idGrupa_urlopowa} value={g.idGrupa_urlopowa}>{g.Zleceniodawca}</Select.Option>
