@@ -36,9 +36,25 @@ export default function CzasPracyPage() {
     ]);
     const [blockStatus, setBlockStatus] = useState(false);
 
+    const [availableGroups, setAvailableGroups] = useState([]);
+    const [nazwaGrupyPracownika, setNazwaGrupyPracownika] = useState(null);
+    const [idGrupy, setIdGrupy] = useState(null);
+    const [pracownicyWGrupie, setPracownicyWGrupie] = useState([]);
+
     const startOfCurrentWeek = startOfWeek(currentDate, { weekStartsOn: 1 });
 
     //#region UseEffects
+    useEffect(() => {
+        //console.log("Pracownicy w grupie", pracownicyWGrupie);
+        // console.log("Nazwa grupy pracownika", nazwaGrupyPracownika);
+    }, [pracownicyWGrupie]);
+
+    useEffect(() => {
+        if (idGrupy) {
+            fetchGrupaWTygodniu();
+        }
+    }, [idGrupy, currentDate]);
+    
     useEffect(() => {
         fetchZalogowanyUzytkownik();
         fetchPojazdy();
@@ -50,7 +66,12 @@ export default function CzasPracyPage() {
     }, []);
 
     useEffect(() => {
-        console.log("Pracownik", Pracownik);
+        // console.log("Grupy", availableGroups);
+    }, [availableGroups]);
+
+    useEffect(() => {
+        // console.log("Pracownik", Pracownik);
+        // console.log("vac group", idGrupy);
     }, [Pracownik]);
 
     useEffect(() => {
@@ -83,6 +104,40 @@ export default function CzasPracyPage() {
     //#endregion
 
     //#region fetching
+
+    const fetchGrupaWTygodniu = async () => {
+        const from = format(startOfWeek(currentDate, { weekStartsOn: 1 }), 'yyyy-MM-dd');
+        const to = format(endOfWeek(currentDate, { weekStartsOn: 2 }), 'yyyy-MM-dd');
+    
+        const urlRequest = `http://localhost:5000/api/planTygodnia/zaplanuj?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
+
+        try {
+            const res = await Axios.get(urlRequest, { 
+                withCredentials: true 
+            });
+            const planData = res.data;
+            const userGroups = planData.filter(entry => entry.pracownikId === currentUserId);
+            setNazwaGrupyPracownika(userGroups[0].Zleceniodawca);
+    
+            const grupaIds = [
+                ...new Set(userGroups.map(group => group.grupaId))
+            ];
+    
+            const pracownicyGrupy = planData
+                .filter(entry => grupaIds.includes(entry.grupaId))
+                .map(employee => ({
+                    label: `${employee.imie} ${employee.nazwisko}`,
+                    value: employee.pracownikId
+                }));
+    
+            setPracownicyWGrupie(pracownicyGrupy);
+        } catch (err) {
+            //console.error(err);
+            setPracownicyWGrupie([]);
+            setNazwaGrupyPracownika(null);
+        }
+    };
+
     const fetchBlockStatus = async () => {
         try {
             const response = await Axios.get("http://localhost:5000/api/czas/warnings", {
@@ -108,6 +163,7 @@ export default function CzasPracyPage() {
                     //console.log(response.data);
                     const userId = response.data.find(pracownik => `${pracownik.name} ${pracownik.surname}` === Pracownik).id;
                     setCurrentUserId(userId);
+                    setIdGrupy(response.data.find(pracownik => `${pracownik.name} ${pracownik.surname}` === Pracownik).vacationGroup);
                 })
                 .catch((error) => {
                     console.error(error);
@@ -260,7 +316,7 @@ export default function CzasPracyPage() {
             setAdditionalProjects([]);
 
             if (error.response && error.response.status === 404) {
-                console.log("brak dodatkowych projektów");
+                //console.log("brak dodatkowych projektów");
             } else {
                 console.error("Błąd podczas pobierania dodatkowych projektów", error);
             }
@@ -642,6 +698,8 @@ export default function CzasPracyPage() {
                 isOver10h={isOver10h}
                 setIsOver10h={setIsOver10h}
                 blockStatus={blockStatus}
+                nazwaGrupyPracownika={nazwaGrupyPracownika}
+                pracownicyWGrupie={pracownicyWGrupie}
             />
             <AdditionalProjects
                 Firma={Firma}
