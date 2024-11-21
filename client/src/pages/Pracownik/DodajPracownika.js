@@ -177,14 +177,14 @@ export default function DodajPracownikaPage() {
                                 </div>
                                 <div className="flex flex-col">
                                     <Form.Item label="Pojazd" name="vehicle" >
-                                        <Select>
+                                        <Select placeholder="-- Brak --">
                                             {pojazd.map(p => (
                                                 <Select.Option key={p.idPojazdy} value={p.idPojazdy}>{p.Nr_rejestracyjny}</Select.Option>
                                             ))}
                                         </Select>
                                     </Form.Item>
                                     <Form.Item label="Grupa urlopowa" name="vacationGroup" >
-                                        <Select>
+                                        <Select placeholder="-- Brak --">
                                             {grupa.map(g => (
                                             <Select.Option key={g.idGrupa_urlopowa} value={g.idGrupa_urlopowa}>{g.Zleceniodawca}</Select.Option>
                                             ))}
