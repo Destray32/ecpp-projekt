@@ -381,7 +381,7 @@ export default function PracownikPage() {
                   <Button label="Dodaj pracownika" className="bg-white outline outline-1 outline-gray-500 p-2 mx-2" />
                 </Link>
               )}
-              {isAdmin || accountType === "Biuro" || accountType === "Kierownik" &&  (
+              {(accountType === "Administrator" || accountType === "Biuro" || accountType === "Kierownik") &&  (
                 <Button onClick={printPDF} label="Drukuj listę" className="bg-white outline outline-1 outline-gray-500 p-2 mx-2" />
               )}
               {isAdmin && (

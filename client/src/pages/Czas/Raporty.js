@@ -12,7 +12,6 @@ import PDF_SprawozdaniePodsumowanie from "../../Components/Raporty/PDF_Sprawozda
 import { notification } from "antd";
 
 import checkUserType from "../../utils/accTypeUtils";
-import { add } from "date-fns";
 
 
 export default function RaportyPage() {
@@ -30,19 +29,25 @@ export default function RaportyPage() {
     const [selectedRow, setSelectedRow] = useState(null);
     const [wybranyRaport, setWybranyRaport] = useState(null);
     const [raport, setRaport] = useState([]);
-    const [isAdmin, setIsAdmin] = useState(false);
     const [accountType, setAccountType] = useState('');
+    const [imie, setImie] = useState('');
+    const [nazwisko, setNazwisko] = useState('');
 
     useEffect(() => {
         checkUserType(setAccountType);
+        getImie();
     }, []);
 
-    useEffect(() => {
-        if (accountType === 'Administrator') {
-            setIsAdmin(true);
+    const getImie = async () => {
+        try {
+            const response = await axios.get('http://localhost:5000/api/imie', { withCredentials: true });
+            const { name, surename } = response.data;
+            setImie(`${name}`);
+            setNazwisko(`${surename}`);
+        } catch (error) {
+            console.error(error);
         }
-    }, [accountType]);
-
+    }
 
     useEffect(() => {
         fetchProjektyPracownicy();
@@ -58,11 +63,25 @@ export default function RaportyPage() {
         fetchProjektyAndRaport();
     }, [startDate, endDate, ignorujDaty]);
 
+    useEffect(() => {
+        if (imie && nazwisko) {
+            fetchProjektyPracownicy();
+        }
+    }, [imie, nazwisko, accountType]);
+
     const fetchProjektyPracownicy = async () => {
         try {
             const response = await axios.get('http://localhost:5000/api/pracownicy', { withCredentials: true });
             const pracownicy = response.data;
-            const pracownicyOptions = pracownicy.map(pracownik => ({ label: `${pracownik.name} ${pracownik.surname}`, value: pracownik.id }));
+            let pracownicyOptions = [];
+            console.log(pracownicy);
+            if(accountType === 'Pracownik') {
+                pracownicyOptions = pracownicy
+                .filter(item => item.name === imie && item.surname === nazwisko)
+                .map(pracownik => ({ label: `${pracownik.name} ${pracownik.surname}`, value: pracownik.id }));
+            } else {
+                pracownicyOptions = pracownicy.map(pracownik => ({ label: `${pracownik.name} ${pracownik.surname}`, value: pracownik.id }));
+            }
             setAvailablePracownicy(pracownicyOptions);
         } catch (error) {
             console.log(error);
@@ -317,22 +336,21 @@ export default function RaportyPage() {
                 <p>Raporty</p>
             </div>
             <div className="w-auto bg-gray-300 h-full m-2 outline outline-1 outline-gray-500">
-                {isAdmin && (
                     <table className="w-full">
                     <tbody className="text-left cursor-pointer">
                         <tr className="border-b hover:underline even:bg-gray-200 odd:bg-gray-300"
-                            onClick={() => setShowRaportyFirma(!showRaportyFirma)}>
+                            onClick={() => {if (accountType === 'Pracownik' && accountType === 'Kierownik') {setShowRaportyFirma(!showRaportyFirma)}}}>
                             <th className="border-r">Raporty dla firmy</th>
                         </tr>
                         <tr className={`border-b hover:underline even:bg-gray-200 odd:bg-gray-300 ${showRaportyFirma ? "" : "hidden"}`}>
                             <td onClick={() => handleRowClick("Sprawozdanie z działalności - szczegółowe")}
-                                className="border-r" style={getRowStyle("Sprawozdanie z działalności - szczegółowe")}>
+                                className="border-r"style={getRowStyle("Sprawozdanie z działalności - szczegółowe")}>
                                 Sprawozdanie z działalności - szczegółowe
                             </td>
                         </tr>
                         <tr className={`border-b hover:underline even:bg-gray-200 odd:bg-gray-300 ${showRaportyFirma ? "" : "hidden"}`}>
                             <td onClick={() => handleRowClick("Sprawozdanie z działalności - podsumowanie")}
-                                className="border-r" style={getRowStyle("Sprawozdanie z działalności - podsumowanie")}>
+                                className="border-r"style={getRowStyle("Sprawozdanie z działalności - podsumowanie")}>
                                 Sprawozdanie z działalności - podsumowanie
                             </td>
                         </tr>
@@ -354,30 +372,6 @@ export default function RaportyPage() {
                         </tr>
                     </tbody>
                 </table>
-                )}
-
-                {!isAdmin && (
-                    <table className="w-full">
-                    <tbody className="text-left cursor-pointer">
-                        <tr className="border-b hover:underline even:bg-gray-200 odd:bg-gray-300"
-                            onClick={() => setShowRaportyPracownik(!showRaportyPracownik)}>
-                            <th className="border-r">Raporty dla pracownika</th>
-                        </tr>
-                        <tr className={`border-b hover:underline even:bg-gray-200 odd:bg-gray-300 ${showRaportyPracownik ? "" : "hidden"}`}>
-                            <td onClick={() => handleRowClick("Analiza świadczeń pracowniczych")}
-                                className="border-r" style={getRowStyle("Analiza świadczeń pracowniczych")}>
-                                Analiza świadczeń pracowniczych
-                            </td>
-                        </tr>
-                        <tr className={`border-b hover:underline even:bg-gray-200 odd:bg-gray-300 ${showRaportyPracownik ? "" : "hidden"}`}>
-                            <td onClick={() => handleRowClick("Pracownik Analiza czasu - działalność")}
-                                className="border-r" style={getRowStyle("Pracownik Analiza czasu - działalność")}>
-                                Pracownik Analiza czasu - działalność
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-                    )}
             </div>
         </div>
     );

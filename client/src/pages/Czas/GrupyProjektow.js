@@ -4,11 +4,16 @@ import { Button } from 'primereact/button';
 import { Checkbox } from 'primereact/checkbox';
 import { Link, useActionData } from "react-router-dom";
 import Axios from "axios";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import checkUserType from '../../utils/accTypeUtils';
 
 export default function GrupyProjektowPage() {
     const [availableGroups, setAvailableGroups] = React.useState([]);
-    
+    const [accountType, setAccountType] = useState('');
+
+    useEffect(() => {
+        checkUserType(setAccountType);
+    }, []);
    
     useEffect(() => {
         fetchGroups();
@@ -50,8 +55,16 @@ export default function GrupyProjektowPage() {
                     <Link className="mr-2" to="/home/projekty">
                         <Button label="Powrót" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2" />
                     </Link>
-                    <Link to="/home/nowa-grupa">
-                        <Button label="Dodaj nową grupę" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2" />
+                    <Link to="/home/nowa-grupa"
+                    onClick={(e) => {
+                        if (accountType !== 'Administrator') {
+                            e.preventDefault();
+                        }
+                    }}
+                    >
+                        <Button label="Dodaj nową grupę" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2"
+                        disabled={accountType !== 'Administrator'} 
+                        />
                     </Link>
                 </div>
             </div>
@@ -75,16 +88,24 @@ export default function GrupyProjektowPage() {
                         <td className="border-r">{group.Cennik}</td>
                         <td className="border-r">{group.Stawka}</td>
                         <td>
-                            <Link to={`/home/grupa/${group.id}`}>
+                            <Link to={`/home/grupa/${group.id}`}
+                            onClick={(e) => {
+                                if (accountType !== 'Administrator') {
+                                    e.preventDefault();
+                                }
+                            }}
+                            >
                                 <Button 
                                     label="Edytuj"
                                     className="bg-blue-700 text-white p-1 m-0.5"
+                                    disabled={accountType !== 'Administrator'}
                                 />
                             </Link>
                             <Button 
                                 onClick={() => handleDelete(group.id)}
                                 label="Usuń"
                                 className="bg-red-500 text-white p-1 m-0.5"
+                                disabled={accountType !== 'Administrator'}
                             />
                         </td>
                     </tr>

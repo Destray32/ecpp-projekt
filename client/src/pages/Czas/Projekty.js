@@ -13,18 +13,12 @@ export default function ProjektyPage() {
     const [filtr, setFiltr] = useState('Wszystkie');
     const [selectedItems, setSelectedItems] = useState([]);
     const [data, setData] = useState([]);
-    const [typKonta, setTypKonta] = useState('');
-    const [isAdmin, setIsAdmin] = useState(false);
+    const [accountType, setAccountType] = useState('');
 
     useEffect(() => {
-        checkUserType(setTypKonta);
+        checkUserType(setAccountType);
     }, []);
 
-    useEffect(() => {
-        if (typKonta === 'Administrator') {
-            setIsAdmin(true);
-        }
-    }, [typKonta]);
 
     const handleCheckboxChange = (id) => {
         setSelectedItems(prevState =>
@@ -132,13 +126,19 @@ export default function ProjektyPage() {
                             <Link to="/home/grupy-projektow">
                                 <Button label="Grupy projektów" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2" />
                             </Link>
-                            {isAdmin && (
-                                <Link to="/home/nowy-projekt">
+                                <Link to="/home/nowy-projekt"
+                                onClick={(e) => {
+                                    if (accountType !== 'Administrator' && accountType !== 'Biuro') {
+                                        e.preventDefault();
+                                    }
+                                }}
+                        
+                                >
                                     <Button label="Dodaj nowy projekt"
-                                        className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2" />
+                                        className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2"
+                                        disabled={accountType === 'Pracownik'}
+                                        />
                                 </Link>
-                            )}
-
                         </div>
                     </div>
                 </div>

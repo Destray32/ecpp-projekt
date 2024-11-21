@@ -47,13 +47,16 @@ const PrzyciskAkcji = ({ handleSave, handleCloseWeek, handleOpenWeek, handlePrin
                                 label="Otwórz tydzień" 
                                 className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 flex-grow" 
                                 onClick={handleOpenWeek}
-                                disabled={userType !== 'Administrator'}
+                                disabled={userType !== 'Biuro' && userType !== 'Administrator'}
+
+                                
                             />
                             <Button 
                                 label="Drukuj raport" 
                                 className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 flex-grow" 
                                 onClick={handlePrintReport}
-                                disabled={userType !== 'Administrator'}
+                                disabled={userType !== 'Biuro' && userType !== 'Administrator'}
+                                
                             />
                         </div>
                     </div>

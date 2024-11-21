@@ -8,20 +8,15 @@ import checkUserType from "../../utils/accTypeUtils";
 
 export default function PojazdyPage() {
     const [tableData, setTableData] = React.useState([]);
-    const [typKonta, setTypKonta] = React.useState('');
-    const [isAdmin, setIsAdmin] = React.useState(false);
+    const [accountType, setAccountType] = React.useState('');
     const [editableRow, setEditableRow] = React.useState(null);
     const [editedData, setEditedData] = React.useState({});
 
-    useEffect(() => {
-        checkUserType(setTypKonta);
-    }, []);
 
     useEffect(() => {
-        if (typKonta === 'Administrator') {
-            setIsAdmin(true);
-        }
-    }, [typKonta]);
+        checkUserType(setAccountType);
+    }, []);
+
 
     useEffect(() => {
         axios.get("http://localhost:5000/api/pojazdy", { withCredentials: true })
@@ -83,13 +78,17 @@ export default function PojazdyPage() {
                 <div className="flex flex-row items-center p-4 w-full">
                     <p>Pojazdy</p>
                     <div className="ml-auto">
-                        {isAdmin && (
-                            <Link to="/home/nowy-pojazd">
+                            <Link to="/home/nowy-pojazd" onClick={(e) => {
+                                    if (accountType !== 'Administrator') {
+                                        e.preventDefault();
+                                    }
+                                }}>
                                 <Button
                                     label="Dodaj nowy pojazd"
-                                    className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2" />
+                                    className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2"
+                                    disabled={accountType !== 'Administrator'}
+                                    />
                             </Link>
-                        )}
                     </div>
                 </div>
             </AmberBox>
@@ -149,11 +148,13 @@ export default function PojazdyPage() {
                             onClick={() => handleDelete(item.id)}
                             icon="pi pi-trash"
                             className="text-red-600 p-button-rounded p-button-danger p-button-text p-button-outlined"
+                            disabled={accountType !== 'Administrator'}
                             />
                             <Button
                             onClick={() => handleEdit(item.id)}
                             icon={editableRow === item.id ? "pi pi-check" : "pi pi-pencil"}
                             className="p-button-rounded p-button-primary p-button-text p-button-outlined"
+                            disabled={accountType !== 'Administrator'}
                             />
                         </td>
                         </tr>
