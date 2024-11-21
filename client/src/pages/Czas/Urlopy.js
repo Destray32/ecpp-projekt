@@ -8,6 +8,7 @@ import { Checkbox } from 'primereact/checkbox';
 import Axios from "axios";
 import ZatwierdzWindow from '../../Components/Urlopy/ZatwierdzWindow';
 import { notification } from 'antd';
+import checkUserType from '../../utils/accTypeUtils';
 
 export default function UrlopyPage() {
     const [urlopOd, setUrlopOd] = useState('');
@@ -27,6 +28,10 @@ export default function UrlopyPage() {
     const [editVacationData, setEditVacationData] = useState({ urlopOd: '', urlopDo: '', status: '' });
     const [zatwierdzWindowVisible, setZatwierdzWindowVisible] = useState(false);
     const [selectedForZatwierdzenie, setSelectedForZatwierdzenie] = useState([]);
+    const [accountType, setAccountType] = useState('');
+    const [imie, setImie] = useState('');
+    const [nazwisko, setNazwisko] = useState('');
+    let urlopyData = [];
 
     // RenderTable component 
     const [remainingGroupSelections, setRemainingGroupSelections] = useState({});
@@ -35,6 +40,8 @@ export default function UrlopyPage() {
     const [approvedGroupSelections, setApprovedGroupSelections] = useState({});
     const [approvedExpandedGroups, setApprovedExpandedGroups] = useState({});
     const [approvedSelectedItems, setApprovedSelectedItems] = useState([]);
+
+
     
 
     const extractId = (idWithPrefix) => idWithPrefix.replace('cb-', '');
@@ -133,10 +140,10 @@ export default function UrlopyPage() {
                                                     <td className="border-r px-2 py-1">{urlopy.komentarz}</td>
                                                     <td className={`border-r px-2 py-1 ${getStatusClass(urlopy.status)}`}>{urlopy.status}</td>
                                                     <td className="px-2 py-1">
-                                                        <Button label="Edytuj" onClick={() => handleEdit(urlopy)} className="bg-blue-700 text-white p-1 m-0.5 text-sm" />
-                                                        <Button label="Usuń" onClick={() => handleUsun(urlopy.id)} className="bg-red-500 text-white p-1 m-0.5 text-sm" />
-                                                        <Button label="Zatwierdź" onClick={() => handleZatwierdz(urlopy.id, false)} className="bg-green-500 text-white p-1 m-0.5 text-sm" />
-                                                        <Button label="Anuluj" onClick={() => handleAnuluj(urlopy.id, false)} className="bg-red-500 text-white p-1 m-0.5 text-sm" />
+                                                        <Button label="Edytuj" onClick={() => handleEdit(urlopy)} disabled={accountType !== 'Administrator'} className="bg-blue-700 text-white p-1 m-0.5 text-sm" />
+                                                        <Button label="Usuń" onClick={() => handleUsun(urlopy.id)} disabled={accountType !== 'Administrator'} className="bg-red-500 text-white p-1 m-0.5 text-sm" />
+                                                        <Button label="Zatwierdź" onClick={() => handleZatwierdz(urlopy.id, false)} disabled={accountType !== 'Administrator'} className="bg-green-500 text-white p-1 m-0.5 text-sm" />
+                                                        <Button label="Anuluj" onClick={() => handleAnuluj(urlopy.id, false)} disabled={accountType !== 'Administrator'} className="bg-red-500 text-white p-1 m-0.5 text-sm" />
                                                     </td>
                                                 </>
                                             )}
@@ -288,6 +295,7 @@ export default function UrlopyPage() {
             .then((response) => {
                 setPracownicy(response.data); // skróciłem do response.data, 
                 // bo mi nie wypełniało dropdowna
+                console.log(response.data);
             })
             .catch((error) => {
                 console.error("There was an error fetching the data:", error);
@@ -315,6 +323,22 @@ export default function UrlopyPage() {
     
     const handleZatwierdz = (id, showDialog = true) => handleUpdateStatus(id, "Zatwierdzone", showDialog);
     const handleAnuluj = (id, showDialog = true) => handleUpdateStatus(id, "Anulowane", showDialog);
+
+    useEffect(() => {
+        checkUserType(setAccountType);
+        getImie();
+    }, []);
+
+    const getImie = async () => {
+        try {
+            const response = await Axios.get('http://localhost:5000/api/imie', { withCredentials: true });
+            const { name, surename } = response.data;
+            setImie(`${name}`);
+            setNazwisko(`${surename}`);
+        } catch (error) {
+            console.error(error);
+        }
+    }
     
     const handleUpdateStatus = (id = null, newStatus, showDialog = true) => {
         let selectedItems = [];
@@ -383,21 +407,24 @@ export default function UrlopyPage() {
     const fetchUrlopy = () => {
         Axios.get("http://localhost:5000/api/urlopy", { withCredentials: true })
             .then((response) => {
-                const urlopyData = response.data.urlopy;
+                if(accountType === 'Administrator') {
+                urlopyData = response.data.urlopy;
+                }
+                else {
+                urlopyData = response.data.urlopy.filter(item => item.imie === imie && item.nazwisko === nazwisko);
+                }
+
     
                 const filterBySelectedGroups = (data) => {
                     if (selectedGrupyNazwa.length === 0) return data;
                     return data.filter(item => selectedGrupyNazwa.includes(item.zleceniodawca));
                 };
                 
-    
                 const filteredUrlopyData = filterBySelectedGroups(urlopyData);
     
-                // Split filtered data into approved and remaining
                 const approvedUrlopy = urlopyData.filter(item => item.status === "Do zatwierdzenia");
                 const remainingUrlopy = filteredUrlopyData.filter(item => item.status !== "Do zatwierdzenia");
     
-                // Group and sort data by name
                 const groupByName = (data) => data.reduce((acc, curr) => {
                     const key = `${curr.imie} ${curr.nazwisko}`;
                     if (!acc[key]) acc[key] = [];
@@ -428,7 +455,7 @@ export default function UrlopyPage() {
     
                 const sortedApprovedEntries = sortEntriesInGroups(sortedApprovedData);
                 const sortedRemainingEntries = sortEntriesInGroups(sortedRemainingData);
-    
+
                 setFilteredDane({ ApprovedUrlopy: sortedApprovedEntries, Pozostale: sortedRemainingEntries });
             })
             .catch((error) => {
@@ -455,6 +482,12 @@ export default function UrlopyPage() {
         handleGetPracownicy();
 
     }, []);
+
+    useEffect(() => {
+        if (imie && nazwisko) {
+            fetchUrlopy();
+        }
+    }, [imie, nazwisko, accountType]);
 
     const handleDodaj = () => {
         Axios.post("http://localhost:5000/api/urlopy", {
@@ -584,7 +617,9 @@ export default function UrlopyPage() {
                                 <Dropdown
                                     value={UrlopDla}
                                     onChange={(e) => setUrlopDla(e.value)}
-                                    options={pracownicy.map(pracownik => `${pracownik.surname} ${pracownik.name}`)}
+                                    options={pracownicy
+                                        .filter(pracownik => pracownik.name === imie && pracownik.surname === nazwisko)
+                                        .map(pracownik => `${pracownik.surname} ${pracownik.name}`)}
                                     placeholder="Pracownik"
                                     autoComplete="off"
                                     className="p-1"
@@ -607,6 +642,7 @@ export default function UrlopyPage() {
                                     filterInputAutoFocus
                                     showFilterClear
                                     showClear
+                                    disabled={accountType !== 'Administrator'}
                                 />
                             </div>
                         </div>
@@ -618,7 +654,7 @@ export default function UrlopyPage() {
                         </div>
                         <div className="flex flex-col w-2/12 ">
                             <p className="text-sm text-gray-600 mb-2">Urlop do:</p>
-                            <InputText id="UrlopDo" value={urlopDo} onChange={(e) => setUrlopDo(e.target.value)} type="date" />
+                            <InputText id="UrlopDo" value={urlopDo} onChange={(e) => setUrlopDo(e.target.value)}type="date" />
                         </div>
                     </div>
                     <div className="flex justify-start w-full p-4 ml-4">
@@ -653,6 +689,7 @@ export default function UrlopyPage() {
                     label="Zatwierdź" 
                     onClick={() => handleUpdateStatus(null, "Zatwierdzone")} 
                     className="bg-green-500 text-white p-1 m-0.5 text-sm w-24" 
+                    disabled={accountType !== 'Administrator'}
                 />
                 <ZatwierdzWindow 
                     visible={zatwierdzWindowVisible}
@@ -678,12 +715,14 @@ export default function UrlopyPage() {
                         inputId="master-checkbox"
                         checked={allGroupsSelected}
                         onChange={handleMasterCheckboxChange}
+                        disabled={accountType !== 'Administrator'}
                     />
                     <span className="ml-2 font-bold">Zaznacz wszystkie</span>
                 </div>
                 {dostepneGrupy.map((grupa) => (
                     <div key={grupa.id}>
                         <Checkbox
+                            disabled={accountType !== 'Administrator'}
                             inputId={`grupa-${grupa.id}`}
                             checked={selectedGrupy[grupa.id] || false}
                             onChange={() => handleGrupaCheckboxChange(grupa.id, grupa.Zleceniodawca)}
@@ -692,7 +731,7 @@ export default function UrlopyPage() {
                     </div>
                 ))}
             </div>
-                <Button label="Szukaj" onClick={handleSearch} />
+                <Button label="Szukaj" onClick={handleSearch} disabled={accountType !== 'Administrator'} />
                 <div className="flex flex-row items-center space-x-4">
                     <InputText
                         className="text-black"
@@ -700,8 +739,9 @@ export default function UrlopyPage() {
                         placeholder="Select week"
                         value={selectedWeek}
                         onChange={(e) => handleSelectWeekAndYear(e)}
+                        disabled={accountType !== 'Administrator'}
                     />
-                    <Button label="Drukuj" onClick={handlePdfDownloadClick} />
+                    <Button label="Drukuj" onClick={handlePdfDownloadClick} disabled={accountType !== 'Administrator'} />
                 </div>
             </AmberBox>
             <div className="w-auto bg-gray-300 h-full m-2 outline outline-1 outline-gray-500">

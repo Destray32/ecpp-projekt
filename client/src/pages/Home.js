@@ -29,6 +29,7 @@ export default function HomePage() {
         if (accountType === 'Administrator') {
             setIsAdmin(true);
         }
+        console.log(accountType);
     }, [accountType]);
 
     useEffect(() => {
@@ -163,17 +164,26 @@ export default function HomePage() {
                     <nav className={`min-w-[200px] bg-primary p-4 ${mobileMenuOpen ? 'fixed top-0 left-0 w-screen h-screen z-50 block' : 'hidden'} min-[1470px]:block`}>
                         <div className="bg-white w-full h-[0.5px] my-4"></div>
                         <div className="space-y-2 max-h-[80%]">
-                            {menu === "Pracownik" && (
+                        {menu === "Pracownik" && (
+                            <>
+                                {accountType === 'Administrator' ? (
                                 <>
                                     <ButtonLewy link="pracownik" nazwa='Pracownik' onClick={closeMobileMenu} isActive={location.pathname === '/home/pracownik'} />
-                                    {isAdmin && (
                                     <ButtonLewy link="logowanie" nazwa='Logowanie' onClick={closeMobileMenu} isActive={location.pathname === '/home/logowanie'} />
-                                    )}
-                                <ButtonLewy nazwa='Wyloguj' onClick={() => { handleLogout(); closeMobileMenu(); }} isActive={false} />
                                 </>
+                                ) : (
+                                <ButtonLewy link="pracownik" nazwa='Pracownik' onClick={closeMobileMenu} isActive={location.pathname === '/home/pracownik'} 
+                                />
+                                )}
+
+                                <ButtonLewy nazwa='Wyloguj' onClick={() => { handleLogout(); closeMobileMenu(); }} isActive={false} 
+                                />
+                            </>
                             )}
                             {menu === "Czas" && (
                                 <>
+                                {accountType === 'Administrator' ? (
+                                    <>
                                     <ButtonLewy link="czas" nazwa='Czas Pracy' onClick={closeMobileMenu} isActive={location.pathname === '/home/czas'} />
                                     <ButtonLewy nazwa='Administracja' onClick={() => { toggleSubMenu(); }} />
                                 {showSubMenu && (
@@ -184,13 +194,53 @@ export default function HomePage() {
                                         <ButtonLewy link="archiwum" nazwa='Archiwum' onClick={closeMobileMenu} isActive={location.pathname === '/home/archiwum'} />
                                     </div>
                                 )}
-                                    {isAdmin && (
-                                        <ButtonLewy link="tydzien" nazwa='Tydzien' onClick={closeMobileMenu} isActive={location.pathname === '/home/tydzien'} />
-                                    )}
+                                <ButtonLewy link="tydzien" nazwa='Tydzien' onClick={closeMobileMenu} isActive={location.pathname === '/home/tydzien'} />
                                 <ButtonLewy link="raporty" nazwa='Raporty' onClick={closeMobileMenu} isActive={location.pathname === '/home/raporty'} />
-                                    <ButtonLewy link="sprawdzsamochod" nazwa='Sprawdź samochód' onClick={closeMobileMenu} isActive={location.pathname === '/home/sprawdzsamochod'} />
-                                    <ButtonLewy nazwa='Wyloguj' onClick={() => { handleLogout(); closeMobileMenu(); }} isActive={false} />
+                                <ButtonLewy link="sprawdzsamochod" nazwa='Sprawdź samochód' onClick={closeMobileMenu} isActive={location.pathname === '/home/sprawdzsamochod'} />  
                                 </>
+                            ) : accountType === 'Pracownik' ? (
+                                <>
+                                    <ButtonLewy link="czas" nazwa='Czas Pracy' onClick={closeMobileMenu} isActive={location.pathname === '/home/czas'} />
+                                    <ButtonLewy nazwa='Administracja' onClick={() => { toggleSubMenu(); }} />
+                                    {showSubMenu && (
+                                        <div className='ml-5 space-y-2'>
+                                            <ButtonLewy link="urlopy" nazwa='Urlopy' onClick={closeMobileMenu} isActive={location.pathname === '/home/urlopy'} />
+                                        </div>
+                                    )}
+                                    <ButtonLewy link="raporty" nazwa='Raporty' onClick={closeMobileMenu} isActive={location.pathname === '/home/raporty'} />
+                                </>
+                            ) : accountType === "Kierownik" ? (
+                                <>
+                                    <ButtonLewy link="czas" nazwa='Czas Pracy' onClick={closeMobileMenu} isActive={location.pathname === '/home/czas'} />
+                                    <ButtonLewy nazwa='Administracja' onClick={() => { toggleSubMenu(); }} />
+                                    {showSubMenu && (
+                                        <div className='ml-5 space-y-2'>
+                                            <ButtonLewy link="projekty" nazwa='Projekty' onClick={closeMobileMenu} isActive={location.pathname === '/home/projekty'} />
+                                            <ButtonLewy link="urlopy" nazwa='Urlopy' onClick={closeMobileMenu} isActive={location.pathname === '/home/urlopy'} />
+                                            <ButtonLewy link="pojazdy" nazwa='Pojazdy' onClick={closeMobileMenu} isActive={location.pathname === '/home/pojazdy'} />
+                                        </div>
+                                    )}
+                                    <ButtonLewy link="raporty" nazwa='Raporty' onClick={closeMobileMenu} isActive={location.pathname === '/home/raporty'} />
+                                    <ButtonLewy link="sprawdzsamochod" nazwa='Sprawdź samochód' onClick={closeMobileMenu} isActive={location.pathname === '/home/sprawdzsamochod'} />  
+                                </>
+                            ) : accountType === "Biuro" ? (
+                                <>
+                                    <ButtonLewy link="czas" nazwa='Czas Pracy' onClick={closeMobileMenu} isActive={location.pathname === '/home/czas'} />
+                                    <ButtonLewy nazwa='Administracja' onClick={() => { toggleSubMenu(); }} />
+                                    {showSubMenu && (
+                                        <div className='ml-5 space-y-2'>
+                                            <ButtonLewy link="projekty" nazwa='Projekty' onClick={closeMobileMenu} isActive={location.pathname === '/home/projekty'} />
+                                            <ButtonLewy link="urlopy" nazwa='Urlopy' onClick={closeMobileMenu} isActive={location.pathname === '/home/urlopy'} />
+                                            <ButtonLewy link="pojazdy" nazwa='Pojazdy' onClick={closeMobileMenu} isActive={location.pathname === '/home/pojazdy'} />
+                                        </div>
+                                    )}
+                                    <ButtonLewy link="tydzien" nazwa='Tydzien' onClick={closeMobileMenu} isActive={location.pathname === '/home/tydzien'} />
+                                    <ButtonLewy link="raporty" nazwa='Raporty' onClick={closeMobileMenu} isActive={location.pathname === '/home/raporty'} />
+                                    <ButtonLewy link="sprawdzsamochod" nazwa='Sprawdź samochód' onClick={closeMobileMenu} isActive={location.pathname === '/home/sprawdzsamochod'} />
+                                </>
+                            ) : null}
+                            <ButtonLewy nazwa='Wyloguj' onClick={() => { handleLogout(); closeMobileMenu(); }} isActive={false} />
+                            </>
                             )}
                             {menu === "PlanTygodnia" && (
                                 <>

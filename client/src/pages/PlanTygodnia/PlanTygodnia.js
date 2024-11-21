@@ -431,7 +431,7 @@ export default function PlanTygodniaPage() {
                         </table>
                     </div>
                 </div>
-                {isAdmin && (
+
                 <div id="prawa" className="flex flex-col mr-2">
                     <AmberBox>
                         <div className="mx-auto flex flex-col justify-between items-center p-4 ">
@@ -446,29 +446,32 @@ export default function PlanTygodniaPage() {
                                 autoComplete='off'
                                 filter
                                 resetFilterOnHide
+                                disabled={accountType != 'Administrator'}
                                 filterInputAutoFocus
                                 className=" md:w-14rem p-1 w-full"
                             />
                             <Button label="Przenieś" className="bg-white w-[9rem] h-[3rem] mt-4"
-                                text raised onClick={handlePrzeniesZaznaczone} />
+                                text raised onClick={handlePrzeniesZaznaczone}
+                                disabled={accountType != 'Administrator'} />
                         </div>
                     </AmberBox>
                     <AmberBox>
                         <div className="mx-auto flex flex-col justify-between items-center p-4 ">
                             <p className="text-center mb-2">Skasuj zaznaczone</p>
                             <Button label="Usuń" className="bg-white w-[9rem] h-[3rem]"
-                                text raised onClick={handleUsunZaznaczone} />
+                                text raised onClick={handleUsunZaznaczone}
+                                disabled={accountType != 'Administrator'} />
                         </div>
                     </AmberBox>
                     <AmberBox>
                         <div className="mx-auto flex flex-col justify-between items-center p-4 ">
                             <p className="text-center mb-2">Skopiuj pracowników z poprzedniego tygodnia</p>
                             <Button label="Skopiuj" className="bg-white w-[9rem] h-[3rem]"
-                                text raised onClick={handleSkopiuj} />
+                                text raised onClick={handleSkopiuj}
+                                disabled={accountType != 'Administrator'} />
                         </div>
                     </AmberBox>
                 </div>
-                )}
             </div>
         </main>
     )

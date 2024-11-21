@@ -155,7 +155,7 @@ function EdytujPracownika(req, res) {
                         valuesUpdatePracownik = [
                             login,
                             active ? 'Aktywne' : 'Nieaktywne',
-                            role === 1 ? 'Administrator' : role === 2 ? 'Majster' : role === 3 ? 'Pracownik' : 'Gosc',
+                            role === 1 ? 'Administrator' : role === 2 ? 'Kierownik' : role === 3 ? 'Pracownik' : 'Biuro',
                             newPassword ? bcrypt.hashSync(newPassword, 10) : null,
                             idPracownik
                         ];
@@ -170,7 +170,7 @@ function EdytujPracownika(req, res) {
                         valuesUpdatePracownik = [
                             login,
                             active ? 'Aktywne' : 'Nieaktywne',
-                            role === 1 ? 'Administrator' : role === 2 ? 'Majster' : role === 3 ? 'Pracownik' : 'Gosc',
+                            role === 1 ? 'Administrator' : role === 2 ? 'Kierownik' : role === 3 ? 'Pracownik' : 'Biuro',
                             idPracownik
                         ];
                     }

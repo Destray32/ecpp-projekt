@@ -211,10 +211,10 @@ export default function DodajPracownikaPage() {
                                 </Form.Item>
                                 <Form.Item label="Rola" name="role" rules={[{ required: true, message: 'Wybierz rolę' }]}>
                                     <Radio.Group>
-                                        <Radio value={1}>Admin</Radio>
+                                        <Radio value={1}>Szef</Radio>
                                         <Radio value={2}>Kierownik</Radio>
                                         <Radio value={3}>Pracownik</Radio>
-                                        <Radio value={4}>Gość</Radio>
+                                        <Radio value={4}>Biuro</Radio>
                                     </Radio.Group>
                                 </Form.Item>
                                 <div className="flex flex-row justify-center items-center space-x-4">
