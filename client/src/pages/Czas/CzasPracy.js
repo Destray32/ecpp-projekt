@@ -489,6 +489,7 @@ export default function CzasPracyPage() {
                 }
             });
 
+
             if (totalDayHours !== projectDayHours) {
                 dayHourMismatch = true;
                 console.log(`Różnica w godzinach dla ${dayName}. Godziny pracy: ${totalDayHours}, godziny w dodatkowych projektach: ${projectDayHours}`);
@@ -531,6 +532,8 @@ export default function CzasPracyPage() {
             return;
         } else {
             try {
+                await handleSave();
+                
                 fetchUserId();
                 try {
                     const warning_response = await Axios.post("http://localhost:5000/api/czas/warnings", {
