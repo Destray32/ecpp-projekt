@@ -112,6 +112,7 @@ export default function CzasPracyPage() {
         const urlRequest = `http://localhost:5000/api/planTygodnia/zaplanuj?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
 
         try {
+            
             const res = await Axios.get(urlRequest, { 
                 withCredentials: true 
             });
@@ -124,7 +125,7 @@ export default function CzasPracyPage() {
             ];
     
             const pracownicyGrupy = planData
-                .filter(entry => grupaIds.includes(entry.grupaId))
+                .filter(entry => grupaIds.includes(entry.grupaId) && entry.pracownikId !== null)
                 .map(employee => ({
                     label: `${employee.imie} ${employee.nazwisko}`,
                     value: employee.pracownikId
