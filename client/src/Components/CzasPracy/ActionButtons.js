@@ -18,9 +18,19 @@ const PrzyciskAkcji = ({ handleSave, handleCloseWeek, handleOpenWeek, handlePrin
         Modal.confirm({
             title: 'Czy na pewno chcesz zamknąć tydzień?',
             content: 'Upewnij się, że zapisałeś wszystkie zmiany, ponieważ po zamknięciu tygodnia nie będzie możliwości edycji.',
-            onOk: handleCloseWeek,
+            onOk: oswiadczenie,
             okText: 'Tak',
             cancelText: 'Nie',
+        });
+    };
+
+    const oswiadczenie = () => {
+        Modal.confirm({
+            title: 'Oświadczenie o prawidłowości wprowadzonych danych',
+            content: 'Oświadczam, że wprowadzone przeze mnie dane są zgodne z rzeczywistością i nie zawierają błędów. Ponoszę odpowiedzialność za wprowadzone dane.',
+            onOk: handleCloseWeek,
+            okText: 'Zamknij tydzień',
+            cancelText: 'Anuluj',
         });
     };
 
