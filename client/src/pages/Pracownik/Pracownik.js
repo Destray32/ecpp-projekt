@@ -73,10 +73,12 @@ export default function PracownikPage() {
     setSearchedColumn(dataIndex);
   };
 
-  const handleReset = (clearFilters) => {
+  const handleReset = (clearFilters, confirm, dataIndex) => {
     clearFilters();
     setSearchText('');
-  };
+    setSearchedColumn('');
+    handleSearch([], confirm, dataIndex);
+  };  
 
   const getColumnSearchProps = dataIndex => ({
     filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
@@ -101,7 +103,11 @@ export default function PracownikPage() {
           >
             Szukaj
           </Button>
-          <Button onClick={() => handleReset(clearFilters)} size="small" style={{ width: 90 }}>
+          <Button
+            onClick={() => handleReset(clearFilters, confirm, dataIndex)}
+            size="small"
+            style={{ width: 90 }}
+          >
             Reset
           </Button>
         </Space>
@@ -114,7 +120,7 @@ export default function PracownikPage() {
         : '',
     onFilterDropdownOpenChange: visible => {
       if (visible) {
-        setTimeout(() => searchInput.current.select());
+        setTimeout(() => searchInput.current.select(), 100);
       }
     },
     render: text =>
@@ -128,7 +134,7 @@ export default function PracownikPage() {
       ) : (
         text
       ),
-  });
+  });  
 
   const columns = [
     {
@@ -165,11 +171,12 @@ export default function PracownikPage() {
         <EditableCell
           title="Grupa urlopowa"
           editable
+          isAdmin={isAdmin}
           selectOptions={groups}
           record={record}
           onSave={handleSave}
         >
-          {text}
+          {text ? text : "-- Brak --" }
         </EditableCell>
       ),
     },
@@ -187,6 +194,7 @@ export default function PracownikPage() {
         <EditableCell
           title="Firma"
           editable
+          isAdmin={isAdmin}
           selectOptions={firms}
           record={record}
           onSave={handleSave}
@@ -292,7 +300,6 @@ export default function PracownikPage() {
       console.error('Update failed:', error);
     }
   };
-
 
   const printPDF = () => {
     const doc = new jsPDF('landscape');
