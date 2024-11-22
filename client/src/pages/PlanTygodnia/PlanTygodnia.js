@@ -23,22 +23,16 @@ export default function PlanTygodniaPage() {
     const [pracownikData, setPracownikData] = useState([]);
     const [selectedRowIds, setSelectedRowIds] = useState([]);
     const [currentDate, setCurrentDate] = useState(new Date());
-    const [isAdmin, setIsAdmin] = useState(false);
     const [accountType, setAccountType] = useState('');
     const [dialogVisible, setDialogVisible] = useState(false);
     const [selectedGroups, setSelectedGroups] = useState([]);
+    const [error, setError] = useState(false);
+    const [isDialogVisible, setIsDialogVisible] = useState(false);
 
 
     useEffect(() => {
         checkUserType(setAccountType);
     }, []);
-
-
-    useEffect(() => {
-        if (accountType === 'Administrator') {
-            setIsAdmin(true);
-        }
-    }, [accountType]);
 
     const from = format(startOfWeek(currentDate, { weekStartsOn: 1 }), 'yyyy-MM-dd');
     const to = format(addWeeks(startOfWeek(currentDate, { weekStartsOn: 1 }), 1), 'yyyy-MM-dd');
@@ -248,6 +242,11 @@ export default function PlanTygodniaPage() {
             .catch(err => console.error(err));
     };
 
+    const confirmDeletion = () => {
+        handleUsunZaznaczone();
+        setIsDialogVisible(false);
+    };
+
     const handleWheelScroll = (e) => {
         const currentIndex = availableGroups.findIndex((g) => g.name === group?.name);
         if (currentIndex !== -1) {
@@ -264,10 +263,16 @@ export default function PlanTygodniaPage() {
             fetchData(nextGroup);  // Fetch data for the new group
         }
     };
-    
-    
-    
 
+    const handlePrint = () => {
+        if (selectedGroups.length === 0) {
+            setError(true);
+        } else {
+            setError(false);
+            handlePrintSelectedGroups();
+        }
+    };
+    
     // funkcja do obsługi zmiany stanu checkboxa w pierwszej kolumnie
     const handleRowCheckboxChange = (employeeId) => {
         setSelectedRowIds(prevSelectedRows => {
@@ -350,8 +355,13 @@ export default function PlanTygodniaPage() {
                                 </div>
                             ))}
                         </div>
+                        {error && (
+                            <div className="p-grid p-col-12 text-red-500 text-sm mt-2 mb-3">
+                                Musisz wybrać co najmniej jedną grupę!
+                            </div>
+                        )}
                         <div className="p-grid">
-                            <Button label="Drukuj Wybrane" className="bg-white w-[9rem] h-[3rem]" text raised onClick={handlePrintSelectedGroups} />
+                            <Button label="Drukuj Wybrane" className="bg-white w-[9rem] h-[3rem]" text raised onClick={handlePrintSelectedGroups  && handlePrint} />
                         </div>
                     </Dialog>
                     <Button label="Drukuj" className="bg-white w-[9rem] h-[3rem]"
@@ -456,12 +466,37 @@ export default function PlanTygodniaPage() {
                         </div>
                     </AmberBox>
                     <AmberBox>
-                        <div className="mx-auto flex flex-col justify-between items-center p-4 ">
+                        <div className="mx-auto flex flex-col justify-between items-center p-4">
                             <p className="text-center mb-2">Skasuj zaznaczone</p>
-                            <Button label="Usuń" className="bg-white w-[9rem] h-[3rem]"
-                                text raised onClick={handleUsunZaznaczone}
-                                disabled={accountType != 'Administrator'} />
+                            <Button
+                                label="Usuń"
+                                className="bg-white w-[9rem] h-[3rem]"
+                                text
+                                raised
+                                onClick={() => setIsDialogVisible(true)}
+                                disabled={accountType !== 'Administrator'}
+                            />
                         </div>
+                        <Dialog
+                            header="Potwierdzenie Usunięcia"
+                            visible={isDialogVisible}
+                            style={{ width: '25vw' }}
+                            onHide={() => setIsDialogVisible(false)}
+                        >
+                            <p className="text-center">Czy na pewno chcesz usunąć zaznaczone elementy?</p>
+                            <div className="flex justify-center gap-4 mt-4">
+                                <Button
+                                    label="Nie"
+                                    className="p-button-outlined p-button-danger w-[6rem] border text-red-600"
+                                    onClick={() => setIsDialogVisible(false)}
+                                />
+                                <Button
+                                    label="Tak"
+                                    className="p-button-success w-[6rem] text-green-400 border"
+                                    onClick={confirmDeletion}
+                                />
+                            </div>
+                        </Dialog>
                     </AmberBox>
                     <AmberBox>
                         <div className="mx-auto flex flex-col justify-between items-center p-4 ">
