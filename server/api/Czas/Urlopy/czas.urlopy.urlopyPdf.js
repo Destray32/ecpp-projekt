@@ -23,7 +23,7 @@ function urlopyPdf(req, res, db) {
     JOIN 
         Urlopy u ON p.idPracownik = u.FK_idPracownik
     WHERE
-        gu.Zleceniodawca IN (?)
+        gu.Zleceniodawca IN (?) AND io.Drukowac_Urlop = 1
     ORDER BY 
     do.Nazwisko, do.Imie;
     `;

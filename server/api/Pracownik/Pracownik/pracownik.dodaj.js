@@ -131,7 +131,7 @@ function DodajPracownika(req, res) {
                     const valuesPracownik = [
                         login,
                         active ? 'Aktywne' : 'Nieaktywne',
-                        role === 1 ? 'Administrator' : role === 2 ? 'Majster' : role === 3 ? 'Pracownik' : 'Gosc',
+                        role === 1 ? 'Administrator' : role === 2 ? 'Kierownik' : role === 3 ? 'Pracownik' : 'Biuro',
                         hashedPassword,
                         daneOsoboweId,
                         informacjeOFirmieId

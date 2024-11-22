@@ -1,11 +1,12 @@
 import React, { useEffect, useRef } from "react";
-import { Form, Select } from 'antd';
+import { Form, Select } from "antd";
 
 const { Option } = Select;
 
 const EditableCell = ({
     title,
     editable,
+    isAdmin,
     children,
     selectOptions = [],
     record,
@@ -15,16 +16,18 @@ const EditableCell = ({
     const [form] = Form.useForm();
     const inputRef = useRef(null);
 
-    const handleChange = value => {
+    const handleChange = (value) => {
         form.setFieldsValue({ [title]: value });
     };
 
     const handleSave = async () => {
         try {
             const updatedValue = form.getFieldValue(title);
-            await onSave(record.id, title, updatedValue);
+            // If `-- Brak --` is selected, pass `null` to the save function.
+            const valueToSave = updatedValue === "-- Brak --" ? null : updatedValue;
+            await onSave(record.id, title, valueToSave);
         } catch (error) {
-            console.error('Save failed:', error);
+            console.error("Save failed:", error);
         }
     };
 
@@ -32,22 +35,32 @@ const EditableCell = ({
         form.setFieldsValue({ [title]: children });
     }, [children, title, form]);
 
+    const displayValue = () => {
+        const option = selectOptions.find((opt) => opt.id === children);
+        return option ? option.name : children;
+    };
+
     return (
         <td {...restProps}>
-            {editable ? (
+            {editable && isAdmin ? (
                 <Form form={form} initialValues={{ [title]: children }}>
                     <Form.Item
                         style={{ margin: 0 }}
                         name={title}
-                        rules={[{ required: true, message: `${title} is required.` }]}
+                        rules={[
+                            { required: true, message: `${title} is required.` },
+                        ]}
                         className="min-w-36"
                     >
                         <Select
                             ref={inputRef}
                             onChange={handleChange}
-                            onBlur={handleSave}
+                            onSelect={handleSave}
                         >
-                            {selectOptions.map(option => (
+                            <Option key="null" value="-- Brak --">
+                                -- Brak --
+                            </Option>
+                            {selectOptions.map((option) => (
                                 <Option key={option.id} value={option.id}>
                                     {option.name}
                                 </Option>
@@ -56,7 +69,7 @@ const EditableCell = ({
                     </Form.Item>
                 </Form>
             ) : (
-                children
+                displayValue()
             )}
         </td>
     );

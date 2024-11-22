@@ -67,7 +67,8 @@ const AdditionalProjectRow = React.memo(({
                         const isActive = activeInput && activeInput.projectId === project.id && activeInput.date === dateKey;
                         const hasCommentAndCar = project.hours[dateKey]?.comment && project.hours[dateKey]?.car && project.hours[dateKey]?.hoursWorked > 0;
                         return (
-                            <div key={index} className="text-center" onClick={() => onActivate(project.id, format(day, 'yyyy-MM-dd'))}>
+                            <div key={index} className="text-center" 
+                            onClick={() => onActivate(project.id, format(day, 'yyyy-MM-dd'))}>
                                 <input
                                     type="number"
                                     value={project.hours[dateKey]?.hoursWorked || ""}
@@ -78,7 +79,7 @@ const AdditionalProjectRow = React.memo(({
                                             e.preventDefault();
                                         }
                                     }}
-                                    className={`w-full p-1 border ${isActive ? 'border-blue-500' : 'border-gray-300'} ${hasCommentAndCar ? 'bg-green-200' : ''} rounded`}
+                                    className={`project-input w-full p-1 border ${isActive ? 'border-blue-500' : 'border-gray-300'} ${hasCommentAndCar ? 'bg-green-200' : ''} rounded`}
                                     placeholder="0"
                                     disabled={niedziela || statusTyg === "Zamkniety"}
                                     min="0"

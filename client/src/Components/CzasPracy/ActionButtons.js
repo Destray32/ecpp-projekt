@@ -18,9 +18,19 @@ const PrzyciskAkcji = ({ handleSave, handleCloseWeek, handleOpenWeek, handlePrin
         Modal.confirm({
             title: 'Czy na pewno chcesz zamknąć tydzień?',
             content: 'Upewnij się, że zapisałeś wszystkie zmiany, ponieważ po zamknięciu tygodnia nie będzie możliwości edycji.',
-            onOk: handleCloseWeek,
+            onOk: oswiadczenie,
             okText: 'Tak',
             cancelText: 'Nie',
+        });
+    };
+
+    const oswiadczenie = () => {
+        Modal.confirm({
+            title: 'Oświadczenie o prawidłowości wprowadzonych danych',
+            content: 'Oświadczam, że wprowadzone przeze mnie dane są zgodne z rzeczywistością i nie zawierają błędów. Ponoszę odpowiedzialność za wprowadzone dane.',
+            onOk: handleCloseWeek,
+            okText: 'Zamknij tydzień',
+            cancelText: 'Anuluj',
         });
     };
 
@@ -47,13 +57,16 @@ const PrzyciskAkcji = ({ handleSave, handleCloseWeek, handleOpenWeek, handlePrin
                                 label="Otwórz tydzień" 
                                 className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 flex-grow" 
                                 onClick={handleOpenWeek}
-                                disabled={userType !== 'Administrator'}
+                                disabled={userType !== 'Biuro' && userType !== 'Administrator'}
+
+                                
                             />
                             <Button 
                                 label="Drukuj raport" 
                                 className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 flex-grow" 
                                 onClick={handlePrintReport}
-                                disabled={userType !== 'Administrator'}
+                                disabled={userType !== 'Biuro' && userType !== 'Administrator'}
+                                
                             />
                         </div>
                     </div>

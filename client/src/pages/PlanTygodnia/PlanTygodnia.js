@@ -23,22 +23,16 @@ export default function PlanTygodniaPage() {
     const [pracownikData, setPracownikData] = useState([]);
     const [selectedRowIds, setSelectedRowIds] = useState([]);
     const [currentDate, setCurrentDate] = useState(new Date());
-    const [isAdmin, setIsAdmin] = useState(false);
     const [accountType, setAccountType] = useState('');
     const [dialogVisible, setDialogVisible] = useState(false);
     const [selectedGroups, setSelectedGroups] = useState([]);
+    const [error, setError] = useState(false);
+    const [isDialogVisible, setIsDialogVisible] = useState(false);
 
 
     useEffect(() => {
         checkUserType(setAccountType);
     }, []);
-
-
-    useEffect(() => {
-        if (accountType === 'Administrator') {
-            setIsAdmin(true);
-        }
-    }, [accountType]);
 
     const from = format(startOfWeek(currentDate, { weekStartsOn: 1 }), 'yyyy-MM-dd');
     const to = format(addWeeks(startOfWeek(currentDate, { weekStartsOn: 1 }), 1), 'yyyy-MM-dd');
@@ -248,6 +242,11 @@ export default function PlanTygodniaPage() {
             .catch(err => console.error(err));
     };
 
+    const confirmDeletion = () => {
+        handleUsunZaznaczone();
+        setIsDialogVisible(false);
+    };
+
     const handleWheelScroll = (e) => {
         const currentIndex = availableGroups.findIndex((g) => g.name === group?.name);
         if (currentIndex !== -1) {
@@ -264,10 +263,16 @@ export default function PlanTygodniaPage() {
             fetchData(nextGroup);  // Fetch data for the new group
         }
     };
-    
-    
-    
 
+    const handlePrint = () => {
+        if (selectedGroups.length === 0) {
+            setError(true);
+        } else {
+            setError(false);
+            handlePrintSelectedGroups();
+        }
+    };
+    
     // funkcja do obsługi zmiany stanu checkboxa w pierwszej kolumnie
     const handleRowCheckboxChange = (employeeId) => {
         setSelectedRowIds(prevSelectedRows => {
@@ -322,7 +327,10 @@ export default function PlanTygodniaPage() {
                                     placeholder="Wybierz grupę" 
                                     autoComplete='off'
                                     showClear 
-                                    className="ml-4 w-64 p-2"
+                                    className="ml-4 w-64 p-1"
+                                    filter
+                                    resetFilterOnHide
+                                    filterInputAutoFocus
                                 />
                             </div>
 
@@ -347,8 +355,13 @@ export default function PlanTygodniaPage() {
                                 </div>
                             ))}
                         </div>
+                        {error && (
+                            <div className="p-grid p-col-12 text-red-500 text-sm mt-2 mb-3">
+                                Musisz wybrać co najmniej jedną grupę!
+                            </div>
+                        )}
                         <div className="p-grid">
-                            <Button label="Drukuj Wybrane" className="bg-white w-[9rem] h-[3rem]" text raised onClick={handlePrintSelectedGroups} />
+                            <Button label="Drukuj Wybrane" className="bg-white w-[9rem] h-[3rem]" text raised onClick={handlePrintSelectedGroups  && handlePrint} />
                         </div>
                     </Dialog>
                     <Button label="Drukuj" className="bg-white w-[9rem] h-[3rem]"
@@ -428,7 +441,7 @@ export default function PlanTygodniaPage() {
                         </table>
                     </div>
                 </div>
-                {isAdmin && (
+
                 <div id="prawa" className="flex flex-col mr-2">
                     <AmberBox>
                         <div className="mx-auto flex flex-col justify-between items-center p-4 ">
@@ -439,31 +452,61 @@ export default function PlanTygodniaPage() {
                                 options={availableGroups}
                                 optionLabel="name"
                                 optionValue="id"
-                                editable
                                 placeholder=""
                                 autoComplete='off'
-                                className="ml-4 md:w-14rem p-4"
+                                filter
+                                resetFilterOnHide
+                                disabled={accountType != 'Administrator'}
+                                filterInputAutoFocus
+                                className=" md:w-14rem p-1 w-full"
                             />
                             <Button label="Przenieś" className="bg-white w-[9rem] h-[3rem] mt-4"
-                                text raised onClick={handlePrzeniesZaznaczone} />
+                                text raised onClick={handlePrzeniesZaznaczone}
+                                disabled={accountType != 'Administrator'} />
                         </div>
                     </AmberBox>
                     <AmberBox>
-                        <div className="mx-auto flex flex-col justify-between items-center p-4 ">
+                        <div className="mx-auto flex flex-col justify-between items-center p-4">
                             <p className="text-center mb-2">Skasuj zaznaczone</p>
-                            <Button label="Usuń" className="bg-white w-[9rem] h-[3rem]"
-                                text raised onClick={handleUsunZaznaczone} />
+                            <Button
+                                label="Usuń"
+                                className="bg-white w-[9rem] h-[3rem]"
+                                text
+                                raised
+                                onClick={() => setIsDialogVisible(true)}
+                                disabled={accountType !== 'Administrator'}
+                            />
                         </div>
+                        <Dialog
+                            header="Potwierdzenie Usunięcia"
+                            visible={isDialogVisible}
+                            style={{ width: '25vw' }}
+                            onHide={() => setIsDialogVisible(false)}
+                        >
+                            <p className="text-center">Czy na pewno chcesz usunąć zaznaczone elementy?</p>
+                            <div className="flex justify-center gap-4 mt-4">
+                                <Button
+                                    label="Nie"
+                                    className="p-button-outlined p-button-danger w-[6rem] border text-red-600"
+                                    onClick={() => setIsDialogVisible(false)}
+                                />
+                                <Button
+                                    label="Tak"
+                                    className="p-button-success w-[6rem] text-green-400 border"
+                                    onClick={confirmDeletion}
+                                />
+                            </div>
+                        </Dialog>
                     </AmberBox>
                     <AmberBox>
                         <div className="mx-auto flex flex-col justify-between items-center p-4 ">
                             <p className="text-center mb-2">Skopiuj pracowników z poprzedniego tygodnia</p>
                             <Button label="Skopiuj" className="bg-white w-[9rem] h-[3rem]"
-                                text raised onClick={handleSkopiuj} />
+                                text raised onClick={handleSkopiuj}
+                                disabled={accountType != 'Administrator'} />
                         </div>
                     </AmberBox>
                 </div>
-                )}
             </div>
         </main>
     )

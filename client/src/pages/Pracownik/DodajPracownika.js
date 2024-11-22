@@ -24,46 +24,61 @@ export default function DodajPracownikaPage() {
             .catch(err => {
                 console.log(err);
             });
-
+    
         axios.get('http://47.76.209.242:5000/api/pracownik/grupy', { withCredentials: true })
             .then(res => {
-                setGrupa(res.data);
+                setGrupa([{ idGrupa_urlopowa: null, Zleceniodawca: '-- Brak --' }, ...res.data]);
             })
             .catch(err => {
                 console.log(err);
             });
-
+    
         axios.get('http://47.76.209.242:5000/api/pracownik/pojazdy', { withCredentials: true })
             .then(res => {
-                setPojazd(res.data);
+                setPojazd([{ idPojazdy: null, Nr_rejestracyjny: '-- Brak --' }, ...res.data]);
             })
             .catch(err => {
                 console.log(err);
             });
-
-        form.setFieldsValue({
-            active: true,
-            role: 3,
-            company: firma[0]?.idFirma,
-        });
+    
+        axios.get('http://47.76.209.242:5000/api/pracownik/firmy', { withCredentials: true })
+            .then(res => {
+                setFirma(res.data);
+                form.setFieldsValue({
+                    active: true,
+                    role: 3,
+                    company: res.data[0]?.idFirma,
+                    vehicle: null,
+                    vacationGroup: null,
+                });
+            })
+            .catch(err => {
+                console.log(err);
+            });
     }, []);
-
+    
     const handleSubmit = (values) => {
-        console.log(values);
-        axios.post('http://47.76.209.242:5000/api/pracownicy', values, { withCredentials: true })
+        const filteredValues = { ...values };
+        
+        if (!filteredValues.vehicle) delete filteredValues.vehicle;
+        if (!filteredValues.vacationGroup) delete filteredValues.vacationGroup;
+    
+        console.log(filteredValues);
+        axios.post('http://47.76.209.242:5000/api/pracownicy', filteredValues, { withCredentials: true })
             .then(res => {
                 console.log(res);
                 notification.success({ message: 'Dodano pracownika' });
             })
             .catch(err => {
                 console.log(err);
+                notification.error({ message: 'Nie udało się dodać pracownika' });
             });
-    }
+    };    
 
     const onValuesChange = (changedValues, allValues) => {
-        const { surename, name } = allValues;
+        const { surename, name, newPassword, confirmPassword } = allValues;
 
-        if (surename && name) {
+        if (surename && name && !newPassword && !confirmPassword) {
             const password = surename + name[0] + '123';
             form.setFieldsValue({
                 newPassword: password,
@@ -176,15 +191,15 @@ export default function DodajPracownikaPage() {
                                     </Form.Item>
                                 </div>
                                 <div className="flex flex-col">
-                                    <Form.Item label="Pojazd" name="vehicle" rules={[{ required: true, message: 'Wybierz pojazd' }]}>
-                                        <Select>
+                                    <Form.Item label="Pojazd" name="vehicle" >
+                                        <Select placeholder="-- Brak --">
                                             {pojazd.map(p => (
                                                 <Select.Option key={p.idPojazdy} value={p.idPojazdy}>{p.Nr_rejestracyjny}</Select.Option>
                                             ))}
                                         </Select>
                                     </Form.Item>
-                                    <Form.Item label="Grupa urlopowa" name="vacationGroup" rules={[{ required: true, message: 'Wybierz grupę urlopową' }]} >
-                                        <Select>
+                                    <Form.Item label="Grupa urlopowa" name="vacationGroup" >
+                                        <Select placeholder="-- Brak --">
                                             {grupa.map(g => (
                                             <Select.Option key={g.idGrupa_urlopowa} value={g.idGrupa_urlopowa}>{g.Zleceniodawca}</Select.Option>
                                             ))}
@@ -211,10 +226,10 @@ export default function DodajPracownikaPage() {
                                 </Form.Item>
                                 <Form.Item label="Rola" name="role" rules={[{ required: true, message: 'Wybierz rolę' }]}>
                                     <Radio.Group>
-                                        <Radio value={1}>Admin</Radio>
+                                        <Radio value={1}>Szef</Radio>
                                         <Radio value={2}>Kierownik</Radio>
                                         <Radio value={3}>Pracownik</Radio>
-                                        <Radio value={4}>Gość</Radio>
+                                        <Radio value={4}>Biuro</Radio>
                                     </Radio.Group>
                                 </Form.Item>
                                 <div className="flex flex-row justify-center items-center space-x-4">

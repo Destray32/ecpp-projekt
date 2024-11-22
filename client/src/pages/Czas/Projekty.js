@@ -13,18 +13,12 @@ export default function ProjektyPage() {
     const [filtr, setFiltr] = useState('Wszystkie');
     const [selectedItems, setSelectedItems] = useState([]);
     const [data, setData] = useState([]);
-    const [typKonta, setTypKonta] = useState('');
-    const [isAdmin, setIsAdmin] = useState(false);
+    const [accountType, setAccountType] = useState('');
 
     useEffect(() => {
-        checkUserType(setTypKonta);
+        checkUserType(setAccountType);
     }, []);
 
-    useEffect(() => {
-        if (typKonta === 'Administrator') {
-            setIsAdmin(true);
-        }
-    }, [typKonta]);
 
     const handleCheckboxChange = (id) => {
         setSelectedItems(prevState =>
@@ -118,10 +112,12 @@ export default function ProjektyPage() {
                     <div className="w-full h-2/6">
                         <div className="w-full flex flex-row items-center p-4">
                             <p className="mr-6">Filtr</p>
-                            <Dropdown value={filtr} onChange={(e) => setFiltr(e.value)} options={["Aktywny", "Zamkniety", "Wszystkie"]} editable placeholder="Filtrowanie"
+                            <Dropdown value={filtr} onChange={(e) => setFiltr(e.value)} options={["Aktywny", "Zamkniety", "Wszystkie"]} placeholder="Filtrowanie"
                                 autoComplete="off"
-                                className="w-3/12 p-2 mr-10"
+                                className="w-3/12 mr-10"
                                 filter
+                                resetFilterOnHide
+                                filterInputAutoFocus
                             />
                             <div className="flex flex-row items-center">
                                 <Button onClick={handlePrzeniesAktyw} label="Przenieś do aktywnych" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2" />
@@ -130,13 +126,19 @@ export default function ProjektyPage() {
                             <Link to="/home/grupy-projektow">
                                 <Button label="Grupy projektów" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2" />
                             </Link>
-                            {isAdmin && (
-                                <Link to="/home/nowy-projekt">
+                                <Link to="/home/nowy-projekt"
+                                onClick={(e) => {
+                                    if (accountType !== 'Administrator' && accountType !== 'Biuro') {
+                                        e.preventDefault();
+                                    }
+                                }}
+                        
+                                >
                                     <Button label="Dodaj nowy projekt"
-                                        className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2" />
+                                        className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2"
+                                        disabled={accountType === 'Pracownik'}
+                                        />
                                 </Link>
-                            )}
-
                         </div>
                     </div>
                 </div>
