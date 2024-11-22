@@ -28,15 +28,15 @@ export default function EdytujPracownikaPage() {
 
         axios.get('http://localhost:5000/api/pracownik/grupy', { withCredentials: true })
             .then(res => {
-                setGrupa(res.data);
+                setGrupa([{ idGrupa_urlopowa: null, Zleceniodawca: '-- Brak --' }, ...res.data]);
             })
             .catch(err => {
                 console.log(err);
             });
-
+    
         axios.get('http://localhost:5000/api/pracownik/pojazdy', { withCredentials: true })
             .then(res => {
-                setPojazd(res.data);
+                setPojazd([{ idPojazdy: null, Nr_rejestracyjny: '-- Brak --' }, ...res.data]);
             })
             .catch(err => {
                 console.log(err);
@@ -125,13 +125,13 @@ export default function EdytujPracownikaPage() {
                                 <Form.Item label="Imię" name="name" rules={[{ required: true, message: 'Wprowadź imię' }]}>
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Data urodzenia" name="brithday" rules={[{ required: true, message: 'Wprowadź datę urodzenia' }]}>
+                                <Form.Item label="Data urodzenia" name="brithday" >
                                     <DatePicker format="DD.MM.YYYY" />
                                 </Form.Item>
-                                <Form.Item label="PESEL" name="pesel" rules={[{ required: true, message: 'Wprowadź PESEL' }]}>
+                                <Form.Item label="PESEL" name="pesel" >
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Ulica / Nr domu" name="street" rules={[{ required: true, message: 'Wprowadź ulicę' }]}>
+                                <Form.Item label="Ulica / Nr domu" name="street" >
                                     <Input />
                                 </Form.Item>
                                 <Form.Item
@@ -139,7 +139,7 @@ export default function EdytujPracownikaPage() {
                                     name="zip"
                                     rules={[
                                         {
-                                            required: true,
+                                            required: false,
                                             message: 'Wprowadź kod pocztowy',
                                             pattern: /^[0-9]{2}-[0-9]{3}$/,
                                         },
@@ -157,7 +157,7 @@ export default function EdytujPracownikaPage() {
                                         }}
                                     />
                                 </Form.Item>
-                                <Form.Item label="Miasto" name="city" rules={[{ required: true, message: 'Wprowadź miasto' }]}>
+                                <Form.Item label="Miasto" name="city" >
                                     <Input />
                                 </Form.Item>
                                 <Form.Item label="Kraj" name="country" >
@@ -172,19 +172,19 @@ export default function EdytujPracownikaPage() {
                                         ))}
                                     </Select>
                                 </Form.Item>
-                                <Form.Item label="Telefon w Polsce" name="phone1" rules={[{ required: true, message: 'Wprowadź telefon' }]}>
+                                <Form.Item label="Telefon w Polsce" name="phone1" >
                                     <Input />
                                 </Form.Item>
                                 <Form.Item label="Telefon w Szwecji" name="phone2">
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Email" name="email" rules={[{ required: true, message: 'Wprowadź email' }]}>
+                                <Form.Item label="Email" name="email" >
                                     <Input />
                                 </Form.Item>
                                 <Form.Item label="Osoba kontaktowa" name="relative1">
                                     <Input />
                                 </Form.Item>
-                                <Form.Item label="Kontakt (wypadek)" name="relative2" rules={[{ required: true, message: 'Wprowadź kontakt' }]}>
+                                <Form.Item label="Kontakt (wypadek)" name="relative2" >
                                     <Input />
                                 </Form.Item>
                                 <Form.Item label="NIP" name="NIP">
