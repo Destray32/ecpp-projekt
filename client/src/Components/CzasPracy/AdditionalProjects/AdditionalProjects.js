@@ -37,7 +37,7 @@ const AdditionalProjects = ({
     Projekty, setProjekty, dostepneProjekty,
     additionalProjects, setAdditionalProjects,
     daysOfWeek, samochody, loggedUserName, currentDate,
-    statusTyg, blockStatus
+    statusTyg, blockStatus, nazwaGrupyPracownika
 }) => {
     const [activeInput, setActiveInput] = useState(null);
     const [filteredZleceniodawcy, setFilteredZleceniodawcy] = useState([]);
@@ -53,6 +53,7 @@ const AdditionalProjects = ({
             const isDropdownPanel = event.target.closest('.p-dropdown-panel');
             const isDropdownTrigger = event.target.closest('.p-dropdown-trigger');
             const isDropdownItem = event.target.closest('.p-dropdown-item');
+            
     
             if (additionalFieldsRef.current && 
                 !additionalFieldsRef.current.contains(event.target) &&

@@ -1,6 +1,8 @@
 import React from 'react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import checkUserType from '../utils/accTypeUtils';
+
 
 /**
  * komponent górnego menu, wyświetlający "Pracownik", "Czas", "Plan tygodnia 'V'".
@@ -11,6 +13,7 @@ import { Link } from 'react-router-dom';
  */
 
 export default function GorneMenu({ setMenu, activeMenu }) {
+    const [accountType, setAccountType] = useState('');
 
     useEffect(() => {
         const savedMenu = localStorage.getItem('selectedMenu');
@@ -18,6 +21,10 @@ export default function GorneMenu({ setMenu, activeMenu }) {
             setMenu(savedMenu);
         }
     }, [setMenu]);
+
+    useEffect(() => {
+        checkUserType(setAccountType);
+    }, []);
 
     const handleMenuClick = (menu) => {
         setMenu(menu);
@@ -34,8 +41,13 @@ export default function GorneMenu({ setMenu, activeMenu }) {
                     ${activeMenu === 'Czas' ? 'bg-hover-szary text-black' : 'text-gray-700 hover:text-black'}`} onClick={() => handleMenuClick('Czas')}>
                 Czas
             </Link>
-            <Link to="/home/plan" className={`cursor-pointer w-full h-14 flex justify-center items-center hover:bg-hover-szary transition-colors duration-300 
-                    ${activeMenu === 'PlanTygodnia' ? 'bg-hover-szary text-black' : 'text-gray-700 hover:text-black'}`} onClick={() => handleMenuClick('PlanTygodnia')}>
+            <Link 
+                to={accountType === 'Pracownik' ? '#' : '/home/plan'} 
+                className={`cursor-pointer w-full h-14 flex justify-center items-center hover:bg-hover-szary transition-colors duration-300 
+                            ${activeMenu === 'PlanTygodnia' ? 'bg-hover-szary text-black' : 'text-gray-700 hover:text-black'} 
+                            ${accountType === 'Pracownik' ? 'pointer-events-none text-gray-400' : ''}`}
+                onClick={accountType === 'Pracownik' ? (e) => e.preventDefault() : () => handleMenuClick('PlanTygodnia')}
+            >
                 Plan tygodnia "V"
             </Link>
         </div>

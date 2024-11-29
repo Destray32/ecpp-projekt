@@ -79,7 +79,7 @@ export default function ZaplanujTydzienPage() {
     }, [currentDate]);
 
     const handleZaplanuj = () => {
-        if (selectedEmployees.length === 0 || !wybranaGrupa || !opis) {
+        if (selectedEmployees.length === 0 || !wybranaGrupa) {
             notification.error({
                 message: 'Puste pola',
                 description: 'Wypełnij wszystkie pola',
