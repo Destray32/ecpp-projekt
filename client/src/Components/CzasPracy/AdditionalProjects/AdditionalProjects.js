@@ -227,19 +227,17 @@ const AdditionalProjects = ({
 
     return (
         blockStatus === false ? (
-        <div className="w-auto h-full m-2 p-3 bg-amber-100 outline outline-1 outline-gray-500 flex flex-col space-y-4">
-            <div className="w-full flex flex-col space-y-2 items-start">
+        <div className="w-auto h-full m-2 p-1 bg-amber-100 outline outline-1 outline-gray-500 flex flex-col">
+            <div className="w-full flex flex-col items-start">
                 <div className="w-full">
-                    <div className="w-full flex flex-row items-center p-4 justify-between">
+                    <div className="w-full flex flex-row items-center p-1 justify-between">
                         <div className="flex flex-col w-3/12">
-                            <p className="text-sm text-gray-600 mb-2">Wybierz firmę</p>
                             <Dropdown
                                 value={Firma}
                                 onChange={(e) => setFirma(e.value)}
                                 options={firmy}
                                 placeholder="Firma"
                                 autoComplete="off"
-                                className="p-1"
                                 filter
                                 resetFilterOnHide
                                 disabled={statusTyg === "Zamkniety"}
@@ -247,14 +245,12 @@ const AdditionalProjects = ({
                             />
                         </div>
                         <div className="flex flex-col w-3/12">
-                            <p className="text-sm text-gray-600 mb-2">Wybierz zleceniodawcę</p>
                             <Dropdown
                                 value={Zleceniodawca}
                                 onChange={(e) => setZleceniodawca(e.value)}
                                 options={filteredZleceniodawcy}
                                 placeholder="Zleceniodawca"
                                 autoComplete="off"
-                                className="p-1"
                                 filter
                                 resetFilterOnHide
                                 filterInputAutoFocus
@@ -263,14 +259,12 @@ const AdditionalProjects = ({
                             />
                         </div>
                         <div className="flex flex-col w-3/12">
-                            <p className="text-sm text-gray-600 mb-2">Wybierz projekt</p>
                             <Dropdown
                                 value={Projekty}
                                 onChange={(e) => setProjekty(e.value)}
                                 options={filteredProjekty}
                                 placeholder="Projekty"
                                 autoComplete="off"
-                                className="p-1"
                                 filter
                                 resetFilterOnHide
                                 filterInputAutoFocus
@@ -278,13 +272,16 @@ const AdditionalProjects = ({
                                 disabled={statusTyg === "Zamkniety"}
                             />
                         </div>
-                        <div className="mt-8">
+                        <div className="flex flex-col">
                             <Button
                                 onClick={addWeek}
                                 label="Dodaj"
-                                className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mb-4"
+                                className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2"
                                 disabled={statusTyg === "Zamkniety"}
                             />
+                        </div>
+                        <div className="flex flex-col">
+                            <p className='font-bold'>Suma: {additionalProjectsTotalTime}:00</p>
                         </div>
                     </div>
                     {additionalProjects.map((project, index) => (
@@ -303,15 +300,11 @@ const AdditionalProjects = ({
                             onActivate={handleProjectActivation}
                         />
                     ))}
-                    <div className='flex justify-between mt-4'>
-                        <div></div>
-                        <p className='font-bold'>Suma: {additionalProjectsTotalTime}:00</p>
-                    </div>
                     {/* Render additional fields if a project is active */}
                     {activeProject && activeDate && (
                         <div ref={additionalFieldsRef}
-                        className='border border-gray-500 p-4 mt-2'>
-                            <div className='grid grid-cols-[auto_1fr] gap-4 items-center'>
+                        className='border border-gray-500 p-1 mt-1'>
+                            <div className='grid grid-cols-[auto_1fr] gap-2 items-center'>
                                 <span className="text-right">Komentarz:</span>
                                 <InputTextarea
                                     value={additionalProjects.find(p => p.id === activeProject)?.hours[activeDate]?.comment || ""}

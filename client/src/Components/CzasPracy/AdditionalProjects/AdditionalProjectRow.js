@@ -29,22 +29,9 @@ const AdditionalProjectRow = React.memo(({
     }, [activeInput]);
 
     return (
-        <div className="mt-4">
+        <div>
             <div className="flex items-center space-x-2">
-                <div className="w-1/3 flex flex-row justify-between translate-y-10">
-                    <div className=''>
-                        <span className=''>
-                            <button
-                                onClick={() => onDelete(project.id)}
-                                className="text-red-500 font-bold border-collapse 
-                                border border-red-500 p-1 rounded"
-                                disabled={statusTyg === "Zamkniety"}
-                            >
-                                Usuń
-                            </button>
-                        </span>
-                        <span className='ml-2'>Projekt: {project.projekt || "Projekt"}</span>
-                    </div>
+                <div className="w-1/3">
                 </div>
                 {first && (
                     <div className="flex-1 grid grid-cols-8 gap-1">
@@ -56,9 +43,21 @@ const AdditionalProjectRow = React.memo(({
                     </div>
                 )}
             </div>
-            <div className="flex items-center space-x-2 mt-2">
-                <div className="w-1/3">
-
+            <div className="flex items-center space-x-2 mt-1">
+                <div className="w-1/3 mt">
+                    <div>
+                        <span>
+                            <button
+                                onClick={() => onDelete(project.id)}
+                                className="text-red-500 font-bold border-collapse 
+                                border border-red-500 p-1 rounded"
+                                disabled={statusTyg === "Zamkniety"}
+                            >
+                                Usuń
+                            </button>
+                        </span>
+                        <span className='ml-2'>Projekt: {project.projekt || "Projekt"}</span>
+                    </div>
                 </div>
                 <div className="flex-1 grid grid-cols-7 gap-1">
                     {daysOfWeek.map((day, index) => {
@@ -79,7 +78,7 @@ const AdditionalProjectRow = React.memo(({
                                             e.preventDefault();
                                         }
                                     }}
-                                    className={`project-input w-full p-1 border ${isActive ? 'border-blue-500' : 'border-gray-300'} ${hasCommentAndCar ? 'bg-green-200' : ''} rounded`}
+                                    className={`project-input w-full p-1 border ${isActive ? 'bg-blue-400' : 'border-gray-300'} ${hasCommentAndCar ? 'bg-green-200' : ''} rounded`}
                                     placeholder="0"
                                     disabled={niedziela || statusTyg === "Zamkniety"}
                                     min="0"
@@ -92,7 +91,7 @@ const AdditionalProjectRow = React.memo(({
                 </div>
                 <span>Razem: {projectTotal} godz.</span>
             </div>
-            <div className='h-[2px] w-full bg-szary mt-2'></div>
+            <div className='h-[2px] w-full bg-szary mt-1'></div>
         </div>
     );
 });

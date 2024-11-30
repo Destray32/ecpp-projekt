@@ -36,10 +36,10 @@ const PrzyciskAkcji = ({ handleSave, handleCloseWeek, handleOpenWeek, handlePrin
 
     return (
         blockStatus === false ?
-        <div className="w-auto h-full m-2 p-3 bg-amber-100 outline outline-1 outline-gray-500 flex flex-col space-y-4">
-            <div className="w-full h-2/5 flex flex-col space-y-2 items-start">
+        <div className="w-auto h-full m-2 p-2 bg-amber-100 outline outline-1 outline-gray-500 flex flex-col">
+            <div className="w-full h-2/5 flex flex-col items-start">
                 <div className="w-full h-2/6">
-                    <div className="w-full flex flex-row items-center p-4 justify-between">
+                    <div className="w-full flex flex-row items-center justify-between">
                         <div className="w-full flex flex-row items-center space-x-2 justify-between">
                             <Button 
                                 label="Zapisz"

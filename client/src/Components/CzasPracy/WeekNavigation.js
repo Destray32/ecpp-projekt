@@ -24,27 +24,27 @@ const WeekNavigation = ({ currentDate, setCurrentDate, Pracownik, setPracownik, 
     const nextWeek = () => setCurrentDate(addWeeks(currentDate, 1));
 
     return (
-        <div className="w-auto h-full m-2 p-3 bg-amber-100 outline outline-1 outline-gray-500 flex flex-col space-y-4">
-            <div className="w-full h-2/5 flex flex-col space-y-2 items-start">
+        <div className="w-auto h-full m-2 bg-amber-100 outline outline-1 outline-gray-500 flex flex-col space-y-4">
+            <div className="w-full h-2/5 flex flex-col items-start">
                 <div className="w-full h-2/6">
-                    <div className="w-full flex flex-row items-center p-4 justify-between">
+                    <div className="w-full flex flex-row items-center justify-between">
                         <div className="flex items-center space-x-2">
                             <Button icon="pi pi-arrow-left" className="p-button-outlined" onClick={previousWeek} />
-                            <div className="flex flex-col items-center space-y-0">
+                            <div className="flex flex-col items-center">
                                 <p>{formatWeek(currentDate)}</p>
                                 <p className="text-lg font-bold">Tydzień {getWeek(currentDate, { weekStartsOn: 1 })}</p>
                             </div>
                             <Button icon="pi pi-arrow-right" iconPos="right" className="p-button-outlined" onClick={nextWeek} />
                         </div>
                         <span className={`text-lg font-bold ${statusTyg === "Otwarty" ? "text-green-600" : "text-red-600"}`}>{statusTyg}</span>
-                            <div className='w-3/12 p-2 '>
+                            <div className='w-3/12 p-2'>
                                 <Dropdown
                                     value={Pracownik}
                                     onChange={(e) => setPracownik(e.value)}
                                     options={pracownicy}
                                     placeholder="Pracownik"
                                     autoComplete="off"
-                                    className="w-3/4 text-lg p-1"
+                                    className="w-3/4 float-right"
                                     disabled={userType === "Pracownik" || userType === "Kierownik"}
                                     filter
                                     resetFilterOnHide
