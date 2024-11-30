@@ -245,7 +245,7 @@ export default function HomePage() {
                             {menu === "PlanTygodnia" && (
                                 <>
                                     <ButtonLewy link="plan" nazwa='Plan Tygodnia' onClick={closeMobileMenu} isActive={location.pathname === '/home/plan'} />
-                                    {isAdmin && (
+                                    {accountType === 'Administrator' && (
                                 <ButtonLewy link="zaplanuj" nazwa='Zaplanuj Tydzień' onClick={closeMobileMenu} isActive={location.pathname === '/home/zaplanuj'} />
                                     )}
                                 <ButtonLewy nazwa='Wyloguj' onClick={() => { handleLogout(); closeMobileMenu(); }} isActive={false} />

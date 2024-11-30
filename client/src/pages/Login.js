@@ -3,6 +3,7 @@ import { Dropdown } from 'primereact/dropdown';
 import { Password } from 'primereact/password';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { notification } from 'antd';
 
 import "primereact/resources/themes/lara-light-cyan/theme.css";
 
@@ -47,11 +48,16 @@ export default function LoginPage() {
         event.preventDefault();
         try {
             const response = await axios.post('http://localhost:5000/api/logowanie', { firma, login, password }, { withCredentials: true });
-
-            console.log(response.data.message);
+            notification.success({ message: 'Zalogowano', description: 'Zalogowano pomyślnie' });
+            
 
             navigate('/home/czas');
         } catch (error) {
+            notification.error({
+                message: 'Logowanie nieudane',
+                description: 'Sprawdź poprawność danych',
+                placement: 'topRight',
+            });
             console.error(error);
         }
     };

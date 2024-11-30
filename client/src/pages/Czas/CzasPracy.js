@@ -723,6 +723,7 @@ export default function CzasPracyPage() {
                 currentDate={currentDate}
                 statusTyg={statusTygodnia}
                 blockStatus={blockStatus}
+                nazwaGrupyPracownika={nazwaGrupyPracownika}
             />
             <ActionButtons handleSave={handleSave} 
             handleCloseWeek={handleZamknijTydzien} 
