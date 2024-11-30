@@ -36,7 +36,7 @@ const PrzyciskAkcji = ({ handleSave, handleCloseWeek, handleOpenWeek, handlePrin
 
     return (
         blockStatus === false ?
-        <div className="w-auto h-full m-2 p-2 bg-amber-100 outline outline-1 outline-gray-500 flex flex-col">
+        <div className="w-auto h-full m-2 p-1 bg-amber-100 outline outline-1 outline-gray-500 flex flex-col">
             <div className="w-full h-2/5 flex flex-col items-start">
                 <div className="w-full h-2/6">
                     <div className="w-full flex flex-row items-center justify-between">

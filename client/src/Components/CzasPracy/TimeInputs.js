@@ -181,7 +181,7 @@ const TimeInputs = ({ daysOfWeek, hours, setHours,
     //#endregion
 
     return (
-        <div className="bg-amber-100 outline outline-1 outline-gray-500 m-2 p-2">
+        <div className="bg-amber-100 outline outline-1 outline-gray-500 m-2 p-1">
             <div className="flex flex-row space-x-8">
                 <div className="flex flex-col w-[40rem]">
                     <div id="nazwaGrupy" className="flex gap-2 text-lg">
@@ -192,8 +192,8 @@ const TimeInputs = ({ daysOfWeek, hours, setHours,
                         <span>{pracownicyWGrupie.map((pracownik) => pracownik.label).join(', ')}</span>
                     </div>
                 </div>
-                <div className="flex flex-col w-full pl-16">
-                    <div className="grid grid-cols-[repeat(8,_minmax(0,_5rem))] gap-4 text-center">
+                <div className="flex flex-col w-full pl-20">
+                    <div className="grid grid-cols-[repeat(8,_minmax(0,_5rem))] text-center">
                         <div className="col-span-1 font-bold flex flex-col justify-end pb-2">
                         <span>Dzień:</span>
                         </div>
@@ -204,7 +204,7 @@ const TimeInputs = ({ daysOfWeek, hours, setHours,
                         </div>
                         ))}
                     </div>
-                    <div className="grid grid-cols-[repeat(8,_minmax(0,_5rem))] gap-4 mt-1 text-center">
+                    <div className="grid grid-cols-[repeat(8,_minmax(0,_5rem))] mt-1 text-center">
                         <div className="col-span-1 flex items-center justify-end">
                         <span className="mr-2">Rozpoczęcie:</span>
                         <input
@@ -212,8 +212,8 @@ const TimeInputs = ({ daysOfWeek, hours, setHours,
                             value={globalStart}
                             onChange={(e) => handleGlobalStartChange(e.target.value)}
                             onBlur={(e) => handleGlobalTimeBlur(e.target.value, setGlobalStart, 'start')}
-                            className="w-16 p-2 border border-gray-300 rounded"
-                            placeholder="HH:MM"
+                            className="w-16 p-1 border text-center border-gray-300 rounded mx-2"
+                            placeholder="00:00"
                             maxLength="5"
                             disabled={statusTyg === 'Zamkniety' || blockStatus}
                         />
@@ -226,16 +226,16 @@ const TimeInputs = ({ daysOfWeek, hours, setHours,
                             onChange={(e) => handleTimeInputChange(format(day, 'yyyy-MM-dd'), 'start', e.target.value)}
                             onBlur={(e) => handleTimeBlur(format(day, 'yyyy-MM-dd'), 'start', e.target.value)}
                             disabled={getDay(day) === 0 || statusTyg === 'Zamkniety' || blockStatus}
-                            className={`w-16 p-2 border border-gray-300 rounded ${
+                            className={`w-16 p-1 border text-center border-gray-300 rounded ${
                                 isOver10h[getDay(day)] ? 'bg-orange-300' : ''
                             }`}
-                            placeholder="HH:MM"
+                            placeholder="00:00"
                             maxLength="5"
                             />
                         </div>
                         ))}
                     </div>
-                    <div className="grid grid-cols-[repeat(8,_minmax(0,_5rem))] gap-4 mt-1 text-center">
+                    <div className="grid grid-cols-[repeat(8,_minmax(0,_5rem))] mt-1 text-center">
                         <div className="col-span-1 flex items-center justify-end">
                         <span className="mr-2">Przerwa:</span>
                         <input
@@ -243,8 +243,8 @@ const TimeInputs = ({ daysOfWeek, hours, setHours,
                             value={globalBreak}
                             onChange={(e) => handleGlobalBreakChange(e.target.value)}
                             onBlur={(e) => handleGlobalTimeBlur(e.target.value, setGlobalBreak, 'break')}
-                            className="w-16 p-2 border border-gray-300 rounded"
-                            placeholder="HH:MM"
+                            className="w-16 p-1 border text-center border-gray-300 rounded mx-2"
+                            placeholder="00:00"
                             maxLength="5"
                             disabled={statusTyg === 'Zamkniety' || blockStatus}
                         />
@@ -257,16 +257,16 @@ const TimeInputs = ({ daysOfWeek, hours, setHours,
                             onChange={(e) => handleTimeInputChange(format(day, 'yyyy-MM-dd'), 'break', e.target.value)}
                             onBlur={(e) => handleTimeBlur(format(day, 'yyyy-MM-dd'), 'break', e.target.value)}
                             disabled={getDay(day) === 0 || statusTyg === 'Zamkniety' || blockStatus}
-                            className={`w-16 p-2 border border-gray-300 rounded ${
+                            className={`w-16 p-1 border text-center border-gray-300 rounded ${
                                 isOver10h[getDay(day)] ? 'bg-orange-300' : ''
                             }`}
-                            placeholder="HH:MM"
+                            placeholder="00:00"
                             maxLength="5"
                             />
                         </div>
                         ))}
                     </div>
-                    <div className="grid grid-cols-[repeat(8,_minmax(0,_5rem))] gap-4 mt-1 text-center">
+                    <div className="grid grid-cols-[repeat(8,_minmax(0,_5rem))] mt-1 text-center">
                         <div className="col-span-1 flex items-center justify-end">
                         <span className="mr-2">Zakończenie:</span>
                         <input
@@ -274,8 +274,8 @@ const TimeInputs = ({ daysOfWeek, hours, setHours,
                             value={globalEnd}
                             onChange={(e) => handleGlobalEndChange(e.target.value)}
                             onBlur={(e) => handleGlobalTimeBlur(e.target.value, setGlobalEnd, 'end')}
-                            className="w-16 p-2 border border-gray-300 rounded"
-                            placeholder="HH:MM"
+                            className="w-16 p-1 border text-center border-gray-300 rounded mx-2"
+                            placeholder="00:00"
                             maxLength="5"
                             disabled={statusTyg === 'Zamkniety' || blockStatus}
                         />
@@ -288,16 +288,16 @@ const TimeInputs = ({ daysOfWeek, hours, setHours,
                         onChange={(e) => handleTimeInputChange(format(day, 'yyyy-MM-dd'), 'end', e.target.value)}
                         onBlur={(e) => handleTimeBlur(format(day, 'yyyy-MM-dd'), 'end', e.target.value)}
                         disabled={getDay(day) === 0 || statusTyg === 'Zamkniety' || blockStatus}
-                        className={`w-16 p-2 border border-gray-300 rounded ${
+                        className={`w-16 p-1 border text-center border-gray-300 rounded ${
                             isOver10h[getDay(day)] ? 'bg-orange-300' : ''
                         }`}
-                        placeholder="HH:MM"
+                        placeholder="00:00"
                         maxLength="5"
                         />
                     </div>
                     ))}
                 </div>
-                <div className="grid grid-cols-[repeat(8,_minmax(0,_5rem))] gap-4 mt-1 text-center font-bold">
+                <div className="grid grid-cols-[repeat(8,_minmax(0,_5rem))] mt-1 text-center font-bold">
                     <div className="col-span-1">Razem:</div>
                     {daysOfWeek.map((day, i) => {
                     const dayKey = format(day, 'yyyy-MM-dd');
