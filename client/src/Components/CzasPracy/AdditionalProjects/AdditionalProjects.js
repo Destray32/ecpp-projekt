@@ -49,6 +49,25 @@ const AdditionalProjects = ({
     const additionalFieldsRef = useRef(null);
 
     useEffect(() => {
+        if (firmy && firmy.length > 0) {
+            Axios.get('http://localhost:5000/api/mojedane', { withCredentials: true })
+                .then(res => {
+                    if (res.data && res.data.company) {
+                        const userFirmaId = res.data.company;
+                        const defaultFirma = firmy.find(f => f.value === userFirmaId);
+    
+                        if (defaultFirma) {
+                            setFirma(defaultFirma.value);
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                });
+        }
+    }, [firmy]);
+
+    useEffect(() => {
         const handleClickOutside = (event) => {
             const isDropdownPanel = event.target.closest('.p-dropdown-panel');
             const isDropdownTrigger = event.target.closest('.p-dropdown-trigger');
