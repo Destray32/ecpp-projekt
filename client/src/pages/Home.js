@@ -140,8 +140,8 @@ export default function HomePage() {
 
     return (
         <>
-            <div className='flex flex-col min-h-screen'>
-                <header className="w-full bg-primary text-white p-2 pl-8 flex justify-between items-center">
+            <div className='flex flex-col min-h-screen overflow-x-auto'>
+            <header className="w-full min-w-[1250px] bg-primary text-white p-2 pl-8 flex justify-between items-center">
                     <button
                         className="min-[1470px]:hidden text-white p-2"
                         onClick={toggleMobileMenu}
