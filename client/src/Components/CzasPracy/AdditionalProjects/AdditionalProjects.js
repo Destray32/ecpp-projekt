@@ -72,6 +72,7 @@ const AdditionalProjects = ({
                         }
                         if (defaultSamochod) {
                             setDefaultSamochod(defaultSamochod.value);
+                            
                         }
 
                     }
@@ -190,7 +191,7 @@ const AdditionalProjects = ({
                 const apiData = response.data?.hours?.[dateKey];
                 newProject.hours[dateKey] = apiData ? {
                     hoursWorked: apiData.hoursWorked || 0,
-                    car: apiData.car || "",
+                    car: apiData.car || defaultSamochod.value,
                     comment: apiData.comment || "",
                     parking: apiData.parking || "",
                     km: apiData.km || "",
@@ -333,6 +334,7 @@ const AdditionalProjects = ({
                             samochody={samochody}
                             statusTyg={statusTyg}
                             onActivate={handleProjectActivation}
+                            defaultCar={defaultSamochod}
                         />
                     ))}
                     {/* Render additional fields if a project is active */}
@@ -358,6 +360,7 @@ const AdditionalProjects = ({
                                     className="w-full"
                                     showClear
                                     disabled={statusTyg === "Zamkniety"}
+                                    defaultValue={defaultSamochod.value}
                                 />
     
                                 <span className="text-right">Parking:</span>

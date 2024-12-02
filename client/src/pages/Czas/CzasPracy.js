@@ -506,23 +506,25 @@ export default function CzasPracyPage() {
             const dayName = format(day, 'EEEE', { locale: pl });
             const formattedDate = format(day, 'yyyy-MM-dd');
             const dailyHours = hours[formattedDate] || {};
-
-            const breakHours = dailyHours.break ? parseFloat(dailyHours.break.split(":")[0]) : 0;
-
+        
+            const [breakHours, breakMinutes] = (dailyHours.break || '00:00').split(':').map(Number);
+            const breakTimeInHours = breakHours + (breakMinutes / 60);
+        
+            // console.log(dailyHours.start, breakTimeInHours, dailyHours.end);
+        
             const totalDayHours = dailyHours.end && dailyHours.start ?
-                parseFloat(dailyHours.end.split(":")[0]) - parseFloat(dailyHours.start.split(":")[0]) - breakHours
+                parseFloat(dailyHours.end.split(":")[0]) - parseFloat(dailyHours.start.split(":")[0]) - breakTimeInHours
                 : 0;
-
+        
             let projectDayHours = 0;
-
+        
             additionalProjects.forEach(project => {
                 const projectData = project.hours[formattedDate];
                 if (projectData?.hoursWorked) {
                     projectDayHours += parseFloat(projectData.hoursWorked);
                 }
             });
-
-
+        
             if (totalDayHours !== projectDayHours) {
                 dayHourMismatch = true;
                 console.log(`Różnica w godzinach dla ${dayName}. Godziny pracy: ${totalDayHours}, godziny w dodatkowych projektach: ${projectDayHours}`);

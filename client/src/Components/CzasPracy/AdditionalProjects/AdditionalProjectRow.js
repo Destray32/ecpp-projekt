@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Dropdown } from "primereact/dropdown";
 import { InputTextarea } from 'primereact/inputtextarea';
 import { InputText } from 'primereact/inputtext';
@@ -16,7 +16,8 @@ const AdditionalProjectRow = React.memo(({
     handleInputFocus,
     samochody,
     statusTyg,
-    onActivate
+    onActivate,
+    defaultCar
 }) => {
     const projectTotal = calculateProjectTotal(project, daysOfWeek);
     const activeCar = activeInput ? project.hours[activeInput.date]?.car : "";
@@ -27,6 +28,46 @@ const AdditionalProjectRow = React.memo(({
             //element.focus();
         }
     }, [activeInput]);
+
+    const [rawInputs, setRawInputs] = useState({});
+
+    const handleTimeInput = (projectId, dateKey, value) => {
+        let cleanValue = value.replace(/[^\d:]/g, '');
+        setRawInputs(prev => ({
+            ...prev,
+            [dateKey]: cleanValue
+        }));
+
+        // updejtawanie stanu podczas wpisywania
+        onInputChange(projectId, dateKey, cleanValue, 'hoursWorked');
+    };
+
+    const handleTimeBlur = (projectId, dateKey, value) => {
+        let cleanValue = value.replace(/[^\d:]/g, '');
+
+        if (cleanValue.includes(':')) {
+            const [hours, minutes] = cleanValue.split(':');
+            const h = parseInt(hours, 10);
+            const m = parseInt(minutes, 10) || 0;
+
+            if (h >= 0 && h <= 24 && m >= 0 && m < 60) {
+                const decimalHours = h + (m / 60);
+                onInputChange(projectId, dateKey, decimalHours.toFixed(2), 'hoursWorked');
+            }
+        } else {
+            const num = parseInt(cleanValue, 10);
+            if (!isNaN(num) && num >= 0 && num <= 24) {
+                onInputChange(projectId, dateKey, num.toString(), 'hoursWorked');
+            }
+        }
+
+        // clearowanie stanu
+        setRawInputs(prev => {
+            const newState = { ...prev };
+            delete newState[dateKey];
+            return newState;
+        });
+    };
 
     return (
         <div>
@@ -64,26 +105,28 @@ const AdditionalProjectRow = React.memo(({
                         const dateKey = format(day, 'yyyy-MM-dd');
                         const niedziela = getDay(day) === 0;
                         const isActive = activeInput && activeInput.projectId === project.id && activeInput.date === dateKey;
+                        if (defaultCar) { // do ustawienia domyslnego samochodu dla pól w projekcie
+                            project.hours[dateKey].car = defaultCar;
+                        }
+                        //console.log(project.hours[dateKey]?.comment, project.hours[dateKey]?.car, project.hours[dateKey]?.hoursWorked > 0);
                         const hasCommentAndCar = project.hours[dateKey]?.comment && project.hours[dateKey]?.car && project.hours[dateKey]?.hoursWorked > 0;
                         return (
-                            <div key={index} className="text-center" 
-                            onClick={() => onActivate(project.id, format(day, 'yyyy-MM-dd'))}>
+                            <div key={index} className="text-center"
+                                onClick={() => onActivate(project.id, format(day, 'yyyy-MM-dd'))}>
                                 <input
-                                    type="number"
-                                    value={project.hours[dateKey]?.hoursWorked || ""}
-                                    onChange={(e) => onInputChange(project.id, dateKey, e.target.value, 'hoursWorked')}
-                                    onFocus={() => handleInputFocus(project.id, dateKey)}
+                                    type="text"
+                                    value={rawInputs[dateKey] || project.hours[dateKey]?.hoursWorked || ""}
+                                    onChange={(e) => handleTimeInput(project.id, dateKey, e.target.value)}
+                                    onBlur={(e) => handleTimeBlur(project.id, dateKey, e.target.value)}
                                     onKeyPress={(e) => {
-                                        if (!/[0-9]/.test(e.key)) {
+                                        if (!/[\d:]/.test(e.key)) {
                                             e.preventDefault();
                                         }
                                     }}
                                     className={`project-input w-full p-1 border ${isActive ? 'bg-blue-400' : 'border-gray-300'} ${hasCommentAndCar ? 'bg-green-200' : ''} rounded`}
                                     placeholder="0"
                                     disabled={niedziela || statusTyg === "Zamkniety"}
-                                    min="0"
-                                    max="24"
-                                    ref={(el) => setInputRef(el, project.id, dateKey)}
+                                    maxLength="5"
                                 />
                             </div>
                         );
