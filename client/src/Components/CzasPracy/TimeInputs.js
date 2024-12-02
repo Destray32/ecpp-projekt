@@ -26,7 +26,7 @@ import { calculateDailyTotal, calculateWeeklyTotal } from '../../utils/dateUtils
  */
 const TimeInputs = ({ daysOfWeek, hours, setHours,
     statusTyg, setPrzekroczone, isOver10h, setIsOver10h,
-    blockStatus, nazwaGrupyPracownika, pracownicyWGrupie }) => {
+    blockStatus, nazwaGrupyPracownika, pracownicyWGrupie, czyZapisano }) => {
     const [globalStart, setGlobalStart] = useState('');
     const [globalBreak, setGlobalBreak] = useState('');
     const [globalEnd, setGlobalEnd] = useState('');
@@ -52,7 +52,7 @@ const TimeInputs = ({ daysOfWeek, hours, setHours,
     }, [hours]);
 
     useEffect(() => {
-        for (let i = 0; i < 7; i++) {
+        for (let i = 0; i < 6; i++) {
             if (isOver10h[i]) {
                 setPrzekroczone(true);
                 return;
@@ -311,16 +311,19 @@ const TimeInputs = ({ daysOfWeek, hours, setHours,
                     </div>
                 </div>
                 <div className="flex flex-col justify-between w-[14rem]">
-                    <div
-                        className={`text-right font-bold self-end ${
-                        calculateWeeklyTotal(hours, daysOfWeek) > 60 ? 'text-red-500' : 'text-black'
-                        }`}
+                <div
+                        className={`text-right font-bold self-end ${calculateWeeklyTotal(hours, daysOfWeek) > 60 &&
+                                (czyZapisano || statusTyg === 'Zamkniety')
+                                ? 'text-red-500'
+                                : 'text-black'
+                            }`}
                     >
                         <p>Razem: {calculateWeeklyTotal(hours, daysOfWeek)} godz.</p>
-                        {calculateWeeklyTotal(hours, daysOfWeek) > 60 ? (
-                        <p className="text-xs">
-                            <strong>Pilne</strong> skontaktuj się z Olafem lub Pawłem
-                        </p>
+                        {calculateWeeklyTotal(hours, daysOfWeek) > 60 &&
+                            (czyZapisano || statusTyg === 'Zamkniety') ? (
+                            <p className="text-xs">
+                                <strong>Pilne:</strong> skontaktuj się z Olafem lub Pawłem
+                            </p>
                         ) : null}
                     </div>
                 </div>

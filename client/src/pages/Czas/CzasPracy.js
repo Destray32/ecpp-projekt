@@ -32,7 +32,7 @@ export default function CzasPracyPage() {
     const [statusTygodnia, setStatusTygodnia] = useState(null);
     const [przekroczoneGodziny, setPrzekroczoneGodziny] = useState(false);
     const [isOver10h, setIsOver10h] = useState([
-        false, false, false, false, false, false, false
+        false, false, false, false, false, false
     ]);
     const [blockStatus, setBlockStatus] = useState(false);
 
@@ -40,6 +40,7 @@ export default function CzasPracyPage() {
     const [nazwaGrupyPracownika, setNazwaGrupyPracownika] = useState(null);
     const [idGrupy, setIdGrupy] = useState(null);
     const [pracownicyWGrupie, setPracownicyWGrupie] = useState([]);
+    const [czyZapisano, setCzyZapisano] = useState(false);
 
     const startOfCurrentWeek = startOfWeek(currentDate, { weekStartsOn: 1 });
 
@@ -48,6 +49,12 @@ export default function CzasPracyPage() {
         //console.log("Pracownicy w grupie", pracownicyWGrupie);
         // console.log("Nazwa grupy pracownika", nazwaGrupyPracownika);
     }, [pracownicyWGrupie]);
+
+    useEffect(() => {
+        if (statusTygodnia == "Zamknięty") {
+            setCzyZapisano(true);
+        }
+    }, [statusTygodnia]);
 
     useEffect(() => {
         if (idGrupy) {
@@ -390,11 +397,14 @@ export default function CzasPracyPage() {
             })
         }));
 
-
         if (przekroczoneGodziny) {
             notification.warning({
                 message: 'Przekroczone godziny',
-                description: `W dniach: ${daysOfWeek.filter((day, index) => isOver10h[index]).map(day => format(day, 'EEEE', { locale: pl })).join(', ')} przekroczono limit 10ciu godzin`,
+                description: `W dniach: ${daysOfWeek
+                    .slice(0, 6)
+                    .filter((day, index) => isOver10h[index + 1])
+                    .map(day => format(day, 'EEEE', { locale: pl }))
+                    .join(', ')} przekroczono limit 10ciu godzin`,
                 placement: 'topRight',
             });
         }
@@ -427,6 +437,8 @@ export default function CzasPracyPage() {
                     description: 'Zapisano dane',
                     placement: 'topRight',
                 });
+
+                setCzyZapisano(true);
             }
         } catch (error) {
             console.error(error);
@@ -704,6 +716,7 @@ export default function CzasPracyPage() {
                 blockStatus={blockStatus}
                 nazwaGrupyPracownika={nazwaGrupyPracownika}
                 pracownicyWGrupie={pracownicyWGrupie}
+                czyZapisano={czyZapisano}
             />
             <AdditionalProjects
                 Firma={Firma}
