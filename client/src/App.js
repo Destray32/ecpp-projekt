@@ -26,8 +26,8 @@ import GrupyProjektowPage from './pages/Czas/GrupyProjektow';
 import NowyPojazdPage from './pages/Czas/NowyPojazd';
 import SprawdzSamochodPage from './pages/Czas/SprawdzSamochod';
 import OgloszeniaPage from './pages/Ogloszenia';
+import PobierzSkrypt from './pages/Pobierz';
 
-import VacationPlanner from './Components/VacationPlanner copy';
 import VacationPlannerNowy from './Components/VacationPlanner_ver3';
 import EdytujGrupePage from './pages/Czas/EdytujGrupe';
 
@@ -39,6 +39,7 @@ function App() {
         <Route path="/" element={<LoginPage />} />
         <Route path="/test" element={<VacationPlannerNowy />} />
         <Route path="/home" element={<HomePage />}>
+          <Route path="pobierz" element={<PobierzSkrypt />} />
           <Route path="pracownik" element={<PracownikPage />} />
           <Route path="zmien-dane" element={<ZmienDanePage />} />
           <Route path="dodaj-pracownika" element={<DodajPracownikaPage />} />
