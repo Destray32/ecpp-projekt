@@ -1,4 +1,4 @@
-import { format, startOfWeek, addWeeks } from 'date-fns';
+import { format, startOfWeek, addWeeks, subDays } from 'date-fns';
 
 export const generateWeek = (startDate = new Date()) => {
     const week = [];
@@ -12,7 +12,7 @@ export const generateWeek = (startDate = new Date()) => {
 
 export const formatWeek = (date) => {
     const start = format(startOfWeek(date, { weekStartsOn: 1 }), 'dd.MM.yyyy');
-    const end = format(addWeeks(startOfWeek(date, { weekStartsOn: 1 }), 1), 'dd.MM.yyyy');
+    const end = format(subDays(addWeeks(startOfWeek(date, { weekStartsOn: 1 }), 1), 1), 'dd.MM.yyyy');
     return `${start} - ${end}`;
 };
 

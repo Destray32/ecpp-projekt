@@ -45,20 +45,35 @@ const AdditionalProjects = ({
     const [activeProject, setActiveProject] = useState(null);
     const [activeDate, setActiveDate] = useState(null);
     const [additionalProjectsTotalTime, setAdditionalProjectsTotalTime] = useState(0.0);
+    const [defaultSamochod, setDefaultSamochod] = useState("");
 
     const additionalFieldsRef = useRef(null);
+
+    useEffect(() => {
+        //console.log("samochody", samochody);
+    }, [samochody]);
 
     useEffect(() => {
         if (firmy && firmy.length > 0) {
             Axios.get('http://localhost:5000/api/mojedane', { withCredentials: true })
                 .then(res => {
+                    //console.log(res.data);
+                    //console.log(zleceniodawcy);
+                    //console.log(samochody);
                     if (res.data && res.data.company) {
                         const userFirmaId = res.data.company;
                         const defaultFirma = firmy.find(f => f.value === userFirmaId);
+
+                        const userIdSamochodu = res.data.vehicle;
+                        const defaultSamochod = samochody.find(s => s.id === userIdSamochodu);
     
                         if (defaultFirma) {
                             setFirma(defaultFirma.value);
                         }
+                        if (defaultSamochod) {
+                            setDefaultSamochod(defaultSamochod.value);
+                        }
+
                     }
                 })
                 .catch(err => {
@@ -223,7 +238,7 @@ const AdditionalProjects = ({
         // wyciągamy wszystkie id nadesłane z bazy dla każdego dzien_projekty i usuwamy
         additionalProjects.forEach(project => {
             if (project.id === projectId) {
-                console.log(project);
+                //console.log(project);
                 Object.values(project.hours).forEach(async hour => {
                     try {
                         await Axios.delete(`http://localhost:5000/api/czas/projekt/${hour.id}`, { withCredentials: true });
@@ -336,7 +351,7 @@ const AdditionalProjects = ({
     
                                 <span className="text-right">Samochód:</span>
                                 <Dropdown
-                                    value={additionalProjects.find(p => p.id === activeProject)?.hours[activeDate]?.car || ""}
+                                    value={additionalProjects.find(p => p.id === activeProject)?.hours[activeDate]?.car || defaultSamochod}
                                     options={samochody}
                                     onChange={(e) => handleInputChange(activeProject, activeDate, e.value, 'car')}
                                     placeholder="Wybierz pojazd"

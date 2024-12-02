@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { format, startOfWeek, addWeeks, endOfWeek, addDays, subWeeks, getWeek, set } from 'date-fns';
+import { format, startOfWeek, addWeeks, endOfWeek, addDays, subWeeks, getWeek, set, parseISO, isWithinInterval } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { v4 as uuidv4 } from 'uuid';
 import { Alert, notification } from 'antd';
@@ -114,35 +114,55 @@ export default function CzasPracyPage() {
 
     const fetchGrupaWTygodniu = async () => {
         const from = format(startOfWeek(currentDate, { weekStartsOn: 1 }), 'yyyy-MM-dd');
-        const to = format(endOfWeek(currentDate, { weekStartsOn: 2 }), 'yyyy-MM-dd');
+        const to = format(addDays(endOfWeek(currentDate, { weekStartsOn: 1 }), 1), 'yyyy-MM-dd');
     
         const urlRequest = `http://localhost:5000/api/planTygodnia/zaplanuj?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
-
+    
         try {
-            
             const res = await Axios.get(urlRequest, { 
                 withCredentials: true 
             });
             const planData = res.data;
-            const userGroups = planData.filter(entry => entry.pracownikId === currentUserId);
-            setNazwaGrupyPracownika(userGroups[0].Zleceniodawca);
     
-            const grupaIds = [
-                ...new Set(userGroups.map(group => group.grupaId))
-            ];
+            const filteredPlanData = planData.filter(entry => {
+                const dataOd = parseISO(entry.data_od);
+                const dataDo = parseISO(entry.data_do);
+                const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
+                const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
+                return (
+                    isWithinInterval(dataOd, { start: weekStart, end: weekEnd }) ||
+                    isWithinInterval(dataDo, { start: weekStart, end: weekEnd })
+                );
+            });
     
-            const pracownicyGrupy = planData
-                .filter(entry => grupaIds.includes(entry.grupaId) && entry.pracownikId !== null)
-                .map(employee => ({
-                    label: `${employee.imie} ${employee.nazwisko}`,
-                    value: employee.pracownikId
-                }));
+            if (filteredPlanData.length > 0) {
+                const userGroups = filteredPlanData.filter(entry => entry.pracownikId === currentUserId);
+                setNazwaGrupyPracownika(userGroups[0]?.Zleceniodawca || null);
+                // console.log(zleceniodawcy);
+                // console.log("Nazwa grupy pracownika", userGroups[0]);
+                setZleceniodawca(userGroups[0]?.grupaId || null);
     
-            setPracownicyWGrupie(pracownicyGrupy);
+                const grupaIds = [
+                    ...new Set(userGroups.map(group => group.grupaId))
+                ];
+    
+                const pracownicyGrupy = filteredPlanData
+                    .filter(entry => grupaIds.includes(entry.grupaId) && entry.pracownikId !== null)
+                    .map(employee => ({
+                        label: `${employee.imie} ${employee.nazwisko}`,
+                        value: employee.pracownikId
+                    }));
+    
+                setPracownicyWGrupie(pracownicyGrupy);
+            } else {
+                setPracownicyWGrupie([]);
+                setNazwaGrupyPracownika(null);
+                setZleceniodawca(null);
+            }
         } catch (err) {
-            //console.error(err);
             setPracownicyWGrupie([]);
             setNazwaGrupyPracownika(null);
+            setZleceniodawca(null);
         }
     };
 
@@ -196,7 +216,8 @@ export default function CzasPracyPage() {
     const fetchPojazdy = () => {
         Axios.get("http://localhost:5000/api/pojazdy", { withCredentials: true })
             .then((response) => {
-                setSamochody(response.data.pojazdy.map(pojazd => ({ label: pojazd.numerRejestracyjny, value: pojazd.numerRejestracyjny })));
+                // console.log(response.data.pojazdy);
+                setSamochody(response.data.pojazdy.map(pojazd => ({id: pojazd.id, label: pojazd.numerRejestracyjny, value: pojazd.numerRejestracyjny })));
             })
             .catch((error) => {
                 console.error(error);
