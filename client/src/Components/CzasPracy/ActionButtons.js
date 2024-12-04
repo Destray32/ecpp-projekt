@@ -49,7 +49,7 @@ const PrzyciskAkcji = ({ handleSave, handleCloseWeek, handleOpenWeek, handlePrin
                             />
                             <Button 
                                 label="Zamknij tydzień" 
-                                className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 flex-grow" 
+                                className={`p-button-outlined border-2 p-1 ${statusTyg === 'Zamkniety' ? 'bg-red-300' : 'bg-white'} pr-2 pl-2 flex-grow`} 
                                 onClick={handleOpenModal}
                                 disabled={statusTyg === 'Zamkniety'}
                             />

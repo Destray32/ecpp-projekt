@@ -80,34 +80,47 @@ const TimeInputs = ({ daysOfWeek, hours, setHours,
     };
 
     const formatTimeValue = (value) => {
-        // usuwanie zer z przodu
-        let cleanValue = value.replace(/\D/g, '');
-
-        let hours = '00';
-        let minutes = '00';
-
-        if (cleanValue.length <= 2) {
-            // 1 lub 2 cyfry - godziny
-            hours = cleanValue.padStart(2, '0');
-        } else if (cleanValue.length === 3) {
-            // 3 cyfry - pierwsza to godziny, reszta to minuty
-            hours = cleanValue.slice(0, 1).padStart(2, '0');
-            minutes = cleanValue.slice(1, 3);
-        } else if (cleanValue.length >= 4) {
-            // 4 lub więcej cyfr - pierwsze dwie to godziny, reszta to minuty
-            hours = cleanValue.slice(0, 2).padStart(2, '0');
-            minutes = cleanValue.slice(2, 4);
+        let czyPrzecinek = value.includes(',');
+        let cleanValue = value;
+    
+        if (czyPrzecinek) {
+            // ("7,3" -> "7:30" itp)
+            const parts = value.split(',');
+            const hoursPart = parts[0] || '0';
+            const decimalPart = parts[1] || '0';
+            
+            // konwersja minut po rzecinku do pelnego formatu
+            if (decimalPart.length <= 1) {
+                cleanValue = `${hoursPart}:${decimalPart}0`;
+            } else {
+                cleanValue = `${hoursPart}:${decimalPart}`;
+            }
         }
-
+    
+        let [hours, minutes] = cleanValue.split(':').map(part => part || '00');
+    
+        if (!cleanValue.includes(':')) {
+            if (cleanValue.length <= 2) {
+                hours = cleanValue.padStart(2, '0');
+                minutes = '00';
+            } else if (cleanValue.length === 3) {
+                hours = cleanValue.slice(0, 1).padStart(2, '0');
+                minutes = cleanValue.slice(1, 3);
+            } else if (cleanValue.length >= 4) {
+                hours = cleanValue.slice(0, 2).padStart(2, '0');
+                minutes = cleanValue.slice(2, 4);
+            }
+        }
+    
         let parsedHours = parseInt(hours, 10);
         let parsedMinutes = parseInt(minutes, 10);
-
+    
         if (isNaN(parsedHours) || parsedHours > 23) {
             parsedHours = 23;
         } else if (parsedHours < 0) {
             parsedHours = 0;
         }
-
+    
         if (isNaN(parsedMinutes)) {
             parsedMinutes = 0;
         } else if (parsedMinutes >= 0 && parsedMinutes < 15) {
@@ -121,14 +134,12 @@ const TimeInputs = ({ daysOfWeek, hours, setHours,
                 parsedHours = 23;
             }
         } else {
-            // poza zakresem => ustaw na 0
             parsedMinutes = 0;
         }
-
-        // formatowanie
+    
         hours = parsedHours.toString().padStart(2, '0');
         minutes = parsedMinutes.toString().padStart(2, '0');
-
+    
         return `${hours}:${minutes}`;
     };
 

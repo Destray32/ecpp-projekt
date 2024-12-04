@@ -105,11 +105,20 @@ const AdditionalProjectRow = React.memo(({
                         const dateKey = format(day, 'yyyy-MM-dd');
                         const niedziela = getDay(day) === 0;
                         const isActive = activeInput && activeInput.projectId === project.id && activeInput.date === dateKey;
-                        if (defaultCar) { // do ustawienia domyslnego samochodu dla pól w projekcie
+
+                        // inicjalizaca obiekty godzin gdy nie ma ich w projekcie
+                        if (!project.hours[dateKey]) {
+                            project.hours[dateKey] = {};
+                        }
+
+                        if (defaultCar) {
                             project.hours[dateKey].car = defaultCar;
                         }
-                        //console.log(project.hours[dateKey]?.comment, project.hours[dateKey]?.car, project.hours[dateKey]?.hoursWorked > 0);
-                        const hasCommentAndCar = project.hours[dateKey]?.comment && project.hours[dateKey]?.car && project.hours[dateKey]?.hoursWorked > 0;
+
+                        const hasCommentAndCar = project.hours[dateKey]?.comment &&
+                            project.hours[dateKey]?.car &&
+                            project.hours[dateKey]?.hoursWorked > 0;
+
                         return (
                             <div key={index} className="text-center"
                                 onClick={() => onActivate(project.id, format(day, 'yyyy-MM-dd'))}>
@@ -130,7 +139,7 @@ const AdditionalProjectRow = React.memo(({
                                 />
                             </div>
                         );
-                    })}
+})}
                 </div>
                 <span>Razem: {projectTotal} godz.</span>
             </div>
