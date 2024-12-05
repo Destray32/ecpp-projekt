@@ -7,7 +7,6 @@ const cors = require('cors');
 const mysql = require('mysql2');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
-const path = require('path');
 
 require('dotenv').config();
 
