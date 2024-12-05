@@ -28,6 +28,8 @@ function DodajZaplanuj(req, res, db) {
     
     const formattedDataOd = startDate.toISOString().split('T')[0];
     const formattedDataDo = new Date(dataDo).toISOString().split('T')[0];
+
+    const m_value = 'M1';
     
     const employeeValues = employees.map(employee => [
         formattedDataOd,
@@ -37,7 +39,8 @@ function DodajZaplanuj(req, res, db) {
         employee,           
         grupa,
         opis,
-        null                
+        null,
+        m_value                
     ]);
     
     const vehicleValues = vehicles.map(vehicle => [
@@ -48,11 +51,12 @@ function DodajZaplanuj(req, res, db) {
         null,               
         grupa,
         opis,
-        vehicle            
+        vehicle,
+        m_value           
     ]);
     
     const sql = `
-        INSERT INTO Plan_Tygodnia_V (data_od, data_do, tydzienRoku, Rok, Pracownik_idPracownik, Grupa_urlopowa_idGrupa_urlopowa, opis, Pojazdy_idPojazdy)
+        INSERT INTO Plan_Tygodnia_V (data_od, data_do, tydzienRoku, Rok, Pracownik_idPracownik, Grupa_urlopowa_idGrupa_urlopowa, opis, Pojazdy_idPojazdy, m_value)
         VALUES ?
     `;
     

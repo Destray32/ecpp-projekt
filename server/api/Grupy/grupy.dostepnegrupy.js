@@ -13,7 +13,21 @@ function DostepneGrupy(req, res, db) {
                 Stawka: row.Stawka,
                 Plan_tygodniaV: row.Plan_tygodniaV,
             }));
-            res.status(200).send({ grupy: formattedRows });
+
+            const sortedRows = formattedRows.sort((a, b) => {
+                const customOrder = {
+                    "NCW": 1,
+                    "do dyspozycji": 98,
+                    "urlopy": 99
+                };
+
+                const orderA = customOrder[a.Zleceniodawca] || 50;
+                const orderB = customOrder[b.Zleceniodawca] || 50;
+
+                return orderA - orderB;
+            });
+
+            res.status(200).send({ grupy: sortedRows });
         }
     });
 }

@@ -68,7 +68,7 @@ export default function LoginPage() {
 
     return (
         <main className='bg-primary min-h-screen flex items-center justify-center'>
-            <div className='bg-white w-1/2 h-[20rem] rounded-lg drop-shadow-2xl'>
+            <div className='bg-white w-1/5 h-[20rem] rounded-lg drop-shadow-2xl'>
                 <form className='p-4 space-y-6 h-full' onSubmit={loginHandler}>
                 <div className='card flex flex-col drop-shadow-lg'>
                     <Dropdown 

@@ -238,7 +238,7 @@ export default function UrlopyPage() {
                 console.error("There was an error fetching the data:", error);
                 notification.error({
                     message: 'Błąd pobierania danych',
-                    description: 'Wystąpił błąd podczas pobierania danych do generowania PDF',
+                    description: 'Sprawdź wybrane grupy i spróbuj ponownie',
                     placement: 'topRight'
                 });
             });

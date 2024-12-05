@@ -29,7 +29,6 @@ export default function HomePage() {
         if (accountType === 'Administrator') {
             setIsAdmin(true);
         }
-        console.log(accountType);
     }, [accountType]);
 
     useEffect(() => {

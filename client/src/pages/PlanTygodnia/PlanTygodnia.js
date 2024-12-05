@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Dropdown } from "primereact/dropdown";
 import { Button } from "primereact/button";
-import { format, startOfWeek, addWeeks, subWeeks, getWeek, set } from 'date-fns';
+import { format, startOfWeek, addWeeks, subWeeks, getWeek, set, addDays } from 'date-fns';
 import Axios from "axios";
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -35,7 +35,7 @@ export default function PlanTygodniaPage() {
     }, []);
 
     const from = format(startOfWeek(currentDate, { weekStartsOn: 1 }), 'yyyy-MM-dd');
-    const to = format(addWeeks(startOfWeek(currentDate, { weekStartsOn: 1 }), 1), 'yyyy-MM-dd');
+    const to = format(addDays(addWeeks(startOfWeek(currentDate, { weekStartsOn: 1 }), 1), -1), 'yyyy-MM-dd');
 
 
     const previousWeek = () => {
@@ -52,7 +52,7 @@ export default function PlanTygodniaPage() {
     
     const formatWeek = (date) => {
         const start = format(startOfWeek(date, { weekStartsOn: 1 }), 'dd.MM.yyyy');
-        const end = format(addWeeks(startOfWeek(date, { weekStartsOn: 1 }), 1), 'dd.MM.yyyy');
+        const end = format(addDays(addWeeks(startOfWeek(date, { weekStartsOn: 1 }), 1), -1), 'dd.MM.yyyy');
         return `${start} - ${end}`;
     };
 
@@ -147,7 +147,7 @@ export default function PlanTygodniaPage() {
     const handleSkopiuj = async () => {
         try {
             const previousWeekStart = format(subWeeks(startOfWeek(currentDate, { weekStartsOn: 1 }), 1), 'yyyy-MM-dd');
-            const previousWeekEnd = format(startOfWeek(currentDate, { weekStartsOn: 1 }), 'yyyy-MM-dd');
+            const previousWeekEnd = format(addDays(startOfWeek(currentDate, { weekStartsOn: 1 }), -1), 'yyyy-MM-dd');
     
             const [currentWeekResponse, previousWeekResponse] = await Promise.all([
                 Axios.get(`http://localhost:5000/api/planTygodnia/zaplanuj?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`, { withCredentials: true }),
@@ -169,7 +169,7 @@ export default function PlanTygodniaPage() {
                 ...item,
                 tydzienRoku: getWeekNumber(currentDate),
                 data_od: format(startOfWeek(currentDate, { weekStartsOn: 1 }), 'yyyy-MM-dd'),
-                data_do: format(addWeeks(startOfWeek(currentDate, { weekStartsOn: 1 }), 1), 'yyyy-MM-dd')
+                data_do: format(addDays(addWeeks(startOfWeek(currentDate, { weekStartsOn: 1 }), 1), -1), 'yyyy-MM-dd'),
             }));
     
             if (entriesToAdd.length > 0) {
@@ -248,6 +248,9 @@ export default function PlanTygodniaPage() {
     };
 
     const handleWheelScroll = (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        
         const currentIndex = availableGroups.findIndex((g) => g.name === group?.name);
         if (currentIndex !== -1) {
             let nextIndex;
@@ -317,7 +320,7 @@ export default function PlanTygodniaPage() {
                                 <Button icon="pi pi-arrow-right" iconPos="right" className="p-button-outlined" onClick={nextWeek} />
                             </div>
                             </div>
-                            <div className="dropdown-container" onWheel={handleWheelScroll}>
+                            <div className="dropdown-container overflow-hidden" onWheel={handleWheelScroll} >
                             <span>Grupa</span>
                                 <Dropdown 
                                     value={group} 
@@ -344,12 +347,13 @@ export default function PlanTygodniaPage() {
                         onHide={() => setDialogVisible(false)}>
                         <div className="p-grid">
                             {availableGroups.map((group) => (
-                                <div key={group.id} className="p-col-12">
+                                <div key={group.id} className="p-col-12 mb-1">
                                     <Checkbox
                                         inputId={group.id}
                                         value={group.name}
                                         onChange={(e) => handleGroupSelection(group, e.checked)}
                                         checked={selectedGroups.some(g => g.id === group.id)}
+                                        className="border border-gray-500 mb-1"
                                     />
                                     <label htmlFor={group.id} className="p-checkbox-label">{group.name}</label>
                                 </div>
@@ -456,13 +460,13 @@ export default function PlanTygodniaPage() {
                                 autoComplete='off'
                                 filter
                                 resetFilterOnHide
-                                disabled={accountType != 'Administrator'}
+                                disabled={accountType !== 'Administrator'}
                                 filterInputAutoFocus
                                 className=" md:w-14rem p-1 w-full"
                             />
                             <Button label="Przenieś" className="bg-white w-[9rem] h-[3rem] mt-4"
                                 text raised onClick={handlePrzeniesZaznaczone}
-                                disabled={accountType != 'Administrator'} />
+                                disabled={accountType !== 'Administrator'} />
                         </div>
                     </AmberBox>
                     <AmberBox>
@@ -503,7 +507,7 @@ export default function PlanTygodniaPage() {
                             <p className="text-center mb-2">Skopiuj pracowników z poprzedniego tygodnia</p>
                             <Button label="Skopiuj" className="bg-white w-[9rem] h-[3rem]"
                                 text raised onClick={handleSkopiuj}
-                                disabled={accountType != 'Administrator'} />
+                                disabled={accountType !== 'Administrator'} />
                         </div>
                     </AmberBox>
                 </div>

@@ -37,7 +37,7 @@ const AdditionalProjects = ({
     Projekty, setProjekty, dostepneProjekty,
     additionalProjects, setAdditionalProjects,
     daysOfWeek, samochody, loggedUserName, currentDate,
-    statusTyg, blockStatus, nazwaGrupyPracownika
+    statusTyg, blockStatus
 }) => {
     const [activeInput, setActiveInput] = useState(null);
     const [filteredZleceniodawcy, setFilteredZleceniodawcy] = useState([]);
