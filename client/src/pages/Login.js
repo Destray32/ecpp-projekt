@@ -3,6 +3,7 @@ import { Dropdown } from 'primereact/dropdown';
 import { Password } from 'primereact/password';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { notification } from 'antd';
 
 import "primereact/resources/themes/lara-light-cyan/theme.css";
 
@@ -47,11 +48,16 @@ export default function LoginPage() {
         event.preventDefault();
         try {
             const response = await axios.post('http://47.76.209.242:5000/api/logowanie', { firma, login, password }, { withCredentials: true });
-
-            console.log(response.data.message);
+            notification.success({ message: 'Zalogowano', description: 'Zalogowano pomyślnie' });
+            
 
             navigate('/home/czas');
         } catch (error) {
+            notification.error({
+                message: 'Logowanie nieudane',
+                description: 'Sprawdź poprawność danych',
+                placement: 'topRight',
+            });
             console.error(error);
         }
     };
@@ -62,7 +68,7 @@ export default function LoginPage() {
 
     return (
         <main className='bg-primary min-h-screen flex items-center justify-center'>
-            <div className='bg-white w-1/2 h-[20rem] rounded-lg drop-shadow-2xl'>
+            <div className='bg-white w-1/5 h-[20rem] rounded-lg drop-shadow-2xl'>
                 <form className='p-4 space-y-6 h-full' onSubmit={loginHandler}>
                 <div className='card flex flex-col drop-shadow-lg'>
                     <Dropdown 

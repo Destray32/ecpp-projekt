@@ -238,7 +238,7 @@ export default function UrlopyPage() {
                 console.error("There was an error fetching the data:", error);
                 notification.error({
                     message: 'Błąd pobierania danych',
-                    description: 'Wystąpił błąd podczas pobierania danych do generowania PDF',
+                    description: 'Sprawdź wybrane grupy i spróbuj ponownie',
                     placement: 'topRight'
                 });
             });
@@ -414,7 +414,7 @@ export default function UrlopyPage() {
                 urlopyData = response.data.urlopy.filter(item => item.imie === imie && item.nazwisko === nazwisko);
                 }
 
-    
+                console.log(urlopyData);    
                 const filterBySelectedGroups = (data) => {
                     if (selectedGrupyNazwa.length === 0) return data;
                     return data.filter(item => selectedGrupyNazwa.includes(item.zleceniodawca));
@@ -563,6 +563,12 @@ export default function UrlopyPage() {
         return `${day}/${month}/${year}`;
     };
 
+    useEffect(() => {
+        if (urlopOd && new Date(urlopDo) < new Date(urlopOd)) {
+          setUrlopDo(urlopOd);
+        }
+      }, [urlopOd]);
+
     const handleSave = (vacationId) => {
         Axios.put(`http://47.76.209.242:5000/api/urlopy/${vacationId}`, {
             urlopOd: convertToDisplayFormat(editVacationData.urlopOd),
@@ -617,9 +623,13 @@ export default function UrlopyPage() {
                                 <Dropdown
                                     value={UrlopDla}
                                     onChange={(e) => setUrlopDla(e.value)}
-                                    options={pracownicy
-                                        .filter(pracownik => pracownik.name === imie && pracownik.surname === nazwisko)
-                                        .map(pracownik => `${pracownik.surname} ${pracownik.name}`)}
+                                    options={
+                                        accountType === 'Administrator'
+                                            ? pracownicy.map(pracownik => `${pracownik.surname} ${pracownik.name}`)
+                                            : pracownicy
+                                                  .filter(pracownik => pracownik.name === imie && pracownik.surname === nazwisko)
+                                                  .map(pracownik => `${pracownik.surname} ${pracownik.name}`)
+                                    }
                                     placeholder="Pracownik"
                                     autoComplete="off"
                                     className="p-1"
@@ -654,7 +664,7 @@ export default function UrlopyPage() {
                         </div>
                         <div className="flex flex-col w-2/12 ">
                             <p className="text-sm text-gray-600 mb-2">Urlop do:</p>
-                            <InputText id="UrlopDo" value={urlopDo} onChange={(e) => setUrlopDo(e.target.value)}type="date" />
+                            <InputText id="UrlopDo" value={urlopDo} onChange={(e) => setUrlopDo(e.target.value)} type="date" min={urlopOd} />
                         </div>
                     </div>
                     <div className="flex justify-start w-full p-4 ml-4">

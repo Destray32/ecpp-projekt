@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { format, startOfWeek, addWeeks, subWeeks, getWeek, parseISO } from 'date-fns';
+import { format, startOfWeek, addWeeks, subWeeks, getWeek, parseISO, addDays} from 'date-fns';
 import { Button } from "primereact/button";
 import { InputText } from "primereact/inputtext";
 import { Dropdown } from "primereact/dropdown";
@@ -33,13 +33,13 @@ export default function ZaplanujTydzienPage() {
 
     const formatWeek = (date) => {
         const start = format(startOfWeek(date, { weekStartsOn: 1 }), 'dd.MM.yyyy');
-        const end = format(addWeeks(startOfWeek(date, { weekStartsOn: 1 }), 1), 'dd.MM.yyyy');
+        const end = format(addDays(addWeeks(startOfWeek(date, { weekStartsOn: 1 }), 1), -1), 'dd.MM.yyyy');
         return `${start} - ${end}`;
     };
 
     const fetchPlany = useCallback(() => {
         const from = format(startOfWeek(currentDate, { weekStartsOn: 1 }), 'yyyy-MM-dd');
-        const to = format(addWeeks(startOfWeek(currentDate, { weekStartsOn: 1 }), 1), 'yyyy-MM-dd');
+        const to = format(addDays(addWeeks(startOfWeek(currentDate, { weekStartsOn: 1 }), 1), -1), 'yyyy-MM-dd');
 
         Axios.get(`http://47.76.209.242:5000/api/planTygodnia/zaplanuj?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`,
             { withCredentials: true })
@@ -79,7 +79,7 @@ export default function ZaplanujTydzienPage() {
     }, [currentDate]);
 
     const handleZaplanuj = () => {
-        if (selectedEmployees.length === 0 || !wybranaGrupa || !opis) {
+        if (selectedEmployees.length === 0 || !wybranaGrupa) {
             notification.error({
                 message: 'Puste pola',
                 description: 'Wypełnij wszystkie pola',
@@ -90,7 +90,7 @@ export default function ZaplanujTydzienPage() {
 
         Axios.post('http://47.76.209.242:5000/api/planTygodnia/zaplanuj', {
             dataOd: format(startOfWeek(currentDate, { weekStartsOn: 1 }), 'yyyy-MM-dd'),
-            dataDo: format(addWeeks(startOfWeek(currentDate, { weekStartsOn: 1 }), 1), 'yyyy-MM-dd'),
+            dataDo: format(addDays(addWeeks(startOfWeek(currentDate, { weekStartsOn: 1 }), 1), -1), 'yyyy-MM-dd'),
             pracownicy: selectedEmployees,
             grupa: wybranaGrupa,
             opis: opis
@@ -145,7 +145,7 @@ export default function ZaplanujTydzienPage() {
 
     const formatDate = (dateString) => {
         const date = parseISO(dateString);
-        return format(date, 'yyyy-MM-dd');
+        return format(date, 'dd.MM.yyyy');
     };
 
     return (
@@ -180,7 +180,7 @@ export default function ZaplanujTydzienPage() {
                             filter
                             filterInputAutoFocus
                             resetFilterOnHide
-                            placeholder=""
+                            placeholder="Wybierz grupę"
                             autoComplete="off"
                             showClear
                             className="md:w-14rem p-1 w-1/4"

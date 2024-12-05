@@ -2,9 +2,7 @@ function EdytujProjekt(req, res, db) {
     const { firma, zleceniodawca, nazwa, ulica, miejscowosc, kodPocztowy, kraj } = req.body;
     const { id } = req.params;
 
-    console.log('Edytuj projekt:', firma, zleceniodawca, nazwa, ulica, miejscowosc, kodPocztowy, kraj, id);
-
-    if (!firma || !zleceniodawca || !nazwa || !ulica || !miejscowosc || !kodPocztowy || !kraj) {
+    if (!firma || !zleceniodawca || !nazwa) {
         res.status(400).send('Brak wymaganych danych');
         return;
     }

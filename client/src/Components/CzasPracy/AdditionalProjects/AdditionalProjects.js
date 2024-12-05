@@ -45,14 +45,50 @@ const AdditionalProjects = ({
     const [activeProject, setActiveProject] = useState(null);
     const [activeDate, setActiveDate] = useState(null);
     const [additionalProjectsTotalTime, setAdditionalProjectsTotalTime] = useState(0.0);
+    const [defaultSamochod, setDefaultSamochod] = useState("");
 
     const additionalFieldsRef = useRef(null);
+
+    useEffect(() => {
+        //console.log("samochody", samochody);
+    }, [samochody]);
+
+    useEffect(() => {
+        if (firmy && firmy.length > 0) {
+            Axios.get('http://localhost:5000/api/mojedane', { withCredentials: true })
+                .then(res => {
+                    //console.log(res.data);
+                    //console.log(zleceniodawcy);
+                    //console.log(samochody);
+                    if (res.data && res.data.company) {
+                        const userFirmaId = res.data.company;
+                        const defaultFirma = firmy.find(f => f.value === userFirmaId);
+
+                        const userIdSamochodu = res.data.vehicle;
+                        const defaultSamochod = samochody.find(s => s.id === userIdSamochodu);
+    
+                        if (defaultFirma) {
+                            setFirma(defaultFirma.value);
+                        }
+                        if (defaultSamochod) {
+                            setDefaultSamochod(defaultSamochod.value);
+                            
+                        }
+
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                });
+        }
+    }, [firmy]);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
             const isDropdownPanel = event.target.closest('.p-dropdown-panel');
             const isDropdownTrigger = event.target.closest('.p-dropdown-trigger');
             const isDropdownItem = event.target.closest('.p-dropdown-item');
+            
     
             if (additionalFieldsRef.current && 
                 !additionalFieldsRef.current.contains(event.target) &&
@@ -155,7 +191,7 @@ const AdditionalProjects = ({
                 const apiData = response.data?.hours?.[dateKey];
                 newProject.hours[dateKey] = apiData ? {
                     hoursWorked: apiData.hoursWorked || 0,
-                    car: apiData.car || "",
+                    car: apiData.car || defaultSamochod.value,
                     comment: apiData.comment || "",
                     parking: apiData.parking || "",
                     km: apiData.km || "",
@@ -203,7 +239,7 @@ const AdditionalProjects = ({
         // wyciągamy wszystkie id nadesłane z bazy dla każdego dzien_projekty i usuwamy
         additionalProjects.forEach(project => {
             if (project.id === projectId) {
-                console.log(project);
+                //console.log(project);
                 Object.values(project.hours).forEach(async hour => {
                     try {
                         await Axios.delete(`http://47.76.209.242:5000/api/czas/projekt/${hour.id}`, { withCredentials: true });
@@ -227,19 +263,17 @@ const AdditionalProjects = ({
 
     return (
         blockStatus === false ? (
-        <div className="w-auto h-full m-2 p-3 bg-amber-100 outline outline-1 outline-gray-500 flex flex-col space-y-4">
-            <div className="w-full flex flex-col space-y-2 items-start">
+        <div className="w-auto h-full m-2 p-1 bg-amber-100 outline outline-1 outline-gray-500 flex flex-col">
+            <div className="w-full flex flex-col items-start">
                 <div className="w-full">
-                    <div className="w-full flex flex-row items-center p-4 justify-between">
+                    <div className="w-full flex flex-row items-center p-1 justify-between">
                         <div className="flex flex-col w-3/12">
-                            <p className="text-sm text-gray-600 mb-2">Wybierz firmę</p>
                             <Dropdown
                                 value={Firma}
                                 onChange={(e) => setFirma(e.value)}
                                 options={firmy}
                                 placeholder="Firma"
                                 autoComplete="off"
-                                className="p-1"
                                 filter
                                 resetFilterOnHide
                                 disabled={statusTyg === "Zamkniety"}
@@ -247,14 +281,12 @@ const AdditionalProjects = ({
                             />
                         </div>
                         <div className="flex flex-col w-3/12">
-                            <p className="text-sm text-gray-600 mb-2">Wybierz zleceniodawcę</p>
                             <Dropdown
                                 value={Zleceniodawca}
                                 onChange={(e) => setZleceniodawca(e.value)}
                                 options={filteredZleceniodawcy}
                                 placeholder="Zleceniodawca"
                                 autoComplete="off"
-                                className="p-1"
                                 filter
                                 resetFilterOnHide
                                 filterInputAutoFocus
@@ -263,14 +295,12 @@ const AdditionalProjects = ({
                             />
                         </div>
                         <div className="flex flex-col w-3/12">
-                            <p className="text-sm text-gray-600 mb-2">Wybierz projekt</p>
                             <Dropdown
                                 value={Projekty}
                                 onChange={(e) => setProjekty(e.value)}
                                 options={filteredProjekty}
                                 placeholder="Projekty"
                                 autoComplete="off"
-                                className="p-1"
                                 filter
                                 resetFilterOnHide
                                 filterInputAutoFocus
@@ -278,13 +308,16 @@ const AdditionalProjects = ({
                                 disabled={statusTyg === "Zamkniety"}
                             />
                         </div>
-                        <div className="mt-8">
+                        <div className="flex flex-col">
                             <Button
                                 onClick={addWeek}
                                 label="Dodaj"
-                                className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mb-4"
+                                className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2"
                                 disabled={statusTyg === "Zamkniety"}
                             />
+                        </div>
+                        <div className="flex flex-col">
+                            <p className='font-bold'>Suma: {additionalProjectsTotalTime}:00</p>
                         </div>
                     </div>
                     {additionalProjects.map((project, index) => (
@@ -301,17 +334,14 @@ const AdditionalProjects = ({
                             samochody={samochody}
                             statusTyg={statusTyg}
                             onActivate={handleProjectActivation}
+                            defaultCar={defaultSamochod}
                         />
                     ))}
-                    <div className='flex justify-between mt-4'>
-                        <div></div>
-                        <p className='font-bold'>Suma: {additionalProjectsTotalTime}:00</p>
-                    </div>
                     {/* Render additional fields if a project is active */}
                     {activeProject && activeDate && (
                         <div ref={additionalFieldsRef}
-                        className='border border-gray-500 p-4 mt-2'>
-                            <div className='grid grid-cols-[auto_1fr] gap-4 items-center'>
+                        className='border border-gray-500 p-1 mt-1'>
+                            <div className='grid grid-cols-[auto_1fr] gap-2 items-center'>
                                 <span className="text-right">Komentarz:</span>
                                 <InputTextarea
                                     value={additionalProjects.find(p => p.id === activeProject)?.hours[activeDate]?.comment || ""}
@@ -323,13 +353,14 @@ const AdditionalProjects = ({
     
                                 <span className="text-right">Samochód:</span>
                                 <Dropdown
-                                    value={additionalProjects.find(p => p.id === activeProject)?.hours[activeDate]?.car || ""}
+                                    value={additionalProjects.find(p => p.id === activeProject)?.hours[activeDate]?.car || defaultSamochod}
                                     options={samochody}
                                     onChange={(e) => handleInputChange(activeProject, activeDate, e.value, 'car')}
                                     placeholder="Wybierz pojazd"
                                     className="w-full"
                                     showClear
                                     disabled={statusTyg === "Zamkniety"}
+                                    defaultValue={defaultSamochod.value}
                                 />
     
                                 <span className="text-right">Parking:</span>

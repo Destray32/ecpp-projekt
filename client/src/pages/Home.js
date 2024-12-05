@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import moment from 'moment';
 import { Button, Badge, Modal } from 'antd';
-import { MenuOutlined } from '@ant-design/icons';
+import { MenuOutlined, DownloadOutlined } from '@ant-design/icons';
 import axios from 'axios';
 
 import GorneMenu from '../Components/GorneMenu';
@@ -29,7 +29,6 @@ export default function HomePage() {
         if (accountType === 'Administrator') {
             setIsAdmin(true);
         }
-        console.log(accountType);
     }, [accountType]);
 
     useEffect(() => {
@@ -140,8 +139,8 @@ export default function HomePage() {
 
     return (
         <>
-            <div className='flex flex-col min-h-screen'>
-                <header className="w-full bg-primary text-white p-4 flex justify-between items-center">
+            <div className='flex flex-col min-h-screen overflow-x-auto'>
+            <header className="w-full min-w-[1250px] bg-primary text-white p-2 pl-8 flex justify-between items-center">
                     <button
                         className="min-[1470px]:hidden text-white p-2"
                         onClick={toggleMobileMenu}
@@ -245,12 +244,17 @@ export default function HomePage() {
                             {menu === "PlanTygodnia" && (
                                 <>
                                     <ButtonLewy link="plan" nazwa='Plan Tygodnia' onClick={closeMobileMenu} isActive={location.pathname === '/home/plan'} />
-                                    {isAdmin && (
+                                    {accountType === 'Administrator' && (
                                 <ButtonLewy link="zaplanuj" nazwa='Zaplanuj Tydzień' onClick={closeMobileMenu} isActive={location.pathname === '/home/zaplanuj'} />
                                     )}
                                 <ButtonLewy nazwa='Wyloguj' onClick={() => { handleLogout(); closeMobileMenu(); }} isActive={false} />
                                 </>
                             )}
+                        </div>
+                        <div className='absolute bottom-10 left-[4.8rem]'>
+                            <Link to='/home/pobierz'>
+                                <DownloadOutlined className='text-3xl hover:text-white transition-all duration-500 ease-in-out'/>
+                            </Link>
                         </div>
                     </nav>
                     <main className={`w-full min-w-[1250px]`}>

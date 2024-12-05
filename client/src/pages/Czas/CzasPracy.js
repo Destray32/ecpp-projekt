@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { format, startOfWeek, addWeeks, endOfWeek, addDays, subWeeks, getWeek, set } from 'date-fns';
+import { format, startOfWeek, addWeeks, endOfWeek, addDays, subWeeks, getWeek, set, parseISO, isWithinInterval } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { v4 as uuidv4 } from 'uuid';
 import { Alert, notification } from 'antd';
@@ -32,7 +32,7 @@ export default function CzasPracyPage() {
     const [statusTygodnia, setStatusTygodnia] = useState(null);
     const [przekroczoneGodziny, setPrzekroczoneGodziny] = useState(false);
     const [isOver10h, setIsOver10h] = useState([
-        false, false, false, false, false, false, false
+        false, false, false, false, false, false
     ]);
     const [blockStatus, setBlockStatus] = useState(false);
 
@@ -40,6 +40,7 @@ export default function CzasPracyPage() {
     const [nazwaGrupyPracownika, setNazwaGrupyPracownika] = useState(null);
     const [idGrupy, setIdGrupy] = useState(null);
     const [pracownicyWGrupie, setPracownicyWGrupie] = useState([]);
+    const [czyZapisano, setCzyZapisano] = useState(false);
 
     const startOfCurrentWeek = startOfWeek(currentDate, { weekStartsOn: 1 });
 
@@ -48,6 +49,12 @@ export default function CzasPracyPage() {
         //console.log("Pracownicy w grupie", pracownicyWGrupie);
         // console.log("Nazwa grupy pracownika", nazwaGrupyPracownika);
     }, [pracownicyWGrupie]);
+
+    useEffect(() => {
+        if (statusTygodnia == "Zamknięty") {
+            setCzyZapisano(true);
+        }
+    }, [statusTygodnia]);
 
     useEffect(() => {
         if (idGrupy) {
@@ -107,35 +114,55 @@ export default function CzasPracyPage() {
 
     const fetchGrupaWTygodniu = async () => {
         const from = format(startOfWeek(currentDate, { weekStartsOn: 1 }), 'yyyy-MM-dd');
-        const to = format(endOfWeek(currentDate, { weekStartsOn: 2 }), 'yyyy-MM-dd');
+        const to = format(addDays(endOfWeek(currentDate, { weekStartsOn: 1 }), 1), 'yyyy-MM-dd');
     
         const urlRequest = `http://47.76.209.242:5000/api/planTygodnia/zaplanuj?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
-
+    
         try {
-            
             const res = await Axios.get(urlRequest, { 
                 withCredentials: true 
             });
             const planData = res.data;
-            const userGroups = planData.filter(entry => entry.pracownikId === currentUserId);
-            setNazwaGrupyPracownika(userGroups[0].Zleceniodawca);
     
-            const grupaIds = [
-                ...new Set(userGroups.map(group => group.grupaId))
-            ];
+            const filteredPlanData = planData.filter(entry => {
+                const dataOd = parseISO(entry.data_od);
+                const dataDo = parseISO(entry.data_do);
+                const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
+                const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
+                return (
+                    isWithinInterval(dataOd, { start: weekStart, end: weekEnd }) ||
+                    isWithinInterval(dataDo, { start: weekStart, end: weekEnd })
+                );
+            });
     
-            const pracownicyGrupy = planData
-                .filter(entry => grupaIds.includes(entry.grupaId) && entry.pracownikId !== null)
-                .map(employee => ({
-                    label: `${employee.imie} ${employee.nazwisko}`,
-                    value: employee.pracownikId
-                }));
+            if (filteredPlanData.length > 0) {
+                const userGroups = filteredPlanData.filter(entry => entry.pracownikId === currentUserId);
+                setNazwaGrupyPracownika(userGroups[0]?.Zleceniodawca || null);
+                // console.log(zleceniodawcy);
+                // console.log("Nazwa grupy pracownika", userGroups[0]);
+                setZleceniodawca(userGroups[0]?.grupaId || null);
     
-            setPracownicyWGrupie(pracownicyGrupy);
+                const grupaIds = [
+                    ...new Set(userGroups.map(group => group.grupaId))
+                ];
+    
+                const pracownicyGrupy = filteredPlanData
+                    .filter(entry => grupaIds.includes(entry.grupaId) && entry.pracownikId !== null)
+                    .map(employee => ({
+                        label: `${employee.imie} ${employee.nazwisko}`,
+                        value: employee.pracownikId
+                    }));
+    
+                setPracownicyWGrupie(pracownicyGrupy);
+            } else {
+                setPracownicyWGrupie([]);
+                setNazwaGrupyPracownika(null);
+                setZleceniodawca(null);
+            }
         } catch (err) {
-            //console.error(err);
             setPracownicyWGrupie([]);
             setNazwaGrupyPracownika(null);
+            setZleceniodawca(null);
         }
     };
 
@@ -189,7 +216,8 @@ export default function CzasPracyPage() {
     const fetchPojazdy = () => {
         Axios.get("http://47.76.209.242:5000/api/pojazdy", { withCredentials: true })
             .then((response) => {
-                setSamochody(response.data.pojazdy.map(pojazd => ({ label: pojazd.numerRejestracyjny, value: pojazd.numerRejestracyjny })));
+                // console.log(response.data.pojazdy);
+                setSamochody(response.data.pojazdy.map(pojazd => ({id: pojazd.id, label: pojazd.numerRejestracyjny, value: pojazd.numerRejestracyjny })));
             })
             .catch((error) => {
                 console.error(error);
@@ -390,11 +418,14 @@ export default function CzasPracyPage() {
             })
         }));
 
-
         if (przekroczoneGodziny) {
             notification.warning({
                 message: 'Przekroczone godziny',
-                description: `W dniach: ${daysOfWeek.filter((day, index) => isOver10h[index]).map(day => format(day, 'EEEE', { locale: pl })).join(', ')} przekroczono limit 10ciu godzin`,
+                description: `W dniach: ${daysOfWeek
+                    .slice(0, 6)
+                    .filter((day, index) => isOver10h[index + 1])
+                    .map(day => format(day, 'EEEE', { locale: pl }))
+                    .join(', ')} przekroczono limit 10ciu godzin`,
                 placement: 'topRight',
             });
         }
@@ -427,6 +458,8 @@ export default function CzasPracyPage() {
                     description: 'Zapisano dane',
                     placement: 'topRight',
                 });
+
+                setCzyZapisano(true);
             }
         } catch (error) {
             console.error(error);
@@ -473,23 +506,25 @@ export default function CzasPracyPage() {
             const dayName = format(day, 'EEEE', { locale: pl });
             const formattedDate = format(day, 'yyyy-MM-dd');
             const dailyHours = hours[formattedDate] || {};
-
-            const breakHours = dailyHours.break ? parseFloat(dailyHours.break.split(":")[0]) : 0;
-
+        
+            const [breakHours, breakMinutes] = (dailyHours.break || '00:00').split(':').map(Number);
+            const breakTimeInHours = breakHours + (breakMinutes / 60);
+        
+            // console.log(dailyHours.start, breakTimeInHours, dailyHours.end);
+        
             const totalDayHours = dailyHours.end && dailyHours.start ?
-                parseFloat(dailyHours.end.split(":")[0]) - parseFloat(dailyHours.start.split(":")[0]) - breakHours
+                parseFloat(dailyHours.end.split(":")[0]) - parseFloat(dailyHours.start.split(":")[0]) - breakTimeInHours
                 : 0;
-
+        
             let projectDayHours = 0;
-
+        
             additionalProjects.forEach(project => {
                 const projectData = project.hours[formattedDate];
                 if (projectData?.hoursWorked) {
                     projectDayHours += parseFloat(projectData.hoursWorked);
                 }
             });
-
-
+        
             if (totalDayHours !== projectDayHours) {
                 dayHourMismatch = true;
                 console.log(`Różnica w godzinach dla ${dayName}. Godziny pracy: ${totalDayHours}, godziny w dodatkowych projektach: ${projectDayHours}`);
@@ -704,6 +739,7 @@ export default function CzasPracyPage() {
                 blockStatus={blockStatus}
                 nazwaGrupyPracownika={nazwaGrupyPracownika}
                 pracownicyWGrupie={pracownicyWGrupie}
+                czyZapisano={czyZapisano}
             />
             <AdditionalProjects
                 Firma={Firma}

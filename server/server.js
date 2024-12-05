@@ -7,6 +7,7 @@ const cors = require('cors');
 const mysql = require('mysql2');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
+const path = require('path');
 
 require('dotenv').config();
 
@@ -186,6 +187,16 @@ const PobierzArchiwum = require('./api/Czas/Archiwum/archiwum.pobierz');
 const PrzywrocArchiwum = require('./api/Czas/Archiwum/archiwum.przywroc');
 
 const PobierzDostepneFirmy = require('./api/pobierzDostepneFirmy');
+
+app.get('/api/home/pobierz', (req, res) => {
+    const filePath = path.join(__dirname, 'public', 'files', 'skrot.bat');
+    res.download(filePath, 'skort.bat', (err) => {
+        if (err) {
+            console.error('File download error:', err);
+            res.status(500).send('Unable to download the file.');
+        }
+    });
+});
 
 // Logowanie
 
