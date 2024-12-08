@@ -55,7 +55,7 @@ const AdditionalProjects = ({
 
     useEffect(() => {
         if (firmy && firmy.length > 0) {
-            Axios.get('http://localhost:5000/api/mojedane', { withCredentials: true })
+            Axios.get('http://47.76.209.242:5000/api/mojedane', { withCredentials: true })
                 .then(res => {
                     //console.log(res.data);
                     //console.log(zleceniodawcy);
