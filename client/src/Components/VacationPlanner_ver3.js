@@ -76,6 +76,10 @@ const VacationPlanner = () => {
         'Lipiec', 'Sierpien', 'Wrzesien', 'Pazdziernik', 'Listopad', 'Grudzien'
     ];
 
+    const nazwyDniTygodnia = [
+        'N', 'P', 'W', 'S', 'C', 'P', 'S'
+    ]
+
     // pobieranie roku z local storage
     const getYearLocalStorage = () => {
         const storedSelectedWeekAndYear = localStorage.getItem('selectedWeekAndYear');
@@ -156,6 +160,7 @@ const VacationPlanner = () => {
                 dzienMiesiaca: currentDate.getDate(),
                 dzienTygodnia: currentDate.getDay(),
                 miesiac: nazwyMiesiacow[currentDate.getMonth()],
+                nazwaDniaTygodnia: nazwyDniTygodnia[currentDate.getDay()]
             });
             currentDate.setDate(currentDate.getDate() + 1);
         }
@@ -244,9 +249,22 @@ const VacationPlanner = () => {
                         <tr>
                             {tygodnie.map((tydzien, index) => (
                                 <th key={`days-${index}`} className="border border-gray-400 min-w-6">
-                                    {tydzien.map((dzien) => (
-                                        <div key={`${dzien.data.toISOString()}`}>{dzien.dzienMiesiaca}</div>
-                                    ))}
+                                    {tydzien.map((dzien) => {
+                                        if (index === 0) {
+                                            return (
+                                                <div key={`${dzien.data.toISOString()}`}>
+                                                    {`${dzien.nazwaDniaTygodnia} ${dzien.dzienMiesiaca}`}
+                                                </div>
+                                            )
+                                        }
+                                        else {
+                                            return (
+                                                <div key={`${dzien.data.toISOString()}`}>
+                                                    {`${dzien.dzienMiesiaca}`}
+                                                </div>
+                                            )
+                                        }
+                                    })}
                                 </th>
                             ))}
                         </tr>

@@ -34,7 +34,7 @@ const authenticateJWT = (req, res, next) => {
     const token = req.cookies.token;
 
     if (!token) {
-        console.log('No token found');
+        //console.log('No token found');
         return res.status(401).json({ error: 'Unauthorized' });
     }
 
