@@ -230,7 +230,7 @@ export default function UrlopyPage() {
 
                 // Otwarcie nowego okna z pdf-em
                 setTimeout(() => {
-                    window.open(`http://47.76.209.242:5000/test`, '_blank');
+                    window.open(`http://47.76.209.242/test`, '_blank');
                 }, 1500);
 
             })
