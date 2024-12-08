@@ -29,45 +29,6 @@ const AdditionalProjectRow = React.memo(({
         }
     }, [activeInput]);
 
-    const [rawInputs, setRawInputs] = useState({});
-
-    const handleTimeInput = (projectId, dateKey, value) => {
-        let cleanValue = value.replace(/[^\d:]/g, '');
-        setRawInputs(prev => ({
-            ...prev,
-            [dateKey]: cleanValue
-        }));
-
-        // updejtawanie stanu podczas wpisywania
-        onInputChange(projectId, dateKey, cleanValue, 'hoursWorked');
-    };
-
-    const handleTimeBlur = (projectId, dateKey, value) => {
-        let cleanValue = value.replace(/[^\d:]/g, '');
-
-        if (cleanValue.includes(':')) {
-            const [hours, minutes] = cleanValue.split(':');
-            const h = parseInt(hours, 10);
-            const m = parseInt(minutes, 10) || 0;
-
-            if (h >= 0 && h <= 24 && m >= 0 && m < 60) {
-                const decimalHours = h + (m / 60);
-                onInputChange(projectId, dateKey, decimalHours.toFixed(2), 'hoursWorked');
-            }
-        } else {
-            const num = parseInt(cleanValue, 10);
-            if (!isNaN(num) && num >= 0 && num <= 24) {
-                onInputChange(projectId, dateKey, num.toString(), 'hoursWorked');
-            }
-        }
-
-        // clearowanie stanu
-        setRawInputs(prev => {
-            const newState = { ...prev };
-            delete newState[dateKey];
-            return newState;
-        });
-    };
 
     return (
         <div>
@@ -124,11 +85,14 @@ const AdditionalProjectRow = React.memo(({
                                 onClick={() => onActivate(project.id, format(day, 'yyyy-MM-dd'))}>
                                 <input
                                     type="text"
-                                    value={rawInputs[dateKey] || project.hours[dateKey]?.hoursWorked || ""}
-                                    onChange={(e) => handleTimeInput(project.id, dateKey, e.target.value)}
-                                    onBlur={(e) => handleTimeBlur(project.id, dateKey, e.target.value)}
+                                    value={project.hours[dateKey]?.hoursWorked || ""}
+                                    onChange={(e) => {
+                                        const value = e.target.value.replace(',', '.');
+                                        onInputChange(project.id, dateKey, value, 'hoursWorked')
+                                    }}
+                                    onFocus={() => handleInputFocus(project.id, dateKey)}
                                     onKeyPress={(e) => {
-                                        if (!/[\d:]/.test(e.key)) {
+                                        if (/[^0-9,.]/.test(e.key)) {
                                             e.preventDefault();
                                         }
                                     }}
