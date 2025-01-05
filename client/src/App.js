@@ -1,4 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Axios from 'axios';
+
+axios.defaults.withCredentials = true;
 
 import './App.css';
 

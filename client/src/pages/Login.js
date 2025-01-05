@@ -26,7 +26,7 @@ export default function LoginPage() {
 
     const fetchCompanies = async () => {
         try {
-            const response = await axios.get('http://localhost:5000/api/companies');
+            const response = await axios.get(`https://api-service-ecpp.onrender.com/api/companies`);
             setAvailableCompanies(response.data);
         }
         catch (error) {
@@ -36,7 +36,7 @@ export default function LoginPage() {
 
     const fetchLogins = async () => {
         try {
-            const response = await axios.get('http://localhost:5000/api/logins');
+            const response = await axios.get(`https://api-service-ecpp.onrender.com/api/logins`);
             setAvailableLogins(response.data);
         }
         catch (error) {
@@ -47,7 +47,7 @@ export default function LoginPage() {
     const loginHandler = async (event) => {
         event.preventDefault();
         try {
-            const response = await axios.post('http://localhost:5000/api/logowanie', { firma, login, password }, { withCredentials: true });
+            const response = await axios.post(`https://api-service-ecpp.onrender.com/api/logowanie`, { firma, login, password }, { withCredentials: true });
             notification.success({ message: 'Zalogowano', description: 'Zalogowano pomyślnie' });
             
 

@@ -1,4 +1,4 @@
-const db = require('../../../server');
+const db = require('../../../server.js');
 
 function PobierzPracownicyGrupy(req, res) {
     const query = `SELECT idGrupa_urlopowa, Zleceniodawca FROM grupa_urlopowa WHERE Archiwum = 0;`;

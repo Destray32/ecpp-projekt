@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import { API_URL } from '../config/config.js';
 import Axios from 'axios';
 
 export const useDataFetch = () => {
@@ -13,11 +14,11 @@ export const useDataFetch = () => {
         const fetchData = async () => {
             try {
                 const [pracownicyRes, firmyRes, zleceniodawcyRes, projektyRes, samochodyRes] = await Promise.all([
-                    Axios.get("http://localhost:5000/api/pracownicy"),
-                    Axios.get("http://localhost:5000/api/firmy"),
-                    Axios.get("http://localhost:5000/api/grupy"),
-                    Axios.get("http://localhost:5000/api/czas/projekty"),
-                    Axios.get("http://localhost:5000/api/pojazdy")
+                    Axios.get(`https://api-service-ecpp.onrender.com/api/pracownicy`),
+                    Axios.get(`https://api-service-ecpp.onrender.com/api/firmy`),
+                    Axios.get(`https://api-service-ecpp.onrender.com/api/grupy`),
+                    Axios.get(`https://api-service-ecpp.onrender.com/api/czas/projekty`),
+                    Axios.get(`https://api-service-ecpp.onrender.com/api/pojazdy`)
                 ]);
 
                 setPracownicy(pracownicyRes.data.map(p => ({ label: `${p.name} ${p.surname}`, value: `${p.name} ${p.surname}` })));

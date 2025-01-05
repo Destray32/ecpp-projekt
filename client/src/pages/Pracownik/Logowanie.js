@@ -7,7 +7,7 @@ export default function LogowaniePage() {
 
     useEffect(() => {
 
-        axios.get("http://localhost:5000/api/logi", { withCredentials: true })
+        axios.get(`https://api-service-ecpp.onrender.com/api/logi`, { withCredentials: true })
             .then((response) => {
                 setLogData(response.data);
             })

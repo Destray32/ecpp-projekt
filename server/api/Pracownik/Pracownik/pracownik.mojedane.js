@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const db = require('../../../server');
+const db = require('../../../server.js');
 
 function MojeDane(req, res) {
     const token = req.cookies.token;

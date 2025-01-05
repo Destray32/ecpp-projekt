@@ -1,4 +1,4 @@
-const db = require('../../../server');
+const db = require('../../../server.js');
 
 function KomorkaPracownika(req, res) {
     const { id } = req.params;

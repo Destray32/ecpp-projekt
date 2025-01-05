@@ -17,7 +17,7 @@ export default function DodajPracownikaPage() {
     const [pojazd, setPojazd] = useState([]);
 
     useEffect(() => {
-        axios.get('http://localhost:5000/api/pracownik/firmy', { withCredentials: true })
+        axios.get(`https://api-service-ecpp.onrender.com/api/pracownik/firmy`, { withCredentials: true })
             .then(res => {
                 setFirma(res.data);
             })
@@ -25,7 +25,7 @@ export default function DodajPracownikaPage() {
                 console.log(err);
             });
     
-        axios.get('http://localhost:5000/api/pracownik/grupy', { withCredentials: true })
+        axios.get(`https://api-service-ecpp.onrender.com/api/pracownik/grupy`, { withCredentials: true })
             .then(res => {
                 setGrupa([{ idGrupa_urlopowa: null, Zleceniodawca: '-- Brak --' }, ...res.data]);
             })
@@ -33,7 +33,7 @@ export default function DodajPracownikaPage() {
                 console.log(err);
             });
     
-        axios.get('http://localhost:5000/api/pracownik/pojazdy', { withCredentials: true })
+        axios.get(`https://api-service-ecpp.onrender.com/api/pracownik/pojazdy`, { withCredentials: true })
             .then(res => {
                 setPojazd([{ idPojazdy: null, Nr_rejestracyjny: '-- Brak --' }, ...res.data]);
             })
@@ -41,7 +41,7 @@ export default function DodajPracownikaPage() {
                 console.log(err);
             });
     
-        axios.get('http://localhost:5000/api/pracownik/firmy', { withCredentials: true })
+        axios.get(`https://api-service-ecpp.onrender.com/api/pracownik/firmy`, { withCredentials: true })
             .then(res => {
                 setFirma(res.data);
                 form.setFieldsValue({
@@ -64,7 +64,7 @@ export default function DodajPracownikaPage() {
         if (!filteredValues.vacationGroup) delete filteredValues.vacationGroup;
     
         console.log(filteredValues);
-        axios.post('http://localhost:5000/api/pracownicy', filteredValues, { withCredentials: true })
+        axios.post(`https://api-service-ecpp.onrender.com/api/pracownicy`, filteredValues, { withCredentials: true })
             .then(res => {
                 console.log(res);
                 notification.success({ message: 'Dodano pracownika' });

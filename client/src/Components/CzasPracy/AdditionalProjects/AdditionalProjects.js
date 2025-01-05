@@ -6,6 +6,7 @@ import { InputText } from 'primereact/inputtext';
 import Axios from "axios";
 import { format, getWeek } from 'date-fns';
 import { notification } from 'antd';
+import {API_URL} from '../../../config/config.js'
 
 import AdditionalProjectRow from './AdditionalProjectRow';
 
@@ -55,7 +56,7 @@ const AdditionalProjects = ({
 
     useEffect(() => {
         if (firmy && firmy.length > 0) {
-            Axios.get('http://localhost:5000/api/mojedane', { withCredentials: true })
+            Axios.get(`https://api-service-ecpp.onrender.com/api/mojedane`, { withCredentials: true })
                 .then(res => {
                     //console.log(res.data);
                     //console.log(zleceniodawcy);
@@ -171,7 +172,7 @@ const AdditionalProjects = ({
                 return;
             }
 
-            const response = await Axios.post("http://localhost:5000/api/czas/projekt", {
+            const response = await Axios.post(`https://api-service-ecpp.onrender.com/api/czas/projekt`, {
                 pracownikName: loggedUserName,
                 projektyName: Projekty,
                 weekData: weekData,
@@ -242,7 +243,7 @@ const AdditionalProjects = ({
                 //console.log(project);
                 Object.values(project.hours).forEach(async hour => {
                     try {
-                        await Axios.delete(`http://localhost:5000/api/czas/projekt/${hour.id}`, { withCredentials: true });
+                        await Axios.delete(`https://api-service-ecpp.onrender.com/api/czas/projekt/${hour.id}`, { withCredentials: true });
                     } catch (error) {
                         console.error("Error deleting project", error);
                     }

@@ -20,7 +20,7 @@ export default function GrupyProjektowPage() {
     }, []);
 
     const fetchGroups = () => {
-        Axios.get("http://localhost:5000/api/grupy", { withCredentials: true })
+        Axios.get(`https://api-service-ecpp.onrender.com/api/grupy`, { withCredentials: true })
             .then((response) => {
                 setAvailableGroups(response.data.grupy);
             })
@@ -36,7 +36,7 @@ export default function GrupyProjektowPage() {
             return;
         }
         console.log(id);
-        Axios.delete(`http://localhost:5000/api/grupy/${id}`, { withCredentials: true })
+        Axios.delete(`https://api-service-ecpp.onrender.com/api/grupy/${id}`, { withCredentials: true })
             .then((response) => {
                 console.log(response.data);
                 fetchGroups(); 

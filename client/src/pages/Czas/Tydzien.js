@@ -122,7 +122,7 @@ export default function TydzienPage() {
             return;
         }
 
-        Axios.post('http://localhost:5000/api/tydzien', {
+        Axios.post(`https://api-service-ecpp.onrender.com/api/tydzien`, {
             tydzienRoku: selectedItems[0].tydzienRoku,
             pracownikId: selectedItems.map(item => item.Pracownik_idPracownik)
         }, { withCredentials: true })
@@ -140,7 +140,7 @@ export default function TydzienPage() {
             return;
         }
 
-        Axios.delete('http://localhost:5000/api/tydzien', {
+        Axios.delete(`https://api-service-ecpp.onrender.com/api/tydzien`, {
             withCredentials: true,
             data: {
                 tydzienRoku: selectedItems[0].tydzienRoku,
@@ -184,7 +184,7 @@ export default function TydzienPage() {
     };
 
     useEffect(() => {
-        Axios.get(`http://localhost:5000/api/tydzien/${numericWeek}`, { withCredentials: true })
+        Axios.get(`https://api-service-ecpp.onrender.com/api/tydzien/${numericWeek}`, { withCredentials: true })
             .then(response => setData(response.data))
             .catch(error => console.error(error));
     }, [numericWeek, refresh]);

@@ -40,7 +40,7 @@ export default function RaportyPage() {
 
     const getImie = async () => {
         try {
-            const response = await axios.get('http://localhost:5000/api/imie', { withCredentials: true });
+            const response = await axios.get(`https://api-service-ecpp.onrender.com/api/imie`, { withCredentials: true });
             const { name, surename } = response.data;
             setImie(`${name}`);
             setNazwisko(`${surename}`);
@@ -71,7 +71,7 @@ export default function RaportyPage() {
 
     const fetchProjektyPracownicy = async () => {
         try {
-            const response = await axios.get('http://localhost:5000/api/pracownicy', { withCredentials: true });
+            const response = await axios.get(`https://api-service-ecpp.onrender.com/api/pracownicy`, { withCredentials: true });
             const pracownicy = response.data;
             let pracownicyOptions = [];
             console.log(pracownicy);
@@ -90,8 +90,8 @@ export default function RaportyPage() {
 
     const fetchProjektyAndRaport = () => {
         Promise.all([
-            axios.get("http://localhost:5000/api/czas/projekty", { withCredentials: true }),
-            axios.get('http://localhost:5000/api/generujRaport', { withCredentials: true })
+            axios.get(`https://api-service-ecpp.onrender.com/api/czas/projekty`, { withCredentials: true }),
+            axios.get(`https://api-service-ecpp.onrender.com/api/generujRaport`, { withCredentials: true })
         ])
         .then(([projektyResponse, raportResponse]) => {
             const projekty = projektyResponse.data.projekty.map(projekt => ({

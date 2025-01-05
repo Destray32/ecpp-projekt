@@ -21,7 +21,7 @@ export default function DodajNowyProjektPage() {
     });
 
     const fetchGroups = () => {
-        Axios.get("http://localhost:5000/api/grupy", { withCredentials: true })
+        Axios.get(`https://api-service-ecpp.onrender.com/api/grupy`, { withCredentials: true })
             .then((response) => {
                 const transformedData = response.data.grupy.map(grupy => ({
                     name: grupy.Zleceniodawca,
@@ -35,7 +35,7 @@ export default function DodajNowyProjektPage() {
     };
 
     const fetchProjects = () => {
-        Axios.get("http://localhost:5000/api/czas/projekty", { withCredentials: true })
+        Axios.get(`https://api-service-ecpp.onrender.com/api/czas/projekty`, { withCredentials: true })
             .then((response) => {
                 const transformedDataProjects = response.data.projekty.map(projekty => ({
                     name: projekty.NazwaKod_Projektu,
@@ -55,7 +55,7 @@ export default function DodajNowyProjektPage() {
 
     const handleSave = () => {
         console.log('Form:', form);
-        Axios.post('http://localhost:5000/api/czas/projekty', form, { withCredentials: true })
+        Axios.post(`https://api-service-ecpp.onrender.com/api/czas/projekty`, form, { withCredentials: true })
             .then(res => {
                 window.location.href = '/home/projekty';
             })

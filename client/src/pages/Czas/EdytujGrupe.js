@@ -22,7 +22,7 @@ export default function EdytujGrupePage() {
     }, []);
 
     const handleSave = () => {
-        Axios.put(`http://localhost:5000/api/czas/edytujGrupe/${id}`, {
+        Axios.put(`https://api-service-ecpp.onrender.com/api/czas/edytujGrupe/${id}`, {
             zleceniodawca: form.zleceniodawca,
             cennik: form.cennik,
             stawka: form.stawka,
@@ -38,7 +38,7 @@ export default function EdytujGrupePage() {
     };
 
     const fetchGroup = () => {
-        Axios.get(`http://localhost:5000/api/czas/pobierzGrupe/${id}`, { withCredentials: true })
+        Axios.get(`https://api-service-ecpp.onrender.com/api/czas/pobierzGrupe/${id}`, { withCredentials: true })
             .then(res => {
                 const data = res.data[0];
                 setForm({

@@ -18,7 +18,7 @@ export default function EdytujPracownikaPage() {
     const [pojazd, setPojazd] = useState([]);
 
     useEffect(() => {
-        axios.get('http://localhost:5000/api/pracownik/firmy', { withCredentials: true })
+        axios.get(`https://api-service-ecpp.onrender.com/api/pracownik/firmy`, { withCredentials: true })
             .then(res => {
                 setFirma(res.data);
             })
@@ -26,7 +26,7 @@ export default function EdytujPracownikaPage() {
                 console.log(err);
             });
 
-        axios.get('http://localhost:5000/api/pracownik/grupy', { withCredentials: true })
+        axios.get(`https://api-service-ecpp.onrender.com/api/pracownik/grupy`, { withCredentials: true })
             .then(res => {
                 setGrupa([{ idGrupa_urlopowa: null, Zleceniodawca: '-- Brak --' }, ...res.data]);
             })
@@ -34,7 +34,7 @@ export default function EdytujPracownikaPage() {
                 console.log(err);
             });
     
-        axios.get('http://localhost:5000/api/pracownik/pojazdy', { withCredentials: true })
+        axios.get(`https://api-service-ecpp.onrender.com/api/pracownik/pojazdy`, { withCredentials: true })
             .then(res => {
                 setPojazd([{ idPojazdy: null, Nr_rejestracyjny: '-- Brak --' }, ...res.data]);
             })
@@ -44,7 +44,7 @@ export default function EdytujPracownikaPage() {
     }, []);
 
     useEffect(() => {
-        axios.get(`http://localhost:5000/api/pracownik/${id}`, { withCredentials: true })
+        axios.get(`https://api-service-ecpp.onrender.com/api/pracownik/${id}`, { withCredentials: true })
             .then(res => {
                 console.log(res.data);
                 form.setFieldsValue({
@@ -83,7 +83,7 @@ export default function EdytujPracownikaPage() {
     }, [id]);
 
     const handleSubmit = (values) => {
-        axios.put(`http://localhost:5000/api/pracownik/${id}`, values, { withCredentials: true })
+        axios.put(`https://api-service-ecpp.onrender.com/api/pracownik/${id}`, values, { withCredentials: true })
             .then(res => {
                 console.log(res);
                 notification.success({ message: 'Pomyślnie zaktualizowano pracownika' });

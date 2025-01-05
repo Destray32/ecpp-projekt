@@ -1,4 +1,4 @@
-const db = require('../../../server');
+const db = require('../../../server.js');
 
 const tableMap = {
     'Pracownicy': 'pracownik',

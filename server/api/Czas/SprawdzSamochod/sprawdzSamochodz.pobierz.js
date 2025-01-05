@@ -1,4 +1,4 @@
-const db = require('../../../server');
+const db = require('../../../server.js');
 
 function PobierzSamochody(req, res) {
     let sql = `SELECT * FROM view_dzien_projekty`;

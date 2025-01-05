@@ -19,14 +19,14 @@ export default function PojazdyPage() {
 
 
     useEffect(() => {
-        axios.get("http://localhost:5000/api/pojazdy", { withCredentials: true })
+        axios.get(`https://api-service-ecpp.onrender.com/api/pojazdy`, { withCredentials: true })
             .then((response) => {
                 setTableData(response.data.pojazdy);
             });
     }, []);
 
     const handleDelete = (id) => {
-        axios.delete(`http://localhost:5000/api/pojazdy/${id}`, { withCredentials: true })
+        axios.delete(`https://api-service-ecpp.onrender.com/api/pojazdy/${id}`, { withCredentials: true })
             .then((response) => {
                 setTableData((prevData) => prevData.filter((item) => item.id !== id));
             });
@@ -43,7 +43,7 @@ export default function PojazdyPage() {
             setEditableRow(null); 
             console.log(editedData);
             
-            axios.put(`http://localhost:5000/api/pojazdy/${id}`, editedData, { withCredentials: true })
+            axios.put(`https://api-service-ecpp.onrender.com/api/pojazdy/${id}`, editedData, { withCredentials: true })
                 .then((response) => {
                     setTableData((prevData) =>
                         prevData.map(item => (item.id === id ? { ...item, ...editedData } : item))

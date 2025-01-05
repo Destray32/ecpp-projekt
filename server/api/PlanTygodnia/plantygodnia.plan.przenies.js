@@ -1,4 +1,4 @@
-const db = require('../../../server');
+const db = require('../../server.js');
 
 function PrzeniesWpisPlan(req, res) {
     const { ids, groupId } = req.body;

@@ -1,4 +1,4 @@
-const db = require('../../server');
+const db = require('../../server.js');
 const jwt = require('jsonwebtoken');
 
 function PobierzOgloszenia(req, res) {

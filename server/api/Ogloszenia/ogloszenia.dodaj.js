@@ -1,4 +1,4 @@
-const db = require('../../server');
+const db = require('../../server.js');
 
 function DodajOgloszenie(req, res) {
     const { tytul, tresc, grupa, osoby } = req.body;

@@ -1,4 +1,4 @@
-const db = require('../../server');
+const db = require('../../server.js');
 
 function UsunOgloszenie(req, res) {
     const id = req.params.id;

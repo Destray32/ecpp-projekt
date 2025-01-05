@@ -37,7 +37,7 @@ export default function ZablokowaniPage() {
     //#region fetching
     const fetchBlockedUsers = async () => {
         try {
-            const response = await Axios.get('http://localhost:5000/api/pracownik/blocked', {
+            const response = await Axios.get(`https://api-service-ecpp.onrender.com/api/pracownik/blocked`, {
                 withCredentials: true
             });
 
@@ -59,7 +59,7 @@ export default function ZablokowaniPage() {
 
     const handleOdblokuj = async (id) => {
         try {
-            const response = await Axios.put(`http://localhost:5000/api/pracownik/unblock/${id}`, {}, {
+            const response = await Axios.put(`https://api-service-ecpp.onrender.com/api/pracownik/unblock/${id}`, {}, {
             withCredentials: true
             });
 

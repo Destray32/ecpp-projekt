@@ -1,4 +1,4 @@
-const db = require('../../../server');
+const db = require('../../../server.js');
 
 function PobierzArchiwum(req, res) {
     const selectedOption = req.params.selectedOption;
