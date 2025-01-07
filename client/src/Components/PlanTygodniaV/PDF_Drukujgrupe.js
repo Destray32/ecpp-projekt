@@ -51,8 +51,25 @@ const PDF_Drukujgrupe = (data, startDate, endDate) => {
         return acc;
     }, {});
 
+    const groupOrder = ['NCW Plat', 'Pogab']; 
+    const lastGroups = ['do dyspozycji', 'urlopy'];
+    const customSort = (a, b) => {
+        const aName = data.find(item => item.grupaId == a).Zleceniodawca;
+        const bName = data.find(item => item.grupaId == b).Zleceniodawca;
+
+        if (groupOrder.includes(aName) && !groupOrder.includes(bName)) return -1;
+        if (!groupOrder.includes(aName) && groupOrder.includes(bName)) return 1;
+
+        if (lastGroups.includes(aName) && !lastGroups.includes(bName)) return 1;
+        if (!lastGroups.includes(aName) && lastGroups.includes(bName)) return -1;
+
+        return aName.localeCompare(bName);
+    };
+
+    const sortedGroupIds = Object.keys(groups).sort(customSort);
+
     let finalY = 80;
-    Object.keys(groups).forEach((groupId) => {
+    sortedGroupIds.forEach((groupId) => {
         const group = groups[groupId];
         const zleceniodawcaName = data.find(item => item.grupaId == groupId).Zleceniodawca;
 
@@ -106,6 +123,6 @@ const PDF_Drukujgrupe = (data, startDate, endDate) => {
     });
 
     doc.save(`Plan_Grupy_${weekNumber}.pdf`);
-}
+};
 
 export default PDF_Drukujgrupe;
