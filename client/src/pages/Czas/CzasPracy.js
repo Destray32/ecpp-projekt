@@ -440,13 +440,24 @@ export default function CzasPracyPage() {
                 days: daysOfWeek.map(day => {
                     const formattedDate = format(day, 'yyyy-MM-dd');
                     const hoursData = hours[formattedDate] || {};
+                    //console.log(day.getDay());
 
-                    return {
-                        dayOfWeek: format(day, 'EEEE', { locale: pl }),
-                        start: hoursData.start || "00:00",
-                        end: hoursData.end || "00:00",
-                        break: hoursData.break || "00:00",
-                    };
+                    if (day.getDay() === 0) {
+                        return {
+                            dayOfWeek: format(day, 'EEEE', { locale: pl }),
+                            start: "00:00",
+                            end: "00:00",
+                            break: "00:00",
+                        }
+                    }
+                    else {
+                        return {
+                            dayOfWeek: format(day, 'EEEE', { locale: pl }),
+                            start: hoursData.start || "00:00",
+                            end: hoursData.end || "00:00",
+                            break: hoursData.break || "00:00",
+                        };
+                    }
                 }),
                 totalHours: totalHours,
                 additionalProjects: formattedAdditionalProjects,
