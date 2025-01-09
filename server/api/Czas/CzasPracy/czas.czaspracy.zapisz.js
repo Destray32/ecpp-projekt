@@ -36,6 +36,12 @@ function ZapiszCzasPracy(req, res, db) {
                             let projectInsertionPromises = [];
 
                             validDays.forEach(day => {
+                                if (day.dayOfWeek === 'niedziela') {
+                                    day.start = '00:00';
+                                    day.end = '00:00';
+                                    day.break = '00:00';
+                                }
+
                                 db.query(
                                     `SELECT * FROM Dzien WHERE Dzien_tygodnia = ? AND Tydzien_idTydzien = ?`,
                                     [day.dayOfWeek, tid],
