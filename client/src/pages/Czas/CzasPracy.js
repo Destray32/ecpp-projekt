@@ -508,17 +508,11 @@ export default function CzasPracyPage() {
             const formattedDate = format(day, 'yyyy-MM-dd');
             const dailyHours = hours[formattedDate] || {};
         
-            const [breakHours, breakMinutes] = (dailyHours.break || '00:00').split(':').map(Number);
-            const breakTimeInHours = breakHours + (breakMinutes / 60);
-        
-            // console.log(dailyHours.start, breakTimeInHours, dailyHours.end);
-        
             const totalDayHours = dailyHours.end && dailyHours.start ?
-                parseFloat(dailyHours.end.split(":")[0]) - parseFloat(dailyHours.start.split(":")[0]) - breakTimeInHours
+                convertTimeToDecimal(dailyHours.end) - convertTimeToDecimal(dailyHours.start) - convertTimeToDecimal(dailyHours.break || '00:00')
                 : 0;
-        
+            
             let projectDayHours = 0;
-        
             additionalProjects.forEach(project => {
                 const projectData = project.hours[formattedDate];
                 if (projectData?.hoursWorked) {
@@ -713,6 +707,11 @@ export default function CzasPracyPage() {
 
         doc.save(`Raport_Tydzien_${weekNumber}.pdf`);
     };
+
+    function convertTimeToDecimal(timeStr) {
+        const [hours, minutes] = timeStr.split(":").map(Number);
+        return hours + minutes / 60;
+    }
 
 
     //#endregion
