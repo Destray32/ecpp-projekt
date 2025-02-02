@@ -534,7 +534,7 @@ export default function CzasPracyPage() {
             // console.log(dailyHours.start, breakTimeInHours, dailyHours.end);
         
             const totalDayHours = dailyHours.end && dailyHours.start ?
-                parseFloat(dailyHours.end.split(":")[0]) - parseFloat(dailyHours.start.split(":")[0]) - breakTimeInHours
+                convertTimeToDecimal(dailyHours.end) - convertTimeToDecimal(dailyHours.start) - convertTimeToDecimal(dailyHours.break || '00:00')
                 : 0;
         
             let projectDayHours = 0;
@@ -736,6 +736,11 @@ export default function CzasPracyPage() {
 
 
     //#endregion
+    
+    function convertTimeToDecimal(timeStr) {
+        const [hours, minutes] = timeStr.split(":").map(Number);
+        return hours + minutes / 60;
+    }
 
     //#region Render
     return (
