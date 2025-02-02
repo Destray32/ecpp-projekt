@@ -17,7 +17,7 @@ export default function NowaGrupaPage() {
     });
 
     const handleSave = () => {
-        Axios.post('http://localhost:5000/api/czas/grupa', {
+        Axios.post('https://qubis.pl:5000/api/czas/grupa', {
             zleceniodawca: form.zleceniodawca,
             cennik: form.cennik,
             stawka: form.stawka,

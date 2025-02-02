@@ -1,1 +1,1 @@
-start http://localhost:3000/
+start https://qubis.pl:3000/

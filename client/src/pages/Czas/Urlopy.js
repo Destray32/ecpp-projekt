@@ -192,7 +192,7 @@ export default function UrlopyPage() {
     const handlePdfDownloadClick = () => {
 
         Axios.post(
-            "http://localhost:5000/api/urlopy/pdf",
+            "https://qubis.pl:5000/api/urlopy/pdf",
             { Zleceniodawca: selectedGrupyNazwa },
             { withCredentials: true }
         )
@@ -230,7 +230,7 @@ export default function UrlopyPage() {
 
                 // Otwarcie nowego okna z pdf-em
                 setTimeout(() => {
-                    window.open(`http://localhost:3000/test`, '_blank');
+                    window.open(`https://qubis.pl:3000/test`, '_blank');
                 }, 1500);
 
             })
@@ -291,7 +291,7 @@ export default function UrlopyPage() {
     };
 
     const handleGetPracownicy = () => {
-        Axios.get("http://localhost:5000/api/pracownicy", { withCredentials: true })
+        Axios.get("https://qubis.pl:5000/api/pracownicy", { withCredentials: true })
             .then((response) => {
                 setPracownicy(response.data); // skróciłem do response.data, 
                 // bo mi nie wypełniało dropdowna
@@ -304,7 +304,7 @@ export default function UrlopyPage() {
 
     const handleZatwierdzConfirm = () => {
         const ids = selectedForZatwierdzenie.map(item => item.id);
-        Axios.put("http://localhost:5000/api/urlopy", {
+        Axios.put("https://qubis.pl:5000/api/urlopy", {
             ids: ids,
             status: "Zatwierdzone",
         }, { withCredentials: true })
@@ -331,7 +331,7 @@ export default function UrlopyPage() {
 
     const getImie = async () => {
         try {
-            const response = await Axios.get('http://localhost:5000/api/imie', { withCredentials: true });
+            const response = await Axios.get('https://qubis.pl:5000/api/imie', { withCredentials: true });
             const { name, surename } = response.data;
             setImie(`${name}`);
             setNazwisko(`${surename}`);
@@ -390,7 +390,7 @@ export default function UrlopyPage() {
         } else {
             const idsArray = Array.isArray(id) ? id : [id];
 
-            Axios.put("http://localhost:5000/api/urlopy", {
+            Axios.put("https://qubis.pl:5000/api/urlopy", {
                 ids: idsArray,
                 status: newStatus,
             }, { withCredentials: true })
@@ -405,7 +405,7 @@ export default function UrlopyPage() {
     };
 
     const fetchUrlopy = () => {
-        Axios.get("http://localhost:5000/api/urlopy", { withCredentials: true })
+        Axios.get("https://qubis.pl:5000/api/urlopy", { withCredentials: true })
             .then((response) => {
                 if(accountType === 'Administrator') {
                 urlopyData = response.data.urlopy;
@@ -466,7 +466,7 @@ export default function UrlopyPage() {
 
 
     const fetchGrupy = () => {
-        Axios.get("http://localhost:5000/api/grupy", { withCredentials: true })
+        Axios.get("https://qubis.pl:5000/api/grupy", { withCredentials: true })
             .then((response) => {
                 setDostepneGrupy(response.data.grupy);
             })
@@ -490,7 +490,7 @@ export default function UrlopyPage() {
     }, [imie, nazwisko, accountType]);
 
     const handleDodaj = () => {
-        Axios.post("http://localhost:5000/api/urlopy", {
+        Axios.post("https://qubis.pl:5000/api/urlopy", {
             nazwisko_imie: UrlopDla,
             status: Status,
             urlop_od: urlopOd,
@@ -517,7 +517,7 @@ export default function UrlopyPage() {
     };
 
     const handleUsun = (itemId) => {
-        Axios.delete("http://localhost:5000/api/urlopy", {
+        Axios.delete("https://qubis.pl:5000/api/urlopy", {
             withCredentials: true,
             data: { id: itemId }
         })
@@ -570,7 +570,7 @@ export default function UrlopyPage() {
       }, [urlopOd]);
 
     const handleSave = (vacationId) => {
-        Axios.put(`http://localhost:5000/api/urlopy/${vacationId}`, {
+        Axios.put(`https://qubis.pl:5000/api/urlopy/${vacationId}`, {
             urlopOd: convertToDisplayFormat(editVacationData.urlopOd),
             urlopDo: convertToDisplayFormat(editVacationData.urlopDo),
             status: editVacationData.status,

@@ -21,7 +21,7 @@ export default function PojazdyPage() {
     }, []);
 
     useEffect(() => {
-        axios.get("http://localhost:5000/api/pojazdy", { withCredentials: true })
+        axios.get("https://qubis.pl:5000/api/pojazdy", { withCredentials: true })
             .then((response) => {
                 setTableData(response.data.pojazdy);
             });
@@ -38,7 +38,7 @@ export default function PojazdyPage() {
     };
 
     const confirmDelete = () => {
-        axios.delete(`http://localhost:5000/api/pojazdy/${deleteItemId}`, { withCredentials: true })
+        axios.delete(`https://qubis.pl:5000/api/pojazdy/${deleteItemId}`, { withCredentials: true })
             .then(() => {
                 setTableData((prevData) => prevData.filter((item) => item.id !== deleteItemId));
                 setDeleteDialogVisible(false);
@@ -81,7 +81,7 @@ export default function PojazdyPage() {
             // If both fields are valid, proceed with the update
             if (isValid) {
                 setEditableRow(null);
-                axios.put(`http://localhost:5000/api/pojazdy/${id}`, editedData, { withCredentials: true })
+                axios.put(`https://qubis.pl:5000/api/pojazdy/${id}`, editedData, { withCredentials: true })
                     .then(() => {
                         setTableData(prevData =>
                             prevData.map(item => (item.id === id ? { ...item, ...editedData } : item))

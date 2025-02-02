@@ -6,7 +6,7 @@ export default function PobierzSkrypt() {
 
     const pobierzSkrypt = async () => {
         try {
-            const response = await Axios.get('http://localhost:5000/api/home/pobierz', {
+            const response = await Axios.get('https://qubis.pl:5000/api/home/pobierz', {
                 responseType: 'blob',
             });
 
@@ -18,7 +18,7 @@ export default function PobierzSkrypt() {
             link.click();
             link.remove();
 
-            // window.location.href = 'http://localhost:3000/home/czas';
+            // window.location.href = 'https://qubis.pl:3000/home/czas';
         } catch (error) {
             console.error('Error downloading the file:', error);
         }
