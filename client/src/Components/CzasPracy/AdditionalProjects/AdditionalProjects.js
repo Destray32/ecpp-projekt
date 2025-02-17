@@ -84,32 +84,35 @@ const AdditionalProjects = ({
     }, [firmy]);
 
     useEffect(() => {
-        const handleClickOutside = (event) => {
-            const isDropdownPanel = event.target.closest('.p-dropdown-panel');
-            const isDropdownTrigger = event.target.closest('.p-dropdown-trigger');
-            const isDropdownItem = event.target.closest('.p-dropdown-item');
-            
-    
-            if (additionalFieldsRef.current && 
-                !additionalFieldsRef.current.contains(event.target) &&
-                !event.target.closest('.project-input') &&
-                !event.target.closest('.p-inputtextarea') && 
-                !event.target.closest('.p-dropdown') && 
-                !event.target.closest('.p-inputtext') &&
-                !isDropdownPanel &&
-                !isDropdownTrigger &&
-                !isDropdownItem
-            ) {
-                setActiveProject(null);
-                setActiveDate(null);
-            }
-        };
-    
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, []);
+    const handleClickOutside = (event) => {
+        // detekcja scrollbaru
+        const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+        const isVerticalScrollbarClick = event.clientX >= window.innerWidth - scrollbarWidth;
+        
+        const isDropdownPanel = event.target.closest('.p-dropdown-panel');
+        const isDropdownTrigger = event.target.closest('.p-dropdown-trigger');
+        const isDropdownItem = event.target.closest('.p-dropdown-item');
+        
+        if (
+            additionalFieldsRef.current && 
+            !additionalFieldsRef.current.contains(event.target) &&
+            !event.target.closest('.project-input') &&
+            !event.target.closest('.p-inputtextarea') && 
+            !event.target.closest('.p-dropdown') && 
+            !event.target.closest('.p-inputtext') &&
+            !isDropdownPanel &&
+            !isDropdownTrigger &&
+            !isDropdownItem &&
+            !isVerticalScrollbarClick 
+        ) {
+            setActiveProject(null);
+            setActiveDate(null);
+        }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+}, []);
 
     useEffect(() => {
         let total = 0.0;

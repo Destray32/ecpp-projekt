@@ -28,7 +28,7 @@ function ListaPracownikow(req, res) {
         LEFT JOIN 
             grupa_urlopowa gu ON iof.FK_idGrupa_urlopowa = gu.idGrupa_urlopowa
         WHERE
-            p.Archiwum = 0;
+            p.Archiwum = 0 AND do.Nazwisko != 'Wachala';
     `;
 
     db.query(query, (err, result) => {
@@ -37,6 +37,8 @@ function ListaPracownikow(req, res) {
             res.status(500).send('Błąd pobierania pracowników');
             return;
         }
+        
+        console.log(result);
         res.json(result);
     });
 }

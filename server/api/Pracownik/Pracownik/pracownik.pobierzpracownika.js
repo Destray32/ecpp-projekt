@@ -58,9 +58,11 @@ function PobierzPracownika(req, res) {
 
         const employeeData = results[0];
         
+    
         employeeData.startDate = formatDate(employeeData.startDate);
         employeeData.endDate = formatDate(employeeData.endDate);
         employeeData.birthday = formatDate(employeeData.birthday);
+        
 
         res.json({
             ...employeeData,

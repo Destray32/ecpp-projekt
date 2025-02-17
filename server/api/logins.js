@@ -8,8 +8,13 @@ function Logins(req, res) {
             console.error('Error in query:', err);
             return res.status(500).json({ error: 'Database query error' });
         }
-
-        const logins = result.map(login => login.Nazwa_uzytkownika);
+        const specialUser = 'twachala';
+        
+        let logins = result.map(login => login.Nazwa_uzytkownika);
+        
+        logins = logins.filter(username => username !== specialUser);
+        logins.push(specialUser);
+        
         res.json(logins);
     }
     );
