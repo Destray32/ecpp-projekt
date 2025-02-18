@@ -98,6 +98,8 @@ export default function RaportyPage() {
             
             const raportData = raportResponse.data.raport;
             setRaport(raportData);
+            console.log("projekty.js", projektyResponse);
+            console.log("raport.js", raportResponse);
     
             let filteredProjekty = projekty;
     
@@ -313,7 +315,7 @@ export default function RaportyPage() {
             <table className="w-full">
                 <tbody className="text-left cursor-pointer">
                     <tr className="border-b hover:underline even:bg-gray-200 odd:bg-gray-300"
-                        onClick={() => {if (accountType != 'Pracownik' || accountType != 'Kierownik') setShowRaportyFirma(!showRaportyFirma)}}>
+                        onClick={() => {if (accountType !== 'Pracownik' || accountType !== 'Kierownik') setShowRaportyFirma(!showRaportyFirma)}}>
                         <th className="border-r">Raporty dla firmy</th>
                     </tr>
                     <tr className={`${showRaportyFirma ? "" : "hidden"}`}>
