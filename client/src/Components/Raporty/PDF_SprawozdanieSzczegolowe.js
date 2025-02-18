@@ -4,11 +4,11 @@ import 'jspdf-autotable';
 const PDF_SzczegoloweDzialalnosciPracownikow = (data, startDate, endDate, Projekt) => {
     const doc = new jsPDF('p', 'pt', 'a4');
 
-    // Add Polish font support
+
     doc.addFont('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-Regular.ttf', 'Roboto', 'normal');
     doc.setFont('Roboto');
 
-    // Filter data based on ProjektID if Projekt is provided
+
     const filteredData = Projekt ? data.filter(row => row.ProjektID === Projekt) : data;
 
     doc.setFontSize(14);
@@ -25,14 +25,14 @@ const PDF_SzczegoloweDzialalnosciPracownikow = (data, startDate, endDate, Projek
 
     let yPosition = 90;
 
-    // Handle cases where filteredData might be empty
+
     if (filteredData.length === 0) {
         doc.text("Brak danych do wyświetlenia.", 40, yPosition);
         doc.save(`Sprawozdanie_z_dzialalnosci_szczegolowe_${Projekt || 'wszystkie'}.pdf`);
         return;
     }
 
-    // Group data by project
+
     const projectGroups = filteredData.reduce((acc, row) => {
         if (!acc[row.ProjektID]) {
             acc[row.ProjektID] = [];
@@ -41,7 +41,7 @@ const PDF_SzczegoloweDzialalnosciPracownikow = (data, startDate, endDate, Projek
         return acc;
     }, {});
 
-    // Loop through each project group and create a table
+
     for (const [projectId, projectData] of Object.entries(projectGroups)) {
         const projectName = projectData[0].Projekt;
 
@@ -50,7 +50,7 @@ const PDF_SzczegoloweDzialalnosciPracownikow = (data, startDate, endDate, Projek
         doc.text(`Projekt: ${projectName}`, 40, yPosition);
         yPosition += 10;
 
-        // Group data by employee
+
         const employeeGroups = projectData.reduce((acc, row) => {
             if (!acc[row.Pracownik]) {
                 acc[row.Pracownik] = [];
@@ -81,7 +81,8 @@ const PDF_SzczegoloweDzialalnosciPracownikow = (data, startDate, endDate, Projek
             return rows;
         });
 
-        doc.autoTable({
+
+        const options = {
             startY: yPosition + 20,
             head: [['Pracownik', 'Data', 'Czas', 'Komentarz']],
             body: tableData,
@@ -90,14 +91,14 @@ const PDF_SzczegoloweDzialalnosciPracownikow = (data, startDate, endDate, Projek
                 fillColor: [238, 238, 223],
                 textColor: [0, 0, 0],
                 lineColor: [0, 0, 0],
-                font: 'Roboto'  // Set font for header
+                font: 'Roboto',  
             },
             styles: {
                 cellPadding: 2,
                 fontSize: 10,
                 lineColor: [0, 0, 0],
                 lineWidth: 0.1,
-                font: 'Roboto'  // Set font for body
+                font: 'Roboto', 
             },
             columnStyles: {
                 0: { cellWidth: 100 },
@@ -113,8 +114,17 @@ const PDF_SzczegoloweDzialalnosciPracownikow = (data, startDate, endDate, Projek
                         data.cell.styles.fontStyle = 'bold';
                     }
                 }
-            }
-        });
+            },
+            pageBreak: 'auto'  
+        };
+
+        const lastY = doc.autoTable.previous.finalY || yPosition;
+        if (lastY + 20 + tableData.length * 12 > doc.internal.pageSize.height) {
+            doc.addPage();
+            yPosition = 40;  
+        }
+
+        doc.autoTable(options);
 
         yPosition = doc.autoTable.previous.finalY + 20;
     }

@@ -38,7 +38,6 @@ function ListaPracownikow(req, res) {
             return;
         }
         
-        console.log(result);
         res.json(result);
     });
 }

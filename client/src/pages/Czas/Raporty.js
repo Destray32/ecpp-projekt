@@ -10,9 +10,7 @@ import PDF_AnalizaSwiadczenPracowniczych from "../../Components/Raporty/PDF_Anal
 import PDF_SprawozdanieSzczegolowe from "../../Components/Raporty/PDF_SprawozdanieSzczegolowe";
 import PDF_SprawozdaniePodsumowanie from "../../Components/Raporty/PDF_SprawozdaniePodsumowanie";
 import { notification } from "antd";
-
 import checkUserType from "../../utils/accTypeUtils";
-
 
 export default function RaportyPage() {
     const [startDate, setStartDate] = useState('');
@@ -25,7 +23,7 @@ export default function RaportyPage() {
     const [interfacePracownik, setInterfacePracownik] = useState(false);
     const [pracownik, setPracownik] = useState(null);
     const [availablePracownicy, setAvailablePracownicy] = useState([]);
-    const [ignorujDaty, setIgnorujDaty] = useState(false);
+    const [ignorujDatyFirma, setIgnorujDatyFirma] = useState(false);
     const [selectedRow, setSelectedRow] = useState(null);
     const [wybranyRaport, setWybranyRaport] = useState(null);
     const [raport, setRaport] = useState([]);
@@ -61,7 +59,7 @@ export default function RaportyPage() {
 
     useEffect(() => {
         fetchProjektyAndRaport();
-    }, [startDate, endDate, ignorujDaty]);
+    }, [startDate, endDate, ignorujDatyFirma]);
 
     useEffect(() => {
         if (imie && nazwisko) {
@@ -74,7 +72,6 @@ export default function RaportyPage() {
             const response = await axios.get('https://qubis.pl:5000/api/pracownicy', { withCredentials: true });
             const pracownicy = response.data;
             let pracownicyOptions = [];
-            console.log(pracownicy);
             if(accountType === 'Pracownik') {
                 pracownicyOptions = pracownicy
                 .filter(item => item.name === imie && item.surname === nazwisko)
@@ -104,7 +101,7 @@ export default function RaportyPage() {
     
             let filteredProjekty = projekty;
     
-            if (!ignorujDaty && startDate && endDate) {
+            if (!ignorujDatyFirma && startDate && endDate) {
                 const startDateObj = new Date(startDate);
                 const endDateObj = new Date(endDate);
     
@@ -139,13 +136,11 @@ export default function RaportyPage() {
         });
     };
 
-
-
     const handleGenerateReport = () => {
         if (!wybranyRaport || 
             (['Sprawozdanie z działalności - szczegółowe', 'Sprawozdanie z działalności - podsumowanie'].includes(wybranyRaport) && !Projekt) ||
             (['Analiza świadczeń pracowniczych', 'Pracownik Analiza czasu - działalność'].includes(wybranyRaport) && !pracownik) ||
-            (!ignorujDaty && (!startDate || !endDate))) {
+            (!ignorujDatyFirma && (!startDate || !endDate))) {
             
             notification.info({
                 message: 'Informacja',
@@ -155,28 +150,32 @@ export default function RaportyPage() {
             return;
         }
 
-                switch (wybranyRaport) {
-                    case "Sprawozdanie z działalności - szczegółowe":
-                        PDF_SprawozdanieSzczegolowe(raport, startDate, endDate, Projekt);
-                        break;
-                    case "Sprawozdanie z działalności - podsumowanie":
-                        PDF_SprawozdaniePodsumowanie(raport, startDate, endDate, Projekt);
-                        break;
-                    case "Analiza świadczeń pracowniczych":
-                        PDF_AnalizaSwiadczenPracowniczych(raport, startDate, endDate, pracownik);
-                        break;
-                    case "Pracownik Analiza czasu - działalność":
-                        PDF_PracownikAnalizaCzasu(raport, startDate, endDate, pracownik);
-                        break;
-                    default:
-                        break;
-                }
-            
+        let filteredRaport = raport;
+
+        if (Projekt && ['Sprawozdanie z działalności - szczegółowe', 'Sprawozdanie z działalności - podsumowanie'].includes(wybranyRaport)) {
+            filteredRaport = raport.filter(entry => entry.ProjektID === Projekt);
+        }
+
+        switch (wybranyRaport) {
+            case "Sprawozdanie z działalności - szczegółowe":
+                PDF_SprawozdanieSzczegolowe(filteredRaport, startDate, endDate, Projekt);
+                break;
+            case "Sprawozdanie z działalności - podsumowanie":
+                PDF_SprawozdaniePodsumowanie(filteredRaport, startDate, endDate, Projekt);
+                break;
+            case "Analiza świadczeń pracowniczych":
+                PDF_AnalizaSwiadczenPracowniczych(filteredRaport, startDate, endDate, pracownik);
+                break;
+            case "Pracownik Analiza czasu - działalność":
+                PDF_PracownikAnalizaCzasu(filteredRaport, startDate, endDate, pracownik);
+                break;
+            default:
+                break;
+        }
     };
 
-            
     const handleGenerateWszystkie = () => {
-        if(!ignorujDaty && (!startDate || !endDate)) {
+        if(!ignorujDatyFirma && (!startDate || !endDate)) {
             notification.info({
                 message: 'Informacja',
                 description: 'Wypełnij wszystkie wymagane pola',
@@ -188,7 +187,6 @@ export default function RaportyPage() {
         switch (wybranyRaport) {
             case "Sprawozdanie z działalności - szczegółowe":
                 PDF_SprawozdanieSzczegolowe(raport, startDate, endDate);
-                console.log(raport);
                 break;
             case "Sprawozdanie z działalności - podsumowanie":
                 PDF_SprawozdaniePodsumowanie(raport, startDate, endDate);
@@ -216,29 +214,7 @@ export default function RaportyPage() {
         } else {
             przejscieDoInterfejsuPracownik();
         }
-
-        switch (rowName) {
-            case "Sprawozdanie z działalności - szczegółowe":
-                console.log("Sprawozdanie z działalności - szczegółowe");
-                setWybranyRaport("Sprawozdanie z działalności - szczegółowe");
-                break;
-            case "Sprawozdanie z działalności - podsumowanie":
-                console.log("Sprawozdanie z działalności - podsumowanie");
-                setWybranyRaport("Sprawozdanie z działalności - podsumowanie");
-                break;
-            case "Analiza świadczeń pracowniczych":
-                console.log("Analiza świadczeń pracowniczych");
-                setIgnorujDaty(false);
-                setWybranyRaport("Analiza świadczeń pracowniczych");
-                break;
-            case "Pracownik Analiza czasu - działalność":
-                console.log("Pracownik Analiza czasu - działalność");
-                setIgnorujDaty(false);
-                setWybranyRaport("Pracownik Analiza czasu - działalność");
-                break;
-            default:
-                break;
-        }
+        setWybranyRaport(rowName);
     };
 
     const getRowStyle = (rowName) => {
@@ -251,128 +227,131 @@ export default function RaportyPage() {
                 <p>Opcje</p>
             </div>
             <AmberBox>
-                <div className="flex flex-col items-center justify-center space-y-4 w-full">
-                    <p>Wybierz okres raportowania</p>
-                    
-                    <div className="flex flex-row items-center space-x-4">
+              <div className="flex flex-col items-center justify-center space-y-4 w-full">
+                  <p>Wybierz okres raportowania</p>
+                  
+                  <div className="flex flex-row items-center space-x-4">
                     <input
                         type="date"
                         className="p-2.5 rounded"
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
-                        disabled={ignorujDaty}
-                        
-                        
+                        disabled={interfaceFirma && ignorujDatyFirma}
                     />
                     <input
                         type="date"
                         className="p-2.5 rounded"
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
-                        disabled={ignorujDaty}
+                        disabled={interfaceFirma && ignorujDatyFirma}
                     />
-                    </div>
-
-                    {interfaceFirma && (
-                        <div className="flex items-center">
-                            <Checkbox
-                                inputId="firma"
-                                checked={ignorujDaty}
-                                onChange={() => setIgnorujDaty(!ignorujDaty)}
-                            />
-                            <span className="ml-2">Ignoruj daty</span>
-                        </div>
-                    )}
-
-                    {interfacePracownik && (
-                        <Dropdown
-                            value={pracownik}
-                            options={availablePracownicy}
-                            onChange={(e) => setPracownik(e.value)}
-                            showClear
-                            filter
-                            className=""
-                            filterInputAutoFocus
-                            resetFilterOnHide
-                            placeholder="Wybierz pracownika"
-                        />
-                    )}
-
-                    <div className="flex flex-col items-center space-y-4">
-                        {interfaceFirma && (
-                            <Dropdown
-                                value={Projekt}
-                                options={projektyOptions}
-                                onChange={(e) => setProjekt(e.value)}
-                                showClear
-                                placeholder="Wybierz projekt"
-                                emptyMessage="Brak projektów"
-                                filter
-                                className="w-3/4"
-                                filterInputAutoFocus
-                                resetFilterOnHide
-                            />
-                        )}
-                        
-                        <div className="flex flex-row items-center space-x-4">
-                            <Button
-                                onClick={handleGenerateReport}
-                                label="Generuj raport"
-                                className="p-button-outlined border-2 p-2.5 bg-white text-black stable-button"
-                            />
-                            
-                            {interfaceFirma && (
-                                <Button
-                                    onClick={handleGenerateWszystkie}
-                                    label="Generuj wszystkie"
-                                    className="p-button-outlined border-2 p-2.5 bg-white text-black stable-button"
-                                />
-                            )}
-                        </div>
-                    </div>
                 </div>
-            </AmberBox>
+          
+                  {interfaceFirma && (
+                      <div className="flex items-center">
+                          <Checkbox
+                              inputId="firma"
+                              checked={ignorujDatyFirma}
+                              onChange={() => setIgnorujDatyFirma(!ignorujDatyFirma)}
+                          />
+                          <span className="ml-2">Ignoruj daty</span>
+                      </div>
+                  )}
+          
+                  {interfacePracownik && (
+                      <Dropdown
+                          value={pracownik}
+                          options={availablePracownicy}
+                          onChange={(e) => setPracownik(e.value)}
+                          showClear
+                          filter
+                          className=""
+                          filterInputAutoFocus
+                          resetFilterOnHide
+                          placeholder="Wybierz pracownika"
+                      />
+                  )}
+          
+                  <div className="flex flex-col items-center space-y-4">
+                      {interfaceFirma && (
+                          <Dropdown
+                              value={Projekt}
+                              options={projektyOptions}
+                              onChange={(e) => setProjekt(e.value)}
+                              showClear
+                              placeholder="Wybierz projekt"
+                              emptyMessage="Brak projektów"
+                              filter
+                              className="w-3/4"
+                              filterInputAutoFocus
+                              resetFilterOnHide
+                          />
+                      )}
+                      
+                      <div className="flex flex-row items-center space-x-4">
+                          <Button
+                              onClick={handleGenerateReport}
+                              label="Generuj raport"
+                              className="p-button-outlined border-2 p-2.5 bg-white text-black stable-button"
+                          />
+                          
+                          {interfaceFirma && (
+                              <Button
+                                  onClick={handleGenerateWszystkie}
+                                  label="Generuj wszystkie"
+                                  className="p-button-outlined border-2 p-2.5 bg-white text-black stable-button"
+                              />
+                          )}
+                      </div>
+                  </div>
+              </div>
+          </AmberBox>
             <div className="w-auto h-auto bg-blue-700 outline outline-1 outline-black flex flex-row items-center space-x-4 m-2 p-3 text-white">
                 <p>Raporty</p>
             </div>
             <div className="w-auto bg-gray-300 h-full m-2 outline outline-1 outline-gray-500">
-                    <table className="w-full">
-                    <tbody className="text-left cursor-pointer">
-                        <tr className="border-b hover:underline even:bg-gray-200 odd:bg-gray-300"
-                            onClick={() => {if (accountType === 'Pracownik' && accountType === 'Kierownik') {setShowRaportyFirma(!showRaportyFirma)}}}>
-                            <th className="border-r">Raporty dla firmy</th>
-                        </tr>
-                        <tr className={`border-b hover:underline even:bg-gray-200 odd:bg-gray-300 ${showRaportyFirma ? "" : "hidden"}`}>
-                            <td onClick={() => handleRowClick("Sprawozdanie z działalności - szczegółowe")}
-                                className="border-r"style={getRowStyle("Sprawozdanie z działalności - szczegółowe")}>
-                                Sprawozdanie z działalności - szczegółowe
-                            </td>
-                        </tr>
-                        <tr className={`border-b hover:underline even:bg-gray-200 odd:bg-gray-300 ${showRaportyFirma ? "" : "hidden"}`}>
-                            <td onClick={() => handleRowClick("Sprawozdanie z działalności - podsumowanie")}
-                                className="border-r"style={getRowStyle("Sprawozdanie z działalności - podsumowanie")}>
-                                Sprawozdanie z działalności - podsumowanie
-                            </td>
-                        </tr>
-                        <tr className="border-b hover:underline even:bg-gray-200 odd:bg-gray-300"
-                            onClick={() => setShowRaportyPracownik(!showRaportyPracownik)}>
-                            <th className="border-r">Raporty dla pracownika</th>
-                        </tr>
-                        <tr className={`border-b hover:underline even:bg-gray-200 odd:bg-gray-300 ${showRaportyPracownik ? "" : "hidden"}`}>
-                            <td onClick={() => handleRowClick("Analiza świadczeń pracowniczych")}
-                                className="border-r" style={getRowStyle("Analiza świadczeń pracowniczych")}>
-                                Analiza świadczeń pracowniczych
-                            </td>
-                        </tr>
-                        <tr className={`border-b hover:underline even:bg-gray-200 odd:bg-gray-300 ${showRaportyPracownik ? "" : "hidden"}`}>
-                            <td onClick={() => handleRowClick("Pracownik Analiza czasu - działalność")}
-                                className="border-r" style={getRowStyle("Pracownik Analiza czasu - działalność")}>
-                                Pracownik Analiza czasu - działalność
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+            <table className="w-full">
+                <tbody className="text-left cursor-pointer">
+                    <tr className="border-b hover:underline even:bg-gray-200 odd:bg-gray-300"
+                        onClick={() => {if (accountType != 'Pracownik' || accountType != 'Kierownik') setShowRaportyFirma(!showRaportyFirma)}}>
+                        <th className="border-r">Raporty dla firmy</th>
+                    </tr>
+                    <tr className={`${showRaportyFirma ? "" : "hidden"}`}>
+                        <td onClick={() => handleRowClick("Sprawozdanie z działalności - szczegółowe")}
+                            style={getRowStyle("Sprawozdanie z działalności - szczegółowe")}
+                            className="border-r hover:underline even:bg-gray-200 odd:bg-gray-300">
+                            Szczegółowy
+                        </td>
+                    </tr>
+                    <tr className={`${showRaportyFirma ? "" : "hidden"}`}>
+                        <td onClick={() => handleRowClick("Sprawozdanie z działalności - podsumowanie")}
+                            style={getRowStyle("Sprawozdanie z działalności - podsumowanie")}
+                            className="border-r hover:underline even:bg-gray-200 odd:bg-gray-300">
+                            Podsumowanie
+                        </td>
+                    </tr>
+
+                    <tr className="border-b hover:underline even:bg-gray-200 odd:bg-gray-300"
+                        onClick={() => setShowRaportyPracownik(!showRaportyPracownik)}>
+                        <th className="border-r">Raporty dla pracownika</th>
+                    </tr>
+                    <tr className={`${showRaportyPracownik ? "" : "hidden"}`}>
+                        <td onClick={() => handleRowClick("Analiza świadczeń pracowniczych")}
+                            style={getRowStyle("Analiza świadczeń pracowniczych")}
+                            className="border-r hover:underline even:bg-gray-200 odd:bg-gray-300">
+                            Szczegółowy
+                        </td>
+                    </tr>
+                    <tr className={`${showRaportyPracownik ? "" : "hidden"}`}>
+                        <td onClick={() => handleRowClick("Pracownik Analiza czasu - działalność")}
+                            style={getRowStyle("Pracownik Analiza czasu - działalność")}
+                            className="border-r hover:underline even:bg-gray-200 odd:bg-gray-300">
+                            Podsumowanie
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
-    );
-}    
+    </div>
+);
+}
