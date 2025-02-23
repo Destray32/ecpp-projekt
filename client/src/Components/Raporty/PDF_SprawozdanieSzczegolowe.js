@@ -10,7 +10,13 @@ const PDF_SzczegoloweDzialalnosciPracownikow = (data, startDate, endDate, Projek
     let filteredData = Projekt ? data.filter(row => row.ProjektID === Projekt) : data;
 
     if (startDate && endDate) {
-        filteredData = filteredData.filter(row => row.Data >= startDate && row.Data <= endDate);
+        filteredData = filteredData.filter(row => {
+            const datePart = row.Data.split(' ')[0];
+            const [day, month, year] = datePart.split('.');
+            const rowDate = new Date(`${year}-${month}-${day}`); 
+            
+            return rowDate >= new Date(startDate) && rowDate <= new Date(endDate);
+        });
     }
 
     doc.setFontSize(14);
@@ -93,7 +99,7 @@ const PDF_SzczegoloweDzialalnosciPracownikow = (data, startDate, endDate, Projek
         doc.setFontSize(15);
         doc.setFont('Helvetica', 'Bold'); 
         doc.text(`Total dla projektu: ${totalProjectHours.toFixed(2)} h`, 40, yPosition + 10);
-        yPosition += 20;
+        yPosition += 40;
     }
 
     doc.save(`Sprawozdanie_z_dzialalnosci_szczegolowe_${Projekt || 'wszystkie'}.pdf`);

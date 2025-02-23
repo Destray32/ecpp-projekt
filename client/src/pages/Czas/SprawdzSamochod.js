@@ -21,39 +21,41 @@ export default function SprawdzSamochodPage() {
     };
 
     const fetchData = () => {
-        axios.get('https://qubis.pl:5000/api/samochody', { withCredentials: true })
-            .then((response) => {
-                const data = response.data;
-                console.log(data);
+    axios.get('https://qubis.pl:5000/api/samochody', { withCredentials: true })
+        .then((response) => {
+            const data = response.data;
 
-                const filteredData = data.filter(item => {
-                    const itemDate = formatDate(item.Data);
-                    if (Pojazd && item.Pojazd !== Pojazd) return false;
-                    if (startDate && itemDate < startDate) return false;
-                    if (endDate && itemDate > endDate) return false;
-                    return true;
-                });
+            const filteredData = data.filter(item => {
+                const itemDate = formatDate(item.Data);
+                if (Pojazd && item.Pojazd !== Pojazd) return false;
+                if (startDate && itemDate < startDate) return false;
+                if (endDate && itemDate > endDate) return false;
+                return true;
+            });
 
-                const formattedData = filteredData.map(item => ({
+            const formattedData = filteredData
+                .map(item => ({
                     ...item,
                     Data: formatDate(item.Data)
-                }));
-                
-                setTableData(formattedData);
+                }))
+                .sort((a, b) => new Date(b.Data) - new Date(a.Data)); 
 
-                if (pojazdyOptions.length === 0) {
-                    const pojazdySet = new Set(data.map(item => item.Pojazd));
-                    const options = Array.from(pojazdySet).map(pojazd => ({
-                        label: pojazd,
-                        value: pojazd
-                    }));
-                    setPojazdyOptions(options);
-                }
-            })
-            .catch((error) => {
-                console.error(error);
-            });
-    };
+            setTableData(formattedData);
+
+            if (pojazdyOptions.length === 0) {
+                const pojazdySet = new Set(data.map(item => item.Pojazd));
+                const options = Array.from(pojazdySet).map(pojazd => ({
+                    label: pojazd,
+                    value: pojazd
+                }));
+                setPojazdyOptions(options);
+            }
+        })
+        .catch((error) => {
+            console.error(error);
+        });
+};
+
 
     useEffect(() => {
         fetchData();

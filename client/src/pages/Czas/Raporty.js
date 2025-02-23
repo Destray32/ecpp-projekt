@@ -98,8 +98,6 @@ export default function RaportyPage() {
             
             const raportData = raportResponse.data.raport;
             setRaport(raportData);
-            console.log("projekty.js", projektyResponse);
-            console.log("raport.js", raportResponse);
     
             let filteredProjekty = projekty;
     
@@ -139,42 +137,61 @@ export default function RaportyPage() {
     };
 
     const handleGenerateReport = () => {
-        if (!wybranyRaport || 
-            (['Sprawozdanie z działalności - szczegółowe', 'Sprawozdanie z działalności - podsumowanie'].includes(wybranyRaport) && !Projekt) ||
-            (['Analiza świadczeń pracowniczych', 'Pracownik Analiza czasu - działalność'].includes(wybranyRaport) && !pracownik) ||
-            (!ignorujDatyFirma && (!startDate || !endDate))) {
-            
-            notification.info({
-                message: 'Informacja',
-                description: 'Wypełnij wszystkie wymagane pola',
-                placement: 'topRight',
-            });
-            return;
-        }
+    if (!wybranyRaport || 
+        (['Sprawozdanie z działalności - szczegółowe', 'Sprawozdanie z działalności - podsumowanie'].includes(wybranyRaport) && !Projekt) ||
+        (['Analiza świadczeń pracowniczych', 'Pracownik Analiza czasu - działalność'].includes(wybranyRaport) && !pracownik) ||
+        (!ignorujDatyFirma && (!startDate || !endDate))) {
+        
+        notification.info({
+            message: 'Informacja',
+            description: 'Wypełnij wszystkie wymagane pola',
+            placement: 'topRight',
+        });
+        return;
+    }
 
-        let filteredRaport = raport;
+    let filteredRaport = raport;
 
-        if (Projekt && ['Sprawozdanie z działalności - szczegółowe', 'Sprawozdanie z działalności - podsumowanie'].includes(wybranyRaport)) {
-            filteredRaport = raport.filter(entry => entry.ProjektID === Projekt);
-        }
+    if (Projekt && ['Sprawozdanie z działalności - szczegółowe', 'Sprawozdanie z działalności - podsumowanie'].includes(wybranyRaport)) {
+        filteredRaport = filteredRaport.filter(entry => entry.ProjektID === Projekt);
+    }
 
-        switch (wybranyRaport) {
-            case "Sprawozdanie z działalności - szczegółowe":
-                PDF_SprawozdanieSzczegolowe(filteredRaport, startDate, endDate, Projekt);
-                break;
-            case "Sprawozdanie z działalności - podsumowanie":
-                PDF_SprawozdaniePodsumowanie(filteredRaport, startDate, endDate, Projekt);
-                break;
-            case "Analiza świadczeń pracowniczych":
-                PDF_AnalizaSwiadczenPracowniczych(filteredRaport, startDate, endDate, pracownik);
-                break;
-            case "Pracownik Analiza czasu - działalność":
-                PDF_PracownikAnalizaCzasu(filteredRaport, startDate, endDate, pracownik);
-                break;
-            default:
-                break;
-        }
-    };
+    if (!ignorujDatyFirma) {
+
+    filteredRaport = filteredRaport.filter(entry => {
+        if (!entry.Data) return false;
+
+        const datePart = entry.Data.split(' ')[0]; 
+        const [day, month, year] = datePart.split('.'); 
+        const entryDate = new Date(`${year}-${month}-${day}`);
+
+
+        return entryDate >= new Date(startDate) && entryDate <= new Date(endDate);
+    });
+
+}
+
+    const passedStartDate = ignorujDatyFirma ? null : startDate;
+    const passedEndDate = ignorujDatyFirma ? null : endDate;
+
+    switch (wybranyRaport) {
+        case "Sprawozdanie z działalności - szczegółowe":
+            PDF_SprawozdanieSzczegolowe(filteredRaport, passedStartDate, passedEndDate, Projekt);
+            break;
+        case "Sprawozdanie z działalności - podsumowanie":
+            PDF_SprawozdaniePodsumowanie(filteredRaport, passedStartDate, passedEndDate, Projekt);
+            break;
+        case "Analiza świadczeń pracowniczych":
+            PDF_AnalizaSwiadczenPracowniczych(filteredRaport, passedStartDate, passedEndDate, pracownik);
+            break;
+        case "Pracownik Analiza czasu - działalność":
+            PDF_PracownikAnalizaCzasu(filteredRaport, passedStartDate, passedEndDate, pracownik);
+            break;
+        default:
+            break;
+    }
+};
+
 
     const handleGenerateWszystkie = () => {
         if(!ignorujDatyFirma && (!startDate || !endDate)) {
