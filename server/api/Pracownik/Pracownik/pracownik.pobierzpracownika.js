@@ -84,11 +84,11 @@ function mapRoleToNumber(role) {
     switch (role) {
         case 'Administrator':
             return 1;
-        case 'Majster':
+        case 'Kierownik':
             return 2;
         case 'Pracownik':
             return 3;
-        case 'Gosc':
+        case 'Biuro':
             return 4;
         default:
             return 4;

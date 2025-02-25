@@ -89,7 +89,7 @@ export default function CzasPracyPage() {
         if (Pracownik && (userType === "Administrator")) {
             fetchWorkHours(Pracownik, currentDate);
             fetchAdditionalProjects(Pracownik, currentDate);
-        } else if (Pracownik && (userType === "Pracownik")) {
+        } else if (Pracownik && (userType === "Pracownik" || userType === "Kierownik" || userType === "Biuro")) {
             fetchWorkHours(Pracownik, currentDate);
             fetchAdditionalProjects(Pracownik, currentDate);
             setPracownicy([{ label: Pracownik, value: Pracownik }]);

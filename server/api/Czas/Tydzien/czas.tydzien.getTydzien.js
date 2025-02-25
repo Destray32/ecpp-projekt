@@ -1,5 +1,6 @@
 function GetTydzien(req, res, db) {
     const { numericWeek } = req.params;
+    console.log(numericWeek);
 
     const sqlPracownicy = `SELECT t.tydzienRoku,
     p.idPracownik,
