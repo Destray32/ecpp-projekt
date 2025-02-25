@@ -184,10 +184,11 @@ export default function TydzienPage() {
     };
 
     useEffect(() => {
-        Axios.get(`http://localhost:5000/api/tydzien/${numericWeek}`, { withCredentials: true })
+        const currentYear = selectedWeek.substring(0, 4); // extract year from week picker
+        Axios.get(`http://localhost:5000/api/tydzien/${currentYear}/${numericWeek}`, { withCredentials: true })
             .then(response => setData(response.data))
             .catch(error => console.error(error));
-    }, [numericWeek, refresh]);
+    }, [numericWeek, selectedWeek, refresh]);
 
     return (
         <div>

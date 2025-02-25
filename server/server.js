@@ -415,7 +415,7 @@ app.put('/api/urlopy/:vacationId', (req, res) => {
 /////////////////////////////////////////
 
 // CZAS > TYDZIEN //
-app.get('/api/tydzien/:numericWeek', (req, res) => {
+app.get('/api/tydzien/:year/:numericWeek', (req, res) => {
     GetTydzien(req, res, pool);
 });
 app.post('/api/tydzien', (req, res) => {
