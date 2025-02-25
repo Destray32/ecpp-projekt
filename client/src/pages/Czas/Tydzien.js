@@ -15,6 +15,7 @@ export default function TydzienPage() {
     const [data, setData] = useState([]);
     const [refresh, setRefresh] = useState(false);
     const [selectAll, setSelectAll] = useState(false);
+    const [isLoaded, setIsLoaded] = useState(false); // new flag
 
     // Function to get the current week in the format "YYYY-Www"
     const getCurrentWeek = () => {
@@ -37,7 +38,17 @@ export default function TydzienPage() {
             start: formatDate(startDate),
             end: formatDate(endDate)
         });
+        setIsLoaded(true); // mark as loaded when defaults are set
     }, []);
+
+    // Fetch data only after page is loaded
+    useEffect(() => {
+        if (!isLoaded) return; // do nothing if not loaded
+        const currentYear = selectedWeek.substring(0, 4);
+        Axios.get(`http://localhost:5000/api/tydzien/${currentYear}/${numericWeek}`, { withCredentials: true })
+            .then(response => setData(response.data))
+            .catch(error => console.error(error));
+    }, [numericWeek, selectedWeek, refresh, isLoaded]);
 
     const generatePDF = () => {
         const doc = new jsPDF();
@@ -182,13 +193,6 @@ export default function TydzienPage() {
             day: 'numeric'
         });
     };
-
-    useEffect(() => {
-        const currentYear = selectedWeek.substring(0, 4); // extract year from week picker
-        Axios.get(`http://localhost:5000/api/tydzien/${currentYear}/${numericWeek}`, { withCredentials: true })
-            .then(response => setData(response.data))
-            .catch(error => console.error(error));
-    }, [numericWeek, selectedWeek, refresh]);
 
     return (
         <div>
