@@ -321,7 +321,7 @@ const AdditionalProjects = ({
                             />
                         </div>
                         <div className="flex flex-col">
-                            <p className='font-bold'>Suma: {additionalProjectsTotalTime}:00</p>
+                            <p className='font-bold'>Razem: {additionalProjectsTotalTime} godz.</p>
                         </div>
                     </div>
                     {additionalProjects.map((project, index) => (
