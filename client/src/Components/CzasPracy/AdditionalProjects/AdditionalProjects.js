@@ -309,6 +309,7 @@ const AdditionalProjects = ({
                                 filterInputAutoFocus
                                 showClear
                                 disabled={statusTyg === "Zamkniety"}
+                                scrollHeight='400px'
                             />
                         </div>
                         <div className="flex flex-col">
