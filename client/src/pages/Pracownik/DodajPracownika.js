@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Form, DatePicker, Input, Checkbox, Radio, Select, ConfigProvider, Button, notification } from 'antd';
 import plPL from 'antd/lib/locale/pl_PL';
 import dayjs from 'dayjs';
@@ -11,6 +11,7 @@ import DaneBox from '../../Components/DaneBox';
 dayjs.locale('pl');
 
 export default function DodajPracownikaPage() {
+    const navigate = useNavigate();
     const [form] = Form.useForm();
     const [firma, setFirma] = useState([]);
     const [grupa, setGrupa] = useState([]);
@@ -67,7 +68,12 @@ export default function DodajPracownikaPage() {
         axios.post('https://localhost:5000/api/pracownicy', filteredValues, { withCredentials: true })
             .then(res => {
                 console.log(res);
-                notification.success({ message: 'Dodano pracownika' });
+                // Navigate back immediately after successful response
+                navigate(-1);
+                // Show notification after navigation is triggered
+                notification.success({ 
+                    message: 'Dodano pracownika'
+                });
             })
             .catch(err => {
                 console.log(err);
@@ -78,12 +84,21 @@ export default function DodajPracownikaPage() {
     const onValuesChange = (changedValues, allValues) => {
         const { surename, name, newPassword, confirmPassword } = allValues;
 
-        if (surename && name && !newPassword && !confirmPassword) {
-            const password = surename + name[0] + '123';
+        if (surename && name) {
+            // Set login as combination of surname and name
+            const login = `${surename}${name}`.toLowerCase();
             form.setFieldsValue({
-                newPassword: password,
-                confirmPassword: password,
+                login: login,
             });
+            
+            // Set default password if not already set
+            if (!newPassword && !confirmPassword) {
+                const password = surename + name[0] + '123';
+                form.setFieldsValue({
+                    newPassword: password,
+                    confirmPassword: password,
+                });
+            }
         }
     };
 
@@ -202,7 +217,7 @@ export default function DodajPracownikaPage() {
                                         <Select placeholder="-- Brak --">
                                             {grupa.map(g => (
                                             <Select.Option key={g.idGrupa_urlopowa} value={g.idGrupa_urlopowa}>{g.Zleceniodawca}</Select.Option>
-                                            ))}
+                                            ))} 
                                         </Select>
                                     </Form.Item>
                                     <Form.Item label="Plan tygodnia 'V'?" name="weeklyPlan" valuePropName="checked">

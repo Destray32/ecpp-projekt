@@ -4,10 +4,11 @@ import { notification } from 'antd';
 import { InputText } from 'primereact/inputtext';
 import { FloatLabel } from 'primereact/floatlabel';
 import { Button } from 'primereact/button';
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 export default function NowyPojazdPage() {
+    const navigate = useNavigate();
     const [vehicle, setVehicle] = React.useState({
         numerRejestracyjny: "",
         marka: "",
@@ -17,7 +18,12 @@ export default function NowyPojazdPage() {
     const handleSave = () => {
         axios.post("https://localhost:5000/api/pojazdy", vehicle, { withCredentials: true })
             .then((response) => {
-                notification.success({ message: 'Pomyślnie dodano nowy pojazd' });
+                // Navigate back immediately after successful response
+                navigate(-1);
+                // Show notification after navigation is triggered
+                notification.success({ 
+                    message: 'Pomyślnie dodano nowy pojazd'
+                });
             })
             .catch((error) => {
                 if (error.response) {

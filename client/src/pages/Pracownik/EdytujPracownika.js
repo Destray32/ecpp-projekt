@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { Form, DatePicker, Input, Checkbox, Radio, Select, ConfigProvider, Button, notification } from 'antd';
 import plPL from 'antd/lib/locale/pl_PL';
 import axios from 'axios';
@@ -11,6 +11,7 @@ import DaneBox from '../../Components/DaneBox';
 dayjs.locale('pl');
 
 export default function EdytujPracownikaPage() {
+    const navigate = useNavigate();
     const [form] = Form.useForm();
     const { id } = useParams();
     const [firma, setFirma] = useState([]);
@@ -86,7 +87,12 @@ export default function EdytujPracownikaPage() {
         axios.put(`https://localhost:5000/api/pracownik/${id}`, values, { withCredentials: true })
             .then(res => {
                 console.log(res);
-                notification.success({ message: 'Pomyślnie zaktualizowano pracownika' });
+                // Navigate back immediately after successful response
+                navigate(-1);
+                // Show notification after navigation is triggered
+                notification.success({ 
+                    message: 'Pomyślnie zaktualizowano pracownika'
+                });
             })
             .catch(err => {
                 console.log(err);
