@@ -175,8 +175,6 @@ function EdytujPracownika(req, res) {
                         ];
                     }
 
-                    console.log(valuesUpdatePracownik);
-
                     connection.query(queryUpdatePracownik, valuesUpdatePracownik, (error, results) => {
                         if (error) {
                             return connection.rollback(() => {

@@ -116,7 +116,7 @@ export default function CzasPracyPage() {
         const from = format(startOfWeek(currentDate, { weekStartsOn: 1 }), 'yyyy-MM-dd');
         const to = format(addDays(endOfWeek(currentDate, { weekStartsOn: 1 }), 1), 'yyyy-MM-dd');
     
-        const urlRequest = `http://localhost:5000/api/planTygodnia/zaplanuj?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
+        const urlRequest = `https://qubis.pl:5000/api/planTygodnia/zaplanuj?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
     
         try {
             const res = await Axios.get(urlRequest, { 
@@ -168,7 +168,7 @@ export default function CzasPracyPage() {
 
     const fetchBlockStatus = async () => {
         try {
-            const response = await Axios.get("http://localhost:5000/api/czas/warnings", {
+            const response = await Axios.get("https://qubis.pl:5000/api/czas/warnings", {
                 withCredentials: true
             });
             setBlockStatus(false);
@@ -186,7 +186,7 @@ export default function CzasPracyPage() {
 
     const fetchUserId = async () => {
         try {
-            await Axios.get("http://localhost:5000/api/pracownicy", { withCredentials: true })
+            await Axios.get("https://qubis.pl:5000/api/pracownicy", { withCredentials: true })
                 .then((response) => {
                     //console.log(response.data);
                     const userId = response.data.find(pracownik => `${pracownik.name} ${pracownik.surname}` === Pracownik).id;
@@ -202,7 +202,7 @@ export default function CzasPracyPage() {
     };
 
     const fetchZalogowanyUzytkownik = () => {
-        Axios.get("http://localhost:5000/api/imie", { withCredentials: true })
+        Axios.get("https://qubis.pl:5000/api/imie", { withCredentials: true })
             .then((response) => {
                 const fullName = `${response.data.name} ${response.data.surename}`;
                 setPracownik(fullName);
@@ -214,7 +214,7 @@ export default function CzasPracyPage() {
     };
 
     const fetchPojazdy = () => {
-        Axios.get("http://localhost:5000/api/pojazdy", { withCredentials: true })
+        Axios.get("https://qubis.pl:5000/api/pojazdy", { withCredentials: true })
             .then((response) => {
                 // console.log(response.data.pojazdy);
                 setSamochody(response.data.pojazdy.map(pojazd => ({id: pojazd.id, label: pojazd.numerRejestracyjny, value: pojazd.numerRejestracyjny })));
@@ -225,7 +225,7 @@ export default function CzasPracyPage() {
     }
 
     const fetchPracownicy = () => {
-        Axios.get("http://localhost:5000/api/pracownicy", { withCredentials: true })
+        Axios.get("https://qubis.pl:5000/api/pracownicy", { withCredentials: true })
             .then((response) => {
                 setPracownicy(response.data.map(pracownik => ({ label: `${pracownik.name} ${pracownik.surname}`, value: `${pracownik.name} ${pracownik.surname}` })));
             })
@@ -235,7 +235,7 @@ export default function CzasPracyPage() {
     }
 
     const fetchFirmy = () => {
-        Axios.get("http://localhost:5000/api/firmy", { withCredentials: true })
+        Axios.get("https://qubis.pl:5000/api/firmy", { withCredentials: true })
             .then((response) => {
                 setFirmy(response.data.map(firma => ({ label: firma.Nazwa_firmy, value: firma.idFirma })));
             })
@@ -245,7 +245,7 @@ export default function CzasPracyPage() {
     }
 
     const fetchZleceniodawcy = () => {
-        Axios.get("http://localhost:5000/api/grupy", { withCredentials: true })
+        Axios.get("https://qubis.pl:5000/api/grupy", { withCredentials: true })
             .then((response) => {
                 setZleceniodawcy(response.data.grupy.map(zleceniodawca => ({
                     label: zleceniodawca.Zleceniodawca,
@@ -258,7 +258,7 @@ export default function CzasPracyPage() {
     }
 
     const fetchProjekty = () => {
-        Axios.get("http://localhost:5000/api/czas/projekty", { withCredentials: true })
+        Axios.get("https://qubis.pl:5000/api/czas/projekty", { withCredentials: true })
             .then((response) => {
                 setDostepneProjekty(response.data.projekty.map(projekt => ({
                     label: projekt.NazwaKod_Projektu,
@@ -276,7 +276,7 @@ export default function CzasPracyPage() {
         try {
             const weekData = getWeek(date, { weekStartsOn: 1 });
             const year = date.getFullYear();
-            const response = await Axios.get("http://localhost:5000/api/czas", {
+            const response = await Axios.get("https://qubis.pl:5000/api/czas", {
                 withCredentials: true,
                 params: {
                     pracownikName: employeeName,
@@ -300,7 +300,7 @@ export default function CzasPracyPage() {
             const weekData = getWeek(date, { weekStartsOn: 1 });
             const year = date.getFullYear();
 
-            const response = await Axios.get("http://localhost:5000/api/czas/projekty/dodane", {
+            const response = await Axios.get("https://qubis.pl:5000/api/czas/projekty/dodane", {
                 withCredentials: true,
                 params: {
                     pracownikName: employeeName,
@@ -355,7 +355,7 @@ export default function CzasPracyPage() {
     const fetchStatusTygodnia = async () => {
         try {
             const weekData = getWeek(currentDate, { weekStartsOn: 1 });
-            const response = await Axios.get(`http://localhost:5000/api/tydzien/${weekData}`, {
+            const response = await Axios.get(`https://qubis.pl:5000/api/tydzien/${weekData}`, {
                 withCredentials: true
             });
 
@@ -432,35 +432,45 @@ export default function CzasPracyPage() {
 
 
         try {
-            const response = await Axios.post("http://localhost:5000/api/czas", {
+
+            const response = await Axios.post(`https://qubis.pl:5000/api/czas`, {
+
                 pracownikName: Pracownik,
+
                 projektyName: Projekty,
+
                 weekData: getWeek(currentDate, { weekStartsOn: 1 }),
+
                 year: currentDate.getFullYear(),
+
                 days: daysOfWeek.map(day => {
+
                     const formattedDate = format(day, 'yyyy-MM-dd');
+
                     const hoursData = hours[formattedDate] || {};
+
                     //console.log(day.getDay());
 
-                    if (day.getDay() === 0) {
-                        return {
-                            dayOfWeek: format(day, 'EEEE', { locale: pl }),
-                            start: "00:00",
-                            end: "00:00",
-                            break: "00:00",
-                        }
-                    }
-                    else {
-                        return {
-                            dayOfWeek: format(day, 'EEEE', { locale: pl }),
-                            start: hoursData.start || "00:00",
-                            end: hoursData.end || "00:00",
-                            break: hoursData.break || "00:00",
-                        };
-                    }
+
+
+                    return {
+
+                        dayOfWeek: format(day, 'EEEE', { locale: pl }),
+
+                        start: hoursData.start || "00:00",
+
+                        end: hoursData.end || "00:00",
+
+                        break: hoursData.break || "00:00",
+
+                    };
+
                 }),
+
                 totalHours: totalHours,
+
                 additionalProjects: formattedAdditionalProjects,
+
             }, { withCredentials: true });
 
             if (response.status === 200) {
@@ -524,7 +534,7 @@ export default function CzasPracyPage() {
             // console.log(dailyHours.start, breakTimeInHours, dailyHours.end);
         
             const totalDayHours = dailyHours.end && dailyHours.start ?
-                parseFloat(dailyHours.end.split(":")[0]) - parseFloat(dailyHours.start.split(":")[0]) - breakTimeInHours
+                convertTimeToDecimal(dailyHours.end) - convertTimeToDecimal(dailyHours.start) - convertTimeToDecimal(dailyHours.break || '00:00')
                 : 0;
         
             let projectDayHours = 0;
@@ -582,7 +592,7 @@ export default function CzasPracyPage() {
                 
                 fetchUserId();
                 try {
-                    const warning_response = await Axios.post("http://localhost:5000/api/czas/warnings", {
+                    const warning_response = await Axios.post("https://qubis.pl:5000/api/czas/warnings", {
                         weeklyHours: totalHours,
                         id: currentUserId,
                     }, { withCredentials: true });
@@ -598,7 +608,7 @@ export default function CzasPracyPage() {
                     console.error(error);
                 }
 
-                const response = await Axios.delete("http://localhost:5000/api/tydzien", {
+                const response = await Axios.delete("https://qubis.pl:5000/api/tydzien", {
                     data: {
                         tydzienRoku: getWeek(currentDate, { weekStartsOn: 1 }),
                         pracownikId: currentUserId,
@@ -624,7 +634,7 @@ export default function CzasPracyPage() {
     const handleOtworzTydzien = async () => {
         try {
             fetchUserId();
-            const response = await Axios.post("http://localhost:5000/api/tydzien", {
+            const response = await Axios.post("https://qubis.pl:5000/api/tydzien", {
                 tydzienRoku: getWeek(currentDate, { weekStartsOn: 1 }),
                 pracownikId: currentUserId,
                 year: currentDate.getFullYear(),
@@ -726,6 +736,11 @@ export default function CzasPracyPage() {
 
 
     //#endregion
+    
+    function convertTimeToDecimal(timeStr) {
+        const [hours, minutes] = timeStr.split(":").map(Number);
+        return hours + minutes / 60;
+    }
 
     //#region Render
     return (

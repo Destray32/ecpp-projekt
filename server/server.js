@@ -7,11 +7,28 @@ const mysql = require('mysql2');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const path = require('path');
+const https = require('https');
+const fs = require('fs');
+
 
 require('dotenv').config();
 
+const allowedOrigins = [
+    'https://138.2.138.18:3000',
+    'https://138.2.138.18',
+    'https://www.qubis.pl:3000',
+    'https://www.qubis.pl',
+    'https://qubis.pl'
+]
+
 app.use(cors({
-    origin: 'http://localhost:3000',
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true
 }));
 
@@ -524,7 +541,11 @@ app.get('/api/firmy', (req, res) => {
     PobierzDostepneFirmy(req, res, pool);
 });
 
-app.listen(port, () => {
-    console.log(`Server listening at http://localhost:${port}`);
-}
-);
+const options = {
+    cert: fs.readFileSync('/home/opc/ECPP/fullchain.pem'),
+    key: fs.readFileSync('/home/opc/ECPP/privkey.pem')
+};
+
+https.createServer(options, app).listen(5000, () => {
+    console.log('Server running on https://qubis.pl:5000');
+});

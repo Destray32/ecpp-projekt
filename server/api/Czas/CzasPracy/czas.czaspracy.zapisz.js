@@ -4,6 +4,19 @@ function ZapiszCzasPracy(req, res, db) {
     const { pracownikName, weekData, year, days, totalHours, additionalProjects } = req.body;
 
     try {
+        days.forEach(day => {
+            if (day.dayOfWeek === 'niedziela') {
+                day.start = '00:00';
+                day.end = '00:00';
+                day.break = '00:00';
+            }
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(400).json({ message: 'Invalid request data' });
+    }
+
+    try {
         // znajdź pracownika na podstawie jego imienia i nazwiska
         db.query(
             `SELECT idPracownik FROM Pracownik INNER JOIN Dane_osobowe ON Pracownik.FK_Dane_osobowe = Dane_osobowe.idDane_osobowe WHERE CONCAT(Dane_osobowe.Imie, ' ', Dane_osobowe.Nazwisko) = ?`,

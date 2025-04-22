@@ -12,7 +12,7 @@ export default function ArchiwumPage() {
 
     const fetchData = async () => {
         try {
-            const response = await axios.get(`http://localhost:5000/api/czas/archiwum/${selectedOption}`, { withCredentials: true });
+            const response = await axios.get(`https://qubis.pl:5000/api/czas/archiwum/${selectedOption}`, { withCredentials: true });
             setData(response.data);
             console.log('Data:', response.data);
         }
@@ -23,7 +23,7 @@ export default function ArchiwumPage() {
 
     const handleActionClick = async (record) => {
         try {
-            await axios.post('http://localhost:5000/api/czas/archiwum/przywroc', {
+            await axios.post('https://qubis.pl:5000/api/czas/archiwum/przywroc', {
                 tableName: selectedOption,
                 recordId: record.idPracownik || record.idFirma || record.idProjekty || record.idPojazdy || record.idGrupa_urlopowa
             }, { withCredentials: true });

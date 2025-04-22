@@ -15,7 +15,7 @@ export default function TydzienPage() {
     const [data, setData] = useState([]);
     const [refresh, setRefresh] = useState(false);
     const [selectAll, setSelectAll] = useState(false);
-    const [isLoaded, setIsLoaded] = useState(false); // new flag
+    const [isLoaded, setIsLoaded] = useState(false);
 
     // Function to get the current week in the format "YYYY-Www"
     const getCurrentWeek = () => {
@@ -38,17 +38,16 @@ export default function TydzienPage() {
             start: formatDate(startDate),
             end: formatDate(endDate)
         });
-        setIsLoaded(true); // mark as loaded when defaults are set
+	setIsLoaded(true);
     }, []);
 
-    // Fetch data only after page is loaded
     useEffect(() => {
-        if (!isLoaded) return; // do nothing if not loaded
-        const currentYear = selectedWeek.substring(0, 4);
-        Axios.get(`http://localhost:5000/api/tydzien/${currentYear}/${numericWeek}`, { withCredentials: true })
-            .then(response => setData(response.data))
-            .catch(error => console.error(error));
-    }, [numericWeek, selectedWeek, refresh, isLoaded]);
+	if (!isLoaded) return;
+	const currentYear = selectedWeek.substring(0, 4);
+	Axios.get(`https://qubis.pl:5000/api/tydzien/${currentYear}/${numericWeek}`, { withCredentials: true })
+	    .then(response => setData(response.data))
+	    .catch(error => console.error(error));
+    }, [numericWeek, selectedWeek, refresh]);
 
     const generatePDF = () => {
         const doc = new jsPDF();
@@ -133,7 +132,7 @@ export default function TydzienPage() {
             return;
         }
 
-        Axios.post('http://localhost:5000/api/tydzien', {
+        Axios.post('https://qubis.pl:5000/api/tydzien', {
             tydzienRoku: selectedItems[0].tydzienRoku,
             pracownikId: selectedItems.map(item => item.Pracownik_idPracownik)
         }, { withCredentials: true })
@@ -151,7 +150,7 @@ export default function TydzienPage() {
             return;
         }
 
-        Axios.delete('http://localhost:5000/api/tydzien', {
+        Axios.delete('https://qubis.pl:5000/api/tydzien', {
             withCredentials: true,
             data: {
                 tydzienRoku: selectedItems[0].tydzienRoku,

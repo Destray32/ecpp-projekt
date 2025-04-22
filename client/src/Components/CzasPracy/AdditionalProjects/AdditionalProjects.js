@@ -55,7 +55,7 @@ const AdditionalProjects = ({
 
     useEffect(() => {
         if (firmy && firmy.length > 0) {
-            Axios.get('http://localhost:5000/api/mojedane', { withCredentials: true })
+            Axios.get('https://qubis.pl:5000/api/mojedane', { withCredentials: true })
                 .then(res => {
                     //console.log(res.data);
                     //console.log(zleceniodawcy);
@@ -84,32 +84,35 @@ const AdditionalProjects = ({
     }, [firmy]);
 
     useEffect(() => {
-        const handleClickOutside = (event) => {
-            const isDropdownPanel = event.target.closest('.p-dropdown-panel');
-            const isDropdownTrigger = event.target.closest('.p-dropdown-trigger');
-            const isDropdownItem = event.target.closest('.p-dropdown-item');
-            
-    
-            if (additionalFieldsRef.current && 
-                !additionalFieldsRef.current.contains(event.target) &&
-                !event.target.closest('.project-input') &&
-                !event.target.closest('.p-inputtextarea') && 
-                !event.target.closest('.p-dropdown') && 
-                !event.target.closest('.p-inputtext') &&
-                !isDropdownPanel &&
-                !isDropdownTrigger &&
-                !isDropdownItem
-            ) {
-                setActiveProject(null);
-                setActiveDate(null);
-            }
-        };
-    
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, []);
+    const handleClickOutside = (event) => {
+        // detekcja scrollbaru
+        const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+        const isVerticalScrollbarClick = event.clientX >= window.innerWidth - scrollbarWidth;
+        
+        const isDropdownPanel = event.target.closest('.p-dropdown-panel');
+        const isDropdownTrigger = event.target.closest('.p-dropdown-trigger');
+        const isDropdownItem = event.target.closest('.p-dropdown-item');
+        
+        if (
+            additionalFieldsRef.current && 
+            !additionalFieldsRef.current.contains(event.target) &&
+            !event.target.closest('.project-input') &&
+            !event.target.closest('.p-inputtextarea') && 
+            !event.target.closest('.p-dropdown') && 
+            !event.target.closest('.p-inputtext') &&
+            !isDropdownPanel &&
+            !isDropdownTrigger &&
+            !isDropdownItem &&
+            !isVerticalScrollbarClick 
+        ) {
+            setActiveProject(null);
+            setActiveDate(null);
+        }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+}, []);
 
     useEffect(() => {
         let total = 0.0;
@@ -171,7 +174,7 @@ const AdditionalProjects = ({
                 return;
             }
 
-            const response = await Axios.post("http://localhost:5000/api/czas/projekt", {
+            const response = await Axios.post("https://qubis.pl:5000/api/czas/projekt", {
                 pracownikName: loggedUserName,
                 projektyName: Projekty,
                 weekData: weekData,
@@ -242,7 +245,7 @@ const AdditionalProjects = ({
                 //console.log(project);
                 Object.values(project.hours).forEach(async hour => {
                     try {
-                        await Axios.delete(`http://localhost:5000/api/czas/projekt/${hour.id}`, { withCredentials: true });
+                        await Axios.delete(`https://qubis.pl:5000/api/czas/projekt/${hour.id}`, { withCredentials: true });
                     } catch (error) {
                         console.error("Error deleting project", error);
                     }
