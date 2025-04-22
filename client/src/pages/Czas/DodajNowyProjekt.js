@@ -48,6 +48,11 @@ export default function DodajNowyProjektPage() {
             });
     };
 
+    // Function to normalize project names for better matching
+    const normalizeProjectName = (name) => {
+        return name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    };
+
     useEffect(() => {
         fetchGroups();
         fetchProjects();
@@ -128,10 +133,19 @@ export default function DodajNowyProjektPage() {
                                 label: project.name
                             }))}
                             placeholder="Wybierz projekt"
-                            filterOption={(inputValue, option) =>
-                                option.label.toLowerCase().includes(inputValue.toLowerCase())
-                            }
+                            filterOption={(inputValue, option) => {
+                                const normalizedInput = normalizeProjectName(inputValue);
+                                const normalizedOption = normalizeProjectName(option.label);
+                                
+                                // Check if normalized versions match
+                                return normalizedOption.includes(normalizedInput);
+                            }}
                             allowClear
+                            onSelect={(value, option) => {
+                                // When an option is selected, use the project name
+                                handleChange(value, 'nazwa');
+                            }}
+                            notFoundContent="Nie znaleziono podobnych projektów"
                         />
                     </div>
 
