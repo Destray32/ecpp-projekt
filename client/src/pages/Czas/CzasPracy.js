@@ -501,7 +501,8 @@ export default function CzasPracyPage() {
     const fetchStatusTygodnia = async () => {
         try {
             const weekData = getWeek(currentDate, { weekStartsOn: 1 });
-            const response = await Axios.get(`https://localhost:5000/api/tydzien/${weekData}`, {
+            const year = currentDate.getFullYear();
+            const response = await Axios.get(`https://localhost:5000/api/tydzien/${year}/${weekData}`, {
                 withCredentials: true
             });
 
