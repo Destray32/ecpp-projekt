@@ -18,7 +18,8 @@ const allowedOrigins = [
     'https://138.2.138.18',
     'https://www.qubis.pl:3000',
     'https://www.qubis.pl',
-    'https://qubis.pl'
+    'https://qubis.pl',
+    'https://localhost:3000',
 ]
 
 app.use(cors({
@@ -542,10 +543,10 @@ app.get('/api/firmy', (req, res) => {
 });
 
 const options = {
-    cert: fs.readFileSync('/home/opc/ECPP/fullchain.pem'),
-    key: fs.readFileSync('/home/opc/ECPP/privkey.pem')
+    cert: fs.readFileSync('../fullchain.pem'),
+    key: fs.readFileSync('../privkey.pem')
 };
 
 https.createServer(options, app).listen(5000, () => {
-    console.log('Server running on https://qubis.pl:5000');
+    console.log('Server running on https://localhost:5000');
 });

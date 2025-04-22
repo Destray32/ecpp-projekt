@@ -15,7 +15,7 @@ export default function NowyPojazdPage() {
     });
 
     const handleSave = () => {
-        axios.post("https://qubis.pl:5000/api/pojazdy", vehicle, { withCredentials: true })
+        axios.post("https://localhost:5000/api/pojazdy", vehicle, { withCredentials: true })
             .then((response) => {
                 notification.success({ message: 'Pomyślnie dodano nowy pojazd' });
             })

@@ -20,7 +20,7 @@ export default function GrupyProjektowPage() {
     }, []);
 
     const fetchGroups = () => {
-        Axios.get("https://qubis.pl:5000/api/grupy", { withCredentials: true })
+        Axios.get("https://localhost:5000/api/grupy", { withCredentials: true })
             .then((response) => {
                 setAvailableGroups(response.data.grupy);
             })
@@ -36,7 +36,7 @@ export default function GrupyProjektowPage() {
             return;
         }
         console.log(id);
-        Axios.delete(`https://qubis.pl:5000/api/grupy/${id}`, { withCredentials: true })
+        Axios.delete(`https://localhost:5000/api/grupy/${id}`, { withCredentials: true })
             .then((response) => {
                 console.log(response.data);
                 fetchGroups(); 

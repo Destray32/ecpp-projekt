@@ -44,7 +44,7 @@ export default function TydzienPage() {
     useEffect(() => {
 	if (!isLoaded) return;
 	const currentYear = selectedWeek.substring(0, 4);
-	Axios.get(`https://qubis.pl:5000/api/tydzien/${currentYear}/${numericWeek}`, { withCredentials: true })
+	Axios.get(`https://localhost:5000/api/tydzien/${currentYear}/${numericWeek}`, { withCredentials: true })
 	    .then(response => setData(response.data))
 	    .catch(error => console.error(error));
     }, [numericWeek, selectedWeek, refresh]);
@@ -132,7 +132,7 @@ export default function TydzienPage() {
             return;
         }
 
-        Axios.post('https://qubis.pl:5000/api/tydzien', {
+        Axios.post('https://localhost:5000/api/tydzien', {
             tydzienRoku: selectedItems[0].tydzienRoku,
             pracownikId: selectedItems.map(item => item.Pracownik_idPracownik)
         }, { withCredentials: true })
@@ -150,7 +150,7 @@ export default function TydzienPage() {
             return;
         }
 
-        Axios.delete('https://qubis.pl:5000/api/tydzien', {
+        Axios.delete('https://localhost:5000/api/tydzien', {
             withCredentials: true,
             data: {
                 tydzienRoku: selectedItems[0].tydzienRoku,

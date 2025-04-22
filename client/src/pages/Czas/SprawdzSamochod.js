@@ -21,7 +21,7 @@ export default function SprawdzSamochodPage() {
     };
 
     const fetchData = () => {
-    axios.get('https://qubis.pl:5000/api/samochody', { withCredentials: true })
+    axios.get('https://localhost:5000/api/samochody', { withCredentials: true })
         .then((response) => {
             const data = response.data;
 
