@@ -18,11 +18,28 @@ export default function LoginPage() {
     const [firma, setFirma] = useState('PC Husbyggen');
     const [login, setLogin] = useState('');
     const [password, setPassword] = useState('');
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
+        // Check if token is valid when component mounts
+        const checkTokenValidity = async () => {
+            try {
+                setIsLoading(true);
+                await axios.get('https://localhost:5000/api/check-token', { withCredentials: true });
+                // If request is successful, token is valid, redirect to home
+                navigate('/home/czas');
+            } catch (error) {
+                // If token is invalid or doesn't exist, show login form
+                console.log('Token is invalid or not present, showing login form');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        checkTokenValidity();
         fetchCompanies();
         fetchLogins();
-    }, []);
+    }, [navigate]);
 
     const fetchCompanies = async () => {
         try {
@@ -65,6 +82,13 @@ export default function LoginPage() {
     // useEffect(() => {
     //     console.log(firma, login, password);
     // }, [firma, login, password]);
+
+    if (isLoading) {
+        // Optional: You can show a loading indicator here
+        return <div className='bg-primary min-h-screen flex items-center justify-center text-white'>
+            <p>Loading...</p>
+        </div>;
+    }
 
     return (
         <main className='bg-primary min-h-screen flex items-center justify-center'>
