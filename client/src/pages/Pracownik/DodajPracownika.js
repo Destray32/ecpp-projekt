@@ -64,10 +64,10 @@ export default function DodajPracownikaPage() {
         if (!filteredValues.vehicle) delete filteredValues.vehicle;
         if (!filteredValues.vacationGroup) delete filteredValues.vacationGroup;
     
-        console.log(filteredValues);
+        //console.log(filteredValues);
         axios.post('https://localhost:5000/api/pracownicy', filteredValues, { withCredentials: true })
             .then(res => {
-                console.log(res);
+                //console.log(res);
                 // Navigate back immediately after successful response
                 navigate(-1);
                 // Show notification after navigation is triggered

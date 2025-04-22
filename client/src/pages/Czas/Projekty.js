@@ -49,7 +49,7 @@ export default function ProjektyPage() {
     const handleSzukaj = () => {
         Axios.get(`https://localhost:5000/api/czas/szukaj?group=${filtr}`, { withCredentials: true })
             .then((response) => {
-                console.log('Response data:', response.data);
+                //console.log('Response data:', response.data);
                 if (response.data && Array.isArray(response.data.projekty)) {
                     setData(response.data.projekty);
                 } else {

@@ -295,7 +295,7 @@ export default function UrlopyPage() {
             .then((response) => {
                 setPracownicy(response.data); // skróciłem do response.data, 
                 // bo mi nie wypełniało dropdowna
-                console.log(response.data);
+                //console.log(response.data);
             })
             .catch((error) => {
                 console.error("There was an error fetching the data:", error);
@@ -414,7 +414,7 @@ export default function UrlopyPage() {
                 urlopyData = response.data.urlopy.filter(item => item.imie === imie && item.nazwisko === nazwisko);
                 }
 
-                console.log(urlopyData);    
+                //console.log(urlopyData);    
                 const filterBySelectedGroups = (data) => {
                     if (selectedGrupyNazwa.length === 0) return data;
                     return data.filter(item => selectedGrupyNazwa.includes(item.zleceniodawca));

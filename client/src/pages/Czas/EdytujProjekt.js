@@ -65,7 +65,7 @@ export default function EdytujProjektPage() {
                         kodPocztowy: project.Kod_pocztowy || '',
                         kraj: project.Kraj || ''
                     });
-                    console.log(project);
+                    //console.log(project);
                 }
             })
             .catch((error) => {

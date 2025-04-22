@@ -24,7 +24,7 @@ export default function NowaGrupaPage() {
             czyPlanTygV: form.czyPlanTygV
         }, { withCredentials: true })
             .then(res => {
-                console.log(res.data);
+                //console.log(res.data);
                 window.location.href = '/home/grupy-projektow';
             })
             .catch(err => {

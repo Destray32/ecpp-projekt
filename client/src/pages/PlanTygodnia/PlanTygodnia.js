@@ -101,7 +101,7 @@ export default function PlanTygodniaPage() {
             });
             return;
         }
-        console.log(pracownikData); 
+        //console.log(pracownikData); 
         PDF_Drukujgrupe(pracownikData, from, to);
     }
 

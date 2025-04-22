@@ -21,7 +21,7 @@ export default function ZmienDanePage() {
     useEffect(() => {
         axios.get('https://localhost:5000/api/mojedane', { withCredentials: true })
             .then(res => {
-                console.log(res.data);
+                //console.log(res.data);
                 form.setFieldsValue({
                     surename: res.data.surename,
                     name: res.data.name,
@@ -84,10 +84,10 @@ export default function ZmienDanePage() {
     }, []);
 
     const handleSubmit = (values) => {
-        console.log(values);
+        //console.log(values);
         axios.put(`https://localhost:5000/api/pracownik/zmienMoje`, values, { withCredentials: true })
             .then(res => {
-                console.log(res);
+                //console.log(res);
                 notification.success({ message: 'Zapisano zmiany' });
             })
             .catch(err => {

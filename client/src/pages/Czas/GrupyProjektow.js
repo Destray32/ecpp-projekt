@@ -38,7 +38,7 @@ export default function GrupyProjektowPage() {
         console.log(id);
         Axios.delete(`https://localhost:5000/api/grupy/${id}`, { withCredentials: true })
             .then((response) => {
-                console.log(response.data);
+                //console.log(response.data);
                 fetchGroups(); 
             })
             .catch((error) => {

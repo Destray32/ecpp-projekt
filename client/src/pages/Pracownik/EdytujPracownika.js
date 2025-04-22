@@ -47,7 +47,7 @@ export default function EdytujPracownikaPage() {
     useEffect(() => {
         axios.get(`https://localhost:5000/api/pracownik/${id}`, { withCredentials: true })
             .then(res => {
-                console.log(res.data);
+                //console.log(res.data);
                 form.setFieldsValue({
                     surename: res.data.surename,
                     name: res.data.name,

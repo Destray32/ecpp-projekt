@@ -43,7 +43,7 @@ export default function ZablokowaniPage() {
 
             if (response.status === 200) {
                 setTableData(response.data);
-                console.log(response.data);
+                //console.log(response.data);
             }
         } catch (error) {
             if (error.response.status === 404) {

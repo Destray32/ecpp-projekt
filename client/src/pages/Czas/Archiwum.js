@@ -14,7 +14,7 @@ export default function ArchiwumPage() {
         try {
             const response = await axios.get(`https://localhost:5000/api/czas/archiwum/${selectedOption}`, { withCredentials: true });
             setData(response.data);
-            console.log('Data:', response.data);
+            //console.log('Data:', response.data);
         }
         catch (error) {
             console.error(error);
