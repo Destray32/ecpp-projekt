@@ -13,6 +13,19 @@ const fs = require('fs');
 
 require('dotenv').config();
 
+// Add middleware to set no-index headers for all responses
+app.use((req, res, next) => {
+    // Set headers to prevent indexing
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+    next();
+});
+
+// Add robots.txt route to explicitly disallow all web crawlers
+app.get('/robots.txt', (req, res) => {
+    res.type('text/plain');
+    res.send('User-agent: *\nDisallow: /');
+});
+
 const allowedOrigins = [
     'https://138.2.138.18:3000',
     'https://138.2.138.18',
