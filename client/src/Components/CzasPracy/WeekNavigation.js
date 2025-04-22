@@ -16,10 +16,24 @@ import { formatWeek } from '../../utils/dateUtils';
  * @param {Array} props.pracownicy - Lista dostępnych pracowników.
  * @param {string} props.userType - Typ użytkownika (np. "Pracownik").
  * @param {string} props.statusTyg - Status tygodnia (np. "Otwarty").
+ * @param {boolean} props.isOnline - Status połączenia z internetem.
+ * @param {Date|null} props.lastSaved - Czas ostatniego lokalnego zapisu.
+ * @param {Function} props.onManualSave - Funkcja zapisująca dane lokalnie.
  * 
  * @returns {JSX.Element} Element JSX reprezentujący nawigację tygodniową.
  */
-const WeekNavigation = ({ currentDate, setCurrentDate, Pracownik, setPracownik, pracownicy, userType, statusTyg }) => {
+const WeekNavigation = ({ 
+    currentDate, 
+    setCurrentDate, 
+    Pracownik, 
+    setPracownik, 
+    pracownicy, 
+    userType, 
+    statusTyg,
+    isOnline,
+    lastSaved,
+    onManualSave
+}) => {
     const previousWeek = () => setCurrentDate(subWeeks(currentDate, 1));
     const nextWeek = () => setCurrentDate(addWeeks(currentDate, 1));
 
@@ -36,21 +50,41 @@ const WeekNavigation = ({ currentDate, setCurrentDate, Pracownik, setPracownik, 
                             </div>
                             <Button icon="pi pi-arrow-right" iconPos="right" className="p-button-outlined" onClick={nextWeek} />
                         </div>
-                        <span className={`text-lg font-bold ${statusTyg === "Otwarty" ? "text-green-600" : "text-red-600"}`}>{statusTyg}</span>
-                            <div className='w-3/12 p-2'>
-                                <Dropdown
-                                    value={Pracownik}
-                                    onChange={(e) => setPracownik(e.value)}
-                                    options={pracownicy}
-                                    placeholder="Pracownik"
-                                    autoComplete="off"
-                                    className="w-3/4 float-right"
-                                    disabled={userType === "Pracownik" || userType === "Kierownik"}
-                                    filter
-                                    resetFilterOnHide
-                                    filterInputAutoFocus
+                        <div className="flex items-center gap-3">
+                            <span className={`text-lg font-bold ${statusTyg === "Otwarty" ? "text-green-600" : "text-red-600"}`}>
+                                {statusTyg}
+                            </span>
+                            <span className={`text-sm ${isOnline ? 'text-green-600' : 'text-red-600'}`}>
+                                {isOnline ? 'Online' : 'Offline'}
+                            </span>
+                            {lastSaved && (
+                                <span className="text-xs text-gray-600">
+                                    Zapisano lokalnie: {lastSaved.toLocaleTimeString()}
+                                </span>
+                            )}
+                            {!isOnline && (
+                                <Button 
+                                    label="Zapisz lokalnie" 
+                                    icon="pi pi-save" 
+                                    className="p-button-sm p-button-warning" 
+                                    onClick={onManualSave} 
                                 />
-                            </div>
+                            )}
+                        </div>
+                        <div className='w-3/12 p-2'>
+                            <Dropdown
+                                value={Pracownik}
+                                onChange={(e) => setPracownik(e.value)}
+                                options={pracownicy}
+                                placeholder="Pracownik"
+                                autoComplete="off"
+                                className="w-3/4 float-right"
+                                disabled={userType === "Pracownik" || userType === "Kierownik"}
+                                filter
+                                resetFilterOnHide
+                                filterInputAutoFocus
+                            />
+                        </div>
                     </div>
                 </div>
             </div>

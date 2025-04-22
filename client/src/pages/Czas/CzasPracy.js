@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { format, startOfWeek, addWeeks, endOfWeek, addDays, subWeeks, getWeek, set, parseISO, isWithinInterval } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { v4 as uuidv4 } from 'uuid';
-import { Alert, notification } from 'antd';
+import { Alert, notification, Modal } from 'antd';
 import Axios from "axios";
 import jsPDF from 'jspdf';
 
@@ -41,6 +41,10 @@ export default function CzasPracyPage() {
     const [idGrupy, setIdGrupy] = useState(null);
     const [pracownicyWGrupie, setPracownicyWGrupie] = useState([]);
     const [czyZapisano, setCzyZapisano] = useState(false);
+
+    const [isOnline, setIsOnline] = useState(navigator.onLine);
+    const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
+    const [lastSaved, setLastSaved] = useState(null);
 
     const startOfCurrentWeek = startOfWeek(currentDate, { weekStartsOn: 1 });
 
@@ -108,6 +112,148 @@ export default function CzasPracyPage() {
             fetchUserId();
         }
     }, [Pracownik]);
+
+    // Network status detection
+    useEffect(() => {
+        const handleOnline = () => {
+            setIsOnline(true);
+            notification.success({
+                message: 'Połączenie przywrócone',
+                description: 'Jesteś teraz online. Możesz zapisać zmiany.',
+                placement: 'topRight',
+                duration: 3,
+            });
+        };
+
+        const handleOffline = () => {
+            setIsOnline(false);
+            notification.warning({
+                message: 'Brak połączenia',
+                description: 'Utracono połączenie z internetem. Twoje zmiany są zapisywane lokalnie.',
+                placement: 'topRight',
+                duration: 5,
+            });
+            saveToLocalStorage();
+        };
+
+        window.addEventListener('online', handleOnline);
+        window.addEventListener('offline', handleOffline);
+
+        return () => {
+            window.removeEventListener('online', handleOnline);
+            window.removeEventListener('offline', handleOffline);
+        };
+    }, []);
+
+    // Auto-save data periodically
+    useEffect(() => {
+        let autoSaveInterval;
+        
+        if (autoSaveEnabled && Pracownik) {
+            autoSaveInterval = setInterval(() => {
+                saveToLocalStorage();
+            }, 30000); // Save every 30 seconds
+        }
+        
+        return () => {
+            if (autoSaveInterval) clearInterval(autoSaveInterval);
+        };
+    }, [hours, additionalProjects, Pracownik, currentDate, autoSaveEnabled]);
+
+    // Check for saved data on component mount
+    useEffect(() => {
+        if (Pracownik && currentDate) {
+            const storageKey = getLocalStorageKey();
+            const savedData = localStorage.getItem(storageKey);
+            
+            if (savedData) {
+                try {
+                    const parsedData = JSON.parse(savedData);
+                    const savedTime = new Date(parsedData.timestamp);
+                    const timeAgo = Math.floor((new Date() - savedTime) / 60000); // Minutes
+                    
+                    Modal.confirm({
+                        title: 'Znaleziono zapisane dane',
+                        content: `Znaleziono dane zapisane ${timeAgo} minut temu. Czy chcesz je przywrócić?`,
+                        okText: 'Przywróć',
+                        cancelText: 'Odrzuć',
+                        onOk() {
+                            restoreFromLocalStorage();
+                        },
+                        onCancel() {
+                            clearLocalStorage();
+                        }
+                    });
+                } catch (error) {
+                    console.error("Error parsing saved data", error);
+                }
+            }
+        }
+    }, [Pracownik, currentDate]);
+    //#endregion
+
+    //#region localStorage management
+    const getLocalStorageKey = () => {
+        const weekNumber = getWeek(currentDate, { weekStartsOn: 1 });
+        const year = currentDate.getFullYear();
+        return `czasPracy_${Pracownik}_${year}_${weekNumber}`;
+    };
+
+    const saveToLocalStorage = () => {
+        if (!Pracownik) return;
+
+        const storageKey = getLocalStorageKey();
+        const dataToSave = {
+            hours,
+            additionalProjects,
+            timestamp: new Date().toISOString(),
+            weekNumber: getWeek(currentDate, { weekStartsOn: 1 }),
+            year: currentDate.getFullYear(),
+        };
+
+        try {
+            localStorage.setItem(storageKey, JSON.stringify(dataToSave));
+            setLastSaved(new Date());
+        } catch (error) {
+            console.error("Error saving to localStorage", error);
+            notification.error({
+                message: 'Błąd zapisu',
+                description: 'Nie udało się zapisać danych lokalnie.',
+                placement: 'topRight',
+            });
+        }
+    };
+
+    const restoreFromLocalStorage = () => {
+        const storageKey = getLocalStorageKey();
+        const savedData = localStorage.getItem(storageKey);
+        
+        if (savedData) {
+            try {
+                const parsedData = JSON.parse(savedData);
+                setHours(parsedData.hours || {});
+                setAdditionalProjects(parsedData.additionalProjects || []);
+                
+                notification.success({
+                    message: 'Dane przywrócone',
+                    description: 'Pomyślnie przywrócono zapisane dane',
+                    placement: 'topRight',
+                });
+            } catch (error) {
+                console.error("Error restoring data", error);
+                notification.error({
+                    message: 'Błąd przywracania',
+                    description: 'Nie udało się przywrócić zapisanych danych.',
+                    placement: 'topRight',
+                });
+            }
+        }
+    };
+
+    const clearLocalStorage = () => {
+        const storageKey = getLocalStorageKey();
+        localStorage.removeItem(storageKey);
+    };
     //#endregion
 
     //#region fetching
@@ -481,9 +627,19 @@ export default function CzasPracyPage() {
                 });
 
                 setCzyZapisano(true);
+                clearLocalStorage(); // Clear localStorage after successful save
             }
         } catch (error) {
             console.error(error);
+            if (!navigator.onLine) {
+                notification.warning({
+                    message: 'Brak połączenia',
+                    description: 'Nie można zapisać danych na serwer. Dane zostały zapisane lokalnie i zostaną wysłane, gdy połączenie zostanie przywrócone.',
+                    placement: 'topRight',
+                    duration: 5,
+                });
+                saveToLocalStorage();
+            }
         }
     };
 
@@ -734,6 +890,14 @@ export default function CzasPracyPage() {
         doc.save(`Raport_Tydzien_${weekNumber}.pdf`);
     };
 
+    const handleManualSaveToLocalStorage = () => {
+        saveToLocalStorage();
+        notification.success({
+            message: 'Zapisano lokalnie',
+            description: 'Dane zostały zapisane lokalnie w przeglądarce',
+            placement: 'topRight',
+        });
+    };
 
     //#endregion
     
@@ -753,6 +917,9 @@ export default function CzasPracyPage() {
                 pracownicy={pracownicy}
                 userType={userType}
                 statusTyg={statusTygodnia}
+                isOnline={isOnline}
+                lastSaved={lastSaved}
+                onManualSave={handleManualSaveToLocalStorage}
             />
             <TimeInputs
                 daysOfWeek={daysOfWeek}
@@ -786,14 +953,25 @@ export default function CzasPracyPage() {
                 statusTyg={statusTygodnia}
                 blockStatus={blockStatus}
             />
-            <ActionButtons handleSave={handleSave} 
-            handleCloseWeek={handleZamknijTydzien} 
-            handleOpenWeek={handleOtworzTydzien} 
-            handlePrintReport={handleDrukujRaport} 
-            statusTyg={statusTygodnia} 
-            userType={userType} 
-            blockStatus={blockStatus}
+            <ActionButtons 
+                handleSave={handleSave} 
+                handleCloseWeek={handleZamknijTydzien} 
+                handleOpenWeek={handleOtworzTydzien} 
+                handlePrintReport={handleDrukujRaport}
+                handleSaveLocal={handleManualSaveToLocalStorage}
+                statusTyg={statusTygodnia} 
+                userType={userType} 
+                blockStatus={blockStatus}
+                isOnline={isOnline}
             />
+            {!isOnline && (
+                <div className="fixed bottom-4 right-4 bg-amber-100 p-4 rounded-md shadow-lg border border-amber-500">
+                    <div className="flex items-center">
+                        <span className="text-amber-700 font-semibold">Offline</span>
+                        <span className="ml-2 text-sm">Zmiany zapisane lokalnie</span>
+                    </div>
+                </div>
+            )}
         </div>
     );
     //#endregion

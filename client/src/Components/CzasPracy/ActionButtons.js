@@ -9,11 +9,23 @@ import { Modal } from 'antd';
  * @param {Function} props.handleCloseWeek - Funkcja obsługująca zamknięcie tygodnia
  * @param {Function} props.handleOpenWeek - Funkcja obsługująca otwarcie tygodnia
  * @param {Function} props.handlePrintReport - Funkcja obsługująca drukowanie raportu
+ * @param {Function} props.handleSaveLocal - Funkcja obsługująca lokalny zapis danych
  * @param {string} props.statusTyg - Status tygodnia
  * @param {string} props.userType - Typ użytkownika
  * @param {boolean} props.blockStatus - Status blokady użytkownika - jeśli przekracza 60h w tygodniu czesto
+ * @param {boolean} props.isOnline - Status połączenia z internetem
  */
-const PrzyciskAkcji = ({ handleSave, handleCloseWeek, handleOpenWeek, handlePrintReport, statusTyg, userType, blockStatus }) => {
+const PrzyciskAkcji = ({ 
+    handleSave, 
+    handleCloseWeek, 
+    handleOpenWeek, 
+    handlePrintReport, 
+    handleSaveLocal,
+    statusTyg, 
+    userType, 
+    blockStatus,
+    isOnline
+}) => {
     const handleOpenModal = () => {
         Modal.confirm({
             title: 'Czy na pewno chcesz zamknąć tydzień?',
@@ -45,28 +57,33 @@ const PrzyciskAkcji = ({ handleSave, handleCloseWeek, handleOpenWeek, handlePrin
                                 label="Zapisz"
                                 className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 flex-grow"
                                 onClick={handleSave}
-                                disabled={statusTyg === 'Zamkniety'}
+                                disabled={statusTyg === 'Zamkniety' || !isOnline}
                             />
+                            {!isOnline && (
+                                <Button 
+                                    label="Zapisz lokalnie" 
+                                    icon="pi pi-save"
+                                    className="p-button-outlined border-2 p-1 bg-amber-200 pr-2 pl-2 flex-grow"
+                                    onClick={handleSaveLocal}
+                                />
+                            )}
                             <Button 
                                 label="Zamknij tydzień" 
                                 className={`p-button-outlined border-2 p-1 ${statusTyg === 'Zamkniety' ? 'bg-red-300' : 'bg-white'} pr-2 pl-2 flex-grow`} 
                                 onClick={handleOpenModal}
-                                disabled={statusTyg === 'Zamkniety'}
+                                disabled={statusTyg === 'Zamkniety' || !isOnline}
                             />
                             <Button 
                                 label="Otwórz tydzień" 
                                 className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 flex-grow" 
                                 onClick={handleOpenWeek}
-                                disabled={userType !== 'Biuro' && userType !== 'Administrator'}
-
-                                
+                                disabled={(userType !== 'Biuro' && userType !== 'Administrator') || !isOnline}
                             />
                             <Button 
                                 label="Drukuj raport" 
                                 className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 flex-grow" 
                                 onClick={handlePrintReport}
                                 disabled={userType !== 'Biuro' && userType !== 'Administrator'}
-                                
                             />
                         </div>
                     </div>
