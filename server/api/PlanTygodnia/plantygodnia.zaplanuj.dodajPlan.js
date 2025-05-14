@@ -52,7 +52,7 @@ function DodajZaplanuj(req, res, db) {
         grupa,
         opis,
         vehicle,
-        m_value           
+        null          
     ]);
     
     const sql = `
