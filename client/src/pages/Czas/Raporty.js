@@ -38,7 +38,7 @@ export default function RaportyPage() {
 
     const getImie = async () => {
         try {
-            const response = await axios.get('https://localhost:5000/api/imie', { withCredentials: true });
+            const response = await axios.get('https://qubis.pl:5000/api/imie', { withCredentials: true });
             const { name, surename } = response.data;
             setImie(`${name}`);
             setNazwisko(`${surename}`);
@@ -69,7 +69,7 @@ export default function RaportyPage() {
 
     const fetchProjektyPracownicy = async () => {
         try {
-            const response = await axios.get('https://localhost:5000/api/pracownicy', { withCredentials: true });
+            const response = await axios.get('https://qubis.pl:5000/api/pracownicy', { withCredentials: true });
             const pracownicy = response.data;
             let pracownicyOptions = [];
             if(accountType === 'Pracownik') {
@@ -87,8 +87,8 @@ export default function RaportyPage() {
 
     const fetchProjektyAndRaport = () => {
         Promise.all([
-            axios.get("https://localhost:5000/api/czas/projekty", { withCredentials: true }),
-            axios.get('https://localhost:5000/api/generujRaport', { withCredentials: true })
+            axios.get("https://qubis.pl:5000/api/czas/projekty", { withCredentials: true }),
+            axios.get('https://qubis.pl:5000/api/generujRaport', { withCredentials: true })
         ])
         .then(([projektyResponse, raportResponse]) => {
             const projekty = projektyResponse.data.projekty.map(projekt => ({

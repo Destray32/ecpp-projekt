@@ -18,7 +18,7 @@ export default function DodajPracownikaPage() {
     const [pojazd, setPojazd] = useState([]);
 
     useEffect(() => {
-        axios.get('https://localhost:5000/api/pracownik/firmy', { withCredentials: true })
+        axios.get('https://qubis.pl:5000/api/pracownik/firmy', { withCredentials: true })
             .then(res => {
                 setFirma(res.data);
             })
@@ -26,7 +26,7 @@ export default function DodajPracownikaPage() {
                 console.log(err);
             });
     
-        axios.get('https://localhost:5000/api/pracownik/grupy', { withCredentials: true })
+        axios.get('https://qubis.pl:5000/api/pracownik/grupy', { withCredentials: true })
             .then(res => {
                 setGrupa([{ idGrupa_urlopowa: null, Zleceniodawca: '-- Brak --' }, ...res.data]);
             })
@@ -34,7 +34,7 @@ export default function DodajPracownikaPage() {
                 console.log(err);
             });
     
-        axios.get('https://localhost:5000/api/pracownik/pojazdy', { withCredentials: true })
+        axios.get('https://qubis.pl:5000/api/pracownik/pojazdy', { withCredentials: true })
             .then(res => {
                 setPojazd([{ idPojazdy: null, Nr_rejestracyjny: '-- Brak --' }, ...res.data]);
             })
@@ -42,7 +42,7 @@ export default function DodajPracownikaPage() {
                 console.log(err);
             });
     
-        axios.get('https://localhost:5000/api/pracownik/firmy', { withCredentials: true })
+        axios.get('https://qubis.pl:5000/api/pracownik/firmy', { withCredentials: true })
             .then(res => {
                 setFirma(res.data);
                 form.setFieldsValue({
@@ -65,7 +65,7 @@ export default function DodajPracownikaPage() {
         if (!filteredValues.vacationGroup) delete filteredValues.vacationGroup;
     
         //console.log(filteredValues);
-        axios.post('https://localhost:5000/api/pracownicy', filteredValues, { withCredentials: true })
+        axios.post('https://qubis.pl:5000/api/pracownicy', filteredValues, { withCredentials: true })
             .then(res => {
                 //console.log(res);
                 // Navigate back immediately after successful response

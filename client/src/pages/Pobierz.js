@@ -6,7 +6,7 @@ export default function PobierzSkrypt() {
 
     const pobierzSkrypt = async () => {
         try {
-            const response = await Axios.get('https://localhost:5000/api/home/pobierz', {
+            const response = await Axios.get('https://qubis.pl:5000/api/home/pobierz', {
                 responseType: 'blob',
             });
 

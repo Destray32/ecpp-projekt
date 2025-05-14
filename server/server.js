@@ -556,8 +556,8 @@ app.get('/api/firmy', (req, res) => {
 });
 
 const options = {
-    cert: fs.readFileSync('../fullchain.pem'),
-    key: fs.readFileSync('../privkey.pem')
+    cert: fs.readFileSync('/home/opc/ECPP/certs/fullchain.pem'),
+    key: fs.readFileSync('/home/opc/ECPP/certs/privkey.pem')
 };
 
 https.createServer(options, app).listen(5000, () => {
