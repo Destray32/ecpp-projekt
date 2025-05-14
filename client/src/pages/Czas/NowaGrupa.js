@@ -15,9 +15,9 @@ export default function NowaGrupaPage() {
         stawka: null,
         czyPlanTygV: 0
     });
-
+    const baseUrl = process.env.REACT_APP_BASE_URL;
     const handleSave = () => {
-        Axios.post('https://qubis.pl:5000/api/czas/grupa', {
+        Axios.post(`${baseUrl}/api/czas/grupa`, {
             zleceniodawca: form.zleceniodawca,
             cennik: form.cennik,
             stawka: form.stawka,

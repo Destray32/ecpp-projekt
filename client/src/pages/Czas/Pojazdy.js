@@ -15,13 +15,13 @@ export default function PojazdyPage() {
     const [deleteDialogVisible, setDeleteDialogVisible] = React.useState(false);
     const [deleteItemId, setDeleteItemId] = React.useState(null);
     const [error, setError] = React.useState('');
-
+    const baseUrl = process.env.REACT_APP_BASE_URL;
     useEffect(() => {
         checkUserType(setAccountType);
     }, []);
 
     useEffect(() => {
-        axios.get("https://qubis.pl:5000/api/pojazdy", { withCredentials: true })
+        axios.get(`${baseUrl}/api/pojazdy`, { withCredentials: true })
             .then((response) => {
                 setTableData(response.data.pojazdy);
             });
@@ -38,7 +38,7 @@ export default function PojazdyPage() {
     };
 
     const confirmDelete = () => {
-        axios.delete(`https://qubis.pl:5000/api/pojazdy/${deleteItemId}`, { withCredentials: true })
+        axios.delete(`${baseUrl}/api/pojazdy/${deleteItemId}`, { withCredentials: true })
             .then(() => {
                 setTableData((prevData) => prevData.filter((item) => item.id !== deleteItemId));
                 setDeleteDialogVisible(false);
@@ -81,7 +81,7 @@ export default function PojazdyPage() {
             // If both fields are valid, proceed with the update
             if (isValid) {
                 setEditableRow(null);
-                axios.put(`https://qubis.pl:5000/api/pojazdy/${id}`, editedData, { withCredentials: true })
+                axios.put(`${baseUrl}/api/pojazdy/${id}`, editedData, { withCredentials: true })
                     .then(() => {
                         setTableData(prevData =>
                             prevData.map(item => (item.id === id ? { ...item, ...editedData } : item))

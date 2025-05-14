@@ -10,7 +10,7 @@ export default function EdytujProjektPage() {
     const [availableGroups, setAvailableGroups] = useState([]);
     const [availableProjects, setAvailableProjects] = useState([]);
     const { id } = useParams();
-
+    const baseUrl = process.env.REACT_APP_BASE_URL;
     const [form, setForm] = useState({
         firma: '1',
         zleceniodawca: '',
@@ -23,7 +23,7 @@ export default function EdytujProjektPage() {
     });
 
     const fetchGroups = () => {
-        Axios.get("https://qubis.pl:5000/api/grupy", { withCredentials: true })
+        Axios.get(`${baseUrl}/api/grupy`, { withCredentials: true })
             .then((response) => {
                 const transformedData = response.data.grupy.map(grupy => ({
                     name: grupy.Zleceniodawca,
@@ -37,7 +37,7 @@ export default function EdytujProjektPage() {
     };
 
     const fetchProjects = () => {
-        Axios.get("https://qubis.pl:5000/api/czas/projekty", { withCredentials: true })
+        Axios.get(`{baseUrl}/api/czas/projekty`, { withCredentials: true })
             .then((response) => {
                 const transformedDataProjects = response.data.projekty.map(projekty => ({
                     name: projekty.NazwaKod_Projektu,
@@ -51,7 +51,7 @@ export default function EdytujProjektPage() {
     };
 
     const fetchProjectData = (projectId) => {
-        Axios.get(`https://qubis.pl:5000/api/czas/projekty/${projectId}`, { withCredentials: true })
+        Axios.get(`${baseUrl}/api/czas/projekty/${projectId}`, { withCredentials: true })
             .then((response) => {
                 if (response.data && Array.isArray(response.data) && response.data.length > 0) {
                     const project = response.data[0];
@@ -80,7 +80,7 @@ export default function EdytujProjektPage() {
     }, [id]);
 
     const handleSave = () => {
-        Axios.put(`https://qubis.pl:5000/api/czas/edytujProjekt/${id}`, form, { 
+        Axios.put(`${baseUrl}/api/czas/edytujProjekt/${id}`, form, { 
             withCredentials: true 
         })
         .then(res => {

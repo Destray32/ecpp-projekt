@@ -28,6 +28,7 @@ export default function PlanTygodniaPage() {
     const [selectedGroups, setSelectedGroups] = useState([]);
     const [error, setError] = useState(false);
     const [isDialogVisible, setIsDialogVisible] = useState(false);
+    const baseUrl = process.env.REACT_APP_BASE_URL;
 
 
     useEffect(() => {
@@ -62,7 +63,7 @@ export default function PlanTygodniaPage() {
     };
 
     const handlePrintSelectedGroups = () => {
-        const url = `https://qubis.pl:5000/api/planTygodnia/zaplanuj?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
+        const url = `${baseUrl}/api/planTygodnia/zaplanuj?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
         Axios.get(url, { withCredentials: true })
             .then(res => {
                 const Data = res.data;
@@ -109,7 +110,7 @@ export default function PlanTygodniaPage() {
         try {
             setPracownikData((prevData) => prevData.filter(item => !selectedRowIds.includes(item.id)));
     
-            await Axios.delete('https://qubis.pl:5000/api/planTygodnia', {
+            await Axios.delete(`${baseUrl}/api/planTygodnia`, {
                 withCredentials: true,
                 data: { id: selectedRowIds }
             });
@@ -135,7 +136,7 @@ export default function PlanTygodniaPage() {
             groupId: grupaPrzenies
         };
     
-        Axios.put('https://qubis.pl:5000/api/planTygodnia', payload, { withCredentials: true })
+        Axios.put(`${baseUrl}/api/planTygodnia`, payload, { withCredentials: true })
             .then(res => {
                 fetchData();
                 setSelectedRowIds([]);
@@ -151,8 +152,8 @@ export default function PlanTygodniaPage() {
             const previousWeekEnd = format(addDays(startOfWeek(currentDate, { weekStartsOn: 1 }), -1), 'yyyy-MM-dd');
     
             const [currentWeekResponse, previousWeekResponse] = await Promise.all([
-                Axios.get(`https://qubis.pl:5000/api/planTygodnia/zaplanuj?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`, { withCredentials: true }),
-                Axios.get(`https://qubis.pl:5000/api/planTygodnia/zaplanuj?from=${encodeURIComponent(previousWeekStart)}&to=${encodeURIComponent(previousWeekEnd)}`, { withCredentials: true })
+                Axios.get(`${baseUrl}/api/planTygodnia/zaplanuj?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`, { withCredentials: true }),
+                Axios.get(`${baseUrl}/api/planTygodnia/zaplanuj?from=${encodeURIComponent(previousWeekStart)}&to=${encodeURIComponent(previousWeekEnd)}`, { withCredentials: true })
             ]);
     
             const currentWeekData = currentWeekResponse.data;
@@ -174,7 +175,7 @@ export default function PlanTygodniaPage() {
             }));
     
             if (entriesToAdd.length > 0) {
-                await Axios.post('https://qubis.pl:5000/api/planTygodniaPrev', entriesToAdd, { withCredentials: true }); 
+                await Axios.post(`${baseUrl}/api/planTygodniaPrev`, entriesToAdd, { withCredentials: true }); 
                 fetchData();
                 notification.success({
                     message: 'Sukces',
@@ -216,7 +217,7 @@ export default function PlanTygodniaPage() {
 
     const fetchData = (selectedGroup = group) => {
 
-        Axios.get('https://qubis.pl:5000/api/grupy', { withCredentials: true })
+        Axios.get(`${baseUrl}/api/grupy`, { withCredentials: true })
             .then(res => {
                 const groups = res.data.grupy;
                 const filteredGroups = groups.filter(group => group.Plan_tygodniaV === 1);
@@ -225,7 +226,7 @@ export default function PlanTygodniaPage() {
             .catch(err => console.error(err));
     
  
-        const url = `https://qubis.pl:5000/api/planTygodnia/zaplanuj?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}${selectedGroup ? `&group=${encodeURIComponent(selectedGroup.name)}` : ''}`;
+        const url = `${baseUrl}/api/planTygodnia/zaplanuj?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}${selectedGroup ? `&group=${encodeURIComponent(selectedGroup.name)}` : ''}`;
         
         Axios.get(url, { withCredentials: true })
             .then(res => {
@@ -294,7 +295,7 @@ export default function PlanTygodniaPage() {
         );
         setPracownikData(updatedData);
     
-        Axios.put(`https://qubis.pl:5000/api/planTygodnia/${employeeId}`, {
+        Axios.put(`${baseUrl}/api/planTygodnia/${employeeId}`, {
             M1_5: selectedM,
         }, { withCredentials: true })
             .then((res) => {

@@ -32,7 +32,10 @@ const allowedOrigins = [
     'https://www.qubis.pl:3000',
     'https://www.qubis.pl',
     'https://qubis.pl',
+    'http://localhost:3000',
+    'http://localhost:5000',
     'https://localhost:3000',
+    'https://localhost:5000',
 ]
 
 app.use(cors({
@@ -555,11 +558,18 @@ app.get('/api/firmy', (req, res) => {
     PobierzDostepneFirmy(req, res, pool);
 });
 
-const options = {
-    cert: fs.readFileSync('/home/opc/ECPP/certs/fullchain.pem'),
-    key: fs.readFileSync('/home/opc/ECPP/certs/privkey.pem')
-};
+// const options = {
+//     cert: fs.readFileSync('/home/opc/ECPP/certs/fullchain.pem'),
+//     key: fs.readFileSync('/home/opc/ECPP/certs/privkey.pem')
+// };
 
-https.createServer(options, app).listen(5000, () => {
-    console.log('Server running on https://localhost:5000');
-});
+// https.createServer(options, app).listen(5000, () => {
+//     console.log('Server running on https://localhost:5000');
+// });
+// 
+//  odkomentować jak będzie szło na oracle
+
+app.listen(port, () => {
+    console.log(`Server listening at http://localhost:${port}`);
+}
+); // usunac jak bedzie szło na oracle

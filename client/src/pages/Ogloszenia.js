@@ -14,6 +14,8 @@ export default function OgloszeniaPage() {
     const [form] = Form.useForm();
     const [accountType, setAccountType] = useState(null);
     const [openAnnouncementId, setOpenAnnouncementId] = useState(null);
+    const baseUrl = process.env.REACT_APP_BASE_URL;
+
 
     useEffect(() => {
         fetchUserAccountType();
@@ -23,7 +25,7 @@ export default function OgloszeniaPage() {
     }, []);
 
     const fetchUserAccountType = () => {
-        axios.get('https://qubis.pl:5000/api/imie', { withCredentials: true })
+        axios.get(`${baseUrl}/api/imie`, { withCredentials: true })
             .then(response => {
                 setAccountType(response.data.accountType);
             })
@@ -33,7 +35,7 @@ export default function OgloszeniaPage() {
     };
 
     const fetchOgloszenia = () => {
-        axios.get('https://qubis.pl:5000/api/ogloszenia', { withCredentials: true })
+        axios.get(`${baseUrl}/api/ogloszenia`, { withCredentials: true })
             .then((response) => {
                 const ogloszenia = response.data.map(ogloszenie => ({
                     id: ogloszenie.idOgloszenia,
@@ -51,7 +53,7 @@ export default function OgloszeniaPage() {
     };
 
     const fetchPracownicy = () => {
-        axios.get('https://qubis.pl:5000/api/ogloszenia/pracownicy', { withCredentials: true })
+        axios.get(`${baseUrl}/api/ogloszenia/pracownicy`, { withCredentials: true })
             .then((response) => {
                 setPracownicy(response.data);
             })
@@ -61,7 +63,7 @@ export default function OgloszeniaPage() {
     };
 
     const fetchGrupy = () => {
-        axios.get('https://qubis.pl:5000/api/ogloszenia/grupy', { withCredentials: true })
+        axios.get(`${baseUrl}/api/ogloszenia/grupy`, { withCredentials: true })
             .then((response) => {
                 setGrupy(response.data);
             })
@@ -91,7 +93,7 @@ export default function OgloszeniaPage() {
                 osoby: values.osoby || []
             };
 
-            axios.post('https://qubis.pl:5000/api/ogloszenia', postData, { withCredentials: true })
+            axios.post(`${baseUrl}/api/ogloszenia`, postData, { withCredentials: true })
                 .then(() => {
                     fetchOgloszenia();
                     setIsModalOpen(false);
@@ -121,7 +123,7 @@ export default function OgloszeniaPage() {
 
     const handleDeleteOk = () => {
         if (itemToDelete) {
-            axios.delete(`https://qubis.pl:5000/api/ogloszenia/${itemToDelete}`, { withCredentials: true })
+            axios.delete(`${baseUrl}/api/ogloszenia/${itemToDelete}`, { withCredentials: true })
                 .then(() => {
                     fetchOgloszenia();
                     setConfirmDeleteVisible(false);
@@ -137,7 +139,7 @@ export default function OgloszeniaPage() {
     };
 
     const markAsRead = (announcementId) => {
-        axios.post('https://qubis.pl:5000/api/ogloszenia/przeczytane', { idOgloszenia: announcementId }, { withCredentials: true })
+        axios.post(`${baseUrl}/api/ogloszenia/przeczytane`, { idOgloszenia: announcementId }, { withCredentials: true })
           .then(response => {
             if (response.status === 200) {
               fetchOgloszenia();

@@ -16,6 +16,7 @@ export default function TydzienPage() {
     const [refresh, setRefresh] = useState(false);
     const [selectAll, setSelectAll] = useState(false);
     const [isLoaded, setIsLoaded] = useState(false);
+    const baseUrl = process.env.REACT_APP_BASE_URL;
 
     // Function to get the current week in the format "YYYY-Www"
     const getCurrentWeek = () => {
@@ -44,7 +45,7 @@ export default function TydzienPage() {
     useEffect(() => {
 	if (!isLoaded) return;
 	const currentYear = selectedWeek.substring(0, 4);
-	Axios.get(`https://qubis.pl:5000/api/tydzien/${currentYear}/${numericWeek}`, { withCredentials: true })
+	Axios.get(`${baseUrl}/api/tydzien/${currentYear}/${numericWeek}`, { withCredentials: true })
 	    .then(response => setData(response.data))
 	    .catch(error => console.error(error));
     }, [numericWeek, selectedWeek, refresh]);
@@ -132,7 +133,7 @@ export default function TydzienPage() {
             return;
         }
 
-        Axios.post('https://qubis.pl:5000/api/tydzien', {
+        Axios.post(`${baseUrl}/api/tydzien`, {
             tydzienRoku: selectedItems[0].tydzienRoku,
             pracownikId: selectedItems.map(item => item.Pracownik_idPracownik)
         }, { withCredentials: true })
@@ -150,7 +151,7 @@ export default function TydzienPage() {
             return;
         }
 
-        Axios.delete('https://qubis.pl:5000/api/tydzien', {
+        Axios.delete(`${baseUrl}/api/tydzien`, {
             withCredentials: true,
             data: {
                 tydzienRoku: selectedItems[0].tydzienRoku,

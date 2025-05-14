@@ -20,6 +20,7 @@ export default function HomePage() {
     const [badgeCount, setBadgeCount] = useState(0);
     const [isAdmin, setIsAdmin] = useState(false);
     const [accountType, setAccountType] = useState('');
+    const baseUrl = process.env.REACT_APP_BASE_URL;
 
     useEffect(() => {
         checkUserType(setAccountType);
@@ -39,7 +40,7 @@ export default function HomePage() {
 
     const handleLogout = async () => {
         try {
-            await axios.post('https://qubis.pl:5000/api/logout', {}, { withCredentials: true });
+            await axios.post(`${baseUrl}/api/logout`, {}, { withCredentials: true });
             navigate('/');
         } catch (error) {
             console.error(error);
@@ -48,7 +49,7 @@ export default function HomePage() {
 
     const checkTokenValidity = async () => {
         try {
-            await axios.get('https://qubis.pl:5000/api/check-token', { withCredentials: true });
+            await axios.get(`${baseUrl}/api/check-token`, { withCredentials: true });
         } catch (error) {
             if (error.response && error.response.status === 401) {
                 navigate('/');
@@ -58,7 +59,7 @@ export default function HomePage() {
 
     const daneUzupelnione = async () => {
         try {
-            const response = await axios.get('https://qubis.pl:5000/api/dane-uzupelnione', { withCredentials: true });
+            const response = await axios.get(`${baseUrl}/api/dane-uzupelnione`, { withCredentials: true });
             if (response.data === false && location.pathname !== '/home/zmien-dane') {
                 Modal.error({
                     title: 'Uzupełnij dane',
@@ -75,7 +76,7 @@ export default function HomePage() {
 
     const getImie = async () => {
         try {
-            const response = await axios.get('https://qubis.pl:5000/api/imie', { withCredentials: true });
+            const response = await axios.get(`${baseUrl}/api/imie`, { withCredentials: true });
             const { name, surename } = response.data;
             setImie(`${name} ${surename}`);
         } catch (error) {
@@ -85,7 +86,7 @@ export default function HomePage() {
 
     const getBadgeCount = async () => {
         try {
-            const response = await axios.get('https://qubis.pl:5000/api/ogloszenia/count', { withCredentials: true });
+            const response = await axios.get(`${baseUrl}/api/ogloszenia/count`, { withCredentials: true });
             setBadgeCount(response.data.count);
         } catch (error) {
             console.error(error);
@@ -100,7 +101,7 @@ export default function HomePage() {
         getBadgeCount();
 
         // const handlePageUnload = () => {
-        //     navigator.sendBeacon('https://qubis.pl:5000/api/zamkniecieStrony');
+        //     navigator.sendBeacon(${baseUrl}/api/zamkniecieStrony');
         // };
 
         // window.addEventListener('beforeunload', handlePageUnload);
@@ -118,7 +119,7 @@ export default function HomePage() {
     // useEffect(() => {
     //     const unlisten = navigate((location, action) => {
     //         if (action === 'POP') {
-    //             navigator.sendBeacon('https://qubis.pl:5000/api/zamkniecieStrony');
+    //             navigator.sendBeacon(${baseUrl}/api/zamkniecieStrony');
     //         }
     //     });
 

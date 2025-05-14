@@ -8,16 +8,16 @@ export const useDataFetch = () => {
     const [firmy, setFirmy] = useState([]);
     const [zleceniodawcy, setZleceniodawcy] = useState([]);
     const [dostepneProjekty, setDostepneProjekty] = useState([]);
-
+    const baseUrl = process.env.REACT_APP_BASE_URL;
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const [pracownicyRes, firmyRes, zleceniodawcyRes, projektyRes, samochodyRes] = await Promise.all([
-                    Axios.get("https://qubis.pl:5000/api/pracownicy"),
-                    Axios.get("https://qubis.pl:5000/api/firmy"),
-                    Axios.get("https://qubis.pl:5000/api/grupy"),
-                    Axios.get("https://qubis.pl:5000/api/czas/projekty"),
-                    Axios.get("https://qubis.pl:5000/api/pojazdy")
+                    Axios.get(`${baseUrl}/api/pracownicy`),
+                    Axios.get(`${baseUrl}/api/firmy`),
+                    Axios.get(`${baseUrl}/api/grupy`),
+                    Axios.get(`${baseUrl}/api/czas/projekty`),
+                    Axios.get(`${baseUrl}/api/pojazdy`)
                 ]);
 
                 setPracownicy(pracownicyRes.data.map(p => ({ label: `${p.name} ${p.surname}`, value: `${p.name} ${p.surname}` })));

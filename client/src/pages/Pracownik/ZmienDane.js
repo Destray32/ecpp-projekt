@@ -17,9 +17,10 @@ export default function ZmienDanePage() {
     const [grupa, setGrupa] = useState([]);
     const [pojazd, setPojazd] = useState([]);
     const [accountType, setAccountType] = useState('');
+    const baseUrl = process.env.REACT_APP_BASE_URL;
 
     useEffect(() => {
-        axios.get('https://qubis.pl:5000/api/mojedane', { withCredentials: true })
+        axios.get(`${baseUrl}/api/mojedane`, { withCredentials: true })
             .then(res => {
                 //console.log(res.data);
                 form.setFieldsValue({
@@ -56,7 +57,7 @@ export default function ZmienDanePage() {
                 console.log(err);
             });
 
-        axios.get('https://qubis.pl:5000/api/pracownik/firmy', { withCredentials: true })
+        axios.get(`${baseUrl}/api/pracownik/firmy`, { withCredentials: true })
             .then(res => {
                 setFirma(res.data);
             })
@@ -64,7 +65,7 @@ export default function ZmienDanePage() {
                 console.log(err);
             });
 
-        axios.get('https://qubis.pl:5000/api/pracownik/grupy', { withCredentials: true })
+        axios.get(`${baseUrl}/api/pracownik/grupy`, { withCredentials: true })
             .then(res => {
                 setGrupa(res.data);
             })
@@ -72,7 +73,7 @@ export default function ZmienDanePage() {
                 console.log(err);
             });
 
-        axios.get('https://qubis.pl:5000/api/pracownik/pojazdy', { withCredentials: true })
+        axios.get(`${baseUrl}/api/pracownik/pojazdy`, { withCredentials: true })
             .then(res => {
                 setPojazd(res.data);
             })
@@ -85,7 +86,7 @@ export default function ZmienDanePage() {
 
     const handleSubmit = (values) => {
         //console.log(values);
-        axios.put(`https://qubis.pl:5000/api/pracownik/zmienMoje`, values, { withCredentials: true })
+        axios.put(`${baseUrl}/api/pracownik/zmienMoje`, values, { withCredentials: true })
             .then(res => {
                 //console.log(res);
                 notification.success({ message: 'Zapisano zmiany' });

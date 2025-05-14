@@ -9,7 +9,7 @@ const { Option } = Select;
 export default function DodajNowyProjektPage() {
     const [availableGroups, setAvailableGroups] = useState([]);
     const [availableProjects, setAvailableProjects] = useState([]);
-
+    const baseUrl = process.env.REACT_APP_BASE_URL;
     const [form, setForm] = useState({
         firma: '1',
         zleceniodawca: '',
@@ -21,7 +21,7 @@ export default function DodajNowyProjektPage() {
     });
 
     const fetchGroups = () => {
-        Axios.get("https://qubis.pl:5000/api/grupy", { withCredentials: true })
+        Axios.get(`${baseUrl}/api/grupy`, { withCredentials: true })
             .then((response) => {
                 const transformedData = response.data.grupy.map(grupy => ({
                     name: grupy.Zleceniodawca,
@@ -35,7 +35,7 @@ export default function DodajNowyProjektPage() {
     };
 
     const fetchProjects = () => {
-        Axios.get("https://qubis.pl:5000/api/czas/projekty", { withCredentials: true })
+        Axios.get(`${baseUrl}/api/czas/projekty`, { withCredentials: true })
             .then((response) => {
                 const transformedDataProjects = response.data.projekty.map(projekty => ({
                     name: projekty.NazwaKod_Projektu,
@@ -60,7 +60,7 @@ export default function DodajNowyProjektPage() {
 
     const handleSave = () => {
         //console.log('Form:', form);
-        Axios.post('https://qubis.pl:5000/api/czas/projekty', form, { withCredentials: true })
+        Axios.post(`${baseUrl}/api/czas/projekty`, form, { withCredentials: true })
             .then(res => {
                 window.location.href = '/home/projekty';
             })

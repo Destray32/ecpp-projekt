@@ -9,6 +9,8 @@ import "primereact/resources/themes/lara-light-cyan/theme.css";
 
 export default function LoginPage() {
     const navigate = useNavigate();
+    const baseUrl = process.env.REACT_APP_BASE_URL;
+
 
     // listy z których wybierać mozna w dropdownach
     const [availableCompanies, setAvailableCompanies] = useState(['test', 'test2']);
@@ -25,7 +27,7 @@ export default function LoginPage() {
         const checkTokenValidity = async () => {
             try {
                 setIsLoading(true);
-                await axios.get('https://qubis.pl:5000/api/check-token', { withCredentials: true });
+                await axios.get(`${baseUrl}/api/check-token`, { withCredentials: true });
                 // If request is successful, token is valid, redirect to home
                 navigate('/home/czas');
             } catch (error) {
@@ -43,7 +45,7 @@ export default function LoginPage() {
 
     const fetchCompanies = async () => {
         try {
-            const response = await axios.get('https://qubis.pl:5000/api/companies');
+            const response = await axios.get(`${baseUrl}/api/companies`);
             setAvailableCompanies(response.data);
         }
         catch (error) {
@@ -53,7 +55,7 @@ export default function LoginPage() {
 
     const fetchLogins = async () => {
         try {
-            const response = await axios.get('https://qubis.pl:5000/api/logins');
+            const response = await axios.get(`${baseUrl}/api/logins`);
             setAvailableLogins(response.data);
         }
         catch (error) {
@@ -64,7 +66,7 @@ export default function LoginPage() {
     const loginHandler = async (event) => {
         event.preventDefault();
         try {
-            const response = await axios.post('https://qubis.pl:5000/api/logowanie', { firma, login, password }, { withCredentials: true });
+            const response = await axios.post(`${baseUrl}/api/logowanie`, { firma, login, password }, { withCredentials: true });
             notification.success({ message: 'Zalogowano', description: 'Zalogowano pomyślnie' });
             
 

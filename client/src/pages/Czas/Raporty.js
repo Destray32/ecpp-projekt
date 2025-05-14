@@ -30,7 +30,7 @@ export default function RaportyPage() {
     const [accountType, setAccountType] = useState('');
     const [imie, setImie] = useState('');
     const [nazwisko, setNazwisko] = useState('');
-
+    const baseUrl = process.env.REACT_APP_BASE_URL;
     useEffect(() => {
         checkUserType(setAccountType);
         getImie();
@@ -38,7 +38,7 @@ export default function RaportyPage() {
 
     const getImie = async () => {
         try {
-            const response = await axios.get('https://qubis.pl:5000/api/imie', { withCredentials: true });
+            const response = await axios.get(`${baseUrl}/api/imie`, { withCredentials: true });
             const { name, surename } = response.data;
             setImie(`${name}`);
             setNazwisko(`${surename}`);
@@ -69,7 +69,7 @@ export default function RaportyPage() {
 
     const fetchProjektyPracownicy = async () => {
         try {
-            const response = await axios.get('https://qubis.pl:5000/api/pracownicy', { withCredentials: true });
+            const response = await axios.get(`${baseUrl}/api/pracownicy`, { withCredentials: true });
             const pracownicy = response.data;
             let pracownicyOptions = [];
             if(accountType === 'Pracownik') {
@@ -87,8 +87,8 @@ export default function RaportyPage() {
 
     const fetchProjektyAndRaport = () => {
         Promise.all([
-            axios.get("https://qubis.pl:5000/api/czas/projekty", { withCredentials: true }),
-            axios.get('https://qubis.pl:5000/api/generujRaport', { withCredentials: true })
+            axios.get(`${baseUrl}/api/czas/projekty`, { withCredentials: true }),
+            axios.get(`${baseUrl}/api/generujRaport`, { withCredentials: true })
         ])
         .then(([projektyResponse, raportResponse]) => {
             const projekty = projektyResponse.data.projekty.map(projekt => ({

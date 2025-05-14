@@ -16,9 +16,10 @@ export default function DodajPracownikaPage() {
     const [firma, setFirma] = useState([]);
     const [grupa, setGrupa] = useState([]);
     const [pojazd, setPojazd] = useState([]);
+    const baseUrl = process.env.REACT_APP_BASE_URL;
 
     useEffect(() => {
-        axios.get('https://qubis.pl:5000/api/pracownik/firmy', { withCredentials: true })
+        axios.get(`${baseUrl}/api/pracownik/firmy`, { withCredentials: true })
             .then(res => {
                 setFirma(res.data);
             })
@@ -26,7 +27,7 @@ export default function DodajPracownikaPage() {
                 console.log(err);
             });
     
-        axios.get('https://qubis.pl:5000/api/pracownik/grupy', { withCredentials: true })
+        axios.get(`${baseUrl}/api/pracownik/grupy`, { withCredentials: true })
             .then(res => {
                 setGrupa([{ idGrupa_urlopowa: null, Zleceniodawca: '-- Brak --' }, ...res.data]);
             })
@@ -34,7 +35,7 @@ export default function DodajPracownikaPage() {
                 console.log(err);
             });
     
-        axios.get('https://qubis.pl:5000/api/pracownik/pojazdy', { withCredentials: true })
+        axios.get(`${baseUrl}/api/pracownik/pojazdy`, { withCredentials: true })
             .then(res => {
                 setPojazd([{ idPojazdy: null, Nr_rejestracyjny: '-- Brak --' }, ...res.data]);
             })
@@ -42,7 +43,7 @@ export default function DodajPracownikaPage() {
                 console.log(err);
             });
     
-        axios.get('https://qubis.pl:5000/api/pracownik/firmy', { withCredentials: true })
+        axios.get(`${baseUrl}/api/pracownik/firmy`, { withCredentials: true })
             .then(res => {
                 setFirma(res.data);
                 form.setFieldsValue({
@@ -65,7 +66,7 @@ export default function DodajPracownikaPage() {
         if (!filteredValues.vacationGroup) delete filteredValues.vacationGroup;
     
         //console.log(filteredValues);
-        axios.post('https://qubis.pl:5000/api/pracownicy', filteredValues, { withCredentials: true })
+        axios.post(`${baseUrl}/api/pracownicy`, filteredValues, { withCredentials: true })
             .then(res => {
                 //console.log(res);
                 // Navigate back immediately after successful response

@@ -7,7 +7,7 @@ import 'primeicons/primeicons.css';
 const EmployeeDropdown = ({ onEmployeeSelect, scheduledEmployees }) => {
   const [options, setOptions] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
-
+    const baseUrl = process.env.REACT_APP_BASE_URL;
   useEffect(() => {
     fetchOptions();
   }, [scheduledEmployees]); // Ensure fetchOptions runs whenever scheduledEmployees changes
@@ -16,8 +16,8 @@ const EmployeeDropdown = ({ onEmployeeSelect, scheduledEmployees }) => {
     try {
       // Fetch both employees and vehicles
       const [employeesRes, vehiclesRes] = await Promise.all([
-        Axios.get('https://qubis.pl:5000/api/pracownicy', { withCredentials: true }),
-        Axios.get('https://qubis.pl:5000/api/pracownik/pojazdy', { withCredentials: true })
+        Axios.get(`${baseUrl}/api/pracownicy`, { withCredentials: true }),
+        Axios.get(`${baseUrl}/api/pracownik/pojazdy`, { withCredentials: true })
       ]);
   
       const VehiclesArray = Array.isArray(vehiclesRes.data) ? vehiclesRes.data : [];

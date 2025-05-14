@@ -1,12 +1,12 @@
-// Pobierz.js
 import React, { useEffect } from 'react';
 import Axios from 'axios';
 
 export default function PobierzSkrypt() {
+const baseUrl = process.env.REACT_APP_BASE_URL;
 
     const pobierzSkrypt = async () => {
         try {
-            const response = await Axios.get('https://qubis.pl:5000/api/home/pobierz', {
+            const response = await Axios.get(`${baseUrl}/api/home/pobierz`, {
                 responseType: 'blob',
             });
 

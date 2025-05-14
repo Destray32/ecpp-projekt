@@ -14,7 +14,7 @@ export default function ProjektyPage() {
     const [selectedItems, setSelectedItems] = useState([]);
     const [data, setData] = useState([]);
     const [accountType, setAccountType] = useState('');
-
+    const baseUrl = process.env.REACT_APP_BASE_URL;
     useEffect(() => {
         checkUserType(setAccountType);
     }, []);
@@ -37,7 +37,7 @@ export default function ProjektyPage() {
     }, [filtr]);
 
     const handleDelete = (id) => {
-        Axios.delete(`https://qubis.pl:5000/api/czas/usun?id=${id}`, { withCredentials: true })
+        Axios.delete(`${baseUrl}/api/czas/usun?id=${id}`, { withCredentials: true })
             .then((response) => {
                 fetchProjects();
             })
@@ -47,7 +47,7 @@ export default function ProjektyPage() {
     };
 
     const handleSzukaj = () => {
-        Axios.get(`https://qubis.pl:5000/api/czas/szukaj?group=${filtr}`, { withCredentials: true })
+        Axios.get(`${baseUrl}/api/czas/szukaj?group=${filtr}`, { withCredentials: true })
             .then((response) => {
                 //console.log('Response data:', response.data);
                 if (response.data && Array.isArray(response.data.projekty)) {
@@ -64,7 +64,7 @@ export default function ProjektyPage() {
     };
 
     const handlePrzeniesAktyw = () => {
-        Axios.put("https://qubis.pl:5000/api/czas/przeniesAkt",
+        Axios.put(`${baseUrl}/api/czas/przeniesAkt`,
             { ids: selectedItems.map((id) => id) },
             { withCredentials: true }
         )
@@ -77,7 +77,7 @@ export default function ProjektyPage() {
     };
 
     const handlePrzeniesNieaktyw = () => {
-        Axios.put("https://qubis.pl:5000/api/czas/przeniesNieakt",
+        Axios.put(`${baseUrl}/api/czas/przeniesNieakt`,
             { ids: selectedItems.map((id) => id) },
             { withCredentials: true }
         )
@@ -90,7 +90,7 @@ export default function ProjektyPage() {
     };
 
     const fetchProjects = () => {
-        Axios.get("https://qubis.pl:5000/api/czas/projekty", { withCredentials: true })
+        Axios.get(`${baseUrl}/api/czas/projekty`, { withCredentials: true })
             .then((response) => {
                 if (response.data && Array.isArray(response.data.projekty)) {
                     setData(response.data.projekty);

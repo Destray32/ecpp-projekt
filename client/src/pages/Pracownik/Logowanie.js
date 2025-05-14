@@ -3,11 +3,12 @@ import axios from "axios";
 
 export default function LogowaniePage() {
     const [logData, setLogData] = useState([]);
+    const baseUrl = process.env.REACT_APP_BASE_URL;
 
 
     useEffect(() => {
 
-        axios.get("https://qubis.pl:5000/api/logi", { withCredentials: true })
+        axios.get(`${baseUrl}/api/logi`, { withCredentials: true })
             .then((response) => {
                 setLogData(response.data);
             })

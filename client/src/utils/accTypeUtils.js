@@ -1,7 +1,8 @@
 import Axios from "axios";
 
 const checkUserType = (setUserType) => {
-    Axios.get("https://qubis.pl:5000/api/imie", { withCredentials: true })
+    const baseUrl = process.env.REACT_APP_BASE_URL;
+    Axios.get(`${baseUrl}/api/imie`, { withCredentials: true })
         .then((response) => {
             setUserType(response.data.accountType);
         })

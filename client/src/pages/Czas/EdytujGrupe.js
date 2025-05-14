@@ -16,13 +16,13 @@ export default function EdytujGrupePage() {
         stawka: '',
         czyPlanTygV: 0
     });
-
+    const baseUrl = process.env.REACT_APP_BASE_URL;
     useEffect(() => {
         fetchGroup();
     }, []);
 
     const handleSave = () => {
-        Axios.put(`https://qubis.pl:5000/api/czas/edytujGrupe/${id}`, {
+        Axios.put(`${baseUrl}/api/czas/edytujGrupe/${id}`, {
             zleceniodawca: form.zleceniodawca,
             cennik: form.cennik,
             stawka: form.stawka,
@@ -38,7 +38,7 @@ export default function EdytujGrupePage() {
     };
 
     const fetchGroup = () => {
-        Axios.get(`https://qubis.pl:5000/api/czas/pobierzGrupe/${id}`, { withCredentials: true })
+        Axios.get(`${baseUrl}/api/czas/pobierzGrupe/${id}`, { withCredentials: true })
             .then(res => {
                 const data = res.data[0];
                 setForm({

@@ -46,7 +46,7 @@ const AdditionalProjects = ({
     const [activeDate, setActiveDate] = useState(null);
     const [additionalProjectsTotalTime, setAdditionalProjectsTotalTime] = useState(0.0);
     const [defaultSamochod, setDefaultSamochod] = useState("");
-
+    const baseUrl = process.env.REACT_APP_BASE_URL;
     const additionalFieldsRef = useRef(null);
 
     useEffect(() => {
@@ -55,7 +55,7 @@ const AdditionalProjects = ({
 
     useEffect(() => {
         if (firmy && firmy.length > 0) {
-            Axios.get('https://qubis.pl:5000/api/mojedane', { withCredentials: true })
+            Axios.get(`${baseUrl}/api/mojedane`, { withCredentials: true })
                 .then(res => {
                     //console.log(res.data);
                     //console.log(zleceniodawcy);
@@ -174,7 +174,7 @@ const AdditionalProjects = ({
                 return;
             }
 
-            const response = await Axios.post("https://qubis.pl:5000/api/czas/projekt", {
+            const response = await Axios.post(`${baseUrl}/api/czas/projekt`, {
                 pracownikName: loggedUserName,
                 projektyName: Projekty,
                 weekData: weekData,
@@ -245,7 +245,7 @@ const AdditionalProjects = ({
                 //console.log(project);
                 Object.values(project.hours).forEach(async hour => {
                     try {
-                        await Axios.delete(`https://qubis.pl:5000/api/czas/projekt/${hour.id}`, { withCredentials: true });
+                        await Axios.delete(`${baseUrl}/api/czas/projekt/${hour.id}`, { withCredentials: true });
                     } catch (error) {
                         console.error("Error deleting project", error);
                     }

@@ -17,6 +17,7 @@ export default function ZaplanujTydzienPage() {
     const [plany, setPlany] = useState([]);
     const [selectedEmployees, setSelectedEmployees] = useState([]);
     const [scheduledEmployees, setScheduledEmployees] = useState([]);
+    const baseUrl = process.env.REACT_APP_BASE_URL;
 
 
     const getWeekNumber = (date) => {
@@ -41,7 +42,7 @@ export default function ZaplanujTydzienPage() {
         const from = format(startOfWeek(currentDate, { weekStartsOn: 1 }), 'yyyy-MM-dd');
         const to = format(addDays(addWeeks(startOfWeek(currentDate, { weekStartsOn: 1 }), 1), -1), 'yyyy-MM-dd');
 
-        Axios.get(`https://qubis.pl:5000/api/planTygodnia/zaplanuj?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`,
+        Axios.get(`${baseUrl}/api/planTygodnia/zaplanuj?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`,
             { withCredentials: true })
             .then((response) => {
                 const sortedData = response.data.sort((a, b) => {
@@ -88,7 +89,7 @@ export default function ZaplanujTydzienPage() {
             return;
         }
 
-        Axios.post('https://qubis.pl:5000/api/planTygodnia/zaplanuj', {
+        Axios.post(`${baseUrl}/api/planTygodnia/zaplanuj`, {
             dataOd: format(startOfWeek(currentDate, { weekStartsOn: 1 }), 'yyyy-MM-dd'),
             dataDo: format(addDays(addWeeks(startOfWeek(currentDate, { weekStartsOn: 1 }), 1), -1), 'yyyy-MM-dd'),
             pracownicy: selectedEmployees,
@@ -111,7 +112,7 @@ export default function ZaplanujTydzienPage() {
     }
 
     const handleUsun = (planId) => {
-        Axios.delete(`https://qubis.pl:5000/api/planTygodnia/zaplanuj?id=${planId}`, { withCredentials: true })
+        Axios.delete(`${baseUrl}/api/planTygodnia/zaplanuj?id=${planId}`, { withCredentials: true })
             .then((response) => {
                 fetchPlany();
             })
@@ -125,7 +126,7 @@ export default function ZaplanujTydzienPage() {
     };
 
     useEffect(() => {
-        Axios.get('https://qubis.pl:5000/api/grupy', { withCredentials: true })
+        Axios.get(`${baseUrl}/api/grupy`, { withCredentials: true })
             .then((response) => {
                 const groups = response.data.grupy;
                 const filteredGroups = groups.filter(group => group.Plan_tygodniaV === 1);

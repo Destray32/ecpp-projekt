@@ -14,6 +14,7 @@ export default function SprawdzSamochodPage() {
     const [pojazdyOptions, setPojazdyOptions] = useState([]);
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
+    const baseUrl = process.env.REACT_APP_BASE_URL;
 
     const formatDate = (dateStr) => {
         const date = new Date(dateStr);
@@ -21,7 +22,7 @@ export default function SprawdzSamochodPage() {
     };
 
     const fetchData = () => {
-    axios.get('https://qubis.pl:5000/api/samochody', { withCredentials: true })
+    axios.get(`${baseUrl}/api/samochody`, { withCredentials: true })
         .then((response) => {
             const data = response.data;
 

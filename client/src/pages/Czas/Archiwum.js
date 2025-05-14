@@ -5,14 +5,14 @@ import axios from 'axios';
 export default function ArchiwumPage() {
     const [selectedOption, setSelectedOption] = useState('Pracownicy');
     const [data, setData] = useState([]);
-
+    const baseUrl = process.env.REACT_APP_BASE_URL;
     useEffect(() => {
         fetchData();
     }, [selectedOption]);
 
     const fetchData = async () => {
         try {
-            const response = await axios.get(`https://qubis.pl:5000/api/czas/archiwum/${selectedOption}`, { withCredentials: true });
+            const response = await axios.get(`${baseUrl}/api/czas/archiwum/${selectedOption}`, { withCredentials: true });
             setData(response.data);
             //console.log('Data:', response.data);
         }
@@ -23,7 +23,7 @@ export default function ArchiwumPage() {
 
     const handleActionClick = async (record) => {
         try {
-            await axios.post('https://qubis.pl:5000/api/czas/archiwum/przywroc', {
+            await axios.post(`${baseUrl}/api/czas/archiwum/przywroc`, {
                 tableName: selectedOption,
                 recordId: record.idPracownik || record.idFirma || record.idProjekty || record.idPojazdy || record.idGrupa_urlopowa
             }, { withCredentials: true });

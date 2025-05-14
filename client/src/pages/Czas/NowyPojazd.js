@@ -14,9 +14,9 @@ export default function NowyPojazdPage() {
         marka: "",
         uwagi: "",
     });
-
+    const baseUrl = process.env.REACT_APP_BASE_URL;
     const handleSave = () => {
-        axios.post("https://qubis.pl:5000/api/pojazdy", vehicle, { withCredentials: true })
+        axios.post(`${baseUrl}/api/pojazdy`, vehicle, { withCredentials: true })
             .then((response) => {
                 // Navigate back immediately after successful response
                 navigate(-1);
