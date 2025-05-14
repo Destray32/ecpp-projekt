@@ -43,12 +43,17 @@ export default function TydzienPage() {
     }, []);
 
     useEffect(() => {
-	if (!isLoaded) return;
-	const currentYear = selectedWeek.substring(0, 4);
-	Axios.get(`${baseUrl}/api/tydzien/${currentYear}/${numericWeek}`, { withCredentials: true })
-	    .then(response => setData(response.data))
-	    .catch(error => console.error(error));
+        if (!isLoaded) return;
+
+        const currentYear = selectedWeek.substring(0, 4);
+        Axios.get(`${baseUrl}/api/tydzien/${currentYear}/${numericWeek}`, { withCredentials: true })
+            .then(response => {
+                const filteredData = response.data.filter(item => item.idPracownik != 3);
+                setData(filteredData);
+            })
+            .catch(error => console.error(error));
     }, [numericWeek, selectedWeek, refresh]);
+
 
     const generatePDF = () => {
         const doc = new jsPDF();

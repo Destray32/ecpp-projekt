@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Dropdown } from "primereact/dropdown";
 import { Button } from "primereact/button";
 import { format, startOfWeek, addWeeks, subWeeks, getWeek, set, addDays } from 'date-fns';
@@ -26,9 +26,30 @@ export default function PlanTygodniaPage() {
     const [accountType, setAccountType] = useState('');
     const [dialogVisible, setDialogVisible] = useState(false);
     const [selectedGroups, setSelectedGroups] = useState([]);
+    const [selectAll, setSelectAll] = useState(false);
     const [error, setError] = useState(false);
     const [isDialogVisible, setIsDialogVisible] = useState(false);
     const baseUrl = process.env.REACT_APP_BASE_URL;
+    const dropdownRef = useRef(null);
+
+    const handleSelectAll = (checked) => {
+    setSelectAll(checked);
+    if (checked) {
+        setSelectedGroups(availableGroups);
+    } else {
+        setSelectedGroups([]);
+    }
+};
+
+useEffect(() => {
+    if (selectedGroups.length === availableGroups.length) {
+        setSelectAll(true);
+    } else {
+        setSelectAll(false);
+    }
+}, [selectedGroups, availableGroups]);
+
+
 
 
     useEffect(() => {
@@ -217,13 +238,49 @@ export default function PlanTygodniaPage() {
 
     const fetchData = (selectedGroup = group) => {
 
-        Axios.get(`${baseUrl}/api/grupy`, { withCredentials: true })
-            .then(res => {
-                const groups = res.data.grupy;
-                const filteredGroups = groups.filter(group => group.Plan_tygodniaV === 1);
-                setAvailableGroups(filteredGroups.map(group => ({ name: group.Zleceniodawca, id: group.id })));
-            })
-            .catch(err => console.error(err));
+    Axios.get(`${baseUrl}/api/grupy`, { withCredentials: true })
+        .then(res => {
+            const groups = res.data.grupy;
+            const filteredGroups = groups.filter(group => group.Plan_tygodniaV === 1);
+
+            const specialOrder = {
+                'NCW Plåt': 1,
+                'NCC': 2,
+                'Do dyspozycji': 98,
+                'Urlopy': 100,
+                'Urlop tacierzyński /L4': 101,
+            };
+
+            let sortedGroups = filteredGroups
+                .map(group => ({
+                    ...group,
+                    order: specialOrder[group.Zleceniodawca] ?? 50,
+                }))
+                .sort((a, b) => {
+                    if (a.order !== b.order) return a.order - b.order;
+                    return a.Zleceniodawca.localeCompare(b.Zleceniodawca, 'pl');
+                });
+
+            const doDyspozycjiIndex = sortedGroups.findIndex(g => g.Zleceniodawca === 'Do dyspozycji');
+            const hasUrlopy = sortedGroups.some(g =>
+                g.Zleceniodawca === 'Urlopy' || g.Zleceniodawca === 'Urlop tacierzyński /L4'
+            );
+
+            if (doDyspozycjiIndex !== -1 && hasUrlopy) {
+                sortedGroups.splice(doDyspozycjiIndex + 1, 0, {
+                    id: 'separator',
+                    Zleceniodawca: '-------------------------',
+                });
+            }
+
+            setAvailableGroups(
+                sortedGroups.map(group => ({
+                    name: group.Zleceniodawca,
+                    id: group.id,
+                }))
+            );
+        })
+        .catch(err => console.error(err));
     
  
         const url = `${baseUrl}/api/planTygodnia/zaplanuj?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}${selectedGroup ? `&group=${encodeURIComponent(selectedGroup.name)}` : ''}`;
@@ -244,30 +301,41 @@ export default function PlanTygodniaPage() {
             .catch(err => console.error(err));
     };
 
-    const confirmDeletion = () => {
-        handleUsunZaznaczone();
-        setIsDialogVisible(false);
-    };
+        const confirmDeletion = () => {
+            handleUsunZaznaczone();
+            setIsDialogVisible(false);
+        };
 
-    const handleWheelScroll = (e) => {
-        e.stopPropagation();
-        e.preventDefault();
-        
+        const handleWheelScroll = (e) => {
+        e.preventDefault();  
+        e.stopPropagation(); 
+
         const currentIndex = availableGroups.findIndex((g) => g.name === group?.name);
         if (currentIndex !== -1) {
-            let nextIndex;
-            if (e.deltaY < 0) {
-                // Scroll up
-                nextIndex = currentIndex === 0 ? availableGroups.length - 1 : currentIndex - 1;
-            } else {
-                // Scroll down
-                nextIndex = (currentIndex + 1) % availableGroups.length;
-            }
-            const nextGroup = availableGroups[nextIndex];
-            setGroup(nextGroup);  // Update the selected group
-            fetchData(nextGroup);  // Fetch data for the new group
+        let nextIndex;
+        if (e.deltaY < 0) {
+            nextIndex = currentIndex === 0 ? availableGroups.length - 1 : currentIndex - 1;
+        } else {
+            nextIndex = (currentIndex + 1) % availableGroups.length;
+        }
+        const nextGroup = availableGroups[nextIndex];
+        setGroup(nextGroup);
+        fetchData(nextGroup);
         }
     };
+
+    useEffect(() => {
+        const node = dropdownRef.current;
+        if (node) {
+        node.addEventListener('wheel', handleWheelScroll, { passive: false });
+        }
+
+        return () => {
+        if (node) {
+            node.removeEventListener('wheel', handleWheelScroll);
+        }
+        };
+    }, [group, availableGroups]);
 
     const handlePrint = () => {
         if (selectedGroups.length === 0) {
@@ -318,12 +386,13 @@ export default function PlanTygodniaPage() {
                             <div className="flex flex-row gap-32 items-center">
                             <div className="flex items-center space-x-2">
                                 <Button icon="pi pi-arrow-left" className="p-button-outlined" onClick={previousWeek} />
-                                <p className="text-lg font-bold">Tydzień {getWeekNumber(currentDate)} : {formatWeek(currentDate)}</p>
+                                <p className="text-lg font-bold">Tydzień {getWeekNumber(currentDate)}</p>
                                 <Button icon="pi pi-arrow-right" iconPos="right" className="p-button-outlined" onClick={nextWeek} />
+                                <p className="text-lg font-bold">{formatWeek(currentDate)}</p>
                             </div>
                             </div>
-                            <div className="dropdown-container overflow-hidden" onWheel={handleWheelScroll} >
-                            <span>Grupa</span>
+                             <div className="dropdown-container overflow-hidden" ref={dropdownRef}>
+                                <span>Grupa</span>
                                 <Dropdown 
                                     value={group} 
                                     onChange={handleChangeGroupFilter}
@@ -337,7 +406,7 @@ export default function PlanTygodniaPage() {
                                     resetFilterOnHide
                                     filterInputAutoFocus
                                 />
-                            </div>
+                                </div>
 
                         </div>
                     </div>
@@ -345,9 +414,19 @@ export default function PlanTygodniaPage() {
                 <div className="flex gap-16">
                     <Button label="Drukuj grupe" className="bg-white w-[9rem] h-[3rem]"
                         text raised onClick={handleDrukujGrupe} />
-                    <Dialog header="Wybierz Grupy do Drukowania" visible={dialogVisible} style={{ width: '30vw' }}
-                        onHide={() => setDialogVisible(false)}>
+                    <Dialog header="Wybierz Grupy do Drukowania" visible={dialogVisible} style={{ width: '30vw' }} onHide={() => setDialogVisible(false)}>
                         <div className="p-grid">
+                            <div className="p-col-12 mb-3">
+                                <Checkbox
+                                    inputId="selectAll"
+                                    value="all"
+                                    onChange={(e) => handleSelectAll(e.checked)}
+                                    checked={selectAll}
+                                    className="border border-gray-500"
+                                />
+                                <label htmlFor="selectAll" className="p-checkbox-label font-bold ml-2">Zaznacz wszystko</label>
+                            </div>
+
                             {availableGroups.map((group) => (
                                 <div key={group.id} className="p-col-12 mb-1">
                                     <Checkbox
@@ -357,17 +436,19 @@ export default function PlanTygodniaPage() {
                                         checked={selectedGroups.some(g => g.id === group.id)}
                                         className="border border-gray-500 mb-1"
                                     />
-                                    <label htmlFor={group.id} className="p-checkbox-label">{group.name}</label>
+                                    <label htmlFor={group.id} className="p-checkbox-label ml-2 ">{group.name}</label>
                                 </div>
                             ))}
                         </div>
+
                         {error && (
                             <div className="p-grid p-col-12 text-red-500 text-sm mt-2 mb-3">
                                 Musisz wybrać co najmniej jedną grupę!
                             </div>
                         )}
+
                         <div className="p-grid">
-                            <Button label="Drukuj Wybrane" className="bg-white w-[9rem] h-[3rem]" text raised onClick={handlePrintSelectedGroups  && handlePrint} />
+                            <Button label="Drukuj Wybrane" className="bg-white w-[9rem] h-[3rem]" text raised onClick={handlePrintSelectedGroups && handlePrint} />
                         </div>
                     </Dialog>
                     <Button label="Drukuj" className="bg-white w-[9rem] h-[3rem]"
@@ -383,13 +464,13 @@ export default function PlanTygodniaPage() {
                                     <th className="border-r"></th>
                                     <th className="border-r">Nazwisko</th>
                                     <th className="border-r">Imię</th>
-                                    <th className="border-r w-1/5">Grupa</th>
+                                    <th className="border-r w-1/6">Grupa</th>
                                     <th className="border-r">M1</th>
                                     <th className="border-r">M2</th>
                                     <th className="border-r">M3</th>
                                     <th className="border-r">M4</th>
                                     <th className="border-r">M5</th>
-                                    <th className="border-r w-1/4">Opis</th>
+                                    <th className="border-r w-1/3">Opis</th>
                                 </tr>
                             </thead>
                             <tbody className="text-center">

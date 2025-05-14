@@ -275,7 +275,7 @@ export default function PracownikPage() {
 
   const fetchGroups = async () => {
     try {
-      const response = await axios.get(`${baseUrl}0/api/pracownik/grupy`, { withCredentials: true });
+      const response = await axios.get(`${baseUrl}/api/pracownik/grupy`, { withCredentials: true });
       setGroups(response.data.map(group => ({
         id: group.idGrupa_urlopowa,
         name: group.Zleceniodawca

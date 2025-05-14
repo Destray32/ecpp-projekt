@@ -131,11 +131,31 @@ const AdditionalProjects = ({
                 zleceniodawca.Firma_idFirma === Firma.value
             );
 
-            setFilteredZleceniodawcy(filteredZleceniodawcy);
+            const specialOrder = {
+                "NCW Plåt": 1,
+                "NCC": 2,
+                "Do dyspozycji": 98,
+                "-------------------------------": 99,
+                "Urlopy": 100,
+                "Urlop tacierzyński /L4": 101
+            };
+
+            const sortedZleceniodawcy = filteredZleceniodawcy.map(zleceniodawca => ({
+                ...zleceniodawca,
+                order: specialOrder[zleceniodawca.label] ?? 50
+            }));
+
+            sortedZleceniodawcy.sort((a, b) => {
+                if (a.order !== b.order) return a.order - b.order;
+                return a.label.toLowerCase().localeCompare(b.label.toLowerCase(), 'pl');
+            });
+            
+            setFilteredZleceniodawcy(sortedZleceniodawcy);
         } else {
             setFilteredZleceniodawcy([]);
         }
     }, [Firma, zleceniodawcy]);
+
 
     useEffect(() => {
         if (Zleceniodawca) {

@@ -6,7 +6,7 @@ function DostepneGrupy(req, res, db) {
             console.log('SQL Error:', err);
             res.status(400).send('Błąd pobierania grup');
         } else {
-            const formattedRows = result.map(row => ({
+            let formattedRows = result.map(row => ({
                 id: row.idGrupa_urlopowa,
                 Zleceniodawca: row.Zleceniodawca,
                 Cennik: row.Cennik,
@@ -14,17 +14,31 @@ function DostepneGrupy(req, res, db) {
                 Plan_tygodniaV: row.Plan_tygodniaV,
             }));
 
+            const specialOrder = {
+                "NCW Plåt": 1,
+                "NCC": 2,
+                "Do dyspozycji": 98,
+                "-------------------------------": 99,
+                "Urlopy": 100,
+                "Urlop tacierzynski /l4": 101
+            };
+
+            formattedRows.push({
+                id: "separator",
+                Zleceniodawca: "-------------------------------",
+                Cennik: null,
+                Stawka: null,
+                Plan_tygodniaV: null
+            });
+
+            formattedRows = formattedRows.map(row => ({
+                ...row,
+                order: specialOrder[row.Zleceniodawca] ?? 50
+            }));
+
             const sortedRows = formattedRows.sort((a, b) => {
-                const customOrder = {
-                    "NCW": 1,
-                    "do dyspozycji": 98,
-                    "urlopy": 99
-                };
-
-                const orderA = customOrder[a.Zleceniodawca] || 50;
-                const orderB = customOrder[b.Zleceniodawca] || 50;
-
-                return orderA - orderB;
+                if (a.order !== b.order) return a.order - b.order;
+                return a.Zleceniodawca.toLowerCase().localeCompare(b.Zleceniodawca.toLowerCase(), 'pl');
             });
 
             res.status(200).send({ grupy: sortedRows });
