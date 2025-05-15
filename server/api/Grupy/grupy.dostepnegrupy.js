@@ -20,7 +20,7 @@ function DostepneGrupy(req, res, db) {
                 "Do dyspozycji": 98,
                 "-------------------------------": 99,
                 "Urlopy": 100,
-                "Urlop tacierzynski /l4": 101
+                "Urlop tacierzyński /L4": 101
             };
 
             formattedRows.push({
@@ -36,9 +36,10 @@ function DostepneGrupy(req, res, db) {
                 order: specialOrder[row.Zleceniodawca] ?? 50
             }));
 
+            // sortowanie: order potem po alfabecie
             const sortedRows = formattedRows.sort((a, b) => {
                 if (a.order !== b.order) return a.order - b.order;
-                return a.Zleceniodawca.toLowerCase().localeCompare(b.Zleceniodawca.toLowerCase(), 'pl');
+                return a.Zleceniodawca.localeCompare(b.Zleceniodawca, 'pl', { sensitivity: 'base' });
             });
 
             res.status(200).send({ grupy: sortedRows });

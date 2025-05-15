@@ -35,7 +35,6 @@ function PobierzArchiwum(req, res) {
             return res.status(500).json({ error: 'Database query error' });
         }
 
-        console.log('Archiwum:', result);
         res.json(result);
     });
 }

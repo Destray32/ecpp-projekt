@@ -231,7 +231,7 @@ export default function UrlopyPage() {
 
                 // Otwarcie nowego okna z pdf-em
                 setTimeout(() => {
-                    window.open(`${baseUrl}/test`, '_blank');
+                    window.open(`https://www.qubis.pl/test`, '_blank');
                 }, 1500);
 
             })
@@ -470,6 +470,7 @@ export default function UrlopyPage() {
         Axios.get(`${baseUrl}/api/grupy`, { withCredentials: true })
             .then((response) => {
                 setDostepneGrupy(response.data.grupy);
+                console.log(response.data.grupy);
             })
             .catch((error) => {
                 console.error("There was an error fetching the data:", error);
