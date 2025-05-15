@@ -10,8 +10,10 @@ import { font } from "../../fonts/OpenSans-Regular-normal";
 
 export default function SprawdzSamochodPage() {
     const [Pojazd, setPojazd] = useState(null);
+    const [Pracownik, setPracownik] = useState(null);
     const [tableData, setTableData] = useState([]);
     const [pojazdyOptions, setPojazdyOptions] = useState([]);
+    const [pracownicyOptions, setPracownicyOptions] = useState([]);
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const baseUrl = process.env.REACT_APP_BASE_URL;
@@ -29,6 +31,7 @@ export default function SprawdzSamochodPage() {
             const filteredData = data.filter(item => {
                 const itemDate = formatDate(item.Data);
                 if (Pojazd && item.Pojazd !== Pojazd) return false;
+                if (Pracownik && item.Pracownik !== Pracownik) return false;
                 if (startDate && itemDate < startDate) return false;
                 if (endDate && itemDate > endDate) return false;
                 return true;
@@ -51,6 +54,15 @@ export default function SprawdzSamochodPage() {
                 }));
                 setPojazdyOptions(options);
             }
+            
+            if (pracownicyOptions.length === 0) {
+                const pracownicySet = new Set(data.map(item => item.Pracownik));
+                const options = Array.from(pracownicySet).map(pracownik => ({
+                    label: pracownik,
+                    value: pracownik
+                }));
+                setPracownicyOptions(options);
+            }
         })
         .catch((error) => {
             console.error(error);
@@ -60,7 +72,7 @@ export default function SprawdzSamochodPage() {
 
     useEffect(() => {
         fetchData();
-    }, [Pojazd, startDate, endDate]);
+    }, [Pojazd, Pracownik, startDate, endDate]);
 
     const generatePDF = () => {
         const doc = new jsPDF();
@@ -114,12 +126,13 @@ export default function SprawdzSamochodPage() {
                     <input type="date" className="p-2.5 rounded" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
                     <input type="date" className="p-2.5 rounded" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
                     <Dropdown value={Pojazd} options={pojazdyOptions} onChange={(e) => setPojazd(e.value)} showClear placeholder="Wybierz pojazd" />
+                    <Dropdown value={Pracownik} options={pracownicyOptions} onChange={(e) => setPracownik(e.value)} showClear placeholder="Wybierz pracownika" />
                     <Button onClick={generatePDF} label="Drukuj" className="p-button-outlined border-2 p-2.5 bg-white text-black" />
                 </div>
             </AmberBox>
             <div className="w-auto bg-gray-300 h-full m-2 outline outline-1 outline-gray-500">
                 <table className="w-full">
-                    <thead className="bg-blue-700 text-white">
+                    <thead className="bg-blue-700 text-left text-white">
                         <tr>
                             <th className="border-r">Data</th>
                             <th className="border-r">Imię i nazwisko</th>
@@ -128,14 +141,14 @@ export default function SprawdzSamochodPage() {
                             <th className="border-r">Ilość godzin</th>
                         </tr>
                     </thead>
-                    <tbody className="text-center">
+                    <tbody className="">
                         {tableData.map((item, index) => (
                             <tr key={index} className="border-b even:bg-gray-200 odd:bg-gray-300">
-                                <td className="border-r">{item.Data}</td>
-                                <td className="border-r">{item.Pracownik}</td>
-                                <td className="border-r">{item.Pojazd}</td>
-                                <td className="border-r">{item.Projekt}</td>
-                                <td className="border-r">{item.GodzinyPrzepracowane}</td>
+                                <td className="border-r text-left pl-2">{item.Data}</td>
+                                <td className="border-r text-left pl-2">{item.Pracownik}</td>
+                                <td className="border-r text-left pl-2">{item.Pojazd}</td>
+                                <td className="border-r text-left pl-2">{item.Projekt}</td>
+                                <td className="border-r text-left pl-2">{item.GodzinyPrzepracowane}</td>
                             </tr>
                         ))}
                     </tbody>
