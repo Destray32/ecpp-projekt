@@ -371,7 +371,7 @@ export default function CzasPracyPage() {
 
             if (response.data && response.data.projects) {
                 const startOfWeekDate = startOfWeek(date, { weekStartsOn: 1 });
-
+                
                 const dayNameToDateMap = {
                     'Poniedziałek': format(startOfWeekDate, 'yyyy-MM-dd'),
                     'Wtorek': format(addDays(startOfWeekDate, 1), 'yyyy-MM-dd'),
@@ -387,7 +387,11 @@ export default function CzasPracyPage() {
 
                     Object.keys(project.hours).forEach(dayOfWeek => {
                         const dateKey = dayNameToDateMap[dayOfWeek];
-                        updatedHours[dateKey] = project.hours[dayOfWeek];
+                        updatedHours[dateKey] = {
+                            ...project.hours[dayOfWeek],
+                            // Preserve the car selection if it exists
+                            car: project.hours[dayOfWeek].car || ""
+                        };
                     });
 
                     return {
@@ -467,7 +471,8 @@ export default function CzasPracyPage() {
                 return {
                     dayOfWeek: dayName,
                     hoursWorked: hoursWorked,
-                    car: hoursWorked > 0 ? projectData?.car || null : null, 
+                    // Send car data only if hoursWorked > 0 or if a car was previously selected
+                    car: projectData?.car || null, 
                     comment: hoursWorked > 0 ? projectData?.comment || "" : "", 
                     diet: projectData?.diet || "",
                     km: projectData?.km || "",

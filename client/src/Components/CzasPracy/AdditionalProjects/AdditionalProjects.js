@@ -214,7 +214,7 @@ const AdditionalProjects = ({
                 const apiData = response.data?.hours?.[dateKey];
                 newProject.hours[dateKey] = apiData ? {
                     hoursWorked: apiData.hoursWorked || 0,
-                    car: apiData.car || defaultSamochod.value,
+                    car: apiData.car || (apiData.hoursWorked > 0 ? defaultSamochod : ""),
                     comment: apiData.comment || "",
                     parking: apiData.parking || "",
                     km: apiData.km || "",
