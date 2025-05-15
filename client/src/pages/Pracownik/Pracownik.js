@@ -374,6 +374,16 @@ export default function PracownikPage() {
 
   return (
     <div>
+      <style jsx="true">{`
+        .compact-row td {
+          padding: 4px 8px !important;
+          height: 32px !important;
+        }
+        .compact-row .ant-table-cell-row-hover {
+          padding: 4px 8px !important;
+        }
+      `}</style>
+      
       <div className="w-auto h-full m-2 p-3 bg-amber-100 outline outline-1 outline-gray-500 flex flex-row items-center space-x-4">
         <div className="flex flex-col space-y-2 items-start">
           <div className="w-full h-2/6">
@@ -412,6 +422,10 @@ export default function PracownikPage() {
             rowKey="id"
             scroll={{ y: 540 }}
             onChange={handleTableChange}
+            rowClassName={(_, index) =>
+              `compact-row ${index % 2 === 0 ? "bg-gray-200" : "bg-gray-300"}`
+            }
+            pagination={{ pageSize: 20 }}
           />
         </ConfigProvider>
       </div>

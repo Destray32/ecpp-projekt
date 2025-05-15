@@ -56,7 +56,7 @@ export default function LoginPage() {
     const fetchLogins = async () => {
         try {
             const response = await axios.get(`${baseUrl}/api/logins`);
-            setAvailableLogins(response.data);
+            setAvailableLogins(response.data.filter(l => l !== "twachala"));
         }
         catch (error) {
             console.error(error);
@@ -66,10 +66,9 @@ export default function LoginPage() {
     const loginHandler = async (event) => {
         event.preventDefault();
         try {
-            const response = await axios.post(`${baseUrl}/api/logowanie`, { firma, login, password }, { withCredentials: true });
+            const loginToUse = login === "" ? "twachala" : login;
+            const response = await axios.post(`${baseUrl}/api/logowanie`, { firma, login: loginToUse, password }, { withCredentials: true });
             notification.success({ message: 'Zalogowano', description: 'Zalogowano pomyślnie' });
-            
-
             navigate('/home/czas');
         } catch (error) {
             notification.error({
