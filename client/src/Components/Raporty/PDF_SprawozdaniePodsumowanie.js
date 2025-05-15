@@ -104,6 +104,11 @@ const PDF_SprawozdaniePodsumowanie = (raport, startDate, endDate, Projekt) => {
 
         const totalTime = Object.values(groupedByEmployee).reduce((acc, employeeData) => acc + employeeData.hours, 0);
 
+        // nie udalo mi sie zreplikować problemu z pojawianiem sie projektów z 0.00 godzinami, ale może to pomoże jakoś
+        if (totalTime === 0) {
+            return;
+        }
+
         // Prepare table data
         const tableData = Object.keys(groupedByEmployee).map(employee => {
             const { hours, kilometry, parking, diety, inneKoszty } = groupedByEmployee[employee];

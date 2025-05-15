@@ -48,6 +48,11 @@ export default function RaportyPage() {
     }
 
     useEffect(() => {
+        setStartDate('');
+        setEndDate('');
+    }, [ignorujDatyFirma]);
+
+    useEffect(() => {
         fetchProjektyPracownicy();
     }, []);
 
@@ -94,13 +99,14 @@ export default function RaportyPage() {
             const projekty = projektyResponse.data.projekty.map(projekt => ({
                 label: projekt.NazwaKod_Projektu,
                 value: projekt.id,
+                zleceniodawca: projekt.Zleceniodawca,
             }));
             
             const raportData = raportResponse.data.raport;
             setRaport(raportData);
     
             let filteredProjekty = projekty;
-    
+
             if (!ignorujDatyFirma && startDate && endDate) {
                 const startDateObj = new Date(startDate);
                 const endDateObj = new Date(endDate);
@@ -158,6 +164,8 @@ export default function RaportyPage() {
 
     if (!ignorujDatyFirma) {
 
+    console.log("Filtered raport", filteredRaport);
+
     filteredRaport = filteredRaport.filter(entry => {
         if (!entry.Data) return false;
 
@@ -176,7 +184,11 @@ export default function RaportyPage() {
 
     switch (wybranyRaport) {
         case "Sprawozdanie z działalności - szczegółowe":
-            PDF_SprawozdanieSzczegolowe(filteredRaport, passedStartDate, passedEndDate, Projekt);
+            const projectZleceniodawcaMapping = {};
+            projektyOptions.forEach(projekt => {
+                projectZleceniodawcaMapping[projekt.value] = projekt.zleceniodawca;
+            });
+            PDF_SprawozdanieSzczegolowe(filteredRaport, passedStartDate, passedEndDate, Projekt, projectZleceniodawcaMapping);
             break;
         case "Sprawozdanie z działalności - podsumowanie":
             PDF_SprawozdaniePodsumowanie(filteredRaport, passedStartDate, passedEndDate, Projekt);
@@ -205,7 +217,13 @@ export default function RaportyPage() {
 
         switch (wybranyRaport) {
             case "Sprawozdanie z działalności - szczegółowe":
-                PDF_SprawozdanieSzczegolowe(raport, startDate, endDate);
+                // Pass null for projekt to generate for all projects
+                // Make zleceniodawca mapping available for each project
+                const projectZleceniodawcaMapping = {};
+                projektyOptions.forEach(projekt => {
+                    projectZleceniodawcaMapping[projekt.value] = projekt.zleceniodawca;
+                });
+                PDF_SprawozdanieSzczegolowe(raport, startDate, endDate, null, projectZleceniodawcaMapping);
                 break;
             case "Sprawozdanie z działalności - podsumowanie":
                 PDF_SprawozdaniePodsumowanie(raport, startDate, endDate);
@@ -263,6 +281,7 @@ export default function RaportyPage() {
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
                         disabled={interfaceFirma && ignorujDatyFirma}
+                        min={startDate || undefined}
                     />
                 </div>
           

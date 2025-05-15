@@ -1,6 +1,6 @@
 function GetProjekty(req, res, db) {
     
-    const sql = 'SELECT * FROM projekty WHERE Archiwum = 0 AND Status = "Aktywny"';
+    const sql = 'SELECT * FROM projekty p JOIN Grupa_urlopowa gu ON p.Grupa_urlopowa_idGrupa_urlopowa = gu.idGrupa_urlopowa WHERE p.Archiwum = 0 AND p.Status = "Aktywny"';
 
     db.query(sql, (err, result) => {
         if (err) {
@@ -13,6 +13,7 @@ function GetProjekty(req, res, db) {
                 Status: row.Status,
                 Grupa_urlopowa_idGrupa_urlopowa: row.Grupa_urlopowa_idGrupa_urlopowa,
                 Firma_idFirma: row.Firma_idFirma,
+                Zleceniodawca: row.Zleceniodawca,
             }));
             res.status(200).send({ projekty: formattedRows });
         }
