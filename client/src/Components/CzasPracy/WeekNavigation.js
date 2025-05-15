@@ -18,7 +18,7 @@ import { formatWeek } from '../../utils/dateUtils';
  * @param {string} props.statusTyg - Status tygodnia (np. "Otwarty").
  * @param {boolean} props.isOnline - Status połączenia z internetem.
  * @param {Date|null} props.lastSaved - Czas ostatniego lokalnego zapisu.
- * @param {Function} props.onManualSave - Funkcja zapisująca dane lokalnie.
+ * @param {string} props.saveStatus - Status zapisu (idle, saving, saved, error)
  * 
  * @returns {JSX.Element} Element JSX reprezentujący nawigację tygodniową.
  */
@@ -32,7 +32,7 @@ const WeekNavigation = ({
     statusTyg,
     isOnline,
     lastSaved,
-    onManualSave
+    saveStatus
 }) => {
     const previousWeek = () => setCurrentDate(subWeeks(currentDate, 1));
     const nextWeek = () => setCurrentDate(addWeeks(currentDate, 1));
@@ -59,16 +59,8 @@ const WeekNavigation = ({
                             </span>
                             {lastSaved && (
                                 <span className="text-xs text-gray-600">
-                                    Zapisano lokalnie: {lastSaved.toLocaleTimeString()}
+                                    Ostatnio zapisano: {lastSaved.toLocaleTimeString()}
                                 </span>
-                            )}
-                            {!isOnline && (
-                                <Button 
-                                    label="Zapisz lokalnie" 
-                                    icon="pi pi-save" 
-                                    className="p-button-sm p-button-warning" 
-                                    onClick={onManualSave} 
-                                />
                             )}
                         </div>
                         <div className='w-3/12 p-2'>
