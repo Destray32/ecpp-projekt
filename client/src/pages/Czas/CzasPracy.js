@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { format, startOfWeek, addWeeks, endOfWeek, addDays, subWeeks, getWeek, set, parseISO, isWithinInterval } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { v4 as uuidv4 } from 'uuid';
@@ -12,6 +12,17 @@ import AdditionalProjects from "../../Components/CzasPracy/AdditionalProjects/Ad
 import ActionButtons from "../../Components/CzasPracy/ActionButtons";
 import { generateWeek, formatWeek, calculateWeeklyTotal, calculateProjectTotal, calculateDailyTotal } from '../../utils/dateUtils';
 import { font } from "../../fonts/OpenSans-Regular-normal";
+
+// Utility function for debouncing
+const debounce = (func, delay) => {
+    let timer;
+    return function(...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+            func.apply(this, args);
+        }, delay);
+    };
+};
 
 export default function CzasPracyPage() {
     const [userType, setUserType] = useState(null);
@@ -43,17 +54,12 @@ export default function CzasPracyPage() {
     const [czyZapisano, setCzyZapisano] = useState(false);
 
     const [isOnline, setIsOnline] = useState(navigator.onLine);
-    const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
+    const [saveStatus, setSaveStatus] = useState("idle"); // idle, saving, saved, error
     const [lastSaved, setLastSaved] = useState(null);
 
     const startOfCurrentWeek = startOfWeek(currentDate, { weekStartsOn: 1 });
 
     //#region UseEffects
-    useEffect(() => {
-        //console.log("Pracownicy w grupie", pracownicyWGrupie);
-        // console.log("Nazwa grupy pracownika", nazwaGrupyPracownika);
-    }, [pracownicyWGrupie]);
-
     useEffect(() => {
         if (statusTygodnia == "Zamknięty") {
             setCzyZapisano(true);
@@ -129,11 +135,10 @@ export default function CzasPracyPage() {
             setIsOnline(false);
             notification.warning({
                 message: 'Brak połączenia',
-                description: 'Utracono połączenie z internetem. Twoje zmiany są zapisywane lokalnie.',
+                description: 'Utracono połączenie z internetem. Zapisywanie danych nie jest możliwe.',
                 placement: 'topRight',
                 duration: 5,
             });
-            saveToLocalStorage();
         };
 
         window.addEventListener('online', handleOnline);
@@ -145,115 +150,28 @@ export default function CzasPracyPage() {
         };
     }, []);
 
-    // Auto-save data periodically
-    useEffect(() => {
-        let autoSaveInterval;
-        
-        if (autoSaveEnabled && Pracownik) {
-            autoSaveInterval = setInterval(() => {
-                saveToLocalStorage();
-            }, 30000); // Save every 30 seconds
-        }
-        
-        return () => {
-            if (autoSaveInterval) clearInterval(autoSaveInterval);
-        };
-    }, [hours, additionalProjects, Pracownik, currentDate, autoSaveEnabled]);
-
-    // Check for saved data on component mount
-    useEffect(() => {
-        if (Pracownik && currentDate) {
-            const storageKey = getLocalStorageKey();
-            const savedData = localStorage.getItem(storageKey);
-            
-            if (savedData) {
-                try {
-                    const parsedData = JSON.parse(savedData);
-                    const savedTime = new Date(parsedData.timestamp);
-                    const timeAgo = Math.floor((new Date() - savedTime) / 60000); // Minutes
-                    
-                    Modal.confirm({
-                        title: 'Znaleziono zapisane dane',
-                        content: `Znaleziono dane zapisane ${timeAgo} minut temu. Czy chcesz je przywrócić?`,
-                        okText: 'Przywróć',
-                        cancelText: 'Odrzuć',
-                        onOk() {
-                            restoreFromLocalStorage();
-                        },
-                        onCancel() {
-                            clearLocalStorage();
-                        }
-                    });
-                } catch (error) {
-                    console.error("Error parsing saved data", error);
-                }
+    // Create debounced save function
+    const debouncedSave = useCallback(
+        debounce(() => {
+            if (isOnline && Pracownik && statusTygodnia !== "Zamknięty") {
+                handleSave(true);
             }
+        }, 2000), // Wait 2 seconds after last change before saving
+        [hours, additionalProjects, Pracownik, currentDate, isOnline, statusTygodnia]
+    );
+
+    // Auto-save when hours or projects change
+    useEffect(() => {
+        if (Pracownik && hours && Object.keys(hours).length > 0) {
+            debouncedSave();
         }
-    }, [Pracownik, currentDate]);
-    //#endregion
+    }, [hours, debouncedSave]);
 
-    //#region localStorage management
-    const getLocalStorageKey = () => {
-        const weekNumber = getWeek(currentDate, { weekStartsOn: 1 });
-        const year = currentDate.getFullYear();
-        return `czasPracy_${Pracownik}_${year}_${weekNumber}`;
-    };
-
-    const saveToLocalStorage = () => {
-        if (!Pracownik) return;
-
-        const storageKey = getLocalStorageKey();
-        const dataToSave = {
-            hours,
-            additionalProjects,
-            timestamp: new Date().toISOString(),
-            weekNumber: getWeek(currentDate, { weekStartsOn: 1 }),
-            year: currentDate.getFullYear(),
-        };
-
-        try {
-            localStorage.setItem(storageKey, JSON.stringify(dataToSave));
-            setLastSaved(new Date());
-        } catch (error) {
-            console.error("Error saving to localStorage", error);
-            notification.error({
-                message: 'Błąd zapisu',
-                description: 'Nie udało się zapisać danych lokalnie.',
-                placement: 'topRight',
-            });
+    useEffect(() => {
+        if (Pracownik && additionalProjects.length > 0) {
+            debouncedSave();
         }
-    };
-
-    const restoreFromLocalStorage = () => {
-        const storageKey = getLocalStorageKey();
-        const savedData = localStorage.getItem(storageKey);
-        
-        if (savedData) {
-            try {
-                const parsedData = JSON.parse(savedData);
-                setHours(parsedData.hours || {});
-                setAdditionalProjects(parsedData.additionalProjects || []);
-                
-                notification.success({
-                    message: 'Dane przywrócone',
-                    description: 'Pomyślnie przywrócono zapisane dane',
-                    placement: 'topRight',
-                });
-            } catch (error) {
-                console.error("Error restoring data", error);
-                notification.error({
-                    message: 'Błąd przywracania',
-                    description: 'Nie udało się przywrócić zapisanych danych.',
-                    placement: 'topRight',
-                });
-            }
-        }
-    };
-
-    const clearLocalStorage = () => {
-        const storageKey = getLocalStorageKey();
-        localStorage.removeItem(storageKey);
-    };
+    }, [additionalProjects, debouncedSave]);
     //#endregion
 
     //#region fetching
@@ -284,8 +202,6 @@ export default function CzasPracyPage() {
             if (filteredPlanData.length > 0) {
                 const userGroups = filteredPlanData.filter(entry => entry.pracownikId === currentUserId);
                 setNazwaGrupyPracownika(userGroups[0]?.Zleceniodawca || null);
-                // console.log(zleceniodawcy);
-                // console.log("Nazwa grupy pracownika", userGroups[0]);
                 setZleceniodawca(userGroups[0]?.grupaId || null);
     
                 const grupaIds = [
@@ -334,7 +250,6 @@ export default function CzasPracyPage() {
         try {
             await Axios.get(`${baseUrl}/api/pracownicy`, { withCredentials: true })
                 .then((response) => {
-                    //console.log(response.data);
                     const userId = response.data.find(pracownik => `${pracownik.name} ${pracownik.surname}` === Pracownik).id;
                     setCurrentUserId(userId);
                     setIdGrupy(response.data.find(pracownik => `${pracownik.name} ${pracownik.surname}` === Pracownik).vacationGroup);
@@ -362,7 +277,6 @@ export default function CzasPracyPage() {
     const fetchPojazdy = () => {
         Axios.get(`${baseUrl}/api/pojazdy`, { withCredentials: true })
             .then((response) => {
-                // console.log(response.data.pojazdy);
                 setSamochody(response.data.pojazdy.map(pojazd => ({id: pojazd.id, label: pojazd.numerRejestracyjny, value: pojazd.numerRejestracyjny })));
             })
             .catch((error) => {
@@ -457,7 +371,7 @@ export default function CzasPracyPage() {
 
             if (response.data && response.data.projects) {
                 const startOfWeekDate = startOfWeek(date, { weekStartsOn: 1 });
-
+                
                 const dayNameToDateMap = {
                     'Poniedziałek': format(startOfWeekDate, 'yyyy-MM-dd'),
                     'Wtorek': format(addDays(startOfWeekDate, 1), 'yyyy-MM-dd'),
@@ -473,7 +387,11 @@ export default function CzasPracyPage() {
 
                     Object.keys(project.hours).forEach(dayOfWeek => {
                         const dateKey = dayNameToDateMap[dayOfWeek];
-                        updatedHours[dateKey] = project.hours[dayOfWeek];
+                        updatedHours[dateKey] = {
+                            ...project.hours[dayOfWeek],
+                            // Preserve the car selection if it exists
+                            car: project.hours[dayOfWeek].car || ""
+                        };
                     });
 
                     return {
@@ -521,16 +439,6 @@ export default function CzasPracyPage() {
                 setStatusTygodnia(null);
             }
 
-            // if (response.data && response.data.status) {
-            //     if (response.data.status === "Zamknięty") {
-            //         notification.error({
-            //             message: 'Błąd',
-            //             description: 'Tydzień jest zamknięty',
-            //             placement: 'topRight',
-            //         });
-            //     }
-            // }
-
         } catch (error) {
             console.error("Error fetching week status", error);
         }
@@ -538,7 +446,16 @@ export default function CzasPracyPage() {
     //#endregion
 
     //#region handlers
-    const handleSave = async () => {
+    const handleSave = async (autoSave = false) => {
+        // Skip saving if no data or status is closed
+        if (statusTygodnia === "Zamknięty" || !isOnline || !Pracownik) {
+            return;
+        }
+        
+        if (!autoSave) {
+            setSaveStatus("saving");
+        }
+
         const totalHours = calculateWeeklyTotal(hours, daysOfWeek);
         const projectNames = additionalProjects.map(project => project.label);
 
@@ -554,8 +471,9 @@ export default function CzasPracyPage() {
                 return {
                     dayOfWeek: dayName,
                     hoursWorked: hoursWorked,
-                    car: hoursWorked > 0 ? projectData?.car || null : null, // null jesli nie ma godzin pracy
-                    comment: hoursWorked > 0 ? projectData?.comment || "" : "", // tak samo tutaj 
+                    // Send car data only if hoursWorked > 0 or if a car was previously selected
+                    car: projectData?.car || null, 
+                    comment: hoursWorked > 0 ? projectData?.comment || "" : "", 
                     diet: projectData?.diet || "",
                     km: projectData?.km || "",
                     materials: projectData?.materials || "",
@@ -565,7 +483,7 @@ export default function CzasPracyPage() {
             })
         }));
 
-        if (przekroczoneGodziny) {
+        if (przekroczoneGodziny && !autoSave) {
             notification.warning({
                 message: 'Przekroczone godziny',
                 description: `W dniach: ${daysOfWeek
@@ -577,70 +495,61 @@ export default function CzasPracyPage() {
             });
         }
 
-
         try {
-
             const response = await Axios.post(`${baseUrl}/api/czas`, {
-
                 pracownikName: Pracownik,
-
                 projektyName: Projekty,
-
                 weekData: getWeek(currentDate, { weekStartsOn: 1 }),
-
                 year: currentDate.getFullYear(),
-
                 days: daysOfWeek.map(day => {
-
                     const formattedDate = format(day, 'yyyy-MM-dd');
-
                     const hoursData = hours[formattedDate] || {};
-
-                    //console.log(day.getDay());
-
-
-
                     return {
-
                         dayOfWeek: format(day, 'EEEE', { locale: pl }),
-
                         start: hoursData.start || "00:00",
-
                         end: hoursData.end || "00:00",
-
                         break: hoursData.break || "00:00",
-
                     };
-
                 }),
-
                 totalHours: totalHours,
-
                 additionalProjects: formattedAdditionalProjects,
-
             }, { withCredentials: true });
 
             if (response.status === 200) {
-                notification.success({
-                    message: 'Success',
-                    description: 'Zapisano dane',
-                    placement: 'topRight',
-                });
-
+                setLastSaved(new Date());
+                setSaveStatus("saved");
+                
+                if (!autoSave) {
+                    notification.success({
+                        message: 'Sukces',
+                        description: 'Zapisano dane',
+                        placement: 'topRight',
+                    });
+                }
+                
                 setCzyZapisano(true);
-                clearLocalStorage(); // Clear localStorage after successful save
+                
+                // Reset save status after a short delay
+                setTimeout(() => {
+                    setSaveStatus("idle");
+                }, 3000);
             }
         } catch (error) {
             console.error(error);
-            if (!navigator.onLine) {
-                notification.warning({
-                    message: 'Brak połączenia',
-                    description: 'Nie można zapisać danych na serwer. Dane zostały zapisane lokalnie i zostaną wysłane, gdy połączenie zostanie przywrócone.',
+            setSaveStatus("error");
+            
+            if (!autoSave) {
+                notification.error({
+                    message: 'Błąd',
+                    description: 'Nie udało się zapisać danych',
                     placement: 'topRight',
-                    duration: 5,
                 });
-                saveToLocalStorage();
             }
+            
+            // Reset save status after a short delay
+            setTimeout(() => {
+                setSaveStatus("idle");
+            }, 3000);
         }
     };
 
@@ -687,8 +596,6 @@ export default function CzasPracyPage() {
         
             const [breakHours, breakMinutes] = (dailyHours.break || '00:00').split(':').map(Number);
             const breakTimeInHours = breakHours + (breakMinutes / 60);
-        
-            // console.log(dailyHours.start, breakTimeInHours, dailyHours.end);
         
             const totalDayHours = dailyHours.end && dailyHours.start ?
                 convertTimeToDecimal(dailyHours.end) - convertTimeToDecimal(dailyHours.start) - convertTimeToDecimal(dailyHours.break || '00:00')
@@ -779,7 +686,6 @@ export default function CzasPracyPage() {
                         description: 'Zamknięto tydzień',
                         placement: 'topRight',
                     });
-                    //setStatusTygodnia("Zamknięty");
                     fetchStatusTygodnia();
                 }
             } catch (error) {
@@ -803,7 +709,6 @@ export default function CzasPracyPage() {
                     description: 'Otwarto tydzień',
                     placement: 'topRight',
                 });
-                //setStatusTygodnia(null);
                 fetchStatusTygodnia();
             }
         } catch (error) {
@@ -890,16 +795,6 @@ export default function CzasPracyPage() {
 
         doc.save(`Raport_Tydzien_${weekNumber}.pdf`);
     };
-
-    const handleManualSaveToLocalStorage = () => {
-        saveToLocalStorage();
-        notification.success({
-            message: 'Zapisano lokalnie',
-            description: 'Dane zostały zapisane lokalnie w przeglądarce',
-            placement: 'topRight',
-        });
-    };
-
     //#endregion
     
     function convertTimeToDecimal(timeStr) {
@@ -920,7 +815,7 @@ export default function CzasPracyPage() {
                 statusTyg={statusTygodnia}
                 isOnline={isOnline}
                 lastSaved={lastSaved}
-                onManualSave={handleManualSaveToLocalStorage}
+                saveStatus={saveStatus}
             />
             <TimeInputs
                 daysOfWeek={daysOfWeek}
@@ -955,21 +850,21 @@ export default function CzasPracyPage() {
                 blockStatus={blockStatus}
             />
             <ActionButtons 
-                handleSave={handleSave} 
+                handleSave={() => handleSave(false)}
                 handleCloseWeek={handleZamknijTydzien} 
                 handleOpenWeek={handleOtworzTydzien} 
                 handlePrintReport={handleDrukujRaport}
-                handleSaveLocal={handleManualSaveToLocalStorage}
                 statusTyg={statusTygodnia} 
                 userType={userType} 
                 blockStatus={blockStatus}
                 isOnline={isOnline}
+                saveStatus={saveStatus}
             />
             {!isOnline && (
                 <div className="fixed bottom-4 right-4 bg-amber-100 p-4 rounded-md shadow-lg border border-amber-500">
                     <div className="flex items-center">
                         <span className="text-amber-700 font-semibold">Offline</span>
-                        <span className="ml-2 text-sm">Zmiany zapisane lokalnie</span>
+                        <span className="ml-2 text-sm">Zmiany nie mogą być zapisane</span>
                     </div>
                 </div>
             )}

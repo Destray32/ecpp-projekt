@@ -15,7 +15,19 @@ export default function NowyPojazdPage() {
         uwagi: "",
     });
     const baseUrl = process.env.REACT_APP_BASE_URL;
+    
     const handleSave = () => {
+        // Validate required fields
+        if (!vehicle.numerRejestracyjny.trim()) {
+            notification.error({ message: 'Numer rejestracyjny jest wymagany' });
+            return;
+        }
+        
+        if (!vehicle.marka.trim()) {
+            notification.error({ message: 'Marka pojazdu jest wymagana' });
+            return;
+        }
+        
         axios.post(`${baseUrl}/api/pojazdy`, vehicle, { withCredentials: true })
             .then((response) => {
                 // Navigate back immediately after successful response
@@ -43,13 +55,17 @@ export default function NowyPojazdPage() {
             <AmberBox>
                 <div className="flex flex-col items-center space-y-8 p-4 w-full">
                     <FloatLabel className="w-6/12 lg:w-4/12">
-                        <InputText id="nrrej" type="text" className="w-full" value={vehicle.numerRejestracyjny} onChange={(e) => setVehicle({ ...vehicle, numerRejestracyjny: e.target.value })} />
-                        <label htmlFor="nrrej">Numer rejestracyjny</label>
+                        <InputText id="nrrej" type="text" className="w-full" value={vehicle.numerRejestracyjny} 
+                            onChange={(e) => setVehicle({ ...vehicle, numerRejestracyjny: e.target.value })}
+                            required />
+                        <label htmlFor="nrrej">Numer rejestracyjny <span className="text-red-500">*</span></label>
                     </FloatLabel>
                     
                     <FloatLabel className="w-6/12 lg:w-4/12">
-                        <InputText id="marka" type="text" className="w-full" value={vehicle.marka} onChange={(e) => setVehicle({ ...vehicle, marka: e.target.value })} />
-                        <label htmlFor="marka">Marka</label>
+                        <InputText id="marka" type="text" className="w-full" value={vehicle.marka} 
+                            onChange={(e) => setVehicle({ ...vehicle, marka: e.target.value })}
+                            required />
+                        <label htmlFor="marka">Marka <span className="text-red-500">*</span></label>
                     </FloatLabel>
                     
                     <FloatLabel className="w-6/12 lg:w-4/12">
@@ -62,6 +78,10 @@ export default function NowyPojazdPage() {
                         <Link to="/home/pojazdy">
                             <Button label="Anuluj" icon="pi pi-times" className="p-button-outlined border-2 p-1 bg-white text-black pr-2 pl-2" />
                         </Link>
+                    </div>
+                    
+                    <div className="text-sm text-gray-500">
+                        <span className="text-red-500">*</span> - pole wymagane
                     </div>
                 </div>
             </AmberBox>
