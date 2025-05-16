@@ -243,38 +243,8 @@ useEffect(() => {
             const groups = res.data.grupy;
             const filteredGroups = groups.filter(group => group.Plan_tygodniaV === 1);
 
-            const specialOrder = {
-                'NCW Plåt': 1,
-                'NCC': 2,
-                'Do dyspozycji': 98,
-                'Urlopy': 100,
-                'Urlop tacierzyński /L4': 101,
-            };
-
-            let sortedGroups = filteredGroups
-                .map(group => ({
-                    ...group,
-                    order: specialOrder[group.Zleceniodawca] ?? 50,
-                }))
-                .sort((a, b) => {
-                    if (a.order !== b.order) return a.order - b.order;
-                    return a.Zleceniodawca.localeCompare(b.Zleceniodawca, 'pl');
-                });
-
-            const doDyspozycjiIndex = sortedGroups.findIndex(g => g.Zleceniodawca === 'Do dyspozycji');
-            const hasUrlopy = sortedGroups.some(g =>
-                g.Zleceniodawca === 'Urlopy' || g.Zleceniodawca === 'Urlop tacierzyński /L4'
-            );
-
-            if (doDyspozycjiIndex !== -1 && hasUrlopy) {
-                sortedGroups.splice(doDyspozycjiIndex + 1, 0, {
-                    id: 'separator',
-                    Zleceniodawca: '-------------------------',
-                });
-            }
-
             setAvailableGroups(
-                sortedGroups.map(group => ({
+                filteredGroups.map(group => ({
                     name: group.Zleceniodawca,
                     id: group.id,
                 }))

@@ -20,7 +20,7 @@ function DostepneGrupy(req, res, db) {
                 "Do dyspozycji": 98,
                 "-------------------------------": 99,
                 "Urlopy": 100,
-                "Urlop tacierzyński /L4": 101
+                "Urlop tacierzyński / L4": 101
             };
 
             formattedRows.push({
