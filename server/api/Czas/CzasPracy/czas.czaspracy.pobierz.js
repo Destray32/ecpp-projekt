@@ -40,9 +40,19 @@ function PobierzCzasPracy(req, res, db) {
 };
 
 function formatTime(time) {
-    // funkcja formatująca czas, aby zawierał tylko godziny i minuty
-    const [hours, minutes] = time.split(':');
-    return `${hours}:${minutes}`;
+    // Improved time formatting function to handle potential null values or malformed data
+    if (!time) return '00:00';
+    
+    try {
+        // Extract hours and minutes, ensuring they're defined
+        const [hours, minutes] = time.toString().split(':');
+        const formattedHours = hours ? hours.padStart(2, '0') : '00';
+        const formattedMinutes = minutes ? minutes.padStart(2, '0') : '00';
+        return `${formattedHours}:${formattedMinutes}`;
+    } catch (error) {
+        console.warn(`Error formatting time value: ${time}. Using default.`);
+        return '00:00';
+    }
 }
 
 const getDateFromDayName = (dayName, weekNumber, year) => {

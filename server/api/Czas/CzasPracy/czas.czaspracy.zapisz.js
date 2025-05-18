@@ -1,5 +1,34 @@
 const { format, add } = require('date-fns');
 
+/**
+ * Validates and formats a time string to ensure it's in the proper HH:MM format
+ * @param {string} timeStr - Time string to validate and format
+ * @returns {string} - Properly formatted time string (HH:MM)
+ */
+function validateTimeFormat(timeStr) {
+    // Return a default value if timeStr is null or undefined
+    if (!timeStr) return '00:00';
+    
+    // Check if the time string matches the expected format (HH:MM)
+    const timeRegex = /^([0-9]{1,2}):([0-9]{2})$/;
+    const match = timeStr.match(timeRegex);
+    
+    if (match) {
+        // If it matches the pattern, ensure hours and minutes are properly formatted
+        const hours = match[1].padStart(2, '0');
+        const minutes = match[2];
+        return `${hours}:${minutes}`;
+    } else if (timeStr.endsWith(':')) {
+        // If there's a colon but no minutes, add '00'
+        const hours = timeStr.slice(0, -1).padStart(2, '0');
+        return `${hours}:00`;
+    } else {
+        // For any other invalid format, return default value
+        // console.warn(`Invalid time format: ${timeStr}, using default 00:00`);
+        return '00:00';
+    }
+}
+
 function ZapiszCzasPracy(req, res, db) {
     const { pracownikName, weekData, year, days, totalHours, additionalProjects } = req.body;
 
@@ -10,6 +39,11 @@ function ZapiszCzasPracy(req, res, db) {
                 day.end = '00:00';
                 day.break = '00:00';
             }
+            
+            // Validate and format all time values to prevent database errors
+            day.start = validateTimeFormat(day.start);
+            day.end = validateTimeFormat(day.end);
+            day.break = validateTimeFormat(day.break);
         });
     } catch (error) {
         console.error(error);
