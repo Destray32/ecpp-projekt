@@ -2,187 +2,143 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
 import openSansBold from '../../fonts/open-sans/OpenSans-Bold.ttf';
-import openSansReg from '../../fonts/open-sans/OpenSans-Regular.ttf';
+import openSansReg  from '../../fonts/open-sans/OpenSans-Regular.ttf';
 
 const getWeekNumber = (date) => {
-    const currentDate = new Date(date);
-    const startOfYear = new Date(currentDate.getFullYear(), 0, 1);
-    const daysSinceStart = Math.floor((currentDate - startOfYear) / (1000 * 60 * 60 * 24));
-    return Math.ceil((daysSinceStart + ((startOfYear.getDay() + 1) % 7)) / 7);
-};
-
-const wrapText = (doc, text, maxWidth, startX, startY, fontSize = 14) => {
-    doc.setFontSize(fontSize);
-    const lines = doc.splitTextToSize(text, maxWidth);
-    let y = startY;
-    lines.forEach(line => {
-        doc.text(line, startX, y);
-        y += fontSize + 2;
-    });
-    return y;
+  const d         = new Date(date);
+  const startYear = new Date(d.getFullYear(), 0, 1);
+  const days      = Math.floor((d - startYear) / (1000 * 60 * 60 * 24));
+  return Math.ceil((days + ((startYear.getDay() + 1) % 7)) / 7);
 };
 
 const PDF_Drukujgrupe = (data, startDate, endDate) => {
-    const doc = new jsPDF('portrait', 'pt', 'a4');
+  const doc      = new jsPDF('portrait','pt','a4');
+  const pageH    = doc.internal.pageSize.height - 40;
+  const marginL  = 20;
+  const maxW     = doc.internal.pageSize.width - marginL*2;
+  const topY     = 60;                    
+  let   yPos     = 80;
+  let   separatorDrawn = false;
 
-    doc.addFont(openSansBold, 'OpenSansB', 'bold');
-    doc.addFont(openSansReg, 'OpenSans', 'normal');
+  doc.addFont(openSansBold,'OpenSansB','bold');
+  doc.addFont(openSansReg, 'OpenSans','normal');
 
-    const year = new Date(startDate).getFullYear();
-    const weekNumber = getWeekNumber(startDate);
-    const marginLeft = 20;
-    const maxWidth = doc.internal.pageSize.width - 2 * marginLeft;
+  // helper do łamania tekstu z kontrolą strony
+  const safeWrap = (text, fontSize = 14) => {
+    doc.setFontSize(fontSize);
+    const lines = doc.splitTextToSize(text, maxW);
+    for (const line of lines) {
+      if (yPos > pageH) {
+        doc.addPage();
+        yPos = topY;
+      }
+      doc.text(line, marginL, yPos);
+      yPos += fontSize + 2;
+    }
+  };
 
-    doc.setFont('OpenSans', 'normal');
-    doc.setFontSize(14);
-    doc.setTextColor(0, 102, 204);
-    doc.setLanguage("pl");
+  // nagłówek (rok i tydzień)
+  const year = new Date(startDate).getFullYear();
+  const wn   = getWeekNumber(startDate);
+  doc.setFont('OpenSans','normal').setFontSize(14).setTextColor(0,102,204).setLanguage('pl');
+  doc.text(`${year}`,    marginL, 40);
+  doc.text(`V-${wn}`,     marginL, 60);
 
-    doc.text(`${year}`, marginLeft, 40);
-    doc.text(`V-${weekNumber}`, marginLeft, 60);
+  // grupowanie danych
+  const groups = data.reduce((acc, itm) => {
+    if (!acc[itm.grupaId]) acc[itm.grupaId] = { workers: [], vehicles: [] };
+    if (itm.pracownikId) acc[itm.grupaId].workers.push({ name:`${itm.imie} ${itm.nazwisko}`, m: itm.m_value });
+    if (itm.pojazdId)    acc[itm.grupaId].vehicles.push({ name: itm.pojazd,              m: itm.m_value });
+    return acc;
+  }, {});
 
-    const groups = data.reduce((acc, item) => {
-        if (!acc[item.grupaId]) {
-            acc[item.grupaId] = { workers: [], vehicles: [], urlopy: [] };
-        }
+  // porządek sekcji
+  const unique = Object.entries(groups).map(([id, grp]) => {
+    const rec = data.find(d=>d.grupaId==id) || {};
+    return { id, name: rec.Zleceniodawca||'' };
+  });
+  const fixed  = ['NCW Plåt','NCC'];
+  const others = unique.map(u=>u.name)
+                       .filter(n=>!fixed.includes(n) && !['Do dyspozycji','Urlopy','Urlop tacierzyński / L4'].includes(n))
+                       .sort();
+  const order  = [...fixed, ...others, 'Do dyspozycji','Urlopy','Urlop tacierzyński / L4'];
+  unique.sort((a,b)=>order.indexOf(a.name) - order.indexOf(b.name));
 
-        if (item.pracownikId) {
-            acc[item.grupaId].workers.push({
-                name: `${item.imie} ${item.nazwisko}`,
-                m_value: item.m_value
-            });
-        }
+  // czy w ogóle są Urlopy?
+  const hasUrlopy = unique.some(g=>g.name==='Urlopy');
 
-        if (item.pojazdId) {
-            acc[item.grupaId].vehicles.push({
-                name: item.pojazd,
-                m_value: item.m_value ?? ''
-            });
-        }
+  // render każdej grupy
+  for (const {id, name} of unique) {
+    const grp = groups[id];
 
-        if (item.urlop) {
-            acc[item.grupaId].urlopy.push(item.urlop);
-        }
+    // separator przed sekcją Urlopy / tacierzyński
+    if (!separatorDrawn && (name==='Urlopy' || (!hasUrlopy && name==='Urlop tacierzyński / L4'))) {
+      if (yPos > pageH) { doc.addPage(); yPos = topY; }
+      yPos += 20;
+      doc.setLineWidth(3);
+      doc.line(marginL, yPos, doc.internal.pageSize.width-marginL, yPos);
+      doc.setDrawColor(0,0,0);
+      separatorDrawn = true;
+    }
 
-        return acc;
-    }, {});
+    // przed każdą grupą linia oddzielająca
+    if (yPos > pageH) { doc.addPage(); yPos = topY; }
+    doc.setLineWidth(0.5)
+       .line(marginL, yPos, doc.internal.pageSize.width-marginL, yPos);
+    yPos += 20;
 
-    const groupOrder = ['NCW Plåt', 'NCC'];
+    // tytuł grupy
+    doc.setFont('OpenSansB','bold').setFontSize(18).setTextColor(0,0,0);
+    doc.text(name, marginL, yPos);
+    doc.setFont('OpenSans','normal');
+    yPos += 20;
 
-    const uniqueGroups = Object.entries(groups).map(([grupaId, group]) => {
-        const item = data.find(item => item.grupaId == grupaId);
-        return {
-            grupaId,
-            Zleceniodawca: item ? item.Zleceniodawca : ''
-        };
+    // pogrupuj pracowników i pojazdy (zmiana M→S)
+    const byM = {};
+    grp.workers.forEach(w => {
+    const k = w.m || '';
+    (byM[k] = byM[k] || { p: [], c: [] }).p.push(w.name);
+    });
+    grp.vehicles.forEach(v => {
+    const raw = v.m;
+    const k = raw ? raw.replace(/^M/, 'S') : '';
+    // Zamieniamy M→S, żeby pojazdy trzymać pod tym samym numerem co pracownicy
+    (byM[k] = byM[k] || { p: [], c: [] }).c.push(v.name);
     });
 
-    uniqueGroups.sort((a, b) => {
-        const aIndex = groupOrder.indexOf(a.Zleceniodawca);
-        const bIndex = groupOrder.indexOf(b.Zleceniodawca);
-        if (aIndex !== -1 && bIndex === -1) return -1;
-        if (aIndex === -1 && bIndex !== -1) return 1;
-        if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
-        return a.Zleceniodawca.localeCompare(b.Zleceniodawca);
-    });
+    // osobno zapisz puste (bez klucza)
+    const emptyVehicles = byM['']?.c || [];
 
-    let finalY = 80;
+    // wypisz dane w kolejności: M1→S1, M2→S2, ..., reszta
+    const sortedKeys = Object.keys(byM)
+    .filter(k => k && /^M\d+$/.test(k))
+    .sort((a, b) => Number(a.slice(1)) - Number(b.slice(1))); // sortuj M1 < M2 < M3
 
-    uniqueGroups.forEach(({ grupaId, Zleceniodawca }) => {
-        const group = groups[grupaId];
+    for (const mKey of sortedKeys) {
+    const sKey = mKey.replace(/^M/, 'S');
 
-        doc.setLineWidth(0.5);
-        doc.line(marginLeft, finalY, doc.internal.pageSize.width - marginLeft, finalY);
-        finalY += 20;
+    if (byM[mKey]?.p.length) {
+        safeWrap(`${mKey}, ${byM[mKey].p.join(', ')}`);
+    }
 
-        doc.setFontSize(18);
-        doc.setFont("OpenSansB", 'bold');
+    if (byM[sKey]?.c.length) {
+        doc.setTextColor(0, 102, 204);
+        safeWrap(`${sKey}, ${byM[sKey].c.join(', ')}`);
         doc.setTextColor(0, 0, 0);
-        doc.text(Zleceniodawca, marginLeft, finalY);
-        doc.setFont("OpenSans", 'normal');
-        finalY += 20;
-        const unassignedVehicles = group.vehicles
-                    .filter(vehicle =>
-                        vehicle.m_value === null ||
-                        vehicle.m_value === '' ||
-                        typeof vehicle.m_value === 'undefined'
-                    )
-                    .map(vehicle => vehicle.name);
-                    
-        const workersByMValue = {};
-        group.workers.forEach(worker => {
-            if (!workersByMValue[worker.m_value]) {
-                workersByMValue[worker.m_value] = [];
-            }
-            workersByMValue[worker.m_value].push(worker.name);
-        });
+    }
+    }
 
-        const vehiclesByMValue = {};
-        group.vehicles.forEach(vehicle => {
-            const mVal = vehicle.m_value;
-            if (!mVal) {
-                unassignedVehicles.push(vehicle.name); 
-            } else {
-                if (!vehiclesByMValue[mVal]) {
-                    vehiclesByMValue[mVal] = [];
-                }
-                vehiclesByMValue[mVal].push(vehicle.name);
-            }
-        });
+    // na koniec pojazdy bez klucza
+    if (emptyVehicles.length) {
+    doc.setTextColor(0, 102, 204);
+    safeWrap(emptyVehicles.join(', '));
+    doc.setTextColor(0, 0, 0);
+    }
 
-        const sortedMValues = Object.keys(workersByMValue).sort();
-    
-        const usedMValues = new Set();
+    yPos += 20;
+  }
 
-        sortedMValues.forEach(mValue => {
-            const workersList = workersByMValue[mValue].join(', ');
-            if (workersList) {
-                finalY = wrapText(doc, `${mValue}, ${workersList}`, maxWidth, marginLeft, finalY);
-            }
-
-            const vehiclesList = vehiclesByMValue[mValue]?.join(', ');
-            if (vehiclesList) {
-                doc.setFontSize(14);
-                doc.setTextColor(0, 102, 204);
-                finalY = wrapText(doc, `${mValue}, ${vehiclesList}`, maxWidth, marginLeft, finalY);
-                doc.setTextColor(0, 0, 0);
-                usedMValues.add(mValue);
-            }
-        });
-
-                // 1. Samochody przypisane do m_value, ale nie pokryte z pracownikami
-        const remainingVehicles = Object.entries(vehiclesByMValue)
-            .filter(([mValue]) =>
-                mValue && !usedMValues.has(mValue)
-            );
-
-        remainingVehicles.forEach(([mValue, vehicles]) => {
-            doc.setFontSize(14);
-            doc.setTextColor(0, 102, 204);
-            finalY = wrapText(doc, `${mValue}, ${vehicles.join(', ')}`, maxWidth, marginLeft, finalY);
-            doc.setTextColor(0, 0, 0);
-        });
-
-
-        if (unassignedVehicles.length > 0) {
-            doc.setFontSize(14);
-            doc.setTextColor(0, 102, 204);
-            finalY = wrapText(doc, unassignedVehicles.join(', '), maxWidth, marginLeft, finalY);
-            doc.setTextColor(0, 0, 0);
-        }
-
-
-        if (group.urlopy.length > 0) {
-            doc.setFontSize(14);
-            doc.setTextColor(255, 0, 0);
-            finalY = wrapText(doc, `Urlopy: ${group.urlopy.join(', ')}`, maxWidth, marginLeft, finalY);
-            doc.setTextColor(0, 0, 0);
-        }
-
-        finalY += 20;
-    });
-
-    doc.save(`Plan_Grupy_${weekNumber}.pdf`);
+  doc.save(`Plan_Grupy_${wn}.pdf`);
 };
 
 export default PDF_Drukujgrupe;

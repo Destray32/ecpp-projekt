@@ -25,6 +25,7 @@ export default function LogowaniePage() {
             .then((response) => {
                 const data = response.data;
                 setLogData(data);
+                console.log(data);
 
                 // Filter data based on selected criteria
                 const filteredData = data.filter(item => {
@@ -40,7 +41,10 @@ export default function LogowaniePage() {
                 const formattedData = filteredData
                     .map(item => ({
                         ...item,
-                        date: formatDate(item.date)
+                        date: new Intl.DateTimeFormat('pl-PL', {
+                            year: 'numeric', month: '2-digit', day: '2-digit',
+                            hour: '2-digit', minute: '2-digit'
+                        }).format(new Date(item.date))
                     }))
                     .sort((a, b) => new Date(b.date) - new Date(a.date));
 
