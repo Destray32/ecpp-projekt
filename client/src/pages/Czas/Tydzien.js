@@ -43,16 +43,19 @@ export default function TydzienPage() {
     }, []);
 
     useEffect(() => {
-        if (!isLoaded) return;
+        if (!isLoaded || !selectedWeek) return;
 
         const currentYear = selectedWeek.substring(0, 4);
-        Axios.get(`${baseUrl}/api/tydzien/${currentYear}/${numericWeek}`, { withCredentials: true })
+        const currentWeek = parseInt(selectedWeek.substring(6));
+
+        Axios.get(`${baseUrl}/api/tydzien/${currentYear}/${currentWeek}`, { withCredentials: true })
             .then(response => {
                 const filteredData = response.data.filter(item => item.idPracownik != 3);
                 setData(filteredData);
             })
             .catch(error => console.error(error));
-    }, [numericWeek, selectedWeek, refresh]);
+    }, [selectedWeek, refresh]);
+
 
 
     const generatePDF = () => {
@@ -199,14 +202,56 @@ export default function TydzienPage() {
         });
     };
 
+    const handlePreviousWeek = () => {
+        const current = new Date(getStartDateOfWeek(selectedWeek));
+        current.setDate(current.getDate() - 7);
+        updateWeek(current);
+    };
+
+    const handleNextWeek = () => {
+        const current = new Date(getStartDateOfWeek(selectedWeek));
+        current.setDate(current.getDate() + 7);
+        updateWeek(current);
+    };
+
+    const updateWeek = (date) => {
+    const year = date.getFullYear();
+    const oneJan = new Date(year, 0, 1);
+    const numberOfDays = Math.floor((date - oneJan) / (24 * 60 * 60 * 1000));
+    const week = Math.ceil((numberOfDays + oneJan.getDay() + 1) / 7);
+
+    const newWeekString = `${year}-W${week.toString().padStart(2, '0')}`;
+
+    // Zaktualizuj stany tylko jeśli coś faktycznie się zmienia
+    setSelectedWeek(prev => {
+        if (prev !== newWeekString) return newWeekString;
+        return prev;
+    });
+
+    setNumericWeek(prev => {
+        if (prev !== week) return week;
+        return prev;
+    });
+
+    const startDate = getStartDateOfWeek(newWeekString);
+    const endDate = getEndDateOfWeek(startDate);
+    setWeekRange({
+        start: formatDate(startDate),
+        end: formatDate(endDate)
+    });
+    setRefresh(prev => !prev);
+};
+
     return (
         <div>
             <AmberBox>
                 <div className="flex flex-col items-center space-y-8 p-4 w-full">
                     <div className="flex flex-row items-center justify-evenly w-full space-x-2">
                         <p className="">Wybierz tydzień:</p>
+                        <Button icon="pi pi-arrow-left" onClick={handlePreviousWeek} className="p-button-text" />
                         <input type="week" value={selectedWeek} onChange={handleWeekChange} />
-                        <div className="">
+                        <Button icon="pi pi-arrow-right" onClick={handleNextWeek} className="p-button-text" />
+                        <div>
                             <p>
                                 {weekRange.start && weekRange.end ? ` ${weekRange.start} - ${weekRange.end}` : 'Wybierz tydzień, aby zobaczyć przedział dni'}
                             </p>

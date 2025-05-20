@@ -116,7 +116,7 @@ export default function PojazdyPage() {
     return (
         <div>
             <AmberBox>
-                <div className="flex flex-row items-center p-4 w-full">
+                <div className="flex flex-row items-center p-2 w-full">
                     <p>Pojazdy</p>
                     <div className="ml-auto">
                         <Link to="/home/nowy-pojazd" onClick={(e) => {
@@ -133,32 +133,32 @@ export default function PojazdyPage() {
                     </div>
                 </div>
             </AmberBox>
-            <div className="w-auto bg-gray-300 h-full m-2 outline outline-1 outline-gray-500">
+            <div className="w-auto bg-gray-300 m-2 outline outline-1 outline-gray-500">
                 <table className="w-full table-fixed">
-                    <thead className="bg-blue-700 text-white">
+                    <thead className="bg-blue-700 text-white ">
                         <tr>
-                            <th className="border-r w-1/12">Nr</th>
-                            <th className="border-r">Nr rejestracyjny</th>
-                            <th className="border-r">Marka</th>
-                            <th className="border-r">Uwagi</th>
+                            <th className="border-r w-1/12 border-black">Nr</th>
+                            <th className="border-r border-black">Nr rejestracyjny</th>
+                            <th className="border-r border-black">Marka</th>
+                            <th className="border-r border-black">Uwagi</th>
                             <th>Akcje</th>
                         </tr>
                     </thead>
                     <tbody className="text-center">
                         {tableData && tableData.map((item, index) => (
-                            <tr key={item.id} className="border-b even:bg-gray-200 odd:bg-gray-300">
-                                <td className="border-r">{index + 1}</td>
-                                <td className="border-r">
+                            <tr key={item.id} className="border-b even:bg-gray-200 odd:bg-gray-300 ">
+                                <td className="border-r border-black">{index + 1}</td>
+                                <td className="border-r border-black">
                                     {editableRow === item.id ? (
                                         <div>
                                             <input
                                                 type="text"
                                                 value={editedData.hasOwnProperty("numerRejestracyjny") ? editedData.numerRejestracyjny : item.numerRejestracyjny}
                                                 onChange={(e) => handleChange(e, 'numerRejestracyjny')}
-                                                className="border rounded p-2 w-3/4"
+                                                className="border rounded w-3/4 border-black"
                                             />
                                             {error.numerRejestracyjny && (
-                                                <p className="text-red-500 text-sm mt-1">{error.numerRejestracyjny}</p>
+                                                <p className="text-red-500 text-sm mt-1 ">{error.numerRejestracyjny}</p>
                                             )}
                                         </div>
                                     ) : (
@@ -166,14 +166,14 @@ export default function PojazdyPage() {
                                     )}
                                 </td>
 
-                                <td className="border-r">
+                                <td className="border-r border-black">
                                     {editableRow === item.id ? (
                                         <div>
                                             <input
                                                 type="text"
                                                 value={editedData.hasOwnProperty("marka") ? editedData.marka : item.marka}
                                                 onChange={(e) => handleChange(e, 'marka')}
-                                                className="border rounded p-2 w-3/4"
+                                                className="border rounded w-3/4 "
                                             />
                                             {error.marka && (
                                                 <p className="text-red-500 text-sm mt-1">{error.marka}</p>
@@ -184,13 +184,13 @@ export default function PojazdyPage() {
                                     )}
                                 </td>
 
-                                <td className="border-r">
+                                <td className="border-r border-black">
                                     {editableRow === item.id ? (
                                         <input
                                             type="text"
                                             value={editedData.hasOwnProperty("uwagi") ? editedData.uwagi : item.uwagi}
                                             onChange={(e) => handleChange(e, 'uwagi')}
-                                            className="border rounded p-2 w-3/4"
+                                            className="border rounded w-3/4 "
                                         />
                                     ) : (
                                         item.uwagi
