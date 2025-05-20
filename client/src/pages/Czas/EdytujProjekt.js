@@ -37,7 +37,7 @@ export default function EdytujProjektPage() {
     };
 
     const fetchProjects = () => {
-        Axios.get(`{baseUrl}/api/czas/projekty`, { withCredentials: true })
+        Axios.get(`${baseUrl}/api/czas/projekty`, { withCredentials: true })
             .then((response) => {
                 const transformedDataProjects = response.data.projekty.map(projekty => ({
                     name: projekty.NazwaKod_Projektu,

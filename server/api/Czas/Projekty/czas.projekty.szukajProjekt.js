@@ -1,7 +1,19 @@
 function SzukajProjekt(req, res, db) {
     const group = req.query.group;
 
-    let sql = 'SELECT * FROM projekty WHERE Archiwum = 0';
+    let sql = `
+        SELECT 
+            p.idProjekty AS id,
+            g.Zleceniodawca,
+            p.NazwaKod_Projektu,
+            p.Status
+        FROM 
+            Projekty p
+        JOIN
+            Grupa_urlopowa g ON p.Grupa_urlopowa_idGrupa_urlopowa = g.idGrupa_urlopowa
+        WHERE 
+            p.Archiwum = 0
+    `;
     const queryParams = [];
 
     if (group && group !== 'Wszystkie') {
@@ -16,7 +28,6 @@ function SzukajProjekt(req, res, db) {
         } else {
             const formattedRows = result.map(row => ({
                 id: row.idProjekty,
-                Firma: row.Firma,
                 Zleceniodawca: row.Zleceniodawca,
                 NazwaKod_Projektu: row.NazwaKod_Projektu,
                 Status: row.Status,
@@ -24,6 +35,7 @@ function SzukajProjekt(req, res, db) {
             res.status(200).json({ projekty: formattedRows });
         }
     });
+
 }
 
 module.exports = SzukajProjekt;

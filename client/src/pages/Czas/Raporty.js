@@ -114,7 +114,6 @@ export default function RaportyPage() {
             
             const raportData = raportResponse.data.raport;
             setRaport(raportData);
-            console.log(raportData);
     
             let filteredProjekty = projekty;
 

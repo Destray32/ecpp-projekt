@@ -49,9 +49,11 @@ export default function ProjektyPage() {
     const handleSzukaj = () => {
         Axios.get(`${baseUrl}/api/czas/szukaj?group=${filtr}`, { withCredentials: true })
             .then((response) => {
-                //console.log('Response data:', response.data);
                 if (response.data && Array.isArray(response.data.projekty)) {
-                    setData(response.data.projekty);
+                    const sortedProjects = [...response.data.projekty].sort((a, b) =>
+                        a.Zleceniodawca.localeCompare(b.Zleceniodawca)
+                    );
+                    setData(sortedProjects);
                 } else {
                     console.error('Unexpected response structure:', response.data);
                     setData([]);
@@ -93,7 +95,10 @@ export default function ProjektyPage() {
         Axios.get(`${baseUrl}/api/czas/projekty`, { withCredentials: true })
             .then((response) => {
                 if (response.data && Array.isArray(response.data.projekty)) {
-                    setData(response.data.projekty);
+                    const sortedProjects = [...response.data.projekty].sort((a, b) =>
+                        a.Zleceniodawca.localeCompare(b.Zleceniodawca)
+                    );
+                    setData(sortedProjects);
                 } else {
                     console.error('Unexpected response structure:', response.data);
                     setData([]);
@@ -112,7 +117,7 @@ export default function ProjektyPage() {
                     <div className="w-full h-2/6">
                         <div className="w-full flex flex-row items-center p-4">
                             <p className="mr-6">Filtr</p>
-                            <Dropdown value={filtr} onChange={(e) => setFiltr(e.value)} options={["Aktywny", "Zamkniety", "Wszystkie"]} placeholder="Filtrowanie"
+                            <Dropdown value={filtr} onChange={(e) => setFiltr(e.value)} options={["Aktywny", "Nieaktywny", "Wszystkie"]} placeholder="Filtrowanie"
                                 autoComplete="off"
                                 className="w-3/12 mr-10"
                                 filter
@@ -143,14 +148,14 @@ export default function ProjektyPage() {
                     </div>
                 </div>
             </AmberBox>
-            <div className="w-auto bg-gray-300 h-full m-2 outline outline-1 outline-gray-500">
+            <div className="w-auto bg-gray-300 h-full m-2 outline outline-1 outline-black ">
                 <table className="w-full">
                     <thead className="bg-blue-700 text-white">
                         <tr>
-                            <th className="border-r"></th>
-                            <th className="border-r">Nr</th>
-                            <th className="border-r">Nazwa/Kod Projektu</th>
-                            <th className="border-r">Status projektu</th>
+                            <th className="border-r border-black"></th>
+                            <th className="border-r border-black">Nr</th>
+                            <th className="border-r text-left pl-4 border-black">Zleceniodawca - Nazwa/Kod Projektu</th>
+                            <th className="border-r border-black">Status projektu</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -160,17 +165,19 @@ export default function ProjektyPage() {
                                 ? 'text-green-500'
                                 : 'text-red-500';
                             return (
-                                <tr key={projekty.id} className="border-b even:bg-gray-200 odd:bg-gray-300">
-                                    <td className="border-r">
+                                <tr key={projekty.id} className="border-b border-black even:bg-gray-200 odd:bg-gray-300">
+                                    <td className="border-r border-black">
                                         <Checkbox
                                             inputId={`cb-${projekty.id}`}
                                             checked={selectedItems.includes(projekty.id)}
                                             onChange={() => handleCheckboxChange(projekty.id)}
                                         />
                                     </td>
-                                    <td className="border-r">{index + 1}</td>
-                                    <td className="border-r">{projekty.NazwaKod_Projektu}</td>
-                                    <td className={`border-r ${statusClass}`}>{projekty.Status}</td>
+                                    <td className="border-r border-black">{index + 1}</td>
+                                    <td className="border-r border-black text-left pl-4">
+                                        <span className="text-blue-800 font-bold">{projekty.Zleceniodawca}</span> – {projekty.NazwaKod_Projektu}
+                                    </td>
+                                    <td className={`border-r border-black ${statusClass}`}>{projekty.Status}</td>
                                     <td>
                                         <Link to={`/home/projekt/${projekty.id}`}>
                                             <Button
