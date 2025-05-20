@@ -7,7 +7,7 @@ const PDF_SprawozdaniePodsumowanie = (raport, startDate, endDate, Projekt) => {
     doc.addFont('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-Regular.ttf', 'Roboto', 'normal');
     doc.setFont('Roboto');
 
-    // Group data by ProjektID
+    // Grupowanie danych po ProjektID
     const groupedByProject = raport.reduce((acc, row) => {
         const projectId = row.ProjektID;
         if (!acc[projectId]) {
@@ -21,6 +21,7 @@ const PDF_SprawozdaniePodsumowanie = (raport, startDate, endDate, Projekt) => {
     }, {});
 
     const projectIds = Object.keys(groupedByProject);
+
     if (projectIds.length === 0) {
         notification.info({
             message: 'Informacja',
@@ -30,38 +31,36 @@ const PDF_SprawozdaniePodsumowanie = (raport, startDate, endDate, Projekt) => {
         return;
     }
 
-    // Iterate over each project group
-    projectIds.forEach((projectId, index) => {
+    // Filtrowanie projektów, które mają godzin > 0 w danym okresie
+    const filteredProjectIds = projectIds.filter(projectId => {
+        const { entries } = groupedByProject[projectId];
+        const entriesInDateRange = (startDate && endDate)
+            ? entries.filter(entry => {
+                const entryDate = new Date(entry.Data.split('.').reverse().join('-'));
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                return entryDate >= start && entryDate <= end;
+            })
+            : entries;
+
+        const totalHours = entriesInDateRange.reduce((sum, entry) => sum + (parseFloat(entry.GodzinyPrzepracowane) || 0), 0);
+        return totalHours > 0;
+    });
+
+    if (filteredProjectIds.length === 0) {
+        notification.info({
+            message: 'Informacja',
+            description: 'Brak danych z godzinami w wybranym okresie dla wybranego projektu',
+            placement: 'topRight',
+        });
+        return;
+    }
+
+    for (let i = 0; i < filteredProjectIds.length; i++) {
+        const projectId = filteredProjectIds[i];
         const { projectName, entries } = groupedByProject[projectId];
 
-        // Setting up header and project name
-        if (index > 0) {
-            doc.addPage(); // Add a new page for the next project
-        }
-        doc.setFontSize(14);
-        doc.setTextColor(0, 102, 204);
-        doc.text("Sprawozdanie z działalności - podsumowanie", 14, 20);
-
-        doc.setFontSize(12);
-        doc.setTextColor(50, 50, 50);
-        let okresYPosition = 40;
-        let okresText = `Okres: ${startDate && endDate ? `${startDate} - ${endDate}` : '-'}`;
-        doc.text(okresText, 14, okresYPosition);
-
-        const currentDate = new Date().toLocaleDateString('pl-PL');
-        const pageWidth = doc.internal.pageSize.getWidth();
-        doc.text(currentDate, pageWidth - 14, 20, { align: 'right' });
-
-        doc.setDrawColor(0, 0, 0);
-        doc.setLineWidth(0.5);
-        doc.line(14, okresYPosition + 3, pageWidth - 14, okresYPosition + 3);
-
-        okresYPosition += 20;
-        doc.setFontSize(10);
-        doc.setTextColor(0, 0, 0);
-        doc.text(`Projekt: ${projectName}`, 40, okresYPosition);
-
-        // Filter by date range if provided
+        // Filtrujemy wpisy po dacie
         let employeeEntries = [];
         if (startDate && endDate) {
             const start = new Date(startDate);
@@ -80,10 +79,10 @@ const PDF_SprawozdaniePodsumowanie = (raport, startDate, endDate, Projekt) => {
                 description: `Brak danych dla wybranych pracowników w wybranym okresie dla projektu ${projectName}`,
                 placement: 'topRight',
             });
-            return; // Skip to the next project if no entries found
+            continue; // Przechodzimy do następnego projektu
         }
 
-        // Grouping employee data
+        // Grupowanie danych po pracowniku i sumowanie wartości
         const groupedByEmployee = employeeEntries.reduce((acc, entry) => {
             const employee = entry.Pracownik;
             if (!acc[employee]) {
@@ -97,6 +96,7 @@ const PDF_SprawozdaniePodsumowanie = (raport, startDate, endDate, Projekt) => {
             }
             acc[employee].hours += parseFloat(entry.GodzinyPrzepracowane) || 0;
             acc[employee].kilometry += parseFloat(entry.Kilometry) || 0;
+            acc[employee].parking += parseFloat(entry.Parking) || 0; // dodane sumowanie parkingu
             acc[employee].diety += parseFloat(entry.Diety) || 0;
             acc[employee].inneKoszty += parseFloat(entry.Inne_koszty) || 0;
             return acc;
@@ -104,18 +104,46 @@ const PDF_SprawozdaniePodsumowanie = (raport, startDate, endDate, Projekt) => {
 
         const totalTime = Object.values(groupedByEmployee).reduce((acc, employeeData) => acc + employeeData.hours, 0);
 
-        // nie udalo mi sie zreplikować problemu z pojawianiem sie projektów z 0.00 godzinami, ale może to pomoże jakoś
         if (totalTime === 0) {
-            return;
+            // Pomijamy projekt bez przepracowanych godzin
+            continue;
         }
 
-        // Prepare table data
+        if (i > 0) {
+            doc.addPage(); // Dodajemy nową stronę dla kolejnego projektu
+        }
+
+        // Nagłówek raportu
+        doc.setFontSize(14);
+        doc.setTextColor(0, 102, 204);
+        doc.text("Sprawozdanie z działalności - podsumowanie", 14, 20);
+
+        doc.setFontSize(12);
+        doc.setTextColor(50, 50, 50);
+        let okresYPosition = 40;
+        const okresText = `Okres: ${startDate && endDate ? `${startDate} - ${endDate}` : '-'}`;
+        doc.text(okresText, 14, okresYPosition);
+
+        const currentDate = new Date().toLocaleDateString('pl-PL');
+        const pageWidth = doc.internal.pageSize.getWidth();
+        doc.text(currentDate, pageWidth - 14, 20, { align: 'right' });
+
+        doc.setDrawColor(0, 0, 0);
+        doc.setLineWidth(0.5);
+        doc.line(14, okresYPosition + 3, pageWidth - 14, okresYPosition + 3);
+
+        okresYPosition += 20;
+        doc.setFontSize(10);
+        doc.setTextColor(0, 0, 0);
+        doc.text(`Projekt: ${projectName}`, 40, okresYPosition);
+
+        // Przygotowanie danych do tabeli
         const tableData = Object.keys(groupedByEmployee).map(employee => {
             const { hours, kilometry, parking, diety, inneKoszty } = groupedByEmployee[employee];
             return [
                 employee,
                 hours.toFixed(2),
-                "104.50", 
+                "104.50", // statyczna wartość, jeśli chcesz dynamiczną, trzeba zmienić
                 kilometry.toFixed(2),
                 parking.toFixed(2),
                 diety.toFixed(2),
@@ -124,7 +152,7 @@ const PDF_SprawozdaniePodsumowanie = (raport, startDate, endDate, Projekt) => {
         });
 
         tableData.push([
-            'Suma: ', totalTime.toFixed(2), '', '', '', '', 'Suma: 0.00' 
+            'Suma: ', totalTime.toFixed(2), '', '', '', '', 'Suma: 0.00'
         ]);
 
         doc.autoTable({
@@ -153,9 +181,9 @@ const PDF_SprawozdaniePodsumowanie = (raport, startDate, endDate, Projekt) => {
             margin: { horizontal: 10, top: 10, left: 30, right: 30 },
             tableWidth: 'auto',
         });
-    });
+    }
 
-    // Footer with page number
+    // Stopka z numeracją stron
     const bottomYPosition = doc.internal.pageSize.getHeight() - 30;
     doc.setDrawColor(0, 0, 0);
     doc.setLineWidth(0.5);
@@ -167,7 +195,7 @@ const PDF_SprawozdaniePodsumowanie = (raport, startDate, endDate, Projekt) => {
         doc.text(`Strona ${i} z ${pageNumber}`, doc.internal.pageSize.getWidth() - 14, bottomYPosition + 15, { align: 'right' });
     }
 
-    // Save the document
+    // Zapis pliku PDF
     doc.save("Sprawozdanie_z_dzialalnosci.pdf");
 };
 

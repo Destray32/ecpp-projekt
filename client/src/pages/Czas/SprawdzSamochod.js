@@ -9,13 +9,21 @@ import 'jspdf-autotable';
 import { font } from "../../fonts/OpenSans-Regular-normal";
 
 export default function SprawdzSamochodPage() {
+    const [allData, setAllData] = useState([]);
+    const [tableData, setTableData] = useState([]);
+
     const [Pojazd, setPojazd] = useState(null);
     const [Pracownik, setPracownik] = useState(null);
-    const [tableData, setTableData] = useState([]);
+    const [Projekt, setProjekt] = useState(null);
+
     const [pojazdyOptions, setPojazdyOptions] = useState([]);
     const [pracownicyOptions, setPracownicyOptions] = useState([]);
+    const [projektyOptions, setProjektyOptions] = useState([]);
+
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
+    const [sortOrder, setSortOrder] = useState('desc'); // 'asc' lub 'desc'
+
     const baseUrl = process.env.REACT_APP_BASE_URL;
 
     const formatDate = (dateStr) => {
@@ -23,62 +31,61 @@ export default function SprawdzSamochodPage() {
         return date.toISOString().split('T')[0];
     };
 
-    const fetchData = () => {
-    axios.get(`${baseUrl}/api/samochody`, { withCredentials: true })
-        .then((response) => {
-            const data = response.data;
-
-            const filteredData = data.filter(item => {
-                const itemDate = formatDate(item.Data);
-                if (Pojazd && item.Pojazd !== Pojazd) return false;
-                if (Pracownik && item.Pracownik !== Pracownik) return false;
-                if (startDate && itemDate < startDate) return false;
-                if (endDate && itemDate > endDate) return false;
-                return true;
-            });
-
-            const formattedData = filteredData
-                .map(item => ({
+    // Pobranie danych raz przy załadowaniu strony
+    useEffect(() => {
+        axios.get(`${baseUrl}/api/samochody`, { withCredentials: true })
+            .then((response) => {
+                const data = response.data.map(item => ({
                     ...item,
                     Data: formatDate(item.Data)
-                }))
-                .sort((a, b) => new Date(b.Data) - new Date(a.Data)); 
-
-            setTableData(formattedData);
-
-            if (pojazdyOptions.length === 0) {
-                const pojazdySet = new Set(data.map(item => item.Pojazd));
-                const options = Array.from(pojazdySet).map(pojazd => ({
-                    label: pojazd,
-                    value: pojazd
                 }));
-                setPojazdyOptions(options);
-            }
-            
-            if (pracownicyOptions.length === 0) {
-                const pracownicySet = new Set(data.map(item => item.Pracownik));
-                const options = Array.from(pracownicySet).map(pracownik => ({
-                    label: pracownik,
-                    value: pracownik
-                }));
-                setPracownicyOptions(options);
-            }
-        })
-        .catch((error) => {
-            console.error(error);
-        });
-};
+                setAllData(data);
+            })
+            .catch(console.error);
+    }, [baseUrl]);
 
-
+    // Filtrowanie i sortowanie danych na podstawie wybranych opcji
     useEffect(() => {
-        fetchData();
-    }, [Pojazd, Pracownik, startDate, endDate]);
+        const filtered = allData.filter(item => {
+            if (Pojazd && item.Pojazd !== Pojazd) return false;
+            if (Pracownik && item.Pracownik !== Pracownik) return false;
+            if (Projekt && item.Projekt !== Projekt) return false;
+            if (startDate && item.Data < startDate) return false;
+            if (endDate && item.Data > endDate) return false;
+            return true;
+        });
+
+        // Aktualizacja dropdownów bazując na przefiltrowanych danych
+        const pojazdySet = new Set(filtered.map(item => item.Pojazd));
+        const pracownicySet = new Set(filtered.map(item => item.Pracownik));
+        const projektySet = new Set(filtered.map(item => item.Projekt));
+
+        setPojazdyOptions(Array.from(pojazdySet).map(p => ({ label: p, value: p })));
+        setPracownicyOptions(Array.from(pracownicySet).map(p => ({ label: p, value: p })));
+        setProjektyOptions(Array.from(projektySet).map(p => ({ label: p, value: p })));
+
+        // Reset wybranych wartości jeśli nie pasują do filtrów
+        if (Pojazd && !pojazdySet.has(Pojazd)) setPojazd(null);
+        if (Pracownik && !pracownicySet.has(Pracownik)) setPracownik(null);
+        if (Projekt && !projektySet.has(Projekt)) setProjekt(null);
+
+        // Sortowanie według daty
+        const sortedData = [...filtered].sort((a, b) => {
+            if (sortOrder === 'asc') {
+                return new Date(a.Data) - new Date(b.Data);
+            } else {
+                return new Date(b.Data) - new Date(a.Data);
+            }
+        });
+
+        setTableData(sortedData);
+    }, [allData, Pojazd, Pracownik, Projekt, startDate, endDate, sortOrder]);
 
     const generatePDF = () => {
         const doc = new jsPDF();
 
         doc.setFont("OpenSans-Regular", "normal");
-        
+
         const columns = [
             { header: "Data", dataKey: "Data" },
             { header: "Imię i nazwisko", dataKey: "Pracownik" },
@@ -86,7 +93,7 @@ export default function SprawdzSamochodPage() {
             { header: "Projekt", dataKey: "Projekt" },
             { header: "Ilość godzin", dataKey: "GodzinyPrzepracowane" }
         ];
-        
+
         const rows = tableData.map(item => ({
             Data: item.Data,
             Pracownik: item.Pracownik,
@@ -94,7 +101,7 @@ export default function SprawdzSamochodPage() {
             Projekt: item.Projekt,
             GodzinyPrzepracowane: item.GodzinyPrzepracowane
         }));
-    
+
         doc.autoTable({
             head: [columns.map(col => col.header)],
             body: rows.map(row => columns.map(col => row[col.dataKey])),
@@ -109,9 +116,9 @@ export default function SprawdzSamochodPage() {
                 fontStyle: "bold"
             }
         });
-    
+
         doc.text("Lista samochodów", 14, 15);
-        //doc.save("lista-samochodow.pdf");
+
         const pdfBlob = doc.output('blob');
         const pdfURL = URL.createObjectURL(pdfBlob);
 
@@ -121,36 +128,94 @@ export default function SprawdzSamochodPage() {
     return (
         <div>
             <AmberBox>
-                <div className="flex flex-row items-center justify-center space-x-4 w-full">
+                <div className="flex flex-row items-center justify-center space-x-4 w-full flex-wrap">
                     <p>Wybierz okres</p>
-                    <input type="date" className="p-2.5 rounded" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-                    <input type="date" className="p-2.5 rounded" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-                    <Dropdown value={Pojazd} options={pojazdyOptions} onChange={(e) => setPojazd(e.value)} showClear placeholder="Wybierz pojazd" />
-                    <Dropdown value={Pracownik} options={pracownicyOptions} onChange={(e) => setPracownik(e.value)} showClear placeholder="Wybierz pracownika" />
-                    <Button onClick={generatePDF} label="Drukuj" className="p-button-outlined border-2 p-2.5 bg-white text-black" />
+                    <input
+                        type="date"
+                        className="p-2.5 rounded"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                    />
+                    <input
+                        type="date"
+                        className="p-2.5 rounded"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                    />
+                    <Dropdown
+                        value={Pojazd}
+                        options={pojazdyOptions}
+                        onChange={(e) => setPojazd(e.value)}
+                        showClear
+                        placeholder="Wybierz pojazd"
+                        style={{ minWidth: 150 }}
+                    />
+                    <Dropdown
+                        value={Pracownik}
+                        options={pracownicyOptions}
+                        onChange={(e) => setPracownik(e.value)}
+                        showClear
+                        placeholder="Wybierz pracownika"
+                        style={{ minWidth: 180 }}
+                    />
+                    <Dropdown
+                        value={Projekt}
+                        options={projektyOptions}
+                        onChange={(e) => setProjekt(e.value)}
+                        showClear
+                        placeholder="Wybierz projekt"
+                        style={{ minWidth: 150 }}
+                    />
+                    <Dropdown
+                        value={sortOrder}
+                        options={[
+                            { label: 'Data malejąco', value: 'desc' },
+                            { label: 'Data rosnąco', value: 'asc' }
+                        ]}
+                        onChange={(e) => setSortOrder(e.value)}
+                        placeholder="Sortuj po dacie"
+                        style={{ minWidth: 150 }}
+                    />
+                    <Button
+                        onClick={generatePDF}
+                        label="Drukuj"
+                        className="p-button-outlined border-2 p-2.5 bg-white text-black"
+                    />
                 </div>
             </AmberBox>
-            <div className="w-auto bg-gray-300 h-full m-2 outline outline-1 outline-gray-500">
-                <table className="w-full">
-                    <thead className="bg-blue-700 text-left text-white">
+
+            <div className="w-auto bg-gray-300 h-full m-2 outline outline-1 outline-gray-500 overflow-auto ">
+                <table className="w-full table-fixed">
+                    <thead className="bg-blue-700 text-left text-white sticky top-0">
                         <tr>
-                            <th className="border-r">Data</th>
-                            <th className="border-r">Imię i nazwisko</th>
-                            <th className="border-r">Pojazd</th>
-                            <th className="border-r">Projekt</th>
-                            <th className="border-r">Ilość godzin</th>
+                            <th className="border-r px-2 py-1 w-32">Data</th>
+                            <th className="border-r px-2 py-1 w-48">Imię i nazwisko</th>
+                            <th className="border-r px-2 py-1 w-32">Pojazd</th>
+                            <th className="border-r px-2 py-1 w-48">Projekt</th>
+                            <th className="border-r px-2 py-1 w-32">Ilość godzin</th>
                         </tr>
                     </thead>
-                    <tbody className="">
-                        {tableData.map((item, index) => (
-                            <tr key={index} className="border-b even:bg-gray-200 odd:bg-gray-300">
-                                <td className="border-r text-left pl-2">{item.Data}</td>
-                                <td className="border-r text-left pl-2">{item.Pracownik}</td>
-                                <td className="border-r text-left pl-2">{item.Pojazd}</td>
-                                <td className="border-r text-left pl-2">{item.Projekt}</td>
-                                <td className="border-r text-left pl-2">{item.GodzinyPrzepracowane}</td>
+                    <tbody>
+                        {tableData.length === 0 ? (
+                            <tr>
+                                <td colSpan={5} className="text-center p-4">
+                                    Brak danych do wyświetlenia
+                                </td>
                             </tr>
-                        ))}
+                        ) : (
+                            tableData.map((item, index) => (
+                                <tr
+                                    key={index}
+                                    className={`border-b ${index % 2 === 0 ? 'bg-gray-200' : 'bg-gray-300'}`}
+                                >
+                                    <td className="border-r text-left pl-2">{item.Data}</td>
+                                    <td className="border-r text-left pl-2">{item.Pracownik}</td>
+                                    <td className="border-r text-left pl-2">{item.Pojazd}</td>
+                                    <td className="border-r text-left pl-2">{item.Projekt}</td>
+                                    <td className="border-r text-left pl-2">{item.GodzinyPrzepracowane}</td>
+                                </tr>
+                            ))
+                        )}
                     </tbody>
                 </table>
             </div>
