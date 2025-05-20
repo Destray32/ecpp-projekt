@@ -30,6 +30,7 @@ export default function RaportyPage() {
     const [accountType, setAccountType] = useState('');
     const [imie, setImie] = useState('');
     const [nazwisko, setNazwisko] = useState('');
+    const [allPracownicyOptions, setAllPracownicyOptions] = useState([]);
     const baseUrl = process.env.REACT_APP_BASE_URL;
     useEffect(() => {
         checkUserType(setAccountType);
@@ -50,11 +51,7 @@ export default function RaportyPage() {
     useEffect(() => {
         setStartDate('');
         setEndDate('');
-    }, [ignorujDatyFirma]);
-
-    useEffect(() => {
-        fetchProjektyPracownicy();
-    }, []);
+    }, [ignorujDatyFirma, accountType]);
 
     useEffect(() => {
         if (Projekt && !projektyOptions.some(p => p.value === Projekt)) {
@@ -67,28 +64,41 @@ export default function RaportyPage() {
     }, [startDate, endDate, ignorujDatyFirma]);
 
     useEffect(() => {
-        if (imie && nazwisko) {
-            fetchProjektyPracownicy();
-        }
-    }, [imie, nazwisko, accountType]);
+        axios.get(`${baseUrl}/api/pracownicy`, { withCredentials: true })
+            .then(res => {
+                const opts = res.data.map(p => ({ label: `${p.name} ${p.surname}`, value: p.id }));
+                setAllPracownicyOptions(opts);
+                setAvailablePracownicy(opts);
+            });
+        }, []);
 
-    const fetchProjektyPracownicy = async () => {
-        try {
-            const response = await axios.get(`${baseUrl}/api/pracownicy`, { withCredentials: true });
-            const pracownicy = response.data;
-            let pracownicyOptions = [];
-            if(accountType === 'Pracownik') {
-                pracownicyOptions = pracownicy
-                .filter(item => item.name === imie && item.surname === nazwisko)
-                .map(pracownik => ({ label: `${pracownik.name} ${pracownik.surname}`, value: pracownik.id }));
-            } else {
-                pracownicyOptions = pracownicy.map(pracownik => ({ label: `${pracownik.name} ${pracownik.surname}`, value: pracownik.id }));
-            }
-            setAvailablePracownicy(pracownicyOptions);
-        } catch (error) {
-            console.log(error);
+        useEffect(() => {
+        if (!interfacePracownik || !startDate || !endDate) {
+            setAvailablePracownicy(allPracownicyOptions);
+            return;
         }
-    }
+
+        const sd = new Date(startDate);
+        const ed = new Date(endDate);
+
+        const pracInRange = new Set(
+            raport
+            .filter(e => {
+                if (!e.PracownikID || !e.Data) return false;
+                // tu oddzielamy część daty od czasu
+                const [datePart] = e.Data.split(' ');
+                const [d, m, y] = datePart.split('.');
+                const dt = new Date(`${y}-${m}-${d}`);
+                return dt >= sd && dt <= ed;
+            })
+            .map(e => e.PracownikID)
+        );
+
+        setAvailablePracownicy(
+            allPracownicyOptions.filter(p => pracInRange.has(p.value))
+        );
+        }, [interfacePracownik, startDate, endDate, raport, allPracownicyOptions]);
+
 
     const fetchProjektyAndRaport = () => {
         Promise.all([
@@ -104,6 +114,7 @@ export default function RaportyPage() {
             
             const raportData = raportResponse.data.raport;
             setRaport(raportData);
+            console.log(raportData);
     
             let filteredProjekty = projekty;
 
@@ -163,8 +174,6 @@ export default function RaportyPage() {
     }
 
     if (!ignorujDatyFirma) {
-
-    console.log("Filtered raport", filteredRaport);
 
     filteredRaport = filteredRaport.filter(entry => {
         if (!entry.Data) return false;
@@ -232,6 +241,36 @@ export default function RaportyPage() {
                 break;
         }
     };
+    const handleGenerateAllEmployees = () => {
+        if (!startDate || !endDate) {
+            notification.info({
+            message: 'Informacja',
+            description: 'Wypełnij daty',
+            placement: 'topRight'
+            });
+            return;
+        }
+
+        const [sd, ed] = [new Date(startDate), new Date(endDate)];
+
+        const filtered = raport.filter(e => {
+            if (!e.Data) return false;
+            const [datePart] = e.Data.split(' ');
+            const [d, m, y] = datePart.split('.');
+            const dt = new Date(`${y}-${m}-${d}`);
+            return dt >= sd && dt <= ed;
+        });
+
+        switch (wybranyRaport) {
+            case "Analiza świadczeń pracowniczych":
+            PDF_AnalizaSwiadczenPracowniczych(filtered, startDate, endDate, null);
+            break;
+            case "Pracownik Analiza czasu - działalność":
+            PDF_PracownikAnalizaCzasu(filtered, startDate, endDate, null);
+            break;
+        }
+        };
+
 
     const przejscieDoInterfejsuFirma = () => {
         setInterfaceFirma(true);
@@ -325,14 +364,19 @@ export default function RaportyPage() {
                               resetFilterOnHide
                           />
                       )}
-                      
                       <div className="flex flex-row items-center space-x-4">
-                          <Button
-                              onClick={handleGenerateReport}
-                              label="Generuj raport"
-                              className="p-button-outlined border-2 p-2.5 bg-white text-black stable-button"
-                          />
-                          
+                            <Button
+                            onClick={handleGenerateReport}
+                            label="Generuj raport"
+                            className="p-button-outlined border-2 p-2.5 bg-white text-black stable-button"
+                            />
+                      {interfacePracownik && (
+                            <Button
+                            onClick={handleGenerateAllEmployees}
+                            label="Generuj wszystkie"
+                            className="p-button-outlined border-2 p-2.5 bg-white text-black stable-button"
+                            />
+                        )}
                           {interfaceFirma && (
                               <Button
                                   onClick={handleGenerateWszystkie}
