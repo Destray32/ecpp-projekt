@@ -104,7 +104,7 @@ export default function LogowaniePage() {
                         <thead className="bg-blue-700 text-white">
                             <tr>
                                 <th className="border-r">Imię</th>
-                                <th className="border-r">Naziwsko</th>
+                                <th className="border-r">Nazwisko</th>
                                 <th className="border-r">Data</th>
                                 <th className="border-r">Szczegoły</th>
                             </tr>

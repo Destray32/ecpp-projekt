@@ -22,7 +22,7 @@ export default function UrlopyPage() {
     const [selectedGrupy, setSelectedGrupy] = useState({});
     const [selectedGrupyNazwa, setSelectedGrupyNazwa] = useState([]);
     const [allGroupsSelected, setAllGroupsSelected] = useState(false);
-    const [selectedWeek, setSelectedWeek] = useState(''); // state do tygodnia ale bez formatowania do pdf
+    
     const [selectedWeekAndYear, setSelectedWeekAndYear] = useState([]); // state do tygodnia i roku dla pdf
     const [editingVacationId, setEditingVacationId] = useState(null);
     const [editVacationData, setEditVacationData] = useState({ urlopOd: '', urlopDo: '', status: '' });
@@ -33,6 +33,7 @@ export default function UrlopyPage() {
     const [nazwisko, setNazwisko] = useState('');
     let urlopyData = [];
     const baseUrl = process.env.REACT_APP_BASE_URL;
+    const [selectAllApprovalChecked, setSelectAllApprovalChecked] = useState(false);
 
     // RenderTable component 
     const [remainingGroupSelections, setRemainingGroupSelections] = useState({});
@@ -42,8 +43,20 @@ export default function UrlopyPage() {
     const [approvedExpandedGroups, setApprovedExpandedGroups] = useState({});
     const [approvedSelectedItems, setApprovedSelectedItems] = useState([]);
 
+    const getCurrentISOWeek = () => {
+        const now = new Date();
+        const start = new Date(now.getFullYear(), 0, 1);
+        const diff = ((now - start) / 86400000 + start.getDay() + 1);
+        return Math.ceil(diff / 7);
+    };
 
-    
+    const [selectedWeek, setSelectedWeek] = useState(getCurrentISOWeek().toString().padStart(2, '0'));
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
+
+
+    const weeks = Array.from({ length: 53 }, (_, i) => (i + 1).toString().padStart(2, '0'));
+    const years = Array.from({ length: 10 }, (_, i) => (new Date().getFullYear() - 5 + i).toString());
+
 
     const extractId = (idWithPrefix) => idWithPrefix.replace('cb-', '');
 
@@ -188,7 +201,13 @@ export default function UrlopyPage() {
             />
         );
     };
-    
+
+    const handleZaznaczWszystkieDoZatwierdzenia = () => {
+    const allApproved = Object.values(filteredDane.ApprovedUrlopy).flat();
+    const allIds = allApproved.map(item => `cb-${item.id}`);
+    setApprovedSelectedItems(prev => selectAllApprovalChecked ? [] : allIds);
+    setSelectAllApprovalChecked(prev => !prev);
+};
 
     const handlePdfDownloadClick = () => {
 
@@ -587,19 +606,15 @@ export default function UrlopyPage() {
             });
     };
 
-    // ustawia do formatu [week, year] wybrany tydzień i rok z inputu
-    const handleSelectWeekAndYear = (e) => {
-        setSelectedWeek(e.target.value);
-        const year = e.target.value.substring(0, 4);
-        const week = e.target.value.substring(6, 8);
-        setSelectedWeekAndYear([week, year]);
-
-        localStorage.setItem('selectedWeekAndYear', JSON.stringify([week, year]));
-    }
-
     const handleSearch = () => {
     fetchUrlopy(selectedGrupyNazwa);
 };
+
+    useEffect(() => {
+        const weekAndYear = [selectedWeek, selectedYear];
+        setSelectedWeekAndYear(weekAndYear);
+        localStorage.setItem('selectedWeekAndYear', JSON.stringify(weekAndYear));
+    }, [selectedWeek, selectedYear]);
 
     const getStatusClass = (status) => {
         switch (status) {
@@ -703,6 +718,12 @@ export default function UrlopyPage() {
                     className="bg-green-500 text-white p-1 m-0.5 text-sm w-24" 
                     disabled={accountType !== 'Administrator'}
                 />
+                <Button 
+                    label={selectAllApprovalChecked ? "Odznacz wszystkie" : "Zaznacz wszystkie"} 
+                    onClick={handleZaznaczWszystkieDoZatwierdzenia} 
+                    className="bg-yellow-500 text-white p-1 m-0.5 text-sm w-24"
+                    disabled={accountType !== 'Administrator'}
+                />
                 <ZatwierdzWindow 
                     visible={zatwierdzWindowVisible}
                     onHide={() => setZatwierdzWindowVisible(false)}
@@ -745,13 +766,21 @@ export default function UrlopyPage() {
             </div>
                 <Button label="Szukaj" onClick={handleSearch} disabled={accountType !== 'Administrator'} />
                 <div className="flex flex-row items-center space-x-4">
-                    <InputText
-                        className="text-black"
-                        type="week"
-                        placeholder="Select week"
+                    <Dropdown
                         value={selectedWeek}
-                        onChange={(e) => handleSelectWeekAndYear(e)}
+                        options={weeks}
+                        onChange={(e) => setSelectedWeek(e.value)}
+                        placeholder="Tydzień"
                         disabled={accountType !== 'Administrator'}
+                        className="text-black text-sm py-1 px-2 h-12"
+                    />
+                    <Dropdown
+                        value={selectedYear}
+                        options={years}
+                        onChange={(e) => setSelectedYear(e.value)}
+                        placeholder="Rok"
+                        disabled={accountType !== 'Administrator'}
+                        className="text-black text-sm py-1 px-2 h-12"
                     />
                     <Button label="Drukuj" onClick={handlePdfDownloadClick} disabled={accountType !== 'Administrator'} />
                 </div>

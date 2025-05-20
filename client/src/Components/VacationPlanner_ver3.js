@@ -136,45 +136,47 @@ const VacationPlanner = () => {
         });
     };
 
-    // generowanie tablicy dni dla widoku kalendarza
+    const getFirstDayOfISOWeek = (week, year) => {
+    const simple = new Date(year, 0, 1 + (week - 1) * 7);
+    const dow = simple.getDay();
+    const ISOweekStart = simple;
+    if (dow <= 4)
+        ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
+    else
+        ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
+    return ISOweekStart;
+};
+
     const generujDni = (rok = getYearLocalStorage()) => {
-        const allDays = [];
+    const allDays = [];
 
-        // ustawiamy date poczatkowa na wybrany tydzien
-        const startDate = new Date(rok, 0, 1);
-        startDate.setDate(startDate.getDate() + (week * 7));
+    const startDate = getFirstDayOfISOWeek(week, rok);
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + 52 * 7); // 52 tygodnie
 
-        const endDate = new Date(startDate);
-        endDate.setFullYear(endDate.getFullYear() + 1);
+    let currentDate = new Date(startDate);
 
-        // szukamy pierwszego poniedzialku
-        let currentDate = new Date(startDate);
-        while (currentDate.getDay() !== 1) {
-            currentDate.setDate(currentDate.getDate() + 1);
+    while (currentDate <= endDate) {
+        allDays.push({
+            data: new Date(currentDate),
+            dzienMiesiaca: currentDate.getDate(),
+            dzienTygodnia: currentDate.getDay(),
+            miesiac: nazwyMiesiacow[currentDate.getMonth()],
+            nazwaDniaTygodnia: nazwyDniTygodnia[currentDate.getDay()]
+        });
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    const tygodnie = [];
+    for (let i = 0; i < allDays.length; i += 7) {
+        if (allDays.length - i >= 7) {
+            tygodnie.push(allDays.slice(i, i + 7));
         }
+    }
 
-        // generujemy wszystkie dni
-        while (currentDate <= endDate) {
-            allDays.push({
-                data: new Date(currentDate),
-                dzienMiesiaca: currentDate.getDate(),
-                dzienTygodnia: currentDate.getDay(),
-                miesiac: nazwyMiesiacow[currentDate.getMonth()],
-                nazwaDniaTygodnia: nazwyDniTygodnia[currentDate.getDay()]
-            });
-            currentDate.setDate(currentDate.getDate() + 1);
-        }
+    return tygodnie;
+};
 
-        // dzielimy dni na tygodnie
-        const tygodnie = [];
-        for (let i = 0; i < allDays.length; i += 7) {
-            if (allDays.length - i >= 7) {
-                tygodnie.push(allDays.slice(i, i + 7));
-            }
-        }
-
-        return tygodnie;
-    };
 
     // konwersja danych o urlopach na format wewnetrzny
     const convertToAktywnosci = () => {
