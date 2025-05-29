@@ -133,7 +133,7 @@ export default function ProjektyPage() {
                             </Link>
                                 <Link to="/home/nowy-projekt"
                                 onClick={(e) => {
-                                    if (accountType !== 'Administrator' && accountType !== 'Biuro') {
+                                    if (accountType !== 'Administrator' && accountType !== 'Biuro' && accountType !== 'Kierownik') {
                                         e.preventDefault();
                                     }
                                 }}
