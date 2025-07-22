@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -130,7 +129,7 @@ const VacationPlanner = () => {
             const imgWidth = pdf.internal.pageSize.getWidth() - 20;
             const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-            pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight, undefined, 'FAST');
+            pdf.addImage(imgData, 'PNG', 12, 12, imgWidth, imgHeight, undefined, 'FAST');
             const fileName = `VacationPlan_${getYearLocalStorage()}_Week${getWeekLocalStorage()}_${dateStr}_${timestamp}.pdf`;
             pdf.save(fileName);
         });
@@ -197,6 +196,15 @@ const VacationPlanner = () => {
     const tygodnie = generujDni();
     const aktywnosci = convertToAktywnosci();
 
+    // Add this function to get the ISO week number for a date
+    const getWeekNumber = (date) => {
+        const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+        d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+        const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+        const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+        return weekNo;
+    };
+
     return (
         <div className="p-4">
             <h1 className="text-2xl font-bold mb-4">Plan urlopow {getYearLocalStorage()}</h1>
@@ -207,9 +215,9 @@ const VacationPlanner = () => {
             <div ref={plannerRef} className="overflow-x-auto">
                 <table className="w-full border-collapse text-center">
                     <thead>
-                        {/* naglowek z miesiacami */}
+                        {/* Header with month names */}
                         <tr>
-                            <th rowSpan="3" className="border border-gray-400">Pracownik</th>
+                            <th rowSpan="2" className="border border-gray-400">Pracownik</th>
                             {(() => {
                                 const monthHeaders = [];
                                 let currentMonth = tygodnie[0][0].miesiac;
@@ -239,43 +247,41 @@ const VacationPlanner = () => {
                                 return monthHeaders;
                             })()}
                         </tr>
-                        {/* numery tygodni */}
-                        <tr>
-                            {tygodnie.map((_, index) => (
-                                <th key={`week-${index}`} className="border border-gray-400">
-                                    {((parseInt(week) + index - 1) % 52) + 1}
-                                </th>
-                            ))}
-                        </tr>
-                        {/* dni miesiaca */}
+
+                        {/* Day names and week numbers below */}
                         <tr>
                             {tygodnie.map((tydzien, index) => (
-                                <th key={`days-${index}`} className="border border-gray-400 min-w-6">
-                                    {tydzien.map((dzien) => {
-                                        if (index === 0) {
-                                            return (
-                                                <div key={`${dzien.data.toISOString()}`}>
-                                                    {`${dzien.nazwaDniaTygodnia} ${dzien.dzienMiesiaca}`}
+                                <th 
+                                    key={`days-${index}`} 
+                                    className="border border-gray-400"
+                                    style={index === 0 ? { minWidth: '10px', maxWidth: '20px' } : { minWidth: '15px' }}
+                                >
+                                    {tydzien.map((dzien, dayIndex) => (
+                                        <div key={`${dzien.data.toISOString()}`}>
+                                            {index === 0 ? (
+                                                <div className="text-xs">
+                                                    <span className="font-bold mr-1">{dzien.nazwaDniaTygodnia}</span>
+                                                    <span>{dzien.dzienMiesiaca}</span>
                                                 </div>
-                                            )
-                                        }
-                                        else {
-                                            return (
-                                                <div key={`${dzien.data.toISOString()}`}>
-                                                    {`${dzien.dzienMiesiaca}`}
-                                                </div>
-                                            )
-                                        }
-                                    })}
+                                            ) : (
+                                                <div className="text-xs">{`${dzien.dzienMiesiaca}`}</div>
+                                            )}
+                                        </div>
+                                    ))}
+                                    <hr className="my-1 border-gray-400" />
+                                    <div className="text-xs font-bold bg-gray-300 py-1 rounded">
+                                        {getWeekNumber(tydzien[0].data)}
+                                    </div>
                                 </th>
                             ))}
                         </tr>
                     </thead>
                     {/* dane pracownikow i ich urlopy */}
                     <tbody>
+                        
                         {vacationData.map((employee) => (
                             <tr key={employee.id}>
-                                <td className="border border-gray-400">{employee.name}</td>
+                                <td className="border border-gray-400 w-1/12">{employee.name}</td>
                                 {tygodnie.map((tydzien, weekIndex) => (
                                     <td
                                         key={`${employee.id}-week-${weekIndex}`}

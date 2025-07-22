@@ -82,16 +82,12 @@ export default function UrlopyPage() {
         return (
             <>
                 <div className="overflow-x-auto">
-                    <table className="w-full table-fixed">
-                        <thead className="bg-blue-700 text-white sticky top-0 z-10">
+                    <table className="w-full border-collapse text-center">
+                        <thead>
                             <tr>
-                                <th className="border-r px-2 py-1 w-12"></th>
-                                <th className="border-r px-2 py-1 w-32">Imię i nazwisko</th>
-                                <th className="border-r px-2 py-1 w-24">Od</th>
-                                <th className="border-r px-2 py-1 w-24">Do</th>
-                                <th className="border-r px-2 py-1 w-64">Komentarz</th>
-                                <th className="border-r px-2 py-1 w-24">Status</th>
-                                <th className="w-32"></th>
+                                <th className="border border-gray-400 bg-gray-200">Pracownik</th>
+                                <th className="border border-gray-400 bg-blue-200">Tydzień</th>
+                                <th className="border border-gray-400 bg-gray-100">Dzień</th>
                             </tr>
                         </thead>
                         <tbody className="text-center">
@@ -250,7 +246,7 @@ export default function UrlopyPage() {
 
                 // Otwarcie nowego okna z pdf-em
                 setTimeout(() => {
-                    window.open(`https://www.qubis.pl/test`, '_blank');
+                    window.open(`http://localhost:3000/test`, '_blank');
                 }, 1500);
 
             })
