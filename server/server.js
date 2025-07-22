@@ -81,9 +81,9 @@ const authenticateJWT = (req, res, next) => {
 // app.get('/api/protected', authorizeRole('Administrator') <----- tutaj typ konta z bazy danych z tabeli "pracownik", (req, res) => {
 //     res.json({ message: 'Protected endpoint' });
 // });
-const authorizeRole = (role) => {
+const authorizeRole = (...roles) => {
     return (req, res, next) => {
-        if (req.user && req.user.role === role) {
+        if (req.user && roles.includes(req.user.role)) {
             next();
         } else {
             res.status(403).json({ error: 'Forbidden' });
@@ -393,10 +393,10 @@ app.route('/api/planTygodnia/zaplanuj')
 app.get('/api/czas/projekty', (req, res) => {
     GetProjekty(req, res, pool);
 });
-app.post('/api/czas/projekty', authorizeRole('Administrator'), (req, res) => {
+app.post('/api/czas/projekty', authorizeRole('Administrator', 'Kierownik', 'Biuro'), (req, res) => {
     DodajNowyProjekt(req, res, pool);
 });
-app.post('/api/czas/grupa', authorizeRole('Administrator'), (req, res) => {
+app.post('/api/czas/grupa', authorizeRole('Administrator', 'Kierownik', 'Biuro'), (req, res) => {
     DodajNowaGrupe(req, res, pool);
 });
 app.get('/api/czas/szukaj', (req, res) => {
@@ -408,19 +408,19 @@ app.put('/api/czas/przeniesAkt', authorizeRole('Administrator'), (req, res) => {
 app.put('/api/czas/przeniesNieakt', authorizeRole('Administrator'), (req, res) => {
     PrzeniesNieakt(req, res, pool);
 });
-app.delete('/api/czas/usun', authorizeRole('Administrator'), (req, res) => {
+app.delete('/api/czas/usun', authorizeRole('Administrator', 'Kierownik', 'Biuro'), (req, res) => {
     UsunProjekt(req, res, pool);
 });
 app.get('/api/czas/projekty/:id', (req, res) => {
     PobierzProjekt(req, res, pool);
 });
-app.put('/api/czas/edytujProjekt/:id', authorizeRole('Administrator'), (req, res) => {
+app.put('/api/czas/edytujProjekt/:id', authorizeRole('Administrator', 'Kierownik', 'Biuro'), (req, res) => {
     EdytujProjekt(req, res, pool);
 });
 app.get('/api/czas/pobierzGrupe/:id', (req, res) => {
     PobierzGrupe(req, res, pool);
 });
-app.put('/api/czas/edytujGrupe/:id', authorizeRole('Administrator'), (req, res) => {
+app.put('/api/czas/edytujGrupe/:id', authorizeRole('Administrator', 'Kierownik', 'Biuro'), (req, res) => {
     EdytujGrupe(req, res, pool);
 });
 /////////////////////////////////////////
@@ -563,9 +563,9 @@ app.get('/api/firmy', (req, res) => {
      key: fs.readFileSync('/home/opc/ECPP/certs/privkey.pem')
  };
 
- https.createServer(options, app).listen(5000, () => {
-     console.log('Server running on https://qubis.pl:5000');
- });
+//  https.createServer(options, app).listen(5000, () => {
+//      console.log('Server running on https://qubis.pl:5000');
+//  });
 
  
 

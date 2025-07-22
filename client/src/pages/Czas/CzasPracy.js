@@ -151,7 +151,7 @@ export default function CzasPracyPage() {
     }, []);
 
     // Create debounced save function
-    const debouncedSave = useCallback(
+    /*const debouncedSave = useCallback(
         debounce(() => {
             if (isOnline && Pracownik && statusTygodnia !== "Zamknięty") {
                 handleSave(true);
@@ -172,7 +172,7 @@ export default function CzasPracyPage() {
             debouncedSave();
         }
     }, [additionalProjects, debouncedSave]);
-    //#endregion
+    //#endregion*/
 
     //#region fetching
 
@@ -656,7 +656,7 @@ export default function CzasPracyPage() {
                 
                 fetchUserId();
                 try {
-                    const warning_response = await Axios.post("${baseUrl}/api/czas/warnings", {
+                    const warning_response = await Axios.post(`${baseUrl}/api/czas/warnings`, {
                         weeklyHours: totalHours,
                         id: currentUserId,
                     }, { withCredentials: true });
@@ -672,7 +672,7 @@ export default function CzasPracyPage() {
                     console.error(error);
                 }
 
-                const response = await Axios.delete("${baseUrl}/api/tydzien", {
+                const response = await Axios.delete(`${baseUrl}/api/tydzien`, {
                     data: {
                         tydzienRoku: getWeek(currentDate, { weekStartsOn: 1 }),
                         pracownikId: currentUserId,

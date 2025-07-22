@@ -27,7 +27,7 @@ function SzukajProjekt(req, res, db) {
             res.status(400).send('Błąd pobierania projektów');
         } else {
             const formattedRows = result.map(row => ({
-                id: row.idProjekty,
+                id: row.id,
                 Zleceniodawca: row.Zleceniodawca,
                 NazwaKod_Projektu: row.NazwaKod_Projektu,
                 Status: row.Status,
