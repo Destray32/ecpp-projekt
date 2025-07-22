@@ -77,70 +77,103 @@ const TimeInputs = ({ daysOfWeek, hours, setHours,
                 [type]: value,
             }
         }));
-    };
-
-    const formatTimeValue = (value) => {
-        let czyPrzecinek = value.includes(',');
-        let cleanValue = value;
+    };    const formatTimeValue = (value) => {
+        // Remove any spaces and handle empty input
+        if (!value || value.trim() === '') return '00:00';
+        
+        let cleanValue = value.trim();
+        let hours = '00';
+        let minutes = '00';
     
-        if (czyPrzecinek) {
-            // ("7,3" -> "7:30" itp)
-            const parts = value.split(',');
+        // Handle different input formats: 7,3 / 7.3 / 7:30 / 7,15 / 7.15 / 7:15
+        if (cleanValue.includes(',') || cleanValue.includes('.')) {
+            // Handle comma or dot as decimal separator
+            const separator = cleanValue.includes(',') ? ',' : '.';
+            const parts = cleanValue.split(separator);
             const hoursPart = parts[0] || '0';
             const decimalPart = parts[1] || '0';
-            
-            // konwersja minut po rzecinku do pelnego formatu
-            if (decimalPart.length <= 1) {
-                cleanValue = `${hoursPart}:${decimalPart}0`;
+              // Convert decimal minutes to actual minutes
+            if (decimalPart.length === 1) {
+                // 7,3 -> 7:30 (0.3 * 60 = 18, but we want 30), 7,5 -> 7:30
+                // Special handling: single digit after decimal represents tenths of hour
+                const digit = parseInt(decimalPart);
+                if (digit === 3) {
+                    minutes = '30'; // 7,3 -> 7:30
+                } else if (digit === 5) {
+                    minutes = '30'; // 7,5 -> 7:30  
+                } else {
+                    // For other digits, multiply by 6 (0.1 hour = 6 minutes)
+                    const minutesFromDecimal = Math.round(digit * 6);
+                    minutes = minutesFromDecimal.toString().padStart(2, '0');
+                }
+            } else if (decimalPart.length === 2) {
+                // 7,15 -> 7:15, 7,30 -> 7:30
+                minutes = decimalPart.padStart(2, '0');
             } else {
-                cleanValue = `${hoursPart}:${decimalPart}`;
+                // More than 2 digits, take first 2
+                minutes = decimalPart.substring(0, 2);
             }
-        }
-    
-        let [hours, minutes] = cleanValue.split(':').map(part => part || '00');
-    
-        if (!cleanValue.includes(':')) {
+            hours = hoursPart;
+        } else if (cleanValue.includes(':')) {
+            // Handle colon format: 7:30, 7:15
+            const parts = cleanValue.split(':');
+            hours = parts[0] || '0';
+            minutes = parts[1] || '0';
+        } else {
+            // Handle plain numbers: 7, 730, 1530
             if (cleanValue.length <= 2) {
+                // Just hours: 7 -> 07:00
                 hours = cleanValue.padStart(2, '0');
                 minutes = '00';
             } else if (cleanValue.length === 3) {
+                // 3 digits: 730 -> 07:30
                 hours = cleanValue.slice(0, 1).padStart(2, '0');
                 minutes = cleanValue.slice(1, 3);
             } else if (cleanValue.length >= 4) {
-                hours = cleanValue.slice(0, 2).padStart(2, '0');
+                // 4+ digits: 1530 -> 15:30
+                hours = cleanValue.slice(0, 2);
                 minutes = cleanValue.slice(2, 4);
             }
         }
     
+        // Parse and validate hours
         let parsedHours = parseInt(hours, 10);
-        let parsedMinutes = parseInt(minutes, 10);
-    
-        if (isNaN(parsedHours) || parsedHours > 23) {
-            parsedHours = 23;
-        } else if (parsedHours < 0) {
+        if (isNaN(parsedHours) || parsedHours < 0) {
             parsedHours = 0;
+        } else if (parsedHours > 23) {
+            parsedHours = 23;
         }
     
-        if (isNaN(parsedMinutes)) {
+        // Parse and validate minutes
+        let parsedMinutes = parseInt(minutes, 10);
+        if (isNaN(parsedMinutes) || parsedMinutes < 0) {
             parsedMinutes = 0;
-        } else if (parsedMinutes >= 0 && parsedMinutes < 15) {
+        } else if (parsedMinutes > 59) {
+            parsedMinutes = 59;
+        }
+    
+        // Round minutes to nearest quarter (0, 15, 30, 45)
+        if (parsedMinutes >= 0 && parsedMinutes < 8) {
             parsedMinutes = 0;
-        } else if (parsedMinutes >= 15 && parsedMinutes < 45) {
+        } else if (parsedMinutes >= 8 && parsedMinutes < 23) {
+            parsedMinutes = 15;
+        } else if (parsedMinutes >= 23 && parsedMinutes < 38) {
             parsedMinutes = 30;
-        } else if (parsedMinutes >= 45 && parsedMinutes < 60) {
+        } else if (parsedMinutes >= 38 && parsedMinutes < 53) {
+            parsedMinutes = 45;
+        } else if (parsedMinutes >= 53) {
             parsedMinutes = 0;
             parsedHours += 1;
             if (parsedHours > 23) {
                 parsedHours = 23;
             }
-        } else {
-            parsedMinutes = 0;
         }
     
-        hours = parsedHours.toString().padStart(2, '0');
-        minutes = parsedMinutes.toString().padStart(2, '0');
+        // Format for MySQL (HH:MM format)
+        const formattedHours = parsedHours.toString().padStart(2, '0');
+        const formattedMinutes = parsedMinutes.toString().padStart(2, '0');
     
-        return `${hours}:${minutes}`;
+        return `${formattedHours}:${formattedMinutes}`;
     };
 
 
