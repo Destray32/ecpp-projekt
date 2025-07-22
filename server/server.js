@@ -178,6 +178,7 @@ const PobierzProjekt = require('./api/Czas/Projekty/czas.projekty.pobierzProjekt
 const EdytujProjekt = require('./api/Czas/Projekty/czas.projekty.edytujProjekt');
 const PobierzGrupe = require('./api/Czas/Projekty/czas.projekty.pobierzGrupe');
 const EdytujGrupe = require('./api/Czas/Projekty/czas.projekty.edytujGrupe');
+const NieuzywaneProjekty = require('./api/Czas/Projekty/czas.projekty.nieuzywane');
 
 // Czas > Urlopy
 const GetUrlopy = require('./api/Czas/Urlopy/czas.urlopy.getUrlopy');
@@ -442,6 +443,10 @@ app.get('/api/czas/pobierzGrupe/:id', (req, res) => {
 });
 app.put('/api/czas/edytujGrupe/:id', authorizeRole('Administrator', 'Kierownik', 'Biuro'), (req, res) => {
     EdytujGrupe(req, res, pool);
+});
+
+app.get('/api/czas/projekty/nieuzywane', (req, res) => {
+    NieuzywaneProjekty(req, res, pool);
 });
 /////////////////////////////////////////
 

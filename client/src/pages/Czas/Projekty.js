@@ -14,6 +14,9 @@ export default function ProjektyPage() {
     const [selectedItems, setSelectedItems] = useState([]);
     const [data, setData] = useState([]);
     const [accountType, setAccountType] = useState('');
+    const [selectAll, setSelectAll] = useState(false);
+    const [searchZleceniodawca, setSearchZleceniodawca] = useState('');
+    const [zleceniodawcyOptions, setZleceniodawcyOptions] = useState([]);
     const baseUrl = process.env.REACT_APP_BASE_URL;
     useEffect(() => {
         checkUserType(setAccountType);
@@ -28,13 +31,42 @@ export default function ProjektyPage() {
         );
     };
 
+    const handleSelectAllChange = () => {
+        setSelectAll(!selectAll);
+        setSelectedItems(!selectAll ? data.map(projekty => projekty.id) : []);
+    };
+
     useEffect(() => {
-        if (filtr) {
-            handleSzukaj();
-        } else {
-            fetchProjects();
-        }
-    }, [filtr]);
+    if (filtr === 'Wszystkie') {
+        fetchProjects();
+    } else {
+        handleSzukaj();
+    }
+}, [filtr]);
+
+
+    useEffect(() => {
+        fetchZleceniodawcyOptions();
+    }, []);
+
+    const fetchZleceniodawcyOptions = () => {
+        Axios.get(`${baseUrl}/api/grupy`, { withCredentials: true })
+            .then((response) => {
+                if (response.data && Array.isArray(response.data.grupy)) {
+                    const zleceniodawcy = response.data.grupy
+                        .filter(item => item.Zleceniodawca && item.id !== 'separator') // Exclude separators and invalid entries
+                        .map(item => ({ label: item.Zleceniodawca, value: item.Zleceniodawca }));
+                    setZleceniodawcyOptions(zleceniodawcy);
+                } else {
+                    console.error('Unexpected response structure:', response.data);
+                    setZleceniodawcyOptions([]);
+                }
+            })
+            .catch((error) => {
+                console.error('Error fetching Zleceniodawcy options:', error);
+                setZleceniodawcyOptions([]);
+            });
+    };
 
     const handleDelete = (id) => {
         Axios.delete(`${baseUrl}/api/czas/usun?id=${id}`, { withCredentials: true })
@@ -61,6 +93,22 @@ export default function ProjektyPage() {
             })
             .catch((error) => {
                 console.error('Error fetching projects:', error);
+                setData([]);
+            });
+    };
+
+    const handleSearchZleceniodawca = () => {
+        Axios.get(`${baseUrl}/api/czas/szukajZleceniodawca?name=${searchZleceniodawca}`, { withCredentials: true })
+            .then((response) => {
+                if (response.data && Array.isArray(response.data.projekty)) {
+                    setData(response.data.projekty);
+                } else {
+                    console.error('Unexpected response structure:', response.data);
+                    setData([]);
+                }
+            })
+            .catch((error) => {
+                console.error('Error searching projects:', error);
                 setData([]);
             });
     };
@@ -92,7 +140,7 @@ export default function ProjektyPage() {
     };
 
     const fetchProjects = () => {
-        Axios.get(`${baseUrl}/api/czas/projekty`, { withCredentials: true })
+        Axios.get(`${baseUrl}/api/czas/szukaj`, { withCredentials: true })
             .then((response) => {
                 if (response.data && Array.isArray(response.data.projekty)) {
                     const sortedProjects = [...response.data.projekty].sort((a, b) =>
@@ -110,6 +158,43 @@ export default function ProjektyPage() {
             });
     };
 
+    const fetchUnusedProjects = () => {
+    Axios.get(`${baseUrl}/api/czas/projekty/nieuzywane`, { withCredentials: true })
+        .then((response) => {
+            if (response.data && Array.isArray(response.data.nieuzywaneProjekty)) {
+                const unusedData = response.data.nieuzywaneProjekty.reduce((acc, item) => {
+                    acc[item.id] = item.DaysUnused === null ? 'Nigdy' : Math.floor(item.DaysUnused / 7);
+                    return acc;
+                }, {});
+
+                setData(prevData =>
+                    prevData.map(projekt => ({
+                        ...projekt,
+                        WeeksUnused: unusedData[projekt.id] !== undefined ? unusedData[projekt.id] : '—'
+                    }))
+                );
+            } else {
+                console.error('Unexpected response structure:', response.data);
+                setData(prevData =>
+                    prevData.map(projekt => ({
+                        ...projekt,
+                        WeeksUnused: '—'
+                    }))
+                );
+            }
+        })
+        .catch((error) => {
+            console.error('Error fetching unused projects:', error);
+        });
+};
+
+
+    useEffect(() => {
+        fetchProjects();
+        fetchUnusedProjects();
+    }, []);
+
+
     return (
         <div>
             <AmberBox>
@@ -119,11 +204,22 @@ export default function ProjektyPage() {
                             <p className="mr-6">Filtr</p>
                             <Dropdown value={filtr} onChange={(e) => setFiltr(e.value)} options={["Aktywny", "Nieaktywny", "Wszystkie"]} placeholder="Filtrowanie"
                                 autoComplete="off"
-                                className="w-3/12 mr-10"
+                                className="w-2/12 mr-6" // Adjusted width to make it smaller
                                 filter
                                 resetFilterOnHide
                                 filterInputAutoFocus
                             />
+                            <Dropdown
+                                value={searchZleceniodawca}
+                                onChange={(e) => setSearchZleceniodawca(e.value)}
+                                options={zleceniodawcyOptions}
+                                placeholder="Szukaj według Zleceniodawcy"
+                                className="w-2/12 mr-6" // Adjusted width to make it smaller
+                                filter
+                                resetFilterOnHide
+                                filterInputAutoFocus
+                            />
+                            <Button onClick={handleSearchZleceniodawca} label="Szukaj" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2" />
                             <div className="flex flex-row items-center">
                                 <Button onClick={handlePrzeniesAktyw} label="Przenieś do aktywnych" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2" />
                                 <Button onClick={handlePrzeniesNieaktyw} label="Przenieś do nieaktywnych" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2" />
@@ -131,19 +227,18 @@ export default function ProjektyPage() {
                             <Link to="/home/grupy-projektow">
                                 <Button label="Grupy projektów" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2" />
                             </Link>
-                                <Link to="/home/nowy-projekt"
+                            <Link to="/home/nowy-projekt"
                                 onClick={(e) => {
                                     if (accountType !== 'Administrator' && accountType !== 'Biuro' && accountType !== 'Kierownik') {
                                         e.preventDefault();
                                     }
                                 }}
-                        
-                                >
-                                    <Button label="Dodaj nowy projekt"
-                                        className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2"
-                                        disabled={accountType === 'Pracownik'}
-                                        />
-                                </Link>
+                            >
+                                <Button label="Dodaj nowy projekt"
+                                    className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2"
+                                    disabled={accountType === 'Pracownik'}
+                                />
+                            </Link>
                         </div>
                     </div>
                 </div>
@@ -152,10 +247,18 @@ export default function ProjektyPage() {
                 <table className="w-full">
                     <thead className="bg-blue-700 text-white">
                         <tr>
-                            <th className="border-r border-black"></th>
+                            <th className="border-r border-black text-center"> {/* Center align "Select All" checkbox */}
+                                <Checkbox
+                                    inputId="select-all"
+                                    checked={selectAll}
+                                    onChange={handleSelectAllChange}
+                                />
+                            </th>
                             <th className="border-r border-black">Nr</th>
                             <th className="border-r text-left pl-4 border-black">Zleceniodawca - Nazwa/Kod Projektu</th>
                             <th className="border-r border-black">Status projektu</th>
+                            <th className="border-r border-black">Wpisane przez</th>
+                            <th className="border-r border-black">Nieużywane od (tygodnie)</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -166,7 +269,7 @@ export default function ProjektyPage() {
                                 : 'text-red-500';
                             return (
                                 <tr key={projekty.id} className="border-b border-black even:bg-gray-200 odd:bg-gray-300">
-                                    <td className="border-r border-black">
+                                    <td className="border-r border-black text-center"> {/* Center align individual checkboxes */}
                                         <Checkbox
                                             inputId={`cb-${projekty.id}`}
                                             checked={selectedItems.includes(projekty.id)}
@@ -178,6 +281,8 @@ export default function ProjektyPage() {
                                         <span className="text-blue-800 font-bold">{projekty.Zleceniodawca}</span> – {projekty.NazwaKod_Projektu}
                                     </td>
                                     <td className={`border-r border-black ${statusClass}`}>{projekty.Status}</td>
+                                    <td className="border-r border-black">{projekty.DodanePrzez}</td>
+                                    <td className="border-r border-black">{projekty.WeeksUnused}</td>
                                     <td>
                                         <Link to={`/home/projekt/${projekty.id}`}>
                                             <Button

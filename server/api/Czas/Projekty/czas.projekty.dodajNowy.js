@@ -1,10 +1,11 @@
 function DodajNowyProjekt(req, res, db) {
     const {firma, zleceniodawca, nazwa, ulica, miejscowosc, kodPocztowy, kraj} = req.body;
+    const dodanePrzez = req.user.id; // Assuming user ID is available in req.user
 
-    const sql = `INSERT INTO projekty (NazwaKod_Projektu, Ulica, Miejscowosc, Kod_Pocztowy, Kraj, Grupa_urlopowa_idGrupa_urlopowa, Firma_idFirma)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`;
+    const sql = `INSERT INTO projekty (NazwaKod_Projektu, Ulica, Miejscowosc, Kod_Pocztowy, Kraj, Grupa_urlopowa_idGrupa_urlopowa, Firma_idFirma, Dodane_przez)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
 
-    db.query(sql, [nazwa, ulica, miejscowosc, kodPocztowy, kraj, zleceniodawca, firma], (err, result) => {
+    db.query(sql, [nazwa, ulica, miejscowosc, kodPocztowy, kraj, zleceniodawca, firma, dodanePrzez], (err, result) => {
         if (err) {
             console.error('Error executing query:', err);
             res.status(400).send('Brak wymaganych danych');
