@@ -47,6 +47,12 @@ const WeekNavigation = ({
                             <div className="flex flex-col items-center">
                                 <p>{formatWeek(currentDate)}</p>
                                 <p className="text-lg font-bold">Tydzień {getWeek(currentDate, { weekStartsOn: 1 })}</p>
+                                <input 
+                                    type="date" 
+                                    value={currentDate.toISOString().split('T')[0]} // Format date as YYYY-MM-DD
+                                    onChange={(e) => setCurrentDate(new Date(e.target.value))} 
+                                    className="mt-2 p-1 border border-gray-300 rounded text-sm w-32 text-center"
+                                />
                             </div>
                             <Button icon="pi pi-arrow-right" iconPos="right" className="p-button-outlined" onClick={nextWeek} />
                         </div>
