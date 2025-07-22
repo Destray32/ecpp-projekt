@@ -391,10 +391,14 @@ export default function PracownikPage() {
               <p>Szukaj pracownika</p>
               <Link to="/home/zmien-dane">
                 <Button label="Zmień swoje dane" className="bg-white outline outline-1 outline-gray-500 p-2 mx-2" />
-              </Link>
-              {isAdmin && (
+              </Link>              {isAdmin && (
                 <Link to="/home/dodaj-pracownika">
                   <Button label="Dodaj pracownika" className="bg-white outline outline-1 outline-gray-500 p-2 mx-2" />
+                </Link>
+              )}
+              {isAdmin && (
+                <Link to="/home/cennik">
+                  <Button label="Cennik" className="bg-white outline outline-1 outline-gray-500 p-2 mx-2" />
                 </Link>
               )}
               {(accountType === "Administrator" || accountType === "Biuro" || accountType === "Kierownik") &&  (

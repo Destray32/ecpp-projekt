@@ -53,6 +53,7 @@ useEffect(() => {
 
 
     useEffect(() => {
+        
         checkUserType(setAccountType);
     }, []);
 
@@ -131,7 +132,7 @@ useEffect(() => {
     const handleUsunZaznaczone = async () => {
         try {
             setPracownikData((prevData) => prevData.filter(item => !selectedRowIds.includes(item.id)));
-    
+        
             await Axios.delete(`${baseUrl}/api/planTygodnia`, {
                 withCredentials: true,
                 data: { id: selectedRowIds }
@@ -238,7 +239,6 @@ useEffect(() => {
     }, [currentDate]);
 
     const fetchData = (selectedGroup = group) => {
-
     Axios.get(`${baseUrl}/api/grupy`, { withCredentials: true })
         .then(res => {
             const groups = res.data.grupy;

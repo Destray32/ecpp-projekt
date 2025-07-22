@@ -10,6 +10,7 @@ import DodajPracownikaPage from './pages/Pracownik/DodajPracownika';
 import EdytujPracownikaPage from './pages/Pracownik/EdytujPracownika';
 import ZablokowaniPage from './pages/Pracownik/ZablokowaniPage';
 import LogowaniePage from './pages/Pracownik/Logowanie';
+import CennikPage from './pages/Pracownik/Cennik';
 import CzasPage from './pages/Czas/CzasPracy';
 import ProjektyPage from './pages/Czas/Projekty';
 import UrlopyPage from './pages/Czas/Urlopy';
@@ -43,9 +44,9 @@ function App() {
           <Route path="pracownik" element={<PracownikPage />} />
           <Route path="zmien-dane" element={<ZmienDanePage />} />
           <Route path="dodaj-pracownika" element={<DodajPracownikaPage />} />
-          <Route path="edytuj-pracownika/:id" element={<EdytujPracownikaPage />} />
-          <Route path="zablokowani-pracownicy" element={<ZablokowaniPage />} />
+          <Route path="edytuj-pracownika/:id" element={<EdytujPracownikaPage />} />          <Route path="zablokowani-pracownicy" element={<ZablokowaniPage />} />
           <Route path="logowanie" element={<LogowaniePage />} />
+          <Route path="cennik" element={<CennikPage />} />
           <Route path="czas" element={<CzasPage />} />
           <Route path="projekty" element={<ProjektyPage />} />
           <Route path="urlopy" element={<UrlopyPage />} />

@@ -13,7 +13,9 @@ const fs = require('fs');
 
 require('dotenv').config();
 
-// Add middleware to set no-index headers for all responses
+
+
+// CZAS > PROJEKTY //no-index headers for all responses
 app.use((req, res, next) => {
     // Set headers to prevent indexing
     res.setHeader('X-Robots-Tag', 'noindex, nofollow');
@@ -137,6 +139,12 @@ const PobierzPracownicyPojazd = require('./api/Pracownik/Pracownik/pracownik.pob
 const KomorkaPracownika = require('./api/Pracownik/Pracownik/pracownik.komorka');
 const GetBlockedUsers = require('./api/Pracownik/Pracownik/pracownik.getBlockedUsers');
 const OdblokujPracownika = require('./api/Pracownik/Pracownik/pracownik.unblock');
+
+// Pracownik > Cennik
+const PobierzCennik = require('./api/Pracownik/Cennik/cennik.pobierz.js');
+const AktualizujStawke = require('./api/Pracownik/Cennik/cennik.aktualizuj');
+const AktualizujStawkeGlobalna = require('./api/Pracownik/Cennik/cennik.aktualizujGlobalna');
+
 
 // Czas > Czas Pracy
 const ZapiszCzasPracy = require('./api/Czas/CzasPracy/czas.czaspracy.zapisz');
@@ -313,7 +321,7 @@ app.get('/api/mojedane', (req, res) => {
 app.put('/api/pracownik/zmienMoje', (req, res) => {
     EdytujPracownika(req, res);
 });
-/////////////////////////////////////////
+
 
 app.get('/api/logi', authenticateJWT, authorizeRole('Administrator'), (req, res) => {
     PobierzLogi(req, res, pool);
@@ -388,6 +396,18 @@ app.route('/api/planTygodnia/zaplanuj')
     });
 /////////////////////////////////////////
 
+app.get('/api/cennik',authorizeRole('Administrator', 'Kierownik'), (req, res) => {
+    PobierzCennik(req, res);
+});
+
+app.put('/api/cennik/stawka', authorizeRole('Administrator', 'Kierownik'), (req, res) => {
+    AktualizujStawke(req, res);
+});
+
+app.put('/api/cennik/globalna', authorizeRole('Administrator', 'Kierownik'), (req, res) => {
+    AktualizujStawkeGlobalna(req, res);
+});
+
 
 // CZAS > PROJEKTY //
 app.get('/api/czas/projekty', (req, res) => {
@@ -447,6 +467,22 @@ app.put('/api/urlopy/:vacationId', (req, res) => {
 });
 
 /////////////////////////////////////////
+
+app.get('/api/cennik', authorizeRole('Administrator', 'Kierownik'), (req, res) => {
+    PobierzCennik(req, res);
+});
+
+app.delete('/api/cennik/stawka', authorizeRole('Administrator', 'Kierownik'), (req, res) => {
+    UsunStawkeIndywidualna(req, res);
+});
+
+app.put('/api/cennik/stawka', authorizeRole('Administrator', 'Kierownik'), (req, res) => {
+    AktualizujStawke(req, res);
+});
+
+app.put('/api/cennik/globalna', authorizeRole('Administrator', 'Kierownik'), (req, res) => {
+    AktualizujStawkeGlobalna(req, res);
+});
 
 // CZAS > TYDZIEN //
 app.get('/api/tydzien/:year/:numericWeek', (req, res) => {
@@ -558,16 +594,19 @@ app.get('/api/firmy', (req, res) => {
     PobierzDostepneFirmy(req, res, pool);
 });
 
-   const options = {
-     cert: fs.readFileSync('/home/opc/ECPP/certs/fullchain.pem'),
-     key: fs.readFileSync('/home/opc/ECPP/certs/privkey.pem')
- };
+//    const options = {
+//      cert: fs.readFileSync('/home/opc/ECPP/certs/fullchain.pem'),
+//      key: fs.readFileSync('/home/opc/ECPP/certs/privkey.pem')
+//  };
 
 //  https.createServer(options, app).listen(5000, () => {
 //      console.log('Server running on https://qubis.pl:5000');
 //  });
 
- 
+app.listen(port, () => {
+    console.log(`Server running on http://localhost:${port}`);
+});
+
 
 
 

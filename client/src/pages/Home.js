@@ -165,11 +165,11 @@ export default function HomePage() {
                         <div className="bg-white w-full h-[0.5px] my-4"></div>
                         <div className="space-y-2 max-h-[80%]">
                         {menu === "Pracownik" && (
-                            <>
-                                {accountType === 'Administrator' ? (
+                            <>                                {accountType === 'Administrator' ? (
                                 <>
                                     <ButtonLewy link="pracownik" nazwa='Pracownik' onClick={closeMobileMenu} isActive={location.pathname === '/home/pracownik'} />
                                     <ButtonLewy link="logowanie" nazwa='Logowanie' onClick={closeMobileMenu} isActive={location.pathname === '/home/logowanie'} />
+                                    <ButtonLewy link="cennik" nazwa='Cennik' onClick={closeMobileMenu} isActive={location.pathname === '/home/cennik'} />
                                 </>
                                 ) : (
                                 <ButtonLewy link="pracownik" nazwa='Pracownik' onClick={closeMobileMenu} isActive={location.pathname === '/home/pracownik'} 
