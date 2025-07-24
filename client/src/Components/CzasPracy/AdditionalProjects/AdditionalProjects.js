@@ -115,14 +115,16 @@ const AdditionalProjects = ({
 }, []);
 
     useEffect(() => {
-        let total = 0.0;
-        additionalProjects.forEach(project => {
-            Object.values(project.hours).forEach(hour => {
-                total += parseFloat(hour.hoursWorked);
-            });
+    let total = 0.0;
+    additionalProjects.forEach(project => {
+        Object.values(project.hours).forEach(hour => {
+            // Convert empty strings to 0, and handle NaN values
+            const hoursValue = hour.hoursWorked ? parseFloat(hour.hoursWorked) : 0;
+            total += isNaN(hoursValue) ? 0 : hoursValue;
         });
-        setAdditionalProjectsTotalTime(total);
-    }, [additionalProjects]);
+    });
+    setAdditionalProjectsTotalTime(total);
+}, [additionalProjects]);
 
 
     useEffect(() => {
