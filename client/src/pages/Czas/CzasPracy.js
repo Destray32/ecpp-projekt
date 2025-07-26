@@ -56,6 +56,8 @@ export default function CzasPracyPage() {
     const [isOnline, setIsOnline] = useState(navigator.onLine);
     const [saveStatus, setSaveStatus] = useState("idle"); // idle, saving, saved, error
     const [lastSaved, setLastSaved] = useState(null);
+    const [activeProject, setActiveProject] = useState(null);
+    const [activeDate, setActiveDate] = useState(null);
 
     const startOfCurrentWeek = startOfWeek(currentDate, { weekStartsOn: 1 });
 
@@ -529,6 +531,10 @@ export default function CzasPracyPage() {
                 
                 setCzyZapisano(true);
                 
+                // Chowaj additional rows po zapisie
+                setActiveProject(null);
+                setActiveDate(null);
+                
                 // Reset save status after a short delay
                 setTimeout(() => {
                     setSaveStatus("idle");
@@ -686,6 +692,9 @@ export default function CzasPracyPage() {
                         description: 'Zamknięto tydzień',
                         placement: 'topRight',
                     });
+                    // Chowaj additional rows po zamknięciu tygodnia
+                    setActiveProject(null);
+                    setActiveDate(null);
                     fetchStatusTygodnia();
                 }
             } catch (error) {
@@ -848,6 +857,10 @@ export default function CzasPracyPage() {
                 currentDate={currentDate}
                 statusTyg={statusTygodnia}
                 blockStatus={blockStatus}
+                activeProject={activeProject}
+                setActiveProject={setActiveProject}
+                activeDate={activeDate}
+                setActiveDate={setActiveDate}
             />
             <ActionButtons 
                 handleSave={() => handleSave(false)}

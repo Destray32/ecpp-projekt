@@ -37,13 +37,11 @@ const AdditionalProjects = ({
     Projekty, setProjekty, dostepneProjekty,
     additionalProjects, setAdditionalProjects,
     daysOfWeek, samochody, loggedUserName, currentDate,
-    statusTyg, blockStatus
+    statusTyg, blockStatus, activeProject, setActiveProject, activeDate, setActiveDate
 }) => {
     const [activeInput, setActiveInput] = useState(null);
     const [filteredZleceniodawcy, setFilteredZleceniodawcy] = useState([]);
     const [filteredProjekty, setFilteredProjekty] = useState([]);
-    const [activeProject, setActiveProject] = useState(null);
-    const [activeDate, setActiveDate] = useState(null);
     const [additionalProjectsTotalTime, setAdditionalProjectsTotalTime] = useState(0.0);
     const [defaultSamochod, setDefaultSamochod] = useState("");
     const baseUrl = process.env.REACT_APP_BASE_URL;
@@ -83,36 +81,36 @@ const AdditionalProjects = ({
         }
     }, [firmy]);
 
-    useEffect(() => {
-    const handleClickOutside = (event) => {
-        // detekcja scrollbaru
-        const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-        const isVerticalScrollbarClick = event.clientX >= window.innerWidth - scrollbarWidth;
+//     useEffect(() => {
+//     const handleClickOutside = (event) => {
+//         // detekcja scrollbaru
+//         const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+//         const isVerticalScrollbarClick = event.clientX >= window.innerWidth - scrollbarWidth;
         
-        const isDropdownPanel = event.target.closest('.p-dropdown-panel');
-        const isDropdownTrigger = event.target.closest('.p-dropdown-trigger');
-        const isDropdownItem = event.target.closest('.p-dropdown-item');
+//         const isDropdownPanel = event.target.closest('.p-dropdown-panel');
+//         const isDropdownTrigger = event.target.closest('.p-dropdown-trigger');
+//         const isDropdownItem = event.target.closest('.p-dropdown-item');
         
-        if (
-            additionalFieldsRef.current && 
-            !additionalFieldsRef.current.contains(event.target) &&
-            !event.target.closest('.project-input') &&
-            !event.target.closest('.p-inputtextarea') && 
-            !event.target.closest('.p-dropdown') && 
-            !event.target.closest('.p-inputtext') &&
-            !isDropdownPanel &&
-            !isDropdownTrigger &&
-            !isDropdownItem &&
-            !isVerticalScrollbarClick 
-        ) {
-            setActiveProject(null);
-            setActiveDate(null);
-        }
-    };
+//         if (
+//             additionalFieldsRef.current && 
+//             !additionalFieldsRef.current.contains(event.target) &&
+//             !event.target.closest('.project-input') &&
+//             !event.target.closest('.p-inputtextarea') && 
+//             !event.target.closest('.p-dropdown') && 
+//             !event.target.closest('.p-inputtext') &&
+//             !isDropdownPanel &&
+//             !isDropdownTrigger &&
+//             !isDropdownItem &&
+//             !isVerticalScrollbarClick 
+//         ) {
+//             setActiveProject(null);
+//             setActiveDate(null);
+//         }
+//     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-}, []);
+//     document.addEventListener('mousedown', handleClickOutside);
+//     return () => document.removeEventListener('mousedown', handleClickOutside);
+// }, []);
 
     useEffect(() => {
     let total = 0.0;
