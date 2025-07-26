@@ -173,19 +173,24 @@ export default function RaportyPage() {
     }
 
     if (!ignorujDatyFirma) {
+        filteredRaport = filteredRaport.filter(entry => {
+            if (!entry.Data) return false;
+            const datePart = entry.Data.split(' ')[0]; 
+            const [day, month, year] = datePart.split('.'); 
+            const entryDate = new Date(`${year}-${month}-${day}`);
+            return entryDate >= new Date(startDate) && entryDate <= new Date(endDate);
+        });
+    }
 
-    filteredRaport = filteredRaport.filter(entry => {
-        if (!entry.Data) return false;
-
-        const datePart = entry.Data.split(' ')[0]; 
-        const [day, month, year] = datePart.split('.'); 
-        const entryDate = new Date(`${year}-${month}-${day}`);
-
-
-        return entryDate >= new Date(startDate) && entryDate <= new Date(endDate);
-    });
-
-}
+    // Dodaj warunek: jeśli raport jest dla pracownika i nie ma danych, nie generuj PDF
+    if ((wybranyRaport === "Analiza świadczeń pracowniczych" || wybranyRaport === "Pracownik Analiza czasu - działalność") && filteredRaport.length === 0) {
+        notification.info({
+            message: 'Brak danych',
+            description: 'Brak danych dla wybranego pracownika w podanym okresie.',
+            placement: 'topRight',
+        });
+        return;
+    }
 
     const passedStartDate = ignorujDatyFirma ? null : startDate;
     const passedEndDate = ignorujDatyFirma ? null : endDate;
@@ -274,11 +279,21 @@ export default function RaportyPage() {
     const przejscieDoInterfejsuFirma = () => {
         setInterfaceFirma(true);
         setInterfacePracownik(false);
+        setProjekt(null);
+        setStartDate('');
+        setEndDate('');
+        setPracownik(null);
+        setIgnorujDatyFirma(false);
     };
 
     const przejscieDoInterfejsuPracownik = () => {
         setInterfaceFirma(false);
         setInterfacePracownik(true);
+        setProjekt(null);
+        setStartDate('');
+        setEndDate('');
+        setPracownik(null);
+        setIgnorujDatyFirma(false);
     };
 
     const handleRowClick = (rowName) => {
@@ -394,7 +409,11 @@ export default function RaportyPage() {
             <table className="w-full">
                 <tbody className="text-left cursor-pointer">
                     <tr className="border-b hover:underline even:bg-gray-200 odd:bg-gray-300"
-                        onClick={() => {if (accountType !== 'Pracownik' || accountType !== 'Kierownik') setShowRaportyFirma(!showRaportyFirma)}}>
+                        onClick={() => {
+                            if (accountType !== 'Pracownik') {
+                                setShowRaportyFirma(!showRaportyFirma);
+                            }
+                        }}>
                         <th className="border-r">Raporty dla firmy</th>
                     </tr>
                     <tr className={`${showRaportyFirma ? "" : "hidden"}`}>

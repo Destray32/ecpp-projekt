@@ -23,7 +23,7 @@ export default function CennikPage() {
             setLoading(true);
 
             const response = await axios.get(`${baseUrl}/api/cennik`, { withCredentials: true });
-            console.log('Pobrano dane cennika:', response.data);
+
             const cennikData = response.data;
 
             // Pobierz wszystkie dostępne grupy urlopowe

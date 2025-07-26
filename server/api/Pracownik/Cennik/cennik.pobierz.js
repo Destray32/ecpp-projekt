@@ -12,7 +12,8 @@ function PobierzCennik(req, res) {
             COALESCE(
                 CASE WHEN ps.aktywna = 1 THEN ps.stawka_indywidualna END,
                 gu.Cennik
-            ) AS stawka_obowiazujaca
+            ) AS stawka_obowiazujaca,
+            gu.Stawka AS Stawka
         FROM 
             pracownik p
         JOIN 

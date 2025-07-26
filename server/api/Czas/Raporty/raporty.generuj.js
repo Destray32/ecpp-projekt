@@ -30,6 +30,7 @@ function generujRaport(req, res, db) {
                       p.idPracownik AS PracownikID,
                       pr.idProjekty AS ProjektID,
                       pr.NazwaKod_Projektu AS Projekt,
+                      gr.Zleceniodawca AS Zleceniodawca,
                       dp.Godziny_przepracowane AS GodzinyPrzepracowane,
                       dp.Komentarz AS Komentarz,
                       dp.Kilometry AS Kilometry,
@@ -50,6 +51,8 @@ function generujRaport(req, res, db) {
                       Pojazdy pj ON dp.Pojazdy_idPojazdy = pj.idPojazdy
                   JOIN
                       Projekty pr ON dp.Projekty_idProjekty = pr.idProjekty
+                  JOIN
+                      Grupa_urlopowa gr ON pr.Grupa_urlopowa_idGrupa_urlopowa = gr.idGrupa_urlopowa
                   WHERE
                       dp.Godziny_przepracowane > 0;`;
 
