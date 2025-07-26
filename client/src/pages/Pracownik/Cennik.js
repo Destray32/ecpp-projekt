@@ -30,15 +30,16 @@ export default function CennikPage() {
             const allGroupsResponse = await axios.get(`${baseUrl}/api/pracownik/grupy`, { withCredentials: true });
             const groups = {};
 
-            // Najpierw dodaj wszystkie dostępne grupy
+
+            // Dodaj wszystkie dostępne grupy bez stawki z grupy urlopowej
             allGroupsResponse.data.forEach(group => {
                 groups[group.idGrupa_urlopowa] = {
                     nazwa: group.Zleceniodawca,
-                    stawka: group.Stawka
+                    // stawka z cennika będzie ustawiona niżej
                 };
             });
 
-            // Potem zaktualizuj danymi z cennika (jeśli istnieją)
+            // Ustaw stawkę z cennika (stawka_globalna)
             cennikData.forEach(item => {
                 if (groups[item.idGrupa_urlopowa]) {
                     groups[item.idGrupa_urlopowa].stawka = item.stawka_globalna;
@@ -261,7 +262,7 @@ export default function CennikPage() {
                                 min={0}
                                 allowClear={true}
                                 disabled={!canEdit || saving}
-                                addonAfter="PLN/h"
+                                addonAfter="kr"
                                 size="small"
                             />
                         </div>

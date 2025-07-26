@@ -12,13 +12,13 @@ function AktualizujStawkeGlobalna(req, res) {
     let params;
 
     if (stawka === null || stawka === '') {
-        query = `UPDATE grupa_urlopowa SET Stawka = NULL WHERE idGrupa_urlopowa = ?`;
+        query = `UPDATE grupa_urlopowa SET Cennik = NULL WHERE idGrupa_urlopowa = ?`;
         params = [grupaId];
     } else if (isNaN(parseFloat(stawka)) || parseFloat(stawka) < 0) {
         return res.status(400).json({ error: 'Nieprawidłowa wartość stawki' });
     } else {
         const stawkaDecimal = Number(parseFloat(stawka).toFixed(2));
-        query = `UPDATE grupa_urlopowa SET Stawka = ? WHERE idGrupa_urlopowa = ?`;
+        query = `UPDATE grupa_urlopowa SET Cennik = ? WHERE idGrupa_urlopowa = ?`;
         params = [stawkaDecimal, grupaId];
     }
 

@@ -8,10 +8,10 @@ function PobierzCennik(req, res) {
             gu.idGrupa_urlopowa,
             gu.Zleceniodawca,
             ps.stawka_indywidualna,
-            gu.Stawka AS stawka_globalna,
+            gu.Cennik AS stawka_globalna,
             COALESCE(
                 CASE WHEN ps.aktywna = 1 THEN ps.stawka_indywidualna END,
-                gu.Stawka
+                gu.Cennik
             ) AS stawka_obowiazujaca
         FROM 
             pracownik p
