@@ -432,6 +432,9 @@ app.put('/api/czas/przeniesNieakt', authorizeRole('Administrator'), (req, res) =
 app.delete('/api/czas/usun', authorizeRole('Administrator', 'Kierownik', 'Biuro'), (req, res) => {
     UsunProjekt(req, res, pool);
 });
+app.get('/api/czas/projekty/nieuzywane', (req, res) => {
+    NieuzywaneProjekty(req, res, pool);
+});
 app.get('/api/czas/projekty/:id', (req, res) => {
     PobierzProjekt(req, res, pool);
 });
@@ -443,10 +446,6 @@ app.get('/api/czas/pobierzGrupe/:id', (req, res) => {
 });
 app.put('/api/czas/edytujGrupe/:id', authorizeRole('Administrator', 'Kierownik', 'Biuro'), (req, res) => {
     EdytujGrupe(req, res, pool);
-});
-
-app.get('/api/czas/projekty/nieuzywane', (req, res) => {
-    NieuzywaneProjekty(req, res, pool);
 });
 /////////////////////////////////////////
 
