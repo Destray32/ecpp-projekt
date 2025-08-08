@@ -659,114 +659,130 @@ export default function CzasPracyPage() {
         }
     };
 
-    const handleZamknijTydzien = async () => {
+    const toMinutes = (val) => {
+    if (!val) return 0;
+    if (typeof val === 'number') val = val.toString();
+    val = val.replace(',', '.');
+    if (val.includes(':')) {
+        const [h, m] = val.split(':').map(Number);
+        return (parseInt(h) || 0) * 60 + (parseInt(m) || 0);
+    }
+    const [h, m] = val.split('.').map(Number);
+    return (parseInt(h) || 0) * 60 + (parseInt(m) || 0);
+};
 
-        let hasMissingFields = false; // stan dla sprawdzania czy brakuje pola w dodatkowych projektach
-        let hasMissingStartEndBreak = false; // stan dla sprawdzania czy godziny sa ustawione dla dodatkowych projektow ale nie ma start, end, lub break
-        let dayHourMismatch = false; // stan dla sprawdzania czy godziny przypisane do projektow zgadzaja sie z godzinami pracy
+const handleZamknijTydzien = async () => {
+    let hasMissingFields = false;
+    let hasMissingStartEndBreak = false;
+    let dayHourMismatch = false;
 
-        const totalHours = calculateWeeklyTotal(hours, daysOfWeek);
-        let projectTotalHours = additionalProjects.map(project => calculateProjectTotal(project, daysOfWeek));
-        projectTotalHours = projectTotalHours.reduce((acc, curr) => acc + curr, 0);
+    // zamieniamy na minuty
+    const totalMinutes = toMinutes(calculateWeeklyTotal(hours, daysOfWeek));
+    let projectTotalMinutes = additionalProjects
+        .map(project => toMinutes(calculateProjectTotal(project, daysOfWeek)))
+        .reduce((acc, curr) => acc + curr, 0);
 
-        additionalProjects.forEach(project => {
-            daysOfWeek.forEach(day => {
-                const dayName = format(day, 'EEEE', { locale: pl });
-
-                // pomijanie niedzieli
-                if (dayName !== 'Niedziela') {
-                    const formattedDate = format(day, 'yyyy-MM-dd');
-                    const projectData = project.hours[formattedDate];
-                    const hoursWorked = projectData?.hoursWorked || 0; // default 0 jesli nie ma godzin pracy
-
-                    // przeskipowanie checkowania jesli nie ma godzin pracy w danym dniu
-                    if (hoursWorked > 0) {
-                        // sprawdza czy godziny sa ustawione dla danego dnia w projekcie ale nie ma start, end, lub break
-                        if ((!hours[formattedDate]?.start || !hours[formattedDate]?.end || !hours[formattedDate]?.break)) {
-                            console.log(`Additional project is filled but start, break, or end times are missing for ${dayName} (${formattedDate}).`);
-                            hasMissingStartEndBreak = true;
-                        }
-                        if (!projectData?.car || !projectData?.comment) {
-                            hasMissingFields = true;
-                            console.log(`Missing car or comment for ${dayName} (${formattedDate}).`);
-                        }
-                    }
-                }
-            });
-        });
-
+    additionalProjects.forEach(project => {
         daysOfWeek.forEach(day => {
             const dayName = format(day, 'EEEE', { locale: pl });
-            const formattedDate = format(day, 'yyyy-MM-dd');
-            const dailyHours = hours[formattedDate] || {};
-        
-            const [breakHours, breakMinutes] = (dailyHours.break || '00:00').split(':').map(Number);
-            const breakTimeInHours = breakHours + (breakMinutes / 60);
-        
-            const totalDayHours = dailyHours.end && dailyHours.start ?
-                convertTimeToDecimal(dailyHours.end) - convertTimeToDecimal(dailyHours.start) - convertTimeToDecimal(dailyHours.break || '00:00')
-                : 0;
-        
-            let projectDayHours = 0;
-        
-            additionalProjects.forEach(project => {
+            if (dayName !== 'Niedziela') {
+                const formattedDate = format(day, 'yyyy-MM-dd');
                 const projectData = project.hours[formattedDate];
-                if (projectData?.hoursWorked) {
-                    projectDayHours += parseFloat(projectData.hoursWorked);
+                const hoursWorked = projectData?.hoursWorked || 0;
+                if (toMinutes(hoursWorked) > 0) {
+                    if ((!hours[formattedDate]?.start || !hours[formattedDate]?.end || !hours[formattedDate]?.break)) {
+                        hasMissingStartEndBreak = true;
+                    }
+                    if (!projectData?.car || !projectData?.comment) {
+                        hasMissingFields = true;
+                    }
                 }
-            });
-        
-            if (totalDayHours !== projectDayHours) {
-                dayHourMismatch = true;
-                console.log(`Różnica w godzinach dla ${dayName}. Godziny pracy: ${totalDayHours}, godziny w dodatkowych projektach: ${projectDayHours}`);
+            }
+        });
+    });
+
+    // sprawdzanie mismatchów w dniach
+    const mismatchDays = [];
+    daysOfWeek.forEach(day => {
+        const dayName = format(day, 'EEEE', { locale: pl });
+        const formattedDate = format(day, 'yyyy-MM-dd');
+        const dailyHours = hours[formattedDate] || {};
+
+        let totalDayMinutes = 0;
+        if (dailyHours.end && dailyHours.start) {
+            totalDayMinutes =
+                toMinutes(dailyHours.end) -
+                toMinutes(dailyHours.start) -
+                toMinutes(dailyHours.break || '0');
+            if (totalDayMinutes < 0) totalDayMinutes = 0;
+        }
+
+        let projectDayMinutes = 0;
+        additionalProjects.forEach(project => {
+            const projectData = project.hours[formattedDate];
+            if (projectData?.hoursWorked) {
+                projectDayMinutes += toMinutes(projectData.hoursWorked);
             }
         });
 
-        if (hasMissingFields) {
-            notification.error({
-                message: 'Puste pola w dodatkowych projektach',
-                description: 'Wybierz samochód i dodaj komentarz do wszystkich projektów',
-                placement: 'topRight',
-            });
-            return;
+        if (totalDayMinutes !== projectDayMinutes) {
+            dayHourMismatch = true;
+            const toHHMM = (min) => {
+                const h = Math.floor(min / 60);
+                const m = min % 60;
+                return `${h}:${m.toString().padStart(2, '0')}`;
+            };
+            mismatchDays.push(`${dayName} (${formattedDate}): ${toHHMM(totalDayMinutes)} ≠ ${toHHMM(projectDayMinutes)}`);
         }
+    });
 
-        if (hasMissingStartEndBreak) {
-            notification.error({
-                message: 'Puste pola',
-                description: 'Wybierz godziny rozpoczęcia, zakończenia i przerwy dla dni w których są projekty',
-                placement: 'topRight',
-            });
-            return;
-        }
+    if (hasMissingFields) {
+        notification.error({
+            message: 'Puste pola w dodatkowych projektach',
+            description: 'Wybierz samochód i dodaj komentarz do wszystkich projektów',
+            placement: 'topRight',
+        });
+        return;
+    }
 
-        if (dayHourMismatch) {
-            notification.error({
-                message: 'Różnica w godzinach',
-                description: 'Suma godzin pracy nie zgadza się z sumą godzin w dodatkowych projektach',
-                placement: 'topRight',
-            });
-            return;
-        }
+    if (hasMissingStartEndBreak) {
+        notification.error({
+            message: 'Puste pola',
+            description: 'Wybierz godziny rozpoczęcia, zakończenia i przerwy dla dni w których są projekty',
+            placement: 'topRight',
+        });
+        return;
+    }
 
-        if (projectTotalHours !== totalHours) {
-            notification.error({
-                message: 'Błąd',
-                description: 'Suma godzin w dodatkowych projektach nie zgadza się z sumą godzin pracy',
-                placement: 'topRight',
-            });
-            return;
-        } else {
+    if (dayHourMismatch) {
+        notification.error({
+            message: 'Różnica w godzinach',
+            description: `Suma godzin pracy nie zgadza się z sumą godzin w dodatkowych projektach dla dni:\n${mismatchDays.join('\n')}`,
+            placement: 'topRight',
+            duration: 8,
+        });
+        return;
+    }
+
+    if (projectTotalMinutes !== totalMinutes) {
+    notification.error({
+        message: 'Błąd',
+        description: 'Suma godzin w dodatkowych projektach nie zgadza się z sumą godzin pracy',
+        placement: 'topRight',
+    });
+    return;
+}else {
             try {
                 await handleSave();
                 
                 fetchUserId();
                 try {
-                    const warning_response = await Axios.post(`${baseUrl}/api/czas/warnings`, {
-                        weeklyHours: totalHours,
-                        id: currentUserId,
-                    }, { withCredentials: true });
-
+            const weeklyHoursDecimal = (totalMinutes / 60).toFixed(2); // np. 42.50
+            console.log(weeklyHoursDecimal);
+            const warning_response = await Axios.post(`${baseUrl}/api/czas/warnings`, {
+                weeklyHours: weeklyHoursDecimal,
+                id: currentUserId,
+            }, { withCredentials: true });
                     if (warning_response.status === 403) {
                         notification.error({
                             message: 'Konto zablokowane',
@@ -777,7 +793,6 @@ export default function CzasPracyPage() {
                 } catch (error) {
                     console.error(error);
                 }
-
                 const response = await Axios.delete(`${baseUrl}/api/tydzien`, {
                     data: {
                         tydzienRoku: getWeek(currentDate, { weekStartsOn: 1 }),

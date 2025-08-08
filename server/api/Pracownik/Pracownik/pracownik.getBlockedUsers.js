@@ -1,15 +1,14 @@
-
 async function GetBlockedUsers(req, res, db) {
     const promisePool = db.promise();
 
     try {
         const [blockedUsers] = await promisePool.query(
-            `SELECT DISTINCT do.Imie as name, do.Nazwisko as surname, po.czy_zablokowany, p.idPracownik as id
+            `SELECT DISTINCT do.Imie as name, do.Nazwisko as surname, po.czy_zablokowany, po.data_ostrzezenia, p.idPracownik as id
             FROM Pracownik_ostrzezenia po
             JOIN Pracownik p ON po.Pracownik_idPracownik = p.idPracownik
             JOIN Dane_osobowe do ON p.FK_Dane_osobowe = do.idDane_osobowe
             WHERE po.czy_zablokowany = 1`
-        )
+        );
 
         if (blockedUsers.length === 0) {
             return res.status(404).json({

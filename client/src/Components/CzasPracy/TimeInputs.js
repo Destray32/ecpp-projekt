@@ -80,11 +80,16 @@ const TimeInputs = ({ daysOfWeek, hours, setHours,
     };    const formatTimeValue = (value) => {
         // Remove any spaces and handle empty input
         if (!value || value.trim() === '') return '00:00';
-        
+
         let cleanValue = value.trim();
         let hours = '00';
         let minutes = '00';
-    
+
+        // Handle single-digit input
+        if (/^\d$/.test(cleanValue)) {
+            return `${cleanValue.padStart(2, '0')}:00`;
+        }
+
         // Handle different input formats: 7,3 / 7.3 / 7:30 / 7,15 / 7.15 / 7:15
         if (cleanValue.includes(',') || cleanValue.includes('.')) {
             // Handle comma or dot as decimal separator
@@ -92,67 +97,52 @@ const TimeInputs = ({ daysOfWeek, hours, setHours,
             const parts = cleanValue.split(separator);
             const hoursPart = parts[0] || '0';
             const decimalPart = parts[1] || '0';
-              // Convert decimal minutes to actual minutes
+            // Convert decimal minutes to actual minutes
             if (decimalPart.length === 1) {
-                // 7,3 -> 7:30 (0.3 * 60 = 18, but we want 30), 7,5 -> 7:30
-                // Special handling: single digit after decimal represents tenths of hour
                 const digit = parseInt(decimalPart);
-                if (digit === 3) {
-                    minutes = '30'; // 7,3 -> 7:30
-                } else if (digit === 5) {
-                    minutes = '30'; // 7,5 -> 7:30  
+                if (digit === 3 || digit === 5) {
+                    minutes = '30';
                 } else {
-                    // For other digits, multiply by 6 (0.1 hour = 6 minutes)
                     const minutesFromDecimal = Math.round(digit * 6);
                     minutes = minutesFromDecimal.toString().padStart(2, '0');
                 }
             } else if (decimalPart.length === 2) {
-                // 7,15 -> 7:15, 7,30 -> 7:30
                 minutes = decimalPart.padStart(2, '0');
             } else {
-                // More than 2 digits, take first 2
                 minutes = decimalPart.substring(0, 2);
             }
             hours = hoursPart;
         } else if (cleanValue.includes(':')) {
-            // Handle colon format: 7:30, 7:15
             const parts = cleanValue.split(':');
             hours = parts[0] || '0';
             minutes = parts[1] || '0';
         } else {
-            // Handle plain numbers: 7, 730, 1530
             if (cleanValue.length <= 2) {
-                // Just hours: 7 -> 07:00
                 hours = cleanValue.padStart(2, '0');
                 minutes = '00';
             } else if (cleanValue.length === 3) {
-                // 3 digits: 730 -> 07:30
                 hours = cleanValue.slice(0, 1).padStart(2, '0');
                 minutes = cleanValue.slice(1, 3);
             } else if (cleanValue.length >= 4) {
-                // 4+ digits: 1530 -> 15:30
                 hours = cleanValue.slice(0, 2);
                 minutes = cleanValue.slice(2, 4);
             }
         }
-    
-        // Parse and validate hours
+
         let parsedHours = parseInt(hours, 10);
         if (isNaN(parsedHours) || parsedHours < 0) {
             parsedHours = 0;
         } else if (parsedHours > 23) {
             parsedHours = 23;
         }
-    
-        // Parse and validate minutes
+
         let parsedMinutes = parseInt(minutes, 10);
         if (isNaN(parsedMinutes) || parsedMinutes < 0) {
             parsedMinutes = 0;
         } else if (parsedMinutes > 59) {
             parsedMinutes = 59;
         }
-    
-        // Round minutes to nearest quarter (0, 15, 30, 45)
+
         if (parsedMinutes >= 0 && parsedMinutes < 8) {
             parsedMinutes = 0;
         } else if (parsedMinutes >= 8 && parsedMinutes < 23) {
@@ -168,11 +158,10 @@ const TimeInputs = ({ daysOfWeek, hours, setHours,
                 parsedHours = 23;
             }
         }
-    
-        // Format for MySQL (HH:MM format)
+
         const formattedHours = parsedHours.toString().padStart(2, '0');
         const formattedMinutes = parsedMinutes.toString().padStart(2, '0');
-    
+
         return `${formattedHours}:${formattedMinutes}`;
     };
 
@@ -254,6 +243,7 @@ const TimeInputs = ({ daysOfWeek, hours, setHours,
                         <input
                             type="text"
                             value={globalStart}
+                            onFocus={(e) => e.target.select()} // Select the entire value on focus
                             onChange={(e) => handleGlobalStartChange(e.target.value)}
                             onBlur={(e) => handleGlobalTimeBlur(e.target.value, setGlobalStart, 'start')}
                             className="w-16 p-1 border text-center border-gray-300 rounded mx-2"
@@ -267,6 +257,7 @@ const TimeInputs = ({ daysOfWeek, hours, setHours,
                             <input
                             type="text"
                             value={hours[format(day, 'yyyy-MM-dd')]?.start || ''}
+                            onFocus={(e) => e.target.select()} // Select the entire value on focus
                             onChange={(e) => handleTimeInputChange(format(day, 'yyyy-MM-dd'), 'start', e.target.value)}
                             onBlur={(e) => handleTimeBlur(format(day, 'yyyy-MM-dd'), 'start', e.target.value)}
                             disabled={getDay(day) === 0 || statusTyg === 'Zamkniety' || blockStatus}
@@ -285,6 +276,7 @@ const TimeInputs = ({ daysOfWeek, hours, setHours,
                         <input
                             type="text"
                             value={globalBreak}
+                            onFocus={(e) => e.target.select()} // Select the entire value on focus
                             onChange={(e) => handleGlobalBreakChange(e.target.value)}
                             onBlur={(e) => handleGlobalTimeBlur(e.target.value, setGlobalBreak, 'break')}
                             className="w-16 p-1 border text-center border-gray-300 rounded mx-2"
@@ -298,6 +290,7 @@ const TimeInputs = ({ daysOfWeek, hours, setHours,
                             <input
                             type="text"
                             value={hours[format(day, 'yyyy-MM-dd')]?.break || ''}
+                            onFocus={(e) => e.target.select()} // Select the entire value on focus
                             onChange={(e) => handleTimeInputChange(format(day, 'yyyy-MM-dd'), 'break', e.target.value)}
                             onBlur={(e) => handleTimeBlur(format(day, 'yyyy-MM-dd'), 'break', e.target.value)}
                             disabled={getDay(day) === 0 || statusTyg === 'Zamkniety' || blockStatus}
@@ -316,6 +309,7 @@ const TimeInputs = ({ daysOfWeek, hours, setHours,
                         <input
                             type="text"
                             value={globalEnd}
+                            onFocus={(e) => e.target.select()} // Select the entire value on focus
                             onChange={(e) => handleGlobalEndChange(e.target.value)}
                             onBlur={(e) => handleGlobalTimeBlur(e.target.value, setGlobalEnd, 'end')}
                             className="w-16 p-1 border text-center border-gray-300 rounded mx-2"
@@ -329,6 +323,7 @@ const TimeInputs = ({ daysOfWeek, hours, setHours,
                         <input
                         type="text"
                         value={hours[format(day, 'yyyy-MM-dd')]?.end || ''}
+                        onFocus={(e) => e.target.select()} // Select the entire value on focus
                         onChange={(e) => handleTimeInputChange(format(day, 'yyyy-MM-dd'), 'end', e.target.value)}
                         onBlur={(e) => handleTimeBlur(format(day, 'yyyy-MM-dd'), 'end', e.target.value)}
                         disabled={getDay(day) === 0 || statusTyg === 'Zamkniety' || blockStatus}

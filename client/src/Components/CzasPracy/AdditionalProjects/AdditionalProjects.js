@@ -113,16 +113,31 @@ const AdditionalProjects = ({
 // }, []);
 
     useEffect(() => {
-    let total = 0.0;
+    let totalHours = 0;
+    let totalMinutes = 0;
+
     additionalProjects.forEach(project => {
         Object.values(project.hours).forEach(hour => {
-            // Convert empty strings to 0, and handle NaN values
-            const hoursValue = hour.hoursWorked ? parseFloat(hour.hoursWorked) : 0;
-            total += isNaN(hoursValue) ? 0 : hoursValue;
+            if (hour.hoursWorked) {
+                const parts = hour.hoursWorked.toString().split('.');
+                const h = parseInt(parts[0], 10) || 0;
+                const m = parseInt(parts[1], 10) || 0; // traktujemy jako minuty, nie dziesiętne
+
+                totalHours += h;
+                totalMinutes += m;
+            }
         });
     });
-    setAdditionalProjectsTotalTime(total);
+
+    // Konwersja minut > 60 do godzin
+    totalHours += Math.floor(totalMinutes / 60);
+    totalMinutes = totalMinutes % 60;
+
+    setAdditionalProjectsTotalTime(
+        `${totalHours}.${totalMinutes.toString().padStart(2, '0')}`
+    );
 }, [additionalProjects]);
+
 
 
     useEffect(() => {

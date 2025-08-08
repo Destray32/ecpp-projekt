@@ -41,9 +41,11 @@ async function setWarnings(req, res, db) {
                 });
             }
 
-            return res.status(400).json({
+            return res.status(200).json({
+                warning: true,
                 message: 'Przekroczono limit 60 godzin. To twoje pierwsze ostrzeżenie'
             });
+
         } else {
             return res.status(200).json({
                 message: 'Brak ostrzeżeń'

@@ -26,49 +26,38 @@ const AdditionalProjectRow = React.memo(({
     const formatHoursValue = (value) => {
         // Handle empty input
         if (!value || value.trim() === '') return '';
-        
-        let cleanValue = value.trim();
+
+        let cleanValue = value.trim().replace(',', '.');
         let hoursNum = 0;
-        
-        // Handle different input formats: 4, 4.5, 4,5
-        if (cleanValue.includes(',') || cleanValue.includes('.')) {
-            // Handle comma or dot as decimal separator
-            const separator = cleanValue.includes(',') ? ',' : '.';
-            const parts = cleanValue.split(separator);
-            const hoursPart = parseFloat(parts[0] || '0');
-            let decimalPart = parseFloat('0.' + (parts[1] || '0'));
-            
-            // Round to quarter hours (0, 0.25, 0.5, 0.75)
-            if (decimalPart < 0.125) {
-                decimalPart = 0;
-            } else if (decimalPart < 0.375) {
-                decimalPart = 0.25;
-            } else if (decimalPart < 0.625) {
-                decimalPart = 0.5;
-            } else if (decimalPart < 0.875) {
-                decimalPart = 0.75;
-            } else {
-                decimalPart = 0;
-                hoursNum = hoursPart + 1;
-            }
-            
-            if (hoursNum === 0) {
-                hoursNum = hoursPart + decimalPart;
-            }
-        } else {
-            // Just a number
-            hoursNum = parseFloat(cleanValue);
+
+        // Only allow numbers with up to 2 decimal places
+        if (!/^\d{0,2}(\.\d{0,2})?$/.test(cleanValue)) return '';
+
+        let floatVal = parseFloat(cleanValue);
+        if (isNaN(floatVal) || floatVal < 0) return '0';
+
+        // Only allow increments: .00, .15, .30, .45, .60
+        let intPart = Math.floor(floatVal);
+        let decimalPart = floatVal - intPart;
+
+        // Find closest allowed decimal
+        let allowedDecimals = [0, 0.15, 0.30, 0.45, 0.60];
+        let closest = allowedDecimals.reduce((prev, curr) =>
+            Math.abs(curr - decimalPart) < Math.abs(prev - decimalPart) ? curr : prev
+        );
+
+        // If .60, increment hour and set decimal to 0
+        if (closest === 0.60) {
+            intPart += 1;
+            closest = 0;
         }
-        
-        // Validate hours - prevent unreasonable values
-        if (isNaN(hoursNum) || hoursNum < 0) {
-            hoursNum = 0;
-        } else if (hoursNum > 24) {
-            // Limit to maximum reasonable daily hours (24 hours)
-            hoursNum = 24;
-        }
-        
-        // Convert to string with at most 2 decimal places
+
+        hoursNum = intPart + closest;
+
+        // Limit to 24 hours max
+        if (hoursNum > 24) hoursNum = 24;
+
+        // Format as string, always 2 decimals if not integer
         return hoursNum % 1 === 0 ? hoursNum.toString() : hoursNum.toFixed(2);
     };
     

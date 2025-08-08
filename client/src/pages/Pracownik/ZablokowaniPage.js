@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Table, Input, Space, Modal, ConfigProvider, Select, Form, notification } from 'antd';
 import { Button } from 'primereact/button';
 import Axios from 'axios';
+import { format, startOfWeek, endOfWeek } from 'date-fns';
+import { getWeek } from 'date-fns';
 
 export default function ZablokowaniPage() {
 
@@ -19,6 +21,18 @@ export default function ZablokowaniPage() {
             title: 'Nazwisko',
             dataIndex: 'surname',
             key: 'surname',
+        },
+        {
+            title: 'Tydzień ostrzeżenia',
+            dataIndex: 'data_ostrzezenia',
+            key: 'data_ostrzezenia',
+            render: date => {
+                const start = format(startOfWeek(new Date(date), { weekStartsOn: 1 }), 'dd.MM.yyyy');
+                const end = format(endOfWeek(new Date(date), { weekStartsOn: 1 }), 'dd.MM.yyyy');
+                const weekNumber = getWeek(new Date(date), { weekStartsOn: 1 });
+                return `Tydzień ${weekNumber} (${start} - ${end})`;
+            }
+            ,
         },
         {
             title: 'Akcje',

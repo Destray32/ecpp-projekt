@@ -1,12 +1,19 @@
-
 async function unblockUser(req, res, db) {
     const promisePool = db.promise();
     const { id } = req.params;
 
     try {
+        // Odblokowanie użytkownika
         await promisePool.query(
             `UPDATE Pracownik_ostrzezenia
             SET czy_zablokowany = 0
+            WHERE Pracownik_idPracownik = ?`,
+            [id]
+        );
+
+        // Usunięcie ostrzeżeń dla użytkownika
+        await promisePool.query(
+            `DELETE FROM Pracownik_ostrzezenia
             WHERE Pracownik_idPracownik = ?`,
             [id]
         );

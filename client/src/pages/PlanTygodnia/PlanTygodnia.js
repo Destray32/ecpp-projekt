@@ -149,23 +149,46 @@ useEffect(() => {
     
     // obsługa przyciusku przeniesienia zaznaczonych pracowników do innej grupy
     const handlePrzeniesZaznaczone = () => {
-        if (!grupaPrzenies) {
-            console.error("Nie wybrano grupy do przeniesienia.");
+        if (selectedRowIds.length === 0) {
+            notification.error({
+                message: 'Błąd',
+                description: 'Musisz zaznaczyć co najmniej jedną osobę przed przeniesieniem do grupy.',
+                placement: 'topRight',
+            });
             return;
         }
-    
+
+        if (!grupaPrzenies) {
+            notification.error({
+                message: 'Błąd',
+                description: 'Musisz wybrać grupę docelową.',
+                placement: 'topRight',
+            });
+            return;
+        }
+
         const payload = {
             ids: selectedRowIds,
             groupId: grupaPrzenies
         };
-    
+
         Axios.put(`${baseUrl}/api/planTygodnia`, payload, { withCredentials: true })
             .then(res => {
                 fetchData();
                 setSelectedRowIds([]);
+                notification.success({
+                    message: 'Sukces',
+                    description: 'Pracownicy zostali przeniesieni do wybranej grupy.',
+                    placement: 'topRight',
+                });
             })
             .catch(err => {
                 console.error("Error transferring selected employees:", err);
+                notification.error({
+                    message: 'Błąd',
+                    description: 'Wystąpił problem podczas przenoszenia pracowników.',
+                    placement: 'topRight',
+                });
             });
     };
 
