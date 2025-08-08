@@ -69,10 +69,18 @@ export default function RaportyPage() {
                 const opts = res.data.map(p => ({ label: `${p.name} ${p.surname}`, value: p.id }));
                 setAllPracownicyOptions(opts);
                 setAvailablePracownicy(opts);
-            });
-        }, []);
 
-        useEffect(() => {
+                if (accountType === 'Pracownik') {
+                    const self = opts.find(o => o.label === `${imie} ${nazwisko}`);
+                    if (self) {
+                        setPracownik(self.value);
+                        setAvailablePracownicy([self]);
+                    }
+                }
+            });
+    }, [accountType, imie, nazwisko]);
+
+    useEffect(() => {
         if (!interfacePracownik || !startDate || !endDate) {
             setAvailablePracownicy(allPracownicyOptions);
             return;
@@ -97,7 +105,7 @@ export default function RaportyPage() {
         setAvailablePracownicy(
             allPracownicyOptions.filter(p => pracInRange.has(p.value))
         );
-        }, [interfacePracownik, startDate, endDate, raport, allPracownicyOptions]);
+    }, [interfacePracownik, startDate, endDate, raport, allPracownicyOptions]);
 
 
     const fetchProjektyAndRaport = () => {
@@ -282,8 +290,8 @@ export default function RaportyPage() {
         setProjekt(null);
         setStartDate('');
         setEndDate('');
-        setPracownik(null);
         setIgnorujDatyFirma(false);
+        setPracownik(null);
     };
 
     const przejscieDoInterfejsuPracownik = () => {
@@ -292,8 +300,10 @@ export default function RaportyPage() {
         setProjekt(null);
         setStartDate('');
         setEndDate('');
-        setPracownik(null);
         setIgnorujDatyFirma(false);
+        if (accountType !== 'Pracownik') {
+            setPracownik(null);
+        }
     };
 
     const handleRowClick = (rowName) => {
@@ -354,12 +364,13 @@ export default function RaportyPage() {
                           value={pracownik}
                           options={availablePracownicy}
                           onChange={(e) => setPracownik(e.value)}
-                          showClear
+                          showClear={accountType !== 'Pracownik'}
                           filter
                           className=""
                           filterInputAutoFocus
                           resetFilterOnHide
                           placeholder="Wybierz pracownika"
+                          disabled={accountType === 'Pracownik'}
                       />
                   )}
           

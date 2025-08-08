@@ -423,6 +423,9 @@ app.post('/api/czas/grupa', authorizeRole('Administrator', 'Kierownik', 'Biuro')
 app.get('/api/czas/szukaj', (req, res) => {
     SzukajProjekt(req, res, pool);
 });
+app.get('/api/czas/szukajZleceniodawca', (req, res) => {
+    SzukajProjekt(req, res, pool);
+});
 app.put('/api/czas/przeniesAkt', authorizeRole('Administrator'), (req, res) => {
     PrzeniesAkt(req, res, pool);
 });

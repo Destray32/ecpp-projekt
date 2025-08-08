@@ -1,5 +1,6 @@
 function SzukajProjekt(req, res, db) {
     const group = req.query.group;
+    const name = req.query.name;
 
     let sql = `
         SELECT 
@@ -25,6 +26,11 @@ function SzukajProjekt(req, res, db) {
     if (group && group !== 'Wszystkie') {
         sql += ' AND p.Status = ?';
         queryParams.push(group);
+    }
+
+    if (name) {
+        sql += ' AND g.Zleceniodawca LIKE ?';
+        queryParams.push('%' + name + '%');
     }
 
     db.query(sql, queryParams, (err, result) => {

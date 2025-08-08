@@ -44,7 +44,8 @@ function App() {
           <Route path="pracownik" element={<PracownikPage />} />
           <Route path="zmien-dane" element={<ZmienDanePage />} />
           <Route path="dodaj-pracownika" element={<DodajPracownikaPage />} />
-          <Route path="edytuj-pracownika/:id" element={<EdytujPracownikaPage />} />          <Route path="zablokowani-pracownicy" element={<ZablokowaniPage />} />
+          <Route path="edytuj-pracownika/:id" element={<EdytujPracownikaPage />} />
+          <Route path="zablokowani-pracownicy" element={<ZablokowaniPage />} />
           <Route path="logowanie" element={<LogowaniePage />} />
           <Route path="cennik" element={<CennikPage />} />
           <Route path="czas" element={<CzasPage />} />

@@ -266,6 +266,16 @@ const AdditionalProjects = ({
         }
     };
 
+    const dailySums = daysOfWeek.map(day => {
+        const dateKey = format(day, 'yyyy-MM-dd');
+        let sum = 0;
+        additionalProjects.forEach(project => {
+            const hoursWorked = project.hours[dateKey]?.hoursWorked;
+            sum += hoursWorked ? parseFloat(hoursWorked) : 0;
+        });
+        return sum % 1 === 0 ? sum.toString() : sum.toFixed(2);
+    });
+
     return (
         blockStatus === false ? (
         <div className="w-auto h-full m-2 p-1 bg-amber-100 outline outline-1 outline-gray-500 flex flex-col">
@@ -322,9 +332,6 @@ const AdditionalProjects = ({
                                 disabled={statusTyg === "Zamkniety"}
                             />
                         </div>
-                        <div className="flex flex-col">
-                            <p className='font-bold'>Razem: {additionalProjectsTotalTime} godz.</p>
-                        </div>
                     </div>
                     {additionalProjects.map((project, index) => (
                         <AdditionalProjectRow
@@ -343,6 +350,24 @@ const AdditionalProjects = ({
                             defaultCar={defaultSamochod}
                         />
                     ))}
+                    <div className="flex items-center space-x-2 mt-1">
+                        <div className="w-[40rem] mt">
+                            <span className='ml-2 font-bold'>Suma godzin:</span>
+                        </div>
+                        <div className="flex-1 grid grid-cols-[repeat(7,_minmax(0,_5rem))] text-center relative -left-4 md:-left-0 lg:left-0">
+                            {daysOfWeek.map((day, index) => (
+                                <input
+                                    key={index}
+                                    type="text"
+                                    value={dailySums[index]}
+                                    className="w-16 p-1 ml-2 border text-center border-gray-300 rounded bg-gray-200 font-bold"
+                                    disabled
+                                    readOnly
+                                />
+                            ))}
+                        </div>
+                        <span className="font-bold">Razem: {additionalProjectsTotalTime} godz.</span>
+                    </div>
                     {/* Render additional fields if a project is active */}
                     {activeProject && activeDate && (
                         <div ref={additionalFieldsRef}

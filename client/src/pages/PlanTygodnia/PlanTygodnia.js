@@ -197,12 +197,15 @@ useEffect(() => {
                 data_do: format(addDays(addWeeks(startOfWeek(currentDate, { weekStartsOn: 1 }), 1), -1), 'yyyy-MM-dd'),
             }));
     
+            const employeesCount = entriesToAdd.filter(item => item.pracownikId).length;
+            const vehiclesCount = entriesToAdd.filter(item => !item.pracownikId && item.pojazdId).length;
+
             if (entriesToAdd.length > 0) {
                 await Axios.post(`${baseUrl}/api/planTygodniaPrev`, entriesToAdd, { withCredentials: true }); 
                 fetchData();
                 notification.success({
                     message: 'Sukces',
-                    description: `Dodano ${entriesToAdd.length} nowych wpisów z poprzedniego tygodnia`,
+                    description: `Dodano ${employeesCount} pracowników i ${vehiclesCount} pojazdów z poprzedniego tygodnia`,
                     placement: 'topRight',
                 });
             } else {
