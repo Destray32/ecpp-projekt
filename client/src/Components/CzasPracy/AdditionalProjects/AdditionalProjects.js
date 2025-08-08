@@ -377,9 +377,10 @@ const AdditionalProjects = ({
                                 <InputTextarea
                                     value={additionalProjects.find(p => p.id === activeProject)?.hours[activeDate]?.comment || ""}
                                     onChange={(e) => handleInputChange(activeProject, activeDate, e.target.value, 'comment')}
-                                    className="w-full"
+                                    className={`w-full ${statusTyg === "Zamkniety" ? 'bg-gray-100 text-gray-800' : ''}`}
                                     rows={3}
                                     disabled={statusTyg === "Zamkniety"}
+                                    readOnly={statusTyg === "Zamkniety"}
                                 />
     
                                 <span className="text-right">Samochód:</span>
@@ -388,7 +389,7 @@ const AdditionalProjects = ({
                                     options={samochody}
                                     onChange={(e) => handleInputChange(activeProject, activeDate, e.value, 'car')}
                                     placeholder="Wybierz pojazd"
-                                    className="w-full"
+                                    className={`w-full ${statusTyg === "Zamkniety" ? 'p-disabled' : ''}`}
                                     showClear
                                     disabled={statusTyg === "Zamkniety"}
                                     defaultValue={defaultSamochod.value}
@@ -398,32 +399,36 @@ const AdditionalProjects = ({
                                 <InputText
                                     value={additionalProjects.find(p => p.id === activeProject)?.hours[activeDate]?.parking || ""}
                                     onChange={(e) => handleInputChange(activeProject, activeDate, e.target.value, 'parking')}
-                                    className="w-full"
+                                    className={`w-full ${statusTyg === "Zamkniety" ? 'bg-gray-100 text-gray-800' : ''}`}
                                     disabled={statusTyg === "Zamkniety"}
+                                    readOnly={statusTyg === "Zamkniety"}
                                 />
     
                                 <span className="text-right">Kilometry:</span>
                                 <InputText
                                     value={additionalProjects.find(p => p.id === activeProject)?.hours[activeDate]?.km || ""}
                                     onChange={(e) => handleInputChange(activeProject, activeDate, e.target.value, 'km')}
-                                    className="w-full"
+                                    className={`w-full ${statusTyg === "Zamkniety" ? 'bg-gray-100 text-gray-800' : ''}`}
                                     disabled={statusTyg === "Zamkniety"}
+                                    readOnly={statusTyg === "Zamkniety"}
                                 />
     
                                 <span className="text-right">Diety:</span>
                                 <InputText
                                     value={additionalProjects.find(p => p.id === activeProject)?.hours[activeDate]?.diet || ""}
                                     onChange={(e) => handleInputChange(activeProject, activeDate, e.target.value, 'diet')}
-                                    className="w-full"
+                                    className={`w-full ${statusTyg === "Zamkniety" ? 'bg-gray-100 text-gray-800' : ''}`}
                                     disabled={statusTyg === "Zamkniety"}
+                                    readOnly={statusTyg === "Zamkniety"}
                                 />
     
                                 <span className="text-right">Wypożyczanie narzędzi:</span>
                                 <InputText
                                     value={additionalProjects.find(p => p.id === activeProject)?.hours[activeDate]?.tools || ""}
                                     onChange={(e) => handleInputChange(activeProject, activeDate, e.target.value, 'tools')}
-                                    className="w-full"
+                                    className={`w-full ${statusTyg === "Zamkniety" ? 'bg-gray-100 text-gray-800' : ''}`}
                                     disabled={statusTyg === "Zamkniety"}
+                                    readOnly={statusTyg === "Zamkniety"}
                                 />
                             </div>
                         </div>

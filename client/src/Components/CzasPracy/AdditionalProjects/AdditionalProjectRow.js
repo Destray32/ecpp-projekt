@@ -143,6 +143,8 @@ const AdditionalProjectRow = React.memo(({
                                     type="text"
                                     value={project.hours[dateKey]?.hoursWorked || ""}
                                     onChange={(e) => {
+                                        if (statusTyg === "Zamkniety") return;
+                                        
                                         let value = e.target.value.replace(',', '.');
 
                                         // Only allow digits, comma, and period with length restriction
@@ -150,11 +152,22 @@ const AdditionalProjectRow = React.memo(({
                                             onInputChange(project.id, dateKey, value, 'hoursWorked');
                                         }
                                     }}
-                                    onBlur={(e) => handleInputBlur(project.id, dateKey, e.target.value)}
-                                    onFocus={() => handleInputFocus(project.id, dateKey)}
-                                    className={`w-16 p-1 border text-center border-gray-300 rounded ${isActive ? 'bg-blue-400' : ''} ${hasCommentAndCar ? 'bg-green-200' : ''}`}
+                                    onBlur={(e) => {
+                                        if (statusTyg !== "Zamkniety") {
+                                            handleInputBlur(project.id, dateKey, e.target.value);
+                                        }
+                                    }}
+                                    onFocus={() => {
+                                        handleInputFocus(project.id, dateKey);
+                                        onActivate(project.id, format(day, 'yyyy-MM-dd'));
+                                    }}
+                                    className={`w-16 p-1 border text-center border-gray-300 rounded 
+                                        ${isActive ? 'bg-blue-400' : ''} 
+                                        ${hasCommentAndCar ? 'bg-green-200' : ''}
+                                        ${statusTyg === "Zamkniety" ? 'bg-gray-100 text-gray-800 cursor-pointer' : ''}`}
                                     placeholder="00:00"
-                                    disabled={niedziela || statusTyg === "Zamkniety"}
+                                    disabled={niedziela}
+                                    readOnly={statusTyg === "Zamkniety"}
                                     maxLength="5"
                                 />
                             </div>
