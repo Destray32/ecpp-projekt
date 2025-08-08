@@ -371,6 +371,27 @@ useEffect(() => {
             });
     };
 
+    // Dodaj funkcję do obsługi zmiany opisu
+const handleOpisChange = (employeeId, newOpis) => {
+    setPracownikData(prevData =>
+        prevData.map(item =>
+            item.id === employeeId ? { ...item, Opis: newOpis } : item
+        )
+    );
+};
+
+const handleOpisBlur = (employeeId, newOpis) => {
+    Axios.put(`${baseUrl}/api/planTygodnia/${employeeId}`, {
+        Opis: newOpis,
+    }, { withCredentials: true })
+        .then(() => {
+            fetchData();
+        })
+        .catch((err) => {
+            console.error('Error updating Opis:', err);
+        });
+};
+
 
 
     return (
@@ -381,30 +402,75 @@ useEffect(() => {
                     <div className="h-full">
                         <div className="h-full flex flex-col justify-around">
                             <div className="flex flex-row gap-32 items-center">
-                            <div className="flex items-center space-x-2">
-                                <Button icon="pi pi-arrow-left" className="p-button-outlined" onClick={previousWeek} />
-                                <p className="text-lg font-bold">Tydzień {getWeekNumber(currentDate)}</p>
-                                <Button icon="pi pi-arrow-right" iconPos="right" className="p-button-outlined" onClick={nextWeek} />
-                                <p className="text-lg font-bold">{formatWeek(currentDate)}</p>
-                            </div>
-                            </div>
-                             <div className="dropdown-container overflow-hidden" ref={dropdownRef}>
-                                <span>Grupa</span>
-                                <Dropdown 
-                                    value={group} 
-                                    onChange={handleChangeGroupFilter}
-                                    options={availableGroups} 
-                                    optionLabel="name"
-                                    placeholder="Wybierz grupę" 
-                                    autoComplete='off'
-                                    showClear 
-                                    className="ml-4 w-64 p-1"
-                                    filter
-                                    resetFilterOnHide
-                                    filterInputAutoFocus
-                                />
+                                <div className="flex items-center space-x-2">
+                                    <Button icon="pi pi-arrow-left" className="p-button-outlined" onClick={previousWeek} />
+                                    <p className="text-lg font-bold">Tydzień {getWeekNumber(currentDate)}</p>
+                                    <Button icon="pi pi-arrow-right" iconPos="right" className="p-button-outlined" onClick={nextWeek} />
+                                    <p className="text-lg font-bold">{formatWeek(currentDate)}</p>
                                 </div>
-
+                            </div>
+                            <div className="dropdown-container overflow-hidden flex flex-row items-center gap-8" ref={dropdownRef}>
+                                {/* Grupa */}
+                                <div className="flex flex-col items-center min-w-[180px]">
+                                    <span className="text-center font-medium">Grupa</span>
+                                    <Dropdown 
+                                        value={group} 
+                                        onChange={handleChangeGroupFilter}
+                                        options={availableGroups} 
+                                        optionLabel="name"
+                                        placeholder="Wybierz grupę" 
+                                        autoComplete='off'
+                                        showClear 
+                                        className="w-64 p-1 mt-1"
+                                        filter
+                                        resetFilterOnHide
+                                        filterInputAutoFocus
+                                    />
+                                </div>
+                                {/* Przenieś zaznaczone do */}
+                                <div className="flex flex-col items-center min-w-[180px]">
+                                    <span className="text-center font-medium">Przenieś zaznaczone do</span>
+                                    <Dropdown
+                                        value={grupaPrzenies}
+                                        onChange={(e) => setGrupaPrzenies(e.value)}
+                                        options={availableGroups}
+                                        optionLabel="name"
+                                        optionValue="id"
+                                        placeholder=""
+                                        autoComplete='off'
+                                        filter
+                                        resetFilterOnHide
+                                        disabled={accountType !== 'Administrator'}
+                                        filterInputAutoFocus
+                                        className="md:w-14rem p-1 w-56 mt-1"
+                                    />
+                                </div>
+                                <div className="flex flex-col items-center min-w-[120px]">
+                                    <span className="invisible">Przenieś</span>
+                                    <Button label="Przenieś" className="bg-white w-[8rem] h-[2.5rem] mt-1"
+                                        text raised onClick={handlePrzeniesZaznaczone}
+                                        disabled={accountType !== 'Administrator'} />
+                                </div>
+                                {/* Skasuj zaznaczone */}
+                                <div className="flex flex-col items-center min-w-[160px]">
+                                    <span className="text-center text-sm font-medium">Skasuj zaznaczone</span>
+                                    <Button
+                                        label="Usuń"
+                                        className="bg-white w-[8rem] h-[2.5rem] mt-1"
+                                        text
+                                        raised
+                                        onClick={() => setIsDialogVisible(true)}
+                                        disabled={accountType !== 'Administrator'}
+                                    />
+                                </div>
+                                {/* Skopiuj pracowników z poprzedniego tygodnia */}
+                                <div className="flex flex-col items-center min-w-[220px]">
+                                    <span className="text-center text-sm font-medium">Skopiuj pracowników z poprzedniego tygodnia</span>
+                                    <Button label="Skopiuj" className="bg-white w-[13rem] h-[2.5rem] mt-1"
+                                        text raised onClick={handleSkopiuj}
+                                        disabled={accountType !== 'Administrator'} />
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -452,7 +518,7 @@ useEffect(() => {
                         text raised onClick={handleDrukuj} />
                 </div>
             </div>
-            <div className="grid grid-cols-[5fr,1fr]">
+            <div className="grid grid-cols-1">
                 <div id="lewa" className="grid grid-cols-auto-fit gap-2.5 p-4">
                     <div className="outline outline-1 outline-gray-500">
                         <table className="w-full">
@@ -471,127 +537,105 @@ useEffect(() => {
                                 </tr>
                             </thead>
                             <tbody className="text-center">
-                                {pracownikData.map((item) => (
-                                    <tr key={item.id} className="border-b even:bg-gray-200 odd:bg-gray-300">
-                                        <td className="border-r">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedRowIds.includes(item.id)}
-                                                onChange={() => handleRowCheckboxChange(item.id)}
-                                            />
-                                        </td>
-                                        <td className="border-r">{item.nazwisko ? item.nazwisko : item.pojazd || 'No Data'}</td>
-                                        <td className="border-r">{item.imie}</td>
-                                        <td className="border-r">{item.Zleceniodawca}</td>
-                                        <td className="border-r">
-                                        <input
-                                            type="radio"
-                                            checked={item.m_value === 'M1'}
-                                            onChange={() => handleRadioChange(item.id, 'M1')}
-                                        />
-                                        </td>
-                                        <td className="border-r">
+                                {pracownikData.map((item, idx) => {
+                                    // Ustal kolor tła na podstawie parzystości wiersza
+                                    const bgColor = idx % 2 === 0 ? '#e5e7eb' : '#d1d5db'; // even:bg-gray-200, odd:bg-gray-300
+                                    return (
+                                        <tr key={item.id} className="border-b even:bg-gray-200 odd:bg-gray-300">
+                                            <td className="border-r">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedRowIds.includes(item.id)}
+                                                    onChange={() => handleRowCheckboxChange(item.id)}
+                                                />
+                                            </td>
+                                            <td className="border-r">{item.nazwisko ? item.nazwisko : item.pojazd || 'No Data'}</td>
+                                            <td className="border-r">{item.imie}</td>
+                                            <td className="border-r">{item.Zleceniodawca}</td>
+                                            <td className="border-r">
                                             <input
                                                 type="radio"
-                                                checked={item.m_value === 'M2'}
-                                                onChange={() => handleRadioChange(item.id, 'M2')}
+                                                checked={item.m_value === 'M1'}
+                                                onChange={() => handleRadioChange(item.id, 'M1')}
                                             />
-                                        </td>
-                                        <td className="border-r">
-                                            <input
-                                                type="radio"
-                                                checked={item.m_value === 'M3'}
-                                                onChange={() => handleRadioChange(item.id, 'M3')}
-                                            />
-                                        </td>
-                                        <td className="border-r">
-                                            <input
-                                                type="radio"
-                                                checked={item.m_value === 'M4'}
-                                                onChange={() => handleRadioChange(item.id, 'M4')}
-                                            />
-                                        </td>
-                                        <td className="border-r">
-                                            <input
-                                                type="radio"
-                                                checked={item.m_value === 'M5'}
-                                                onChange={() => handleRadioChange(item.id, 'M5')}
-                                            />
-                                        </td>
-                                        <td className="border-r">{item.Opis}</td>
-                                    </tr>
-                                ))}
+                                            </td>
+                                            <td className="border-r">
+                                                <input
+                                                    type="radio"
+                                                    checked={item.m_value === 'M2'}
+                                                    onChange={() => handleRadioChange(item.id, 'M2')}
+                                                />
+                                            </td>
+                                            <td className="border-r">
+                                                <input
+                                                    type="radio"
+                                                    checked={item.m_value === 'M3'}
+                                                    onChange={() => handleRadioChange(item.id, 'M3')}
+                                                />
+                                            </td>
+                                            <td className="border-r">
+                                                <input
+                                                    type="radio"
+                                                    checked={item.m_value === 'M4'}
+                                                    onChange={() => handleRadioChange(item.id, 'M4')}
+                                                />
+                                            </td>
+                                            <td className="border-r">
+                                                <input
+                                                    type="radio"
+                                                    checked={item.m_value === 'M5'}
+                                                    onChange={() => handleRadioChange(item.id, 'M5')}
+                                                />
+                                            </td>
+                                            <td className="border-r">
+                                                {item.Opis && accountType !== 'Administrator'
+                                                    ? item.Opis
+                                                    : accountType === 'Administrator'
+                                                        ? (
+                                                            <input
+                                                                type="text"
+                                                                value={item.Opis || ''}
+                                                                onChange={e => handleOpisChange(item.id, e.target.value)}
+                                                                onBlur={e => handleOpisBlur(item.id, e.target.value)}
+                                                                className="w-full px-1 py-0.5 border rounded"
+                                                                style={{
+                                                                    backgroundColor: bgColor,
+                                                                    color: '#111827', // text-gray-900
+                                                                    border: '1px solid #9ca3af', // border-gray-400
+                                                                }}
+                                                            />
+                                                        )
+                                                        : item.Opis
+                                                }</td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>
                 </div>
-
-                <div id="prawa" className="flex flex-col mr-2">
-                    <AmberBox>
-                        <div className="mx-auto flex flex-col justify-between items-center p-4 ">
-                            <p className="text-center mb-2">Przenieś zaznaczone do</p>
-                            <Dropdown
-                                value={grupaPrzenies}
-                                onChange={(e) => setGrupaPrzenies(e.value)}
-                                options={availableGroups}
-                                optionLabel="name"
-                                optionValue="id"
-                                placeholder=""
-                                autoComplete='off'
-                                filter
-                                resetFilterOnHide
-                                disabled={accountType !== 'Administrator'}
-                                filterInputAutoFocus
-                                className=" md:w-14rem p-1 w-full"
-                            />
-                            <Button label="Przenieś" className="bg-white w-[9rem] h-[3rem] mt-4"
-                                text raised onClick={handlePrzeniesZaznaczone}
-                                disabled={accountType !== 'Administrator'} />
-                        </div>
-                    </AmberBox>
-                    <AmberBox>
-                        <div className="mx-auto flex flex-col justify-between items-center p-4">
-                            <p className="text-center mb-2">Skasuj zaznaczone</p>
-                            <Button
-                                label="Usuń"
-                                className="bg-white w-[9rem] h-[3rem]"
-                                text
-                                raised
-                                onClick={() => setIsDialogVisible(true)}
-                                disabled={accountType !== 'Administrator'}
-                            />
-                        </div>
-                        <Dialog
-                            header="Potwierdzenie Usunięcia"
-                            visible={isDialogVisible}
-                            style={{ width: '25vw' }}
-                            onHide={() => setIsDialogVisible(false)}
-                        >
-                            <p className="text-center">Czy na pewno chcesz usunąć zaznaczone elementy?</p>
-                            <div className="flex justify-center gap-4 mt-4">
-                                <Button
-                                    label="Nie"
-                                    className="p-button-outlined p-button-danger w-[6rem] border text-red-600"
-                                    onClick={() => setIsDialogVisible(false)}
-                                />
-                                <Button
-                                    label="Tak"
-                                    className="p-button-success w-[6rem] text-green-400 border"
-                                    onClick={confirmDeletion}
-                                />
-                            </div>
-                        </Dialog>
-                    </AmberBox>
-                    <AmberBox>
-                        <div className="mx-auto flex flex-col justify-between items-center p-4 ">
-                            <p className="text-center mb-2">Skopiuj pracowników z poprzedniego tygodnia</p>
-                            <Button label="Skopiuj" className="bg-white w-[9rem] h-[3rem]"
-                                text raised onClick={handleSkopiuj}
-                                disabled={accountType !== 'Administrator'} />
-                        </div>
-                    </AmberBox>
-                </div>
             </div>
+            {/* Dialog do potwierdzenia usunięcia */}
+            <Dialog
+                header="Potwierdzenie Usunięcia"
+                visible={isDialogVisible}
+                style={{ width: '25vw' }}
+                onHide={() => setIsDialogVisible(false)}
+            >
+                <p className="text-center">Czy na pewno chcesz usunąć zaznaczone elementy?</p>
+                <div className="flex justify-center gap-4 mt-4">
+                    <Button
+                        label="Nie"
+                        className="p-button-outlined p-button-danger w-[6rem] border text-red-600"
+                        onClick={() => setIsDialogVisible(false)}
+                    />
+                    <Button
+                        label="Tak"
+                        className="p-button-success w-[6rem] text-green-400 border"
+                        onClick={confirmDeletion}
+                    />
+                </div>
+            </Dialog>
         </main>
     )
 }
