@@ -24,6 +24,26 @@ const debounce = (func, delay) => {
     };
 };
 
+const deepEqual = (obj1, obj2) => {
+    if (obj1 === obj2) return true;
+    
+    if (obj1 == null || obj2 == null) return obj1 === obj2;
+    
+    if (typeof obj1 !== 'object' || typeof obj2 !== 'object') return obj1 === obj2;
+    
+    const keys1 = Object.keys(obj1);
+    const keys2 = Object.keys(obj2);
+    
+    if (keys1.length !== keys2.length) return false;
+    
+    for (let key of keys1) {
+        if (!keys2.includes(key)) return false;
+        if (!deepEqual(obj1[key], obj2[key])) return false;
+    }
+    
+    return true;
+};
+
 export default function CzasPracyPage() {
     const [userType, setUserType] = useState(null);
     const [Pracownik, setPracownik] = useState(null);
@@ -58,6 +78,11 @@ export default function CzasPracyPage() {
     const [lastSaved, setLastSaved] = useState(null);
     const [activeProject, setActiveProject] = useState(null);
     const [activeDate, setActiveDate] = useState(null);
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+    const [pendingDateChange, setPendingDateChange] = useState(null);
+    const [loadingCounter, setLoadingCounter] = useState(0);
+    const [initialHours, setInitialHours] = useState({});
+    const [initialAdditionalProjects, setInitialAdditionalProjects] = useState([]);
 
     const startOfCurrentWeek = startOfWeek(currentDate, { weekStartsOn: 1 });
 
@@ -152,29 +177,29 @@ export default function CzasPracyPage() {
         };
     }, []);
 
-    // Create debounced save function
-    /*const debouncedSave = useCallback(
-        debounce(() => {
-            if (isOnline && Pracownik && statusTygodnia !== "Zamknięty") {
-                handleSave(true);
+    // Track changes to hours and additional projects
+    useEffect(() => {
+        if (Pracownik && statusTygodnia !== "Zamknięty" && loadingCounter === 0) {
+            const hasHoursChanged = !deepEqual(hours, initialHours);
+            const hasProjectsChanged = !deepEqual(additionalProjects, initialAdditionalProjects);
+            
+            if (hasHoursChanged || hasProjectsChanged) {
+                setHasUnsavedChanges(true);
+            } else {
+                setHasUnsavedChanges(false);
             }
-        }, 2000), // Wait 2 seconds after last change before saving
-        [hours, additionalProjects, Pracownik, currentDate, isOnline, statusTygodnia]
-    );
-
-    // Auto-save when hours or projects change
-    useEffect(() => {
-        if (Pracownik && hours && Object.keys(hours).length > 0) {
-            debouncedSave();
         }
-    }, [hours, debouncedSave]);
+    }, [hours, additionalProjects, Pracownik, statusTygodnia, loadingCounter, initialHours, initialAdditionalProjects]);
 
     useEffect(() => {
-        if (Pracownik && additionalProjects.length > 0) {
-            debouncedSave();
+        if (czyZapisano) {
+            setHasUnsavedChanges(false);
         }
-    }, [additionalProjects, debouncedSave]);
-    //#endregion*/
+    }, [czyZapisano]);
+
+    useEffect(() => {
+        setHasUnsavedChanges(false);
+    }, [Pracownik, currentDate]);
 
     //#region fetching
 
@@ -336,6 +361,7 @@ export default function CzasPracyPage() {
 
     const fetchWorkHours = async (employeeName, date) => {
         try {
+            setLoadingCounter(prev => prev + 1);
             const weekData = getWeek(date, { weekStartsOn: 1 });
             const year = date.getFullYear();
             const response = await Axios.get(`${baseUrl}/api/czas`, {
@@ -349,16 +375,23 @@ export default function CzasPracyPage() {
 
             if (response.data && response.data.days) {
                 setHours(response.data.days);
+                setInitialHours(JSON.parse(JSON.stringify(response.data.days)));
             } else {
                 setHours({});
+                setInitialHours({});
             }
         } catch (error) {
             console.error("Error fetching work hours", error);
+            setHours({});
+            setInitialHours({});
+        } finally {
+            setLoadingCounter(prev => prev - 1);
         }
     };
 
     const fetchAdditionalProjects = async (employeeName, date) => {
         try {
+            setLoadingCounter(prev => prev + 1);
             const weekData = getWeek(date, { weekStartsOn: 1 });
             const year = date.getFullYear();
 
@@ -404,17 +437,22 @@ export default function CzasPracyPage() {
                 });
 
                 setAdditionalProjects(loadedProjects);
+                setInitialAdditionalProjects(JSON.parse(JSON.stringify(loadedProjects)));
             } else {
                 setAdditionalProjects([]);
+                setInitialAdditionalProjects([]);
             }
         } catch (error) {
             setAdditionalProjects([]);
+            setInitialAdditionalProjects([]);
 
             if (error.response && error.response.status === 404) {
                 //console.log("brak dodatkowych projektów");
             } else {
                 console.error("Błąd podczas pobierania dodatkowych projektów", error);
             }
+        } finally {
+            setLoadingCounter(prev => prev - 1);
         }
     };
 
@@ -443,6 +481,64 @@ export default function CzasPracyPage() {
 
         } catch (error) {
             console.error("Error fetching week status", error);
+        }
+    };
+    //#endregion
+
+    //#region Week Navigation with Unsaved Changes Warning
+    const handleWeekChange = (newDate) => {
+        if (hasUnsavedChanges && statusTygodnia !== "Zamknięty") {
+            setPendingDateChange(newDate);
+            Modal.confirm({
+                title: 'Niezapisane zmiany',
+                content: 'Masz niezapisane zmiany. Czy chcesz kontynuować bez zapisywania? Wszystkie zmiany zostaną utracone.',
+                okText: 'Tak, kontynuuj',
+                cancelText: 'Anuluj',
+                onOk: () => {
+                    setCurrentDate(newDate);
+                    setHasUnsavedChanges(false);
+                    setCzyZapisano(false);
+                    setPendingDateChange(null);
+                    setInitialHours({});
+                    setInitialAdditionalProjects([]);
+                },
+                onCancel: () => {
+                    setPendingDateChange(null);
+                }
+            });
+        } else {
+            setCurrentDate(newDate);
+            setCzyZapisano(false);
+            setInitialHours({});
+            setInitialAdditionalProjects([]);
+        }
+    };
+
+    const handleEmployeeChange = (newEmployee) => {
+        if (hasUnsavedChanges && statusTygodnia !== "Zamknięty") {
+            Modal.confirm({
+                title: 'Niezapisane zmiany',
+                content: 'Masz niezapisane zmiany. Czy chcesz kontynuować bez zapisywania? Wszystkie zmiany zostaną utracone.',
+                okText: 'Tak, kontynuuj',
+                cancelText: 'Anuluj',
+                onOk: () => {
+                    setPracownik(newEmployee);
+                    setHasUnsavedChanges(false);
+                    setCzyZapisano(false);
+                    // Reset initial data when changing employee
+                    setInitialHours({});
+                    setInitialAdditionalProjects([]);
+                },
+                onCancel: () => {
+                    // Do nothing, keep current employee
+                }
+            });
+        } else {
+            setPracownik(newEmployee);
+            setCzyZapisano(false);
+            // Reset initial data when changing employee
+            setInitialHours({});
+            setInitialAdditionalProjects([]);
         }
     };
     //#endregion
@@ -520,6 +616,10 @@ export default function CzasPracyPage() {
             if (response.status === 200) {
                 setLastSaved(new Date());
                 setSaveStatus("saved");
+                setHasUnsavedChanges(false);
+                
+                setInitialHours(JSON.parse(JSON.stringify(hours)));
+                setInitialAdditionalProjects(JSON.parse(JSON.stringify(additionalProjects)));
                 
                 if (!autoSave) {
                     notification.success({
@@ -816,15 +916,16 @@ export default function CzasPracyPage() {
         <div>
             <WeekNavigation
                 currentDate={currentDate}
-                setCurrentDate={setCurrentDate}
+                setCurrentDate={handleWeekChange}
                 Pracownik={Pracownik}
-                setPracownik={setPracownik}
+                setPracownik={handleEmployeeChange}
                 pracownicy={pracownicy}
                 userType={userType}
                 statusTyg={statusTygodnia}
                 isOnline={isOnline}
                 lastSaved={lastSaved}
                 saveStatus={saveStatus}
+                hasUnsavedChanges={hasUnsavedChanges}
             />
             <TimeInputs
                 daysOfWeek={daysOfWeek}

@@ -19,6 +19,7 @@ import { formatWeek } from '../../utils/dateUtils';
  * @param {boolean} props.isOnline - Status połączenia z internetem.
  * @param {Date|null} props.lastSaved - Czas ostatniego lokalnego zapisu.
  * @param {string} props.saveStatus - Status zapisu (idle, saving, saved, error)
+ * @param {boolean} props.hasUnsavedChanges - Czy są niezapisane zmiany
  * 
  * @returns {JSX.Element} Element JSX reprezentujący nawigację tygodniową.
  */
@@ -32,10 +33,12 @@ const WeekNavigation = ({
     statusTyg,
     isOnline,
     lastSaved,
-    saveStatus
+    saveStatus,
+    hasUnsavedChanges
 }) => {
     const previousWeek = () => setCurrentDate(subWeeks(currentDate, 1));
     const nextWeek = () => setCurrentDate(addWeeks(currentDate, 1));
+    const handleDateChange = (e) => setCurrentDate(new Date(e.target.value));
 
     return (
         <div className="w-auto h-full m-2 bg-amber-100 outline outline-1 outline-gray-500 flex flex-col space-y-4">
@@ -50,7 +53,7 @@ const WeekNavigation = ({
                                 <input 
                                     type="date" 
                                     value={currentDate.toISOString().split('T')[0]} // Format date as YYYY-MM-DD
-                                    onChange={(e) => setCurrentDate(new Date(e.target.value))} 
+                                    onChange={handleDateChange} 
                                     className="mt-2 p-1 border border-gray-300 rounded text-sm w-32 text-center"
                                 />
                             </div>
@@ -60,6 +63,11 @@ const WeekNavigation = ({
                             <span className={`text-lg font-bold ${statusTyg === "Otwarty" ? "text-green-600" : "text-red-600"}`}>
                                 {statusTyg}
                             </span>
+                            {hasUnsavedChanges && (
+                                <span className="text-sm bg-orange-100 text-orange-700 px-2 py-1 rounded border">
+                                    Niezapisane zmiany
+                                </span>
+                            )}
                             <span className={`text-sm ${isOnline ? 'text-green-600' : 'text-red-600'}`}>
                                 {isOnline ? 'Online' : 'Offline'}
                             </span>
