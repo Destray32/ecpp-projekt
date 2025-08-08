@@ -116,8 +116,12 @@ const AdditionalProjectRow = React.memo(({
                             project.hours[dateKey] = {};
                         }
 
-                        // Only set default car if there isn't one already selected
-                        if (defaultCar && !project.hours[dateKey].car) {
+                        // Przypisz domyślny samochód tylko jeśli nie ma wybranego i nie jest niedziela
+                        if (
+                            defaultCar &&
+                            !project.hours[dateKey].car &&
+                            !niedziela
+                        ) {
                             project.hours[dateKey].car = defaultCar;
                         }
 

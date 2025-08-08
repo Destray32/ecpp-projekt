@@ -58,14 +58,60 @@ const PDF_PracownikAnalizaCzasu = (raport, startDate, endDate, pracownik) => {
 
     // tabela godzin
     const byProj = entries.reduce((acc, e) => {
-      acc[e.Projekt] = (acc[e.Projekt] || 0) + parseFloat(e.GodzinyPrzepracowane);
+      // Obsługa formatu hh:mm, hh.mm, mm
+      let godziny = e.GodzinyPrzepracowane;
+      let h = 0, m = 0;
+      if (typeof godziny === 'string') {
+        const str = godziny.replace(',', '.');
+        if (str.includes(':')) {
+          const [hPart, mPart] = str.split(':');
+          h = parseInt(hPart, 10) || 0;
+          m = parseInt(mPart, 10) || 0;
+        } else if (str.includes('.')) {
+          const [hPart, mPart] = str.split('.');
+          h = parseInt(hPart, 10) || 0;
+          m = parseInt(mPart, 10) || 0;
+        } else if (str.length <= 2) {
+          m = parseInt(str, 10) || 0;
+        } else {
+          h = parseInt(str, 10) || 0;
+        }
+      } else if (typeof godziny === 'number') {
+        h = Math.floor(godziny);
+        m = Math.round((godziny - h) * 60);
+      }
+      if (!acc[e.Projekt]) acc[e.Projekt] = [];
+      acc[e.Projekt].push({ h, m });
       return acc;
     }, {});
-    const tableData = Object.entries(byProj)
-      .map(([proj, hrs]) => [proj, hrs.toFixed(2)])
-      .sort((a,b) => parseFloat(b[1]) - parseFloat(a[1]));
-    const total = tableData.reduce((s, r) => s + parseFloat(r[1]), 0);
-    tableData.push(["Razem", total.toFixed(2)]);
+    // Sumowanie i normalizacja minut do godzin
+    const byProjNormalized = {};
+    Object.entries(byProj).forEach(([proj, arr]) => {
+      let sumH = 0, sumM = 0;
+      arr.forEach(({ h, m }) => {
+        sumH += h;
+        sumM += m;
+      });
+      sumH += Math.floor(sumM / 60);
+      sumM = sumM % 60;
+      byProjNormalized[proj] = { h: sumH, m: sumM };
+    });
+    const tableData = Object.entries(byProjNormalized)
+      .map(([proj, { h, m }]) => [proj, `${h}:${m.toString().padStart(2, '0')}`])
+      .sort((a,b) => {
+        const [h1, m1] = a[1].split(':').map(Number);
+        const [h2, m2] = b[1].split(':').map(Number);
+        return (h2*60+m2)-(h1*60+m1);
+      });
+    // Suma całości
+    let totalH = 0, totalM = 0;
+    Object.values(byProjNormalized).forEach(({ h, m }) => {
+      totalH += h;
+      totalM += m;
+    });
+    totalH += Math.floor(totalM / 60);
+    totalM = totalM % 60;
+    tableData.push(["Razem", `${totalH}:${totalM.toString().padStart(2, '0')}`]);
 
     doc.autoTable({
       startY: 80,

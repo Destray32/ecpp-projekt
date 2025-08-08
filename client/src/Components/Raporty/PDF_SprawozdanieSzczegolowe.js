@@ -87,8 +87,7 @@ const PDF_SzczegoloweDzialalnosciPracownikow = (data, startDate, endDate, Projek
             return acc;
         }, {});
 
-        let totalProjectHours = 0;
-
+        let totalProjectHours = 0, totalProjectMinutes = 0;
         // Dla każdego pracownika tworzona jest oddzielna tabela
         for (const [employeeName, employeeData] of Object.entries(employeeGroups)) {
             // Sortowanie danych dla danego pracownika
@@ -97,19 +96,42 @@ const PDF_SzczegoloweDzialalnosciPracownikow = (data, startDate, endDate, Projek
             });
             
             // Budowanie wierszy z nazwą pracownika w pierwszej kolumnie
+            let empH = 0, empM = 0;
             const rows = employeeData.map((row, index) => {
-                const hoursWorked = parseFloat(row.GodzinyPrzepracowane) || 0;
+                let godziny = row.GodzinyPrzepracowane;
+                let h = 0, m = 0;
+                if (typeof godziny === 'string') {
+                    const str = godziny.replace(',', '.');
+                    if (str.includes(':')) {
+                        const [hPart, mPart] = str.split(':');
+                        h = parseInt(hPart, 10) || 0;
+                        m = parseInt(mPart, 10) || 0;
+                    } else if (str.includes('.')) {
+                        const [hPart, mPart] = str.split('.');
+                        h = parseInt(hPart, 10) || 0;
+                        m = parseInt(mPart, 10) || 0;
+                    } else if (str.length <= 2) {
+                        m = parseInt(str, 10) || 0;
+                    } else {
+                        h = parseInt(str, 10) || 0;
+                    }
+                } else if (typeof godziny === 'number') {
+                    h = Math.floor(godziny);
+                    m = Math.round((godziny - h) * 60);
+                }
+                empH += h;
+                empM += m;
                 // Imię i nazwisko tylko w pierwszym wierszu dla tego pracownika
                 const employeeNameCell = index === 0 ? employeeName : '';
-                return [employeeNameCell, row.Data, hoursWorked.toFixed(2), row.Komentarz];
+                return [employeeNameCell, row.Data, `${h}:${m.toString().padStart(2, '0')}`, row.Komentarz];
             });
-
-            // Obliczanie sumy godzin dla pracownika
-            const totalHours = employeeData.reduce((sum, row) => sum + (parseFloat(row.GodzinyPrzepracowane) || 0), 0);
-            totalProjectHours += totalHours;
-
-            // Dodanie wiersza podsumowującego godziny na końcu tabeli dla każdego pracownika
-            rows.push(["Razem:", "", totalHours.toFixed(2), ""]);
+            // --- nie normalizuj empH/empM tutaj ---
+            totalProjectHours += empH;
+            totalProjectMinutes += empM;
+            // Normalizacja tylko do wyświetlenia sumy dla pracownika
+            let normEmpH = empH + Math.floor(empM / 60);
+            let normEmpM = empM % 60;
+            rows.push(["Razem:", "", `${normEmpH}:${normEmpM.toString().padStart(2, '0')}`, ""]);
             
             const options = {
                 startY: yPosition + 20,
@@ -140,10 +162,12 @@ const PDF_SzczegoloweDzialalnosciPracownikow = (data, startDate, endDate, Projek
             doc.autoTable(options);
             yPosition = doc.autoTable.previous.finalY + 20;
         }
-
+        // Normalizacja sumy projektu
+        totalProjectHours += Math.floor(totalProjectMinutes / 60);
+        totalProjectMinutes = totalProjectMinutes % 60;
         doc.setFontSize(15);
         doc.setFont('Helvetica', 'Bold'); 
-        doc.text(`Total dla projektu: ${totalProjectHours.toFixed(2)} h`, 40, yPosition);
+        doc.text(`Total dla projektu: ${totalProjectHours}:${totalProjectMinutes.toString().padStart(2, '0')} h`, 40, yPosition);
         yPosition += 40;
     }
 

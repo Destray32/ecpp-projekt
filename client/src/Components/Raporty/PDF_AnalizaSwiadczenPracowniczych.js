@@ -82,7 +82,7 @@ const PDF_AnalizaSwiadczenPracowniczych = async (raport, startDate, endDate, pra
     // Grupowanie i sumowanie danych
     // Jeśli masz stawki indywidualne/globalne, pobierz je tutaj
     // Przykład: const stawkaIndywidualna = ...
-    let totalHours = 0, totalKm = 0, totalParking = 0, totalDiety = 0, totalKoszty = 0, totalSum = 0;
+    let totalHours = 0, totalMinutes = 0, totalKm = 0, totalParking = 0, totalDiety = 0, totalKoszty = 0, totalSum = 0;
     const tableData = entries.map(e => {
       // Pobierz stawki dla danego wpisu
       let grupaUrlopowaId = e.idGrupa_urlopowa;
@@ -98,24 +98,51 @@ const PDF_AnalizaSwiadczenPracowniczych = async (raport, startDate, endDate, pra
       const stawkaKm = parseFloat(stawki.stawkaZa1km) || 0;
 
       // Oblicz wartości
-      const godziny = parseFloat(e.GodzinyPrzepracowane) || 0;
+      // Godziny mogą być w formacie "hh:mm" lub "hh.mm" lub tylko minuty
+      let godziny = e.GodzinyPrzepracowane;
+      let h = 0, m = 0;
+      if (typeof godziny === 'string') {
+        const str = godziny.replace(',', '.');
+        if (str.includes(':')) {
+          const [hPart, mPart] = str.split(':');
+          h = parseInt(hPart, 10) || 0;
+          m = parseInt(mPart, 10) || 0;
+        } else if (str.includes('.')) {
+          const [hPart, mPart] = str.split('.');
+          h = parseInt(hPart, 10) || 0;
+          m = parseInt(mPart, 10) || 0;
+        } else if (str.length <= 2) {
+          m = parseInt(str, 10) || 0;
+        } else {
+          h = parseInt(str, 10) || 0;
+        }
+      } else if (typeof godziny === 'number') {
+        h = Math.floor(godziny);
+        m = Math.round((godziny - h) * 60);
+      }
+
+      totalHours += h;
+      totalMinutes += m;
+
       const km = parseFloat(e.Kilometry) || 0;
       const parking = parseFloat(e.Parking) || 0;
       const diety = parseFloat(e.Diety) || 0;
       const koszty = parseFloat(e.Inne_koszty) || 0;
-      const suma = (godziny * stawkaGodzinowa) + (km * stawkaKm) + parking + diety + koszty;
+      const suma = ((h + m / 60) * stawkaGodzinowa) + (km * stawkaKm) + parking + diety + koszty;
 
       // Sumuj wartości
-      totalHours += godziny;
       totalKm += km;
       totalParking += parking;
       totalDiety += diety;
       totalKoszty += koszty;
       totalSum += suma;
 
+      // Format godzin do hh:mm
+      let godzinyStr = `${h}:${m.toString().padStart(2, '0')}`;
+
       return [
         `${nameSurname} (${id})`,
-        godziny.toFixed(2),
+        godzinyStr,
         stawkaGodzinowa.toFixed(2),
         km.toFixed(2),
         parking.toFixed(2),
@@ -125,10 +152,15 @@ const PDF_AnalizaSwiadczenPracowniczych = async (raport, startDate, endDate, pra
       ];
     });
 
+    // Normalizacja minut do godzin dla sumy
+    totalHours += Math.floor(totalMinutes / 60);
+    totalMinutes = totalMinutes % 60;
+    let totalGodzinyStr = `${totalHours}:${totalMinutes.toString().padStart(2, '0')}`;
+
     // Suma
     tableData.push([
       'Suma:',
-      totalHours.toFixed(2),
+      totalGodzinyStr,
       '',
       totalKm.toFixed(2),
       totalParking.toFixed(2),

@@ -1,9 +1,26 @@
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { notification } from 'antd';
+import axios from 'axios';
+const baseUrl = process.env.REACT_APP_BASE_URL;
 
-const PDF_SprawozdaniePodsumowanie = (raport, startDate, endDate, Projekt) => {
+const PDF_SprawozdaniePodsumowanie = async (raport, startDate, endDate, Projekt) => {
+    // --- Pobierz cennik z backendu ---
+    let cennikData = [];
+    try {
+        const response = await axios.get(`${baseUrl}/api/cennik`, { withCredentials: true });
+        cennikData = response.data;
+    } catch (err) {
+        notification.error({
+            message: 'Błąd',
+            description: 'Nie udało się pobrać danych cennika',
+            placement: 'topRight',
+        });
+        return;
+    }
+
     const doc = new jsPDF('landscape', 'pt', 'a4');
+    console.log(raport);
     doc.addFont('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-Regular.ttf', 'Roboto', 'normal');
     doc.setFont('Roboto');
 
@@ -87,33 +104,91 @@ const PDF_SprawozdaniePodsumowanie = (raport, startDate, endDate, Projekt) => {
             const employee = entry.Pracownik;
             if (!acc[employee]) {
                 acc[employee] = {
-                    hours: 0,
+                    h: 0,
+                    m: 0,
                     kilometry: 0,
                     parking: 0,
                     diety: 0,
                     inneKoszty: 0,
+                    zleceniodawca: entry.Zleceniodawca,
+                    pracownikId: entry.PracownikID
                 };
             }
-            acc[employee].hours += parseFloat(entry.GodzinyPrzepracowane) || 0;
+            // Obsługa formatu hh:mm, hh.mm, mm
+            let godziny = entry.GodzinyPrzepracowane;
+            let h = 0, m = 0;
+            if (typeof godziny === 'string') {
+                const str = godziny.replace(',', '.');
+                if (str.includes(':')) {
+                    const [hPart, mPart] = str.split(':');
+                    h = parseInt(hPart, 10) || 0;
+                    m = parseInt(mPart, 10) || 0;
+                } else if (str.includes('.')) {
+                    const [hPart, mPart] = str.split('.');
+                    h = parseInt(hPart, 10) || 0;
+                    m = parseInt(mPart, 10) || 0;
+                } else if (str.length <= 2) {
+                    m = parseInt(str, 10) || 0;
+                } else {
+                    h = parseInt(str, 10) || 0;
+                }
+            } else if (typeof godziny === 'number') {
+                h = Math.floor(godziny);
+                m = Math.round((godziny - h) * 60);
+            }
+            acc[employee].h += h;
+            acc[employee].m += m;
             acc[employee].kilometry += parseFloat(entry.Kilometry) || 0;
-            acc[employee].parking += parseFloat(entry.Parking) || 0; // dodane sumowanie parkingu
+            acc[employee].parking += parseFloat(entry.Parking) || 0;
             acc[employee].diety += parseFloat(entry.Diety) || 0;
             acc[employee].inneKoszty += parseFloat(entry.Inne_koszty) || 0;
             return acc;
         }, {});
 
-        const totalTime = Object.values(groupedByEmployee).reduce((acc, employeeData) => acc + employeeData.hours, 0);
+        // Normalizacja minut do godzin dla każdego pracownika
+        Object.values(groupedByEmployee).forEach(obj => {
+            // nie normalizuj tutaj!
+        });
 
-        if (totalTime === 0) {
-            // Pomijamy projekt bez przepracowanych godzin
-            continue;
-        }
+        // Suma całości
+        let totalH = 0, totalM = 0;
+        Object.values(groupedByEmployee).forEach(obj => {
+            totalH += obj.h;
+            totalM += obj.m;
+        });
+        // Normalizuj dopiero po zsumowaniu wszystkich minut
+        totalH += Math.floor(totalM / 60);
+        totalM = totalM % 60;
+
+        const tableData = Object.keys(groupedByEmployee).map(employee => {
+            const { h, m, kilometry, parking, diety, inneKoszty, zleceniodawca, pracownikId } = groupedByEmployee[employee];
+            // --- Pobierz stawkę godzinową z cennika po Zleceniodawca i idPracownik ---
+            let entryCennik = cennikData.find(c =>
+                c.idPracownik === pracownikId &&
+                c.Zleceniodawca === zleceniodawca
+            );
+            const stawkaGodzinowa = parseFloat(entryCennik?.stawka_indywidualna ?? entryCennik?.stawka_globalna ?? 0) || 0;
+            // Normalizuj tylko do wyświetlenia
+            let normH = h + Math.floor(m / 60);
+            let normM = m % 60;
+            return [
+                employee,
+                `${normH}:${normM.toString().padStart(2, '0')}`,
+                stawkaGodzinowa.toFixed(2),
+                kilometry.toFixed(2),
+                parking.toFixed(2),
+                diety.toFixed(2),
+                inneKoszty.toFixed(2)
+            ];
+        });
+
+        tableData.push([
+            'Suma: ', `${totalH}:${totalM.toString().padStart(2, '0')}`, '', '', '', '', 'Suma: 0.00'
+        ]);
 
         if (i > 0) {
-            doc.addPage(); // Dodajemy nową stronę dla kolejnego projektu
+            doc.addPage();
         }
-
-        // Nagłówek raportu
         doc.setFontSize(14);
         doc.setTextColor(0, 102, 204);
         doc.text("Sprawozdanie z działalności - podsumowanie", 14, 20);
@@ -137,26 +212,11 @@ const PDF_SprawozdaniePodsumowanie = (raport, startDate, endDate, Projekt) => {
         doc.setTextColor(0, 0, 0);
         doc.text(`Projekt: ${projectName}`, 40, okresYPosition);
 
-        // Przygotowanie danych do tabeli
-        const tableData = Object.keys(groupedByEmployee).map(employee => {
-            const { hours, kilometry, parking, diety, inneKoszty } = groupedByEmployee[employee];
-            return [
-                employee,
-                hours.toFixed(2),
-                "104.50", // statyczna wartość, jeśli chcesz dynamiczną, trzeba zmienić
-                kilometry.toFixed(2),
-                parking.toFixed(2),
-                diety.toFixed(2),
-                inneKoszty.toFixed(2)
-            ];
-        });
-
-        tableData.push([
-            'Suma: ', totalTime.toFixed(2), '', '', '', '', 'Suma: 0.00'
-        ]);
+        // --- Ustaw startY na większą wartość, aby nie ucinało nagłówka ---
+        const tableStartY = Math.max(okresYPosition + 20, 80);
 
         doc.autoTable({
-            startY: okresYPosition + 20,
+            startY: tableStartY,
             head: [['Pracownik', 'Czas', '1h=kr', 'Kilometry', 'Parking', 'Diety', 'Inne koszty']],
             body: tableData,
             theme: 'grid',
@@ -200,3 +260,4 @@ const PDF_SprawozdaniePodsumowanie = (raport, startDate, endDate, Projekt) => {
 };
 
 export default PDF_SprawozdaniePodsumowanie;
+

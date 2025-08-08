@@ -104,7 +104,7 @@ const NODE_ENV = process.env.NODE_ENV;
 const pool = mysql.createPool({
     host: 'localhost',
     user: 'root',
-    password: 'root',
+    password: '',
     database: 'mydb',
     waitForConnections: true,
     connectionLimit: 30,
@@ -397,19 +397,6 @@ app.route('/api/planTygodnia/zaplanuj')
     });
 /////////////////////////////////////////
 
-app.get('/api/cennik',authorizeRole('Administrator', 'Kierownik'), (req, res) => {
-    PobierzCennik(req, res);
-});
-
-app.put('/api/cennik/stawka', authorizeRole('Administrator', 'Kierownik'), (req, res) => {
-    AktualizujStawke(req, res);
-});
-
-app.put('/api/cennik/globalna', authorizeRole('Administrator', 'Kierownik'), (req, res) => {
-    AktualizujStawkeGlobalna(req, res);
-});
-
-
 // CZAS > PROJEKTY //
 app.get('/api/czas/projekty', (req, res) => {
     GetProjekty(req, res, pool);
@@ -479,9 +466,6 @@ app.get('/api/cennik', authorizeRole('Administrator', 'Kierownik'), (req, res) =
     PobierzCennik(req, res);
 });
 
-app.delete('/api/cennik/stawka', authorizeRole('Administrator', 'Kierownik'), (req, res) => {
-    UsunStawkeIndywidualna(req, res);
-});
 
 app.put('/api/cennik/stawka', authorizeRole('Administrator', 'Kierownik'), (req, res) => {
     AktualizujStawke(req, res);
