@@ -29,11 +29,14 @@
     "uuid": "^10.0.0",
     "web-vitals": "^2.1.4"
   },
+  
+  
+  
   "scripts": {
     "simulate": "serve -s build",
     "start": "node start.js",
     "start:dev": "react-scripts start",
-    "start:prod": "HTTPS=true SSL_CRT_FILE=/home/opc/ECPP/fullchain.pem SSL_KEY_FILE=/home/opc/ECPP/privkey.pem react-scripts start",
+    "start:prod": "HTTPS=true SSL_CRT_FILE=/home/opc/ECPP/certs/fullchain.pem SSL_KEY_FILE=/home/opc/ECPP/certs/privkey.pem react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"

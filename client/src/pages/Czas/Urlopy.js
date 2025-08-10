@@ -246,7 +246,7 @@ export default function UrlopyPage() {
 
                 // Otwarcie nowego okna z pdf-em
                 setTimeout(() => {
-                    window.open(`http://localhost:3000/test`, '_blank');
+                    window.open(`https://www.qubis.pl/test`, '_blank');
                 }, 1500);
 
             })

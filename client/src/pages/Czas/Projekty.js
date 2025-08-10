@@ -147,6 +147,7 @@ export default function ProjektyPage() {
                         a.Zleceniodawca.localeCompare(b.Zleceniodawca)
                     );
                     setData(sortedProjects);
+                    console.log(sortedProjects);
                 } else {
                     console.error('Unexpected response structure:', response.data);
                     setData([]);
