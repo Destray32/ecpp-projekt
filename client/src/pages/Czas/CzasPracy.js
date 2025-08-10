@@ -123,15 +123,15 @@ export default function CzasPracyPage() {
     }, [currentDate]);
 
     useEffect(() => {
-        if (Pracownik && (userType === "Administrator")) {
+        if (Pracownik && dostepneProjekty.length > 0 && (userType === "Administrator")) {
             fetchWorkHours(Pracownik, currentDate);
             fetchAdditionalProjects(Pracownik, currentDate);
-        } else if (Pracownik && (userType === "Pracownik" || userType === "Kierownik" || userType === "Biuro")) {
+        } else if (Pracownik && dostepneProjekty.length > 0 && (userType === "Pracownik" || userType === "Kierownik" || userType === "Biuro")) {
             fetchWorkHours(Pracownik, currentDate);
             fetchAdditionalProjects(Pracownik, currentDate);
             setPracownicy([{ label: Pracownik, value: Pracownik }]);
         }
-    }, [Pracownik, currentDate]);
+    }, [Pracownik, currentDate, dostepneProjekty]);
 
     useEffect(() => {
         if (currentUserId) {
@@ -429,9 +429,13 @@ export default function CzasPracyPage() {
                         };
                     });
 
+                    const projectInfo = dostepneProjekty.find(p => p.value === project.projekt);
+                    const zleceniodawcaId = projectInfo ? projectInfo.Grupa_urlopowa_idGrupa_urlopowa : null;
+
                     return {
                         ...project,
                         id: uuidv4(),
+                        zleceniodawca: zleceniodawcaId,
                         hours: updatedHours
                     };
                 });

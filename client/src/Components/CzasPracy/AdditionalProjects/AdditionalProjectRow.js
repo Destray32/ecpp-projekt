@@ -17,10 +17,19 @@ const AdditionalProjectRow = React.memo(({
     samochody,
     statusTyg,
     onActivate,
-    defaultCar
+    defaultCar,
+    zleceniodawcy
 }) => {
     const projectTotal = calculateProjectTotal(project, daysOfWeek);
     const activeCar = activeInput ? project.hours[activeInput.date]?.car : "";
+
+    const getZleceniodawcaName = () => {
+        if (!zleceniodawcy || !project.zleceniodawca) return "";
+        const zleceniodawca = zleceniodawcy.find(z => z.value === project.zleceniodawca);
+        return zleceniodawca ? zleceniodawca.label : "";
+    };
+
+    const zleceniodawcaName = getZleceniodawcaName();
 
     // Format hours similar to TimeInputs component
     const formatHoursValue = (value) => {
@@ -102,7 +111,17 @@ const AdditionalProjectRow = React.memo(({
                                 Usuń
                             </button>
                         </span>
-                        <span className='ml-2'>Projekt: {project.projekt || "Projekt"}</span>
+                        <span className='ml-2'>
+                            {zleceniodawcaName ? (
+                                <>
+                                    <span className="text-blue-800 font-bold">{zleceniodawcaName}</span>
+                                    {" – "}
+                                    {project.projekt || "Projekt"}
+                                </>
+                            ) : (
+                                `Projekt: ${project.projekt || "Projekt"}`
+                            )}
+                        </span>
                     </div>
                 </div>
                 <div className="flex-1 grid grid-cols-[repeat(7,_minmax(0,_5rem))] text-center relative -left-4 md:-left-0 lg:left-0">
