@@ -606,7 +606,7 @@ export default function CzasPracyPage() {
                         dayOfWeek: format(day, 'EEEE', { locale: pl }),
                         start: hoursData.start || "00:00",
                         end: hoursData.end || "00:00",
-                        break: hoursData.break || "00:00",
+                        break: hoursData.break && hoursData.break.trim() !== "" ? hoursData.break : "00:00",
                     };
                 }),
                 totalHours: totalHours,
@@ -690,7 +690,7 @@ const handleZamknijTydzien = async () => {
                 const projectData = project.hours[formattedDate];
                 const hoursWorked = projectData?.hoursWorked || 0;
                 if (toMinutes(hoursWorked) > 0) {
-                    if ((!hours[formattedDate]?.start || !hours[formattedDate]?.end || !hours[formattedDate]?.break)) {
+                    if ((!hours[formattedDate]?.start || !hours[formattedDate]?.end)) {
                         hasMissingStartEndBreak = true;
                     }
                     if (!projectData?.car || !projectData?.comment) {
