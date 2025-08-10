@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 
 async function Logowanie(req, res) {
     const { firma, login, password } = req.body;
-
+    
     const query = `
         SELECT p.idPracownik, p.Haslo, f.Nazwa_firmy, p.Typ_konta
         FROM pracownik p
