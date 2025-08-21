@@ -462,7 +462,7 @@ app.put('/api/urlopy/:vacationId', (req, res) => {
 
 /////////////////////////////////////////
 
-app.get('/api/cennik', authorizeRole('Administrator', 'Kierownik'), (req, res) => {
+app.get('/api/cennik', authorizeRole('Administrator', 'Kierownik', 'Biuro'), (req, res) => {
     PobierzCennik(req, res);
 });
 
