@@ -52,7 +52,7 @@ const PDF_PracownikAnalizaCzasu = (raport, startDate, endDate, pracownik) => {
     doc.text(`Okres: ${startDate} - ${endDate}`, 14, 56);
     const pageWidth = doc.internal.pageSize.getWidth();
     doc.text(new Date().toLocaleDateString('pl-PL'), pageWidth - 14, 20, { align: 'right' });
-    doc.setDrawColor(0,0,0);
+    doc.setDrawColor(0, 0, 0);
     doc.setLineWidth(0.5);
     doc.line(14, 60, pageWidth - 14, 60);
 
@@ -98,10 +98,10 @@ const PDF_PracownikAnalizaCzasu = (raport, startDate, endDate, pracownik) => {
     });
     const tableData = Object.entries(byProjNormalized)
       .map(([proj, { h, m }]) => [proj, `${h}:${m.toString().padStart(2, '0')}`])
-      .sort((a,b) => {
+      .sort((a, b) => {
         const [h1, m1] = a[1].split(':').map(Number);
         const [h2, m2] = b[1].split(':').map(Number);
-        return (h2*60+m2)-(h1*60+m1);
+        return (h2 * 60 + m2) - (h1 * 60 + m1);
       });
     // Suma całości
     let totalH = 0, totalM = 0;
@@ -115,25 +115,27 @@ const PDF_PracownikAnalizaCzasu = (raport, startDate, endDate, pracownik) => {
 
     doc.autoTable({
       startY: 80,
-      head: [['Projekt','Godziny']],
+      head: [['Projekt', 'Godziny']],
       body: tableData,
       theme: 'grid',
-      headStyles: { fillColor:[238,238,223], textColor:[0,0,0], font:'Roboto' },
-      styles: { cellPadding:4, fontSize:11, halign:'center', font:'Roboto' },
-      columnStyles: { 0:{halign:'left'}, 1:{halign:'right'} },
-      margin: { left:14, right:14 }
+      headStyles: { fillColor: [238, 238, 223], textColor: [0, 0, 0], font: 'Roboto' },
+      styles: { cellPadding: 4, fontSize: 11, halign: 'center', font: 'Roboto' },
+      columnStyles: { 0: { halign: 'left' }, 1: { halign: 'right' } },
+      margin: { left: 14, right: 14 }
     });
-
-    // stopka
-    const bottom = doc.internal.pageSize.getHeight() - 30;
-    doc.setDrawColor(0,0,0);
-    doc.line(14, bottom, pageWidth - 14, bottom);
-    const pages = doc.internal.getNumberOfPages();
-    for (let p=1; p<=pages; p++){
-      doc.setPage(p);
-      doc.text(`Strona ${p} z ${pages}`, pageWidth - 14, bottom + 15, { align:'right' });
-    }
   });
+
+  const pageWidth = doc.internal.pageSize.getWidth();
+
+  // stopka
+  const bottom = doc.internal.pageSize.getHeight() - 30;
+  doc.setDrawColor(0, 0, 0);
+  doc.line(14, bottom, pageWidth - 14, bottom);
+  const pages = doc.internal.getNumberOfPages();
+  for (let p = 1; p <= pages; p++) {
+    doc.setPage(p);
+    doc.text(`Strona ${p} z ${pages}`, pageWidth - 14, bottom + 15, { align: 'right' });
+  }
 
   const fileName = pracownik
     ? "Pracownik_Analiza_Czasu.pdf"

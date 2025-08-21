@@ -33,8 +33,8 @@ const PDF_AnalizaSwiadczenPracowniczych = async (raport, startDate, endDate, pra
   const allIds = Array.from(new Set(raport.map(r => r.PracownikID)));
   const targetIds = pracownik ? [pracownik] : allIds;
 
-  const doc = new jsPDF('landscape','pt','a4');
-  doc.addFont('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-Regular.ttf','Roboto','normal');
+  const doc = new jsPDF('landscape', 'pt', 'a4');
+  doc.addFont('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-Regular.ttf', 'Roboto', 'normal');
   doc.setFont('Roboto');
 
   targetIds.forEach((id, idx) => {
@@ -43,7 +43,7 @@ const PDF_AnalizaSwiadczenPracowniczych = async (raport, startDate, endDate, pra
     const entries = raport.filter(e =>
       e.PracownikID === id &&
       (() => {
-        const [d,m,y] = e.Data.split('.');
+        const [d, m, y] = e.Data.split('.');
         const dt = new Date(`${y}-${m}-${d}`);
         return dt >= new Date(startDate) && dt <= new Date(endDate);
       })()
@@ -62,22 +62,22 @@ const PDF_AnalizaSwiadczenPracowniczych = async (raport, startDate, endDate, pra
     const nameSurname = entries[0].Pracownik;
     // nagłówek
     doc.setFontSize(14);
-    doc.setTextColor(0,102,204);
-    doc.text("Analiza świadczeń pracowniczych",14,20);
+    doc.setTextColor(0, 102, 204);
+    doc.text("Analiza świadczeń pracowniczych", 14, 20);
     doc.setFontSize(12);
-    doc.setTextColor(50,50,50);
-    doc.text(`Pracownik: ${nameSurname}`,14,40);
+    doc.setTextColor(50, 50, 50);
+    doc.text(`Pracownik: ${nameSurname}`, 14, 40);
     const fmt = d => {
       const dt = new Date(d);
-      return [dt.getDate(), dt.getMonth()+1, dt.getFullYear()]
-        .map(n=>String(n).padStart(2,'0')).join('-');
+      return [dt.getDate(), dt.getMonth() + 1, dt.getFullYear()]
+        .map(n => String(n).padStart(2, '0')).join('-');
     };
-    doc.text(`Okres: ${fmt(startDate)} - ${fmt(endDate)}`,14,56);
+    doc.text(`Okres: ${fmt(startDate)} - ${fmt(endDate)}`, 14, 56);
     const pageWidth = doc.internal.pageSize.getWidth();
-    doc.text(new Date().toLocaleDateString('pl-PL'), pageWidth - 14,20, { align:'right' });
-    doc.setDrawColor(0,0,0);
+    doc.text(new Date().toLocaleDateString('pl-PL'), pageWidth - 14, 20, { align: 'right' });
+    doc.setDrawColor(0, 0, 0);
     doc.setLineWidth(0.5);
-    doc.line(14,60, pageWidth - 14,60);
+    doc.line(14, 60, pageWidth - 14, 60);
 
     // Grupowanie i sumowanie danych
     // Jeśli masz stawki indywidualne/globalne, pobierz je tutaj
@@ -171,7 +171,7 @@ const PDF_AnalizaSwiadczenPracowniczych = async (raport, startDate, endDate, pra
 
     doc.autoTable({
       startY: 80,
-      head: [['Pracownik','Godziny','1h=kr','Kilometry','Parking','Diety','Inne koszty','Suma']],
+      head: [['Pracownik', 'Godziny', '1h=kr', 'Kilometry', 'Parking', 'Diety', 'Inne koszty', 'Suma']],
       body: tableData,
       theme: 'grid',
       headStyles: { fillColor: [238, 238, 223], textColor: [0, 0, 0], font: 'Roboto' },
@@ -196,18 +196,22 @@ const PDF_AnalizaSwiadczenPracowniczych = async (raport, startDate, endDate, pra
       margin: { horizontal: 10, top: 10, left: 30, right: 30 },
       tableWidth: 'auto',
     });
+  });
 
-    // stopka
-    const bottom = doc.internal.pageSize.getHeight() - 30;
-    doc.setDrawColor(0,0,0);
+  // stopka
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const bottom = doc.internal.pageSize.getHeight() - 30;
+  const totalPages = doc.internal.getNumberOfPages();
+
+  for (let p = 1; p <= totalPages; p++) {
+    doc.setPage(p);
+    doc.setDrawColor(0, 0, 0);
     doc.setLineWidth(0.5);
     doc.line(14, bottom, pageWidth - 14, bottom);
-    const pages = doc.internal.getNumberOfPages();
-    for (let p=1; p<=pages; p++){
-      doc.setPage(p);
-      doc.text(`Strona ${p} z ${pages}`, pageWidth - 14, bottom + 15, { align:'right' });
-    }
-  });
+    doc.setFontSize(10);
+    doc.setTextColor(50, 50, 50);
+    doc.text(`Strona ${p} z ${totalPages}`, pageWidth - 14, bottom + 15, { align: 'right' });
+  }
 
   const fileName = pracownik
     ? "Analiza_świadczeń_pracowniczych.pdf"
