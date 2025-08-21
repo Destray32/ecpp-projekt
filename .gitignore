@@ -130,3 +130,5 @@ dist
 .pnp.*
 fullchain.pem
 privkey.pem
+fullchain.pem.*
+privkey.pem.*
