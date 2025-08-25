@@ -116,12 +116,20 @@ const AdditionalProjectRow = React.memo(({
                                 <div className="flex items-center">
                                     <span className="text-blue-800 font-bold">{zleceniodawcaName}</span>
                                     <span className="mx-1">–</span>
-                                    <span className="inline-block max-w-[200px] truncate" title={project.projekt || "Projekt"}>
+                                    <span 
+                                        className="inline-block max-w-[200px] truncate cursor-help" 
+                                        title={project.projekt || "Projekt"}
+                                        style={{ textDecoration: 'none' }}
+                                    >
                                         {project.projekt || "Projekt"}
                                     </span>
                                 </div>
                             ) : (
-                                <span className="inline-block max-w-[300px] truncate" title={`Projekt: ${project.projekt || "Projekt"}`}>
+                                <span 
+                                    className="inline-block max-w-[300px] truncate cursor-help" 
+                                    title={`Projekt: ${project.projekt || "Projekt"}`}
+                                    style={{ textDecoration: 'none' }}
+                                >
                                     {`Projekt: ${project.projekt || "Projekt"}`}
                                 </span>
                             )}
