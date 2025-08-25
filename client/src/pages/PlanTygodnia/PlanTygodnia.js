@@ -226,9 +226,22 @@ useEffect(() => {
             if (entriesToAdd.length > 0) {
                 await Axios.post(`${baseUrl}/api/planTygodniaPrev`, entriesToAdd, { withCredentials: true }); 
                 fetchData();
+                
+                // Tworzenie szczegółowego komunikatu
+                let message = 'Sukces - Skopiowano z poprzedniego tygodnia:';
+                let details = [];
+                
+                if (employeesCount > 0) {
+                    details.push(`${employeesCount} pracownik${employeesCount === 1 ? 'a' : employeesCount < 5 ? 'ów' : 'ów'}`);
+                }
+                
+                if (vehiclesCount > 0) {
+                    details.push(`${vehiclesCount} pojazd${vehiclesCount === 1 ? '' : vehiclesCount < 5 ? 'y' : 'ów'}`);
+                }
+                
                 notification.success({
-                    message: 'Sukces',
-                    description: `Dodano ${employeesCount} pracowników i ${vehiclesCount} pojazdów z poprzedniego tygodnia`,
+                    message: message,
+                    description: details.join(' i '),
                     placement: 'topRight',
                 });
             } else {
@@ -356,7 +369,7 @@ useEffect(() => {
 
     const handleRadioChange = (employeeId, selectedM) => {
         const updatedData = pracownikData.map((item) =>
-            item.id === employeeId ? { ...item, M1_5: selectedM } : item
+            item.id === employeeId ? { ...item, M1_5: selectedM, m_value: selectedM } : item
         );
         setPracownikData(updatedData);
     
@@ -364,7 +377,8 @@ useEffect(() => {
             M1_5: selectedM,
         }, { withCredentials: true })
             .then((res) => {
-                fetchData();
+                // Usuń fetchData() - już zaktualizowaliśmy stan lokalnie
+                // fetchData();
             })
             .catch((err) => {
                 console.error('Error updating employee:', err);
@@ -385,7 +399,8 @@ const handleOpisBlur = (employeeId, newOpis) => {
         Opis: newOpis,
     }, { withCredentials: true })
         .then(() => {
-            fetchData();
+            // Usuń fetchData() - nie potrzebujemy ponownie pobierać wszystkich danych
+            // fetchData();
         })
         .catch((err) => {
             console.error('Error updating Opis:', err);
@@ -538,8 +553,6 @@ const handleOpisBlur = (employeeId, newOpis) => {
                             </thead>
                             <tbody className="text-center">
                                 {pracownikData.map((item, idx) => {
-                                    // Ustal kolor tła na podstawie parzystości wiersza
-                                    const bgColor = idx % 2 === 0 ? '#e5e7eb' : '#d1d5db'; // even:bg-gray-200, odd:bg-gray-300
                                     return (
                                         <tr key={item.id} className="border-b even:bg-gray-200 odd:bg-gray-300">
                                             <td className="border-r">
@@ -597,12 +610,7 @@ const handleOpisBlur = (employeeId, newOpis) => {
                                                                 value={item.Opis || ''}
                                                                 onChange={e => handleOpisChange(item.id, e.target.value)}
                                                                 onBlur={e => handleOpisBlur(item.id, e.target.value)}
-                                                                className="w-full px-1 py-0.5 border rounded"
-                                                                style={{
-                                                                    backgroundColor: bgColor,
-                                                                    color: '#111827', // text-gray-900
-                                                                    border: '1px solid #9ca3af', // border-gray-400
-                                                                }}
+                                                                className="w-full px-1 py-0.5 bg-transparent border-none text-gray-900"
                                                             />
                                                         )
                                                         : item.Opis

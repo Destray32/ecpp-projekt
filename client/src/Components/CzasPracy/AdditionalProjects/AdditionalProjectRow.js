@@ -89,7 +89,7 @@ const AdditionalProjectRow = React.memo(({
                 <div className="w-[40rem]">
                 </div>
                 {first && (
-                    <div className="flex-1 grid grid-cols-[repeat(7,_minmax(0,_5rem))] text-center relative -left-4 md:-left-0 lg:left-0">
+                    <div className="flex-1 grid grid-cols-[repeat(7,_minmax(0,_5rem))] text-center relative -left-16">
                         {daysOfWeek.map((day, index) => (
                             <div key={index} className="col-span-1 font-bold">
                                 {format(day, 'EEE', { locale: pl })}
@@ -113,18 +113,22 @@ const AdditionalProjectRow = React.memo(({
                         </span>
                         <span className='ml-2'>
                             {zleceniodawcaName ? (
-                                <>
+                                <div className="flex items-center">
                                     <span className="text-blue-800 font-bold">{zleceniodawcaName}</span>
-                                    {" – "}
-                                    {project.projekt || "Projekt"}
-                                </>
+                                    <span className="mx-1">–</span>
+                                    <span className="inline-block max-w-[200px] truncate" title={project.projekt || "Projekt"}>
+                                        {project.projekt || "Projekt"}
+                                    </span>
+                                </div>
                             ) : (
-                                `Projekt: ${project.projekt || "Projekt"}`
+                                <span className="inline-block max-w-[300px] truncate" title={`Projekt: ${project.projekt || "Projekt"}`}>
+                                    {`Projekt: ${project.projekt || "Projekt"}`}
+                                </span>
                             )}
                         </span>
                     </div>
                 </div>
-                <div className="flex-1 grid grid-cols-[repeat(7,_minmax(0,_5rem))] text-center relative -left-4 md:-left-0 lg:left-0">
+                <div className="flex-1 grid grid-cols-[repeat(7,_minmax(0,_5rem))] text-center relative -left-16">
                     {daysOfWeek.map((day, index) => {
                         const dateKey = format(day, 'yyyy-MM-dd');
                         const niedziela = getDay(day) === 0;

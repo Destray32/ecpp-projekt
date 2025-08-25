@@ -86,8 +86,8 @@ export default function DodajPracownikaPage() {
         const { surename, name, newPassword, confirmPassword } = allValues;
 
         if (surename && name) {
-            // Set login as combination of surname and name
-            const login = `${surename}${name}`.toLowerCase();
+            // Set login as combination of surname and name with space
+            const login = `${surename} ${name}`;
             form.setFieldsValue({
                 login: login,
             });

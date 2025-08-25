@@ -370,13 +370,13 @@ const AdditionalProjects = ({
                         <div className="w-[40rem] mt">
                             <span className='ml-2 font-bold'>Suma godzin:</span>
                         </div>
-                        <div className="flex-1 grid grid-cols-[repeat(7,_minmax(0,_5rem))] text-center relative -left-4 md:-left-0 lg:left-0">
+                        <div className="flex-1 grid grid-cols-[repeat(7,_minmax(0,_5rem))] text-center relative -left-16">
                             {daysOfWeek.map((day, index) => (
                                 <input
                                     key={index}
                                     type="text"
                                     value={dailySums[index]}
-                                    className="w-16 p-1 ml-2 border text-center border-gray-300 rounded bg-gray-200 font-bold"
+                                    className="w-16 p-1 border text-center border-gray-300 rounded bg-gray-200 font-bold"
                                     disabled
                                     readOnly
                                 />
