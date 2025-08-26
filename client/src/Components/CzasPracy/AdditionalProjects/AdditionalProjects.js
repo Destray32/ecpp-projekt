@@ -366,23 +366,24 @@ const AdditionalProjects = ({
                             zleceniodawcy={zleceniodawcy}
                         />
                     ))}
-                    <div className="flex items-center space-x-2 mt-1">
-                        <div className="w-[40rem] mt">
+                    <div className="flex items-center mt-1">
+                        <div className="w-[40rem]">
                             <span className='ml-2 font-bold'>Suma godzin:</span>
                         </div>
-                        <div className="flex-1 grid grid-cols-[repeat(7,_minmax(0,_5rem))] text-center relative -left-16">
+                        <div className="flex-1 grid grid-cols-[repeat(7,_minmax(0,_5rem))] text-center">
                             {daysOfWeek.map((day, index) => (
-                                <input
-                                    key={index}
-                                    type="text"
-                                    value={dailySums[index]}
-                                    className="w-16 p-1 border text-center border-gray-300 rounded bg-gray-200 font-bold"
-                                    disabled
-                                    readOnly
-                                />
+                                <div key={index}>
+                                    <input
+                                        type="text"
+                                        value={dailySums[index]}
+                                        className="w-16 p-1 border text-center border-gray-300 rounded bg-gray-200 font-bold"
+                                        disabled
+                                        readOnly
+                                    />
+                                </div>
                             ))}
                         </div>
-                        <span className="font-bold">Razem: {additionalProjectsTotalTime} godz.</span>
+                        <span className="pl-2 font-bold">Razem: {additionalProjectsTotalTime} godz.</span>
                     </div>
                     {/* Render additional fields if a project is active */}
                     {activeProject && activeDate && (

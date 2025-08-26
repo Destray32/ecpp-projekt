@@ -85,21 +85,25 @@ const AdditionalProjectRow = React.memo(({
 
     return (
         <div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-start">
                 <div className="w-[40rem]">
+                    {first && (
+                        <div className="h-6"></div> 
+                    )}
                 </div>
                 {first && (
-                    <div className="flex-1 grid grid-cols-[repeat(7,_minmax(0,_5rem))] text-center relative -left-16">
+                    <div className="flex-1 grid grid-cols-[repeat(7,_minmax(0,_5rem))] text-center">
                         {daysOfWeek.map((day, index) => (
-                            <div key={index} className="col-span-1 font-bold">
+                            <div key={index} className="font-bold">
                                 {format(day, 'EEE', { locale: pl })}
                             </div>
                         ))}
                     </div>
                 )}
+                <div className="w-24"></div>
             </div>
-            <div className="flex items-center space-x-2 mt-1">
-                <div className="w-[40rem] mt">
+            <div className="flex items-center mt-1">
+                <div className="w-[40rem]">
                     <div>
                         <span>
                             <button
@@ -136,7 +140,7 @@ const AdditionalProjectRow = React.memo(({
                         </span>
                     </div>
                 </div>
-                <div className="flex-1 grid grid-cols-[repeat(7,_minmax(0,_5rem))] text-center relative -left-16">
+                <div className="flex-1 grid grid-cols-[repeat(7,_minmax(0,_5rem))] text-center">
                     {daysOfWeek.map((day, index) => {
                         const dateKey = format(day, 'yyyy-MM-dd');
                         const niedziela = getDay(day) === 0;
@@ -161,7 +165,7 @@ const AdditionalProjectRow = React.memo(({
                             project.hours[dateKey]?.hoursWorked > 0;
 
                         return (
-                            <div key={index} className="col-span-1 cursor-pointer"
+                            <div key={index} className="cursor-pointer"
                                 onClick={() => onActivate(project.id, format(day, 'yyyy-MM-dd'))}>
                                 <input
                                     type="text"
@@ -198,7 +202,7 @@ const AdditionalProjectRow = React.memo(({
                         );
 })}
                 </div>
-                <span>Razem: {projectTotal} godz.</span>
+                <div className="w-24 pl-2">Razem: {projectTotal} godz.</div>
             </div>
             <div className='h-[2px] w-full bg-szary mt-1'></div>
         </div>
