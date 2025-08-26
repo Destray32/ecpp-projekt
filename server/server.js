@@ -13,7 +13,15 @@ const fs = require('fs');
 
 require('dotenv').config();
 
+const CERT = '/etc/letsencrypt/live/qubis.pl-0001/fullchain.pem';
+const KEY  = '/etc/letsencrypt/live/qubis.pl-0001/privkey.pem';
 
+function loadTLS() {
+  return {
+    cert: fs.readFileSync(CERT),
+    key: fs.readFileSync(KEY),
+  };
+}
 
 // CZAS > PROJEKTY //no-index headers for all responses
 app.use((req, res, next) => {
@@ -585,15 +593,23 @@ app.get('/api/firmy', (req, res) => {
     PobierzDostepneFirmy(req, res, pool);
 });
 
-const options = {
-    cert: fs.readFileSync('/home/opc/ECPP/certs/fullchain.pem'),
-    key: fs.readFileSync('/home/opc/ECPP/certs/privkey.pem')
-};
+const server = https.createServer(loadTLS(), app);
 
-https.createServer(options, app).listen(5000, () => {
-    console.log('Server running on https://qubis.pl:5000');
+server.listen(5000, () => {
+  console.log('Server running on https://qubis.pl:5000');
 });
 
+// automatyczne przeładowanie TLS po odnowieniu certów
+function reloadTLS() {
+  try {
+    server.setSecureContext(loadTLS());
+    console.log('TLS context reloaded (cert renewed)');
+  } catch (e) {
+    console.error('TLS reload failed:', e);
+  }
+}
+
+[KEY, CERT].forEach(f => fs.watchFile(f, { interval: 30000 }, reloadTLS));
 
 // app.listen(port, () => {
 //     console.log(`Server running on http://localhost:${port}`);
