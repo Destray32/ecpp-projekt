@@ -593,27 +593,27 @@ app.get('/api/firmy', (req, res) => {
     PobierzDostepneFirmy(req, res, pool);
 });
 
-// const server = https.createServer(loadTLS(), app);
+const server = https.createServer(loadTLS(), app);
 
-// server.listen(5000, () => {
-//   console.log('Server running on https://qubis.pl:5000');
-// });
-
-// // automatyczne przeładowanie TLS po odnowieniu certów
-// function reloadTLS() {
-//   try {
-//     server.setSecureContext(loadTLS());
-//     console.log('TLS context reloaded (cert renewed)');
-//   } catch (e) {
-//     console.error('TLS reload failed:', e);
-//   }
-// }
-
-// [KEY, CERT].forEach(f => fs.watchFile(f, { interval: 30000 }, reloadTLS));
-
-app.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}`);
+server.listen(5000, () => {
+  console.log('Server running on https://qubis.pl:5000');
 });
+
+// automatyczne przeładowanie TLS po odnowieniu certów
+function reloadTLS() {
+  try {
+    server.setSecureContext(loadTLS());
+    console.log('TLS context reloaded (cert renewed)');
+  } catch (e) {
+    console.error('TLS reload failed:', e);
+  }
+}
+
+[KEY, CERT].forEach(f => fs.watchFile(f, { interval: 30000 }, reloadTLS));
+
+// app.listen(port, () => {
+//     console.log(`Server running on http://localhost:${port}`);
+// });
 
 
 
