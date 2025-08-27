@@ -146,35 +146,62 @@ const VacationPlanner = () => {
     return ISOweekStart;
 };
 
+    // Fix date comparison for proper vacation rendering
+    const compareDates = (date1, date2) => {
+        if (!date1 || !date2) return false;
+        
+        // Compare only year, month, and day - ignore time
+        return date1.getFullYear() === date2.getFullYear() && 
+               date1.getMonth() === date2.getMonth() && 
+               date1.getDate() === date2.getDate();
+    };
+    
+    const isDateInRange = (date, start, end) => {
+        if (!date || !start || !end) return false;
+        
+        // Clone dates to avoid modifying the original
+        const testDate = new Date(date.getTime());
+        const startDate = new Date(start.getTime());
+        const endDate = new Date(end.getTime());
+        
+        // Reset time to midnight for accurate day comparison
+        testDate.setHours(0, 0, 0, 0);
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(0, 0, 0, 0);
+        
+        return testDate >= startDate && testDate <= endDate;
+    };
+
+    // Keep the original implementation of generujDni
     const generujDni = (rok = getYearLocalStorage()) => {
-    const allDays = [];
+        const allDays = [];
 
-    const startDate = getFirstDayOfISOWeek(week, rok);
-    const endDate = new Date(startDate);
-    endDate.setDate(endDate.getDate() + 52 * 7); // 52 tygodnie
+        const startDate = getFirstDayOfISOWeek(week, rok);
+        const endDate = new Date(startDate);
+        endDate.setDate(endDate.getDate() + 52 * 7); // 52 tygodnie
 
-    let currentDate = new Date(startDate);
+        let currentDate = new Date(startDate);
 
-    while (currentDate <= endDate) {
-        allDays.push({
-            data: new Date(currentDate),
-            dzienMiesiaca: currentDate.getDate(),
-            dzienTygodnia: currentDate.getDay(),
-            miesiac: nazwyMiesiacow[currentDate.getMonth()],
-            nazwaDniaTygodnia: nazwyDniTygodnia[currentDate.getDay()]
-        });
-        currentDate.setDate(currentDate.getDate() + 1);
-    }
-
-    const tygodnie = [];
-    for (let i = 0; i < allDays.length; i += 7) {
-        if (allDays.length - i >= 7) {
-            tygodnie.push(allDays.slice(i, i + 7));
+        while (currentDate <= endDate) {
+            allDays.push({
+                data: new Date(currentDate),
+                dzienMiesiaca: currentDate.getDate(),
+                dzienTygodnia: currentDate.getDay(),
+                miesiac: nazwyMiesiacow[currentDate.getMonth()],
+                nazwaDniaTygodnia: nazwyDniTygodnia[currentDate.getDay()]
+            });
+            currentDate.setDate(currentDate.getDate() + 1);
         }
-    }
 
-    return tygodnie;
-};
+        const tygodnie = [];
+        for (let i = 0; i < allDays.length; i += 7) {
+            if (allDays.length - i >= 7) {
+                tygodnie.push(allDays.slice(i, i + 7));
+            }
+        }
+
+        return tygodnie;
+    };
 
 
     // konwersja danych o urlopach na format wewnetrzny
@@ -213,11 +240,11 @@ const VacationPlanner = () => {
             </button>
             {/* tabela z kalendarzem */}
             <div ref={plannerRef} className="overflow-x-auto">
-                <table className="w-full border-collapse text-center">
+                <table className="w-full border-collapse text-center table-fixed">
                     <thead>
                         {/* Header with month names */}
                         <tr>
-                            <th rowSpan="2" className="border border-gray-400">Pracownik</th>
+                            <th rowSpan="2" className="border border-gray-400" style={{width: '150px'}}>Pracownik</th>
                             {(() => {
                                 const monthHeaders = [];
                                 let currentMonth = tygodnie[0][0].miesiac;
@@ -253,23 +280,28 @@ const VacationPlanner = () => {
                             {tygodnie.map((tydzien, index) => (
                                 <th 
                                     key={`days-${index}`} 
-                                    className="border border-gray-400"
-                                    style={index === 0 ? { minWidth: '10px', maxWidth: '20px' } : { minWidth: '15px' }}
+                                    className="border border-gray-400 p-0"
+                                    style={{ 
+                                        width: '35px', 
+                                        minWidth: '35px', 
+                                        maxWidth: '35px',
+                                        fontSize: '0.7rem'
+                                    }}
                                 >
                                     {tydzien.map((dzien, dayIndex) => (
-                                        <div key={`${dzien.data.toISOString()}`}>
+                                        <div key={`${dzien.data.toISOString()}`} className="leading-tight">
                                             {index === 0 ? (
-                                                <div className="text-xs">
-                                                    <span className="font-bold mr-1">{dzien.nazwaDniaTygodnia}</span>
-                                                    <span>{dzien.dzienMiesiaca}</span>
+                                                <div className="text-[0.6rem]">
+                                                    <span className="font-bold">{dzien.nazwaDniaTygodnia}</span>
+                                                    <span className="ml-0.5">{dzien.dzienMiesiaca}</span>
                                                 </div>
                                             ) : (
-                                                <div className="text-xs">{`${dzien.dzienMiesiaca}`}</div>
+                                                <div className="text-[0.6rem]">{`${dzien.dzienMiesiaca}`}</div>
                                             )}
                                         </div>
                                     ))}
-                                    <hr className="my-1 border-gray-400" />
-                                    <div className="text-xs font-bold bg-gray-300 py-1 rounded">
+                                    <hr className="my-0.5 border-gray-400" />
+                                    <div className="text-[0.6rem] font-bold bg-gray-300 py-0.5 rounded">
                                         {getWeekNumber(tydzien[0].data)}
                                     </div>
                                 </th>
@@ -278,21 +310,20 @@ const VacationPlanner = () => {
                     </thead>
                     {/* dane pracownikow i ich urlopy */}
                     <tbody>
-                        
-                        {vacationData.map((employee) => (
-                            <tr key={employee.id}>
-                                <td className="border border-gray-400 w-1/12">{employee.name}</td>
+                        {vacationData.map((employee, index) => (
+                            <tr key={employee.id} className={index % 2 === 0 ? 'bg-gray-100' : 'bg-white'}>
+                                <td className="border border-gray-400 text-left pl-2 text-sm truncate">{employee.name}</td>
                                 {tygodnie.map((tydzien, weekIndex) => (
                                     <td
                                         key={`${employee.id}-week-${weekIndex}`}
                                         className="p-0 relative"
-                                        style={{ height: '50px' }}
+                                        style={{ height: '30px' }}
                                     >
                                         <div className="grid grid-cols-7 h-full">
                                             {tydzien.map((dzien) => {
                                                 const isSunday = dzien.dzienTygodnia === 0;
                                                 const vacation = aktywnosci[employee.name]?.find(
-                                                    v => dzien.data >= v.od && dzien.data <= v.do
+                                                    v => isDateInRange(dzien.data, v.od, v.do)
                                                 );
 
                                                 const isVacationDay = vacation !== undefined;
@@ -301,8 +332,8 @@ const VacationPlanner = () => {
                                                 let spanLeft = '0';
 
                                                 if (isVacationDay) {
-                                                    const isFirstDayOfVacation = dzien.data.getTime() === vacation.od.getTime();
-                                                    const isLastDayOfVacation = dzien.data.getTime() === vacation.do.getTime();
+                                                    const isFirstDayOfVacation = compareDates(dzien.data, vacation.od);
+                                                    const isLastDayOfVacation = compareDates(dzien.data, vacation.do);
 
                                                     const daysUntilEndOfWeek = 7 - dzien.dzienTygodnia;
                                                     const daysUntilEndOfVacation = Math.floor((vacation.do - dzien.data) / (1000 * 60 * 60 * 24));
@@ -314,12 +345,12 @@ const VacationPlanner = () => {
                                                 return (
                                                     <div
                                                         key={dzien.data.toISOString()}
-                                                        className="h-full relative border border-gray-500"
+                                                        className="h-full relative border border-gray-300"
                                                     >
                                                         {/* oznaczenie urlopu */}
                                                         {isVacationDay && (
                                                             <div
-                                                                className="absolute h-6 top-1/2 -translate-y-1/2 z-10"
+                                                                className="absolute h-4 top-1/2 -translate-y-1/2 z-10"
                                                                 style={{
                                                                     left: spanLeft,
                                                                     width: spanWidth,
@@ -334,7 +365,7 @@ const VacationPlanner = () => {
                                                         )}
                                                         {/* oznaczenie niedzieli */}
                                                         {isSunday && (
-                                                            <div className="absolute inset-0 bg-red-500" />
+                                                            <div className="absolute inset-0 bg-red-400" />
                                                         )}
                                                     </div>
                                                 );
@@ -346,6 +377,26 @@ const VacationPlanner = () => {
                         ))}
                     </tbody>
                 </table>
+                
+                {/* Legend */}
+                <div className="mt-4 flex space-x-4 text-sm">
+                    <div className="flex items-center">
+                        <div className="w-3 h-3 mr-1" style={{backgroundColor: '#22c55e'}}></div>
+                        <span>Zatwierdzone</span>
+                    </div>
+                    <div className="flex items-center">
+                        <div className="w-3 h-3 mr-1" style={{backgroundColor: '#eab308'}}></div>
+                        <span>Do zatwierdzenia</span>
+                    </div>
+                    <div className="flex items-center">
+                        <div className="w-3 h-3 mr-1" style={{backgroundColor: '#ef4444'}}></div>
+                        <span>Anulowane</span>
+                    </div>
+                    <div className="flex items-center">
+                        <div className="w-3 h-3 mr-1 bg-red-100"></div>
+                        <span>Niedziela</span>
+                    </div>
+                </div>
             </div>
         </div>
     );
