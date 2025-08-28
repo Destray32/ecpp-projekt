@@ -37,6 +37,7 @@ export default function RaportyPage() {
     useEffect(() => {
         checkUserType(setAccountType);
         getImie();
+        fetchPracownicy(); // Add this line
     }, []);
 
     const getImie = async () => {
@@ -50,14 +51,57 @@ export default function RaportyPage() {
         }
     }
 
+    // Add this new function after getImie()
+    const fetchPracownicy = async () => {
+        try {
+            const response = await axios.get(`${baseUrl}/api/pracownicy`, { withCredentials: true });
+            const pracownicyOptions = response.data.map(pracownik => ({
+                label: `${pracownik.name} ${pracownik.surname}`,
+                value: pracownik.id
+            }));
+            
+            // Sort employees alphabetically by label
+            pracownicyOptions.sort((a, b) => a.label.localeCompare(b.label));
+            
+            setAvailablePracownicy(pracownicyOptions);
+            setAllPracownicyOptions(pracownicyOptions);
+            
+        } catch (error) {
+            console.error('Error fetching employees:', error);
+            notification.error({
+                message: 'Błąd',
+                description: 'Nie udało się pobrać listy pracowników',
+                placement: 'topRight',
+            });
+        }
+    };
+
+    // Add useEffect to handle auto-selection after both accountType and employees are loaded
+    useEffect(() => {
+        if (accountType === 'Pracownik' && availablePracownicy.length > 0 && imie && nazwisko) {
+            const currentUser = availablePracownicy.find(p => 
+                p.label.includes(imie) && p.label.includes(nazwisko)
+            );
+            if (currentUser) {
+                setPracownik(currentUser.value);
+            }
+        }
+    }, [accountType, availablePracownicy, imie, nazwisko]);
+
     useEffect(() => {
         setStartDate('');
         setEndDate('');
     }, [ignorujDatyFirma, accountType]);
 
     useEffect(() => {
-        if (Projekt && !projektyOptions.some(p => p.value === Projekt)) {
-            setProjekt(null);
+        if (Projekt && projektyOptions.length > 0) {
+            // Check if project is available in grouped structure
+            const projectStillAvailable = projektyOptions.some(group => 
+                group.items && group.items.some(p => p.value === Projekt)
+            );
+            if (!projectStillAvailable) {
+                setProjekt(null);
+            }
         }
     }, [projektyOptions, Projekt]);
 
@@ -86,8 +130,8 @@ export default function RaportyPage() {
     
             let filteredProjekty = projekty;
 
-            // Always filter by date range if dates are selected, unless explicitly ignored
-            if (!ignorujDatyFirma && startDate && endDate) {
+            // Only filter by date range if dates are selected AND not ignored AND we're in company interface
+            if (interfaceFirma && !ignorujDatyFirma && startDate && endDate) {
                 const startDateObj = new Date(startDate);
                 const endDateObj = new Date(endDate);
     
@@ -109,12 +153,11 @@ export default function RaportyPage() {
                     projectsInDateRange.has(projekt.value)
                 );
                 
-                console.log(`Found ${filteredProjekty.length} projects in date range ${startDate} to ${endDate}`);
             }
 
-            // Extract unique zleceniodawcy from ALL projects if no date range is selected
-            // or from filtered projects if date range is selected
-            const sourceForZleceniodawcy = (!startDate || !endDate || ignorujDatyFirma) ? projekty : filteredProjekty;
+            // Extract unique zleceniodawcy from ALL projects if no date range is applied
+            // or from filtered projects if date range is applied
+            const sourceForZleceniodawcy = (interfaceFirma && !ignorujDatyFirma && startDate && endDate) ? filteredProjekty : projekty;
             const zleceniodawcySet = new Set(sourceForZleceniodawcy.map(projekt => projekt.zleceniodawca || 'Bez zleceniodawcy'));
             
             // Define special order for zleceniodawcy (same as in grupy.dostepnegrupy.js)
@@ -145,7 +188,7 @@ export default function RaportyPage() {
                 );
             }
     
-            // Group projects by zleceniodawca for display
+            // Group projects by zleceniodawca for display (restore grouped structure)
             const groupedProjekty = filteredProjekty.reduce((groups, projekt) => {
                 const zleceniodawca = projekt.zleceniodawca || 'Bez zleceniodawcy';
                 if (!groups[zleceniodawca]) {
@@ -155,24 +198,18 @@ export default function RaportyPage() {
                 return groups;
             }, {});
             
-            // Convert to PrimeReact's optgroup format
-            const groupedOptions = Object.entries(groupedProjekty).map(([zleceniodawca, projekty]) => ({
-                label: `${zleceniodawca} (${projekty.length})`,
-                items: projekty
-            }));
-            
-            // Sort groups alphabetically by zleceniodawca
-            groupedOptions.sort((a, b) => a.label.localeCompare(b.label));
+            // Convert to PrimeReact's optgroup format with special order
+            const groupedOptions = zleceniodawcyList
+                .filter(zleceniodawca => groupedProjekty[zleceniodawca] && groupedProjekty[zleceniodawca].length > 0)
+                .map(zleceniodawca => ({
+                    label: `${zleceniodawca} (${groupedProjekty[zleceniodawca].length})`,
+                    items: groupedProjekty[zleceniodawca]
+                }));
             
             setProjektyOptions(groupedOptions);
             
-            // Check if currently selected project is still in the filtered list
-            if (Projekt) {
-                const projectStillAvailable = filteredProjekty.some(p => p.value === Projekt);
-                if (!projectStillAvailable) {
-                    setProjekt(null);
-                }
-            }
+            // Remove the duplicate project availability check from here
+            // It's now handled in the useEffect above
         })
         .catch((error) => {
             console.error(error);
@@ -200,11 +237,18 @@ export default function RaportyPage() {
 
     let filteredRaport = raport;
 
+    // Filter by project for company reports
     if (Projekt && ['Sprawozdanie z działalności - szczegółowe', 'Sprawozdanie z działalności - podsumowanie'].includes(wybranyRaport)) {
         filteredRaport = filteredRaport.filter(entry => entry.ProjektID === Projekt);
     }
 
-    if (!ignorujDatyFirma) {
+    // Filter by employee for employee reports
+    if (pracownik && ['Analiza świadczeń pracowniczych', 'Pracownik Analiza czasu - działalność'].includes(wybranyRaport)) {
+        filteredRaport = filteredRaport.filter(entry => entry.PracownikID === pracownik);
+    }
+
+    // Filter by date range if not ignored
+    if (!ignorujDatyFirma && startDate && endDate) {
         filteredRaport = filteredRaport.filter(entry => {
             if (!entry.Data) return false;
             const datePart = entry.Data.split(' ')[0]; 
@@ -214,11 +258,19 @@ export default function RaportyPage() {
         });
     }
 
-    // Dodaj warunek: jeśli raport jest dla pracownika i nie ma danych, nie generuj PDF
-    if ((wybranyRaport === "Analiza świadczeń pracowniczych" || wybranyRaport === "Pracownik Analiza czasu - działalność") && filteredRaport.length === 0) {
+    // Check if there's any data after all filtering
+    if (filteredRaport.length === 0) {
+        let message = 'Brak danych dla wybranych kryteriów.';
+        
+        if (['Analiza świadczeń pracowniczych', 'Pracownik Analiza czasu - działalność'].includes(wybranyRaport)) {
+            message = 'Brak danych dla wybranego pracownika w podanym okresie.';
+        } else if (['Sprawozdanie z działalności - szczegółowe', 'Sprawozdanie z działalności - podsumowanie'].includes(wybranyRaport)) {
+            message = 'Brak danych dla wybranego projektu w podanym okresie.';
+        }
+        
         notification.info({
             message: 'Brak danych',
-            description: 'Brak danych dla wybranego pracownika w podanym okresie.',
+            description: message,
             placement: 'topRight',
         });
         return;
@@ -227,21 +279,18 @@ export default function RaportyPage() {
     const passedStartDate = ignorujDatyFirma ? null : startDate;
     const passedEndDate = ignorujDatyFirma ? null : endDate;
 
-    switch (wybranyRaport) {
-        case "Sprawozdanie z działalności - szczegółowe":
-            // Create a flattened mapping for all projects from the grouped options
-            const allProjekty = [];
-            projektyOptions.forEach(group => {
-                if (group.items) {
-                    allProjekty.push(...group.items);
-                }
-            });
-            
-            const projectZleceniodawcaMapping = {};
-            allProjekty.forEach(projekt => {
+    // Create zleceniodawca mapping from grouped projektyOptions
+    const projectZleceniodawcaMapping = {};
+    projektyOptions.forEach(group => {
+        if (group.items) {
+            group.items.forEach(projekt => {
                 projectZleceniodawcaMapping[projekt.value] = projekt.zleceniodawca;
             });
-            
+        }
+    });
+
+    switch (wybranyRaport) {
+        case "Sprawozdanie z działalności - szczegółowe":
             PDF_SprawozdanieSzczegolowe(filteredRaport, passedStartDate, passedEndDate, Projekt, projectZleceniodawcaMapping);
             break;
         case "Sprawozdanie z działalności - podsumowanie":
@@ -258,7 +307,6 @@ export default function RaportyPage() {
     }
 };
 
-
     const handleGenerateWszystkie = () => {
         if(!ignorujDatyFirma && (!startDate || !endDate)) {
             notification.info({
@@ -269,24 +317,48 @@ export default function RaportyPage() {
             return;
         }	
 
-        switch (wybranyRaport) {
-            case "Sprawozdanie z działalności - szczegółowe":
-                // Create a flattened mapping for all projects
-                const allProjekty = [];
-                projektyOptions.forEach(group => {
-                    if (group.items) {
-                        allProjekty.push(...group.items);
-                    }
-                });
-                
-                const projectZleceniodawcaMapping = {};
-                allProjekty.forEach(projekt => {
+        // Filter the report data based on selected criteria
+        let filteredRaport = raport;
+
+        // Filter by date range if not ignored and dates are provided
+        if (!ignorujDatyFirma && startDate && endDate) {
+            filteredRaport = filteredRaport.filter(entry => {
+                if (!entry.Data) return false;
+                const datePart = entry.Data.split(' ')[0]; 
+                const [day, month, year] = datePart.split('.'); 
+                const entryDate = new Date(`${year}-${month}-${day}`);
+                return entryDate >= new Date(startDate) && entryDate <= new Date(endDate);
+            });
+        }
+
+        // Filter by selected zleceniodawcy if any are selected
+        if (selectedZleceniodawcy.length > 0) {
+            filteredRaport = filteredRaport.filter(entry => {
+                // Get zleceniodawca from the entry or from project mapping
+                const entryZleceniodawca = entry.Zleceniodawca || 'Bez zleceniodawcy';
+                return selectedZleceniodawcy.includes(entryZleceniodawca);
+            });
+        }
+
+        // Create zleceniodawca mapping from grouped projektyOptions
+        const projectZleceniodawcaMapping = {};
+        projektyOptions.forEach(group => {
+            if (group.items) {
+                group.items.forEach(projekt => {
                     projectZleceniodawcaMapping[projekt.value] = projekt.zleceniodawca;
                 });
-                PDF_SprawozdanieSzczegolowe(raport, startDate, endDate, null, projectZleceniodawcaMapping);
+            }
+        });
+
+        const passedStartDate = ignorujDatyFirma ? null : startDate;
+        const passedEndDate = ignorujDatyFirma ? null : endDate;
+
+        switch (wybranyRaport) {
+            case "Sprawozdanie z działalności - szczegółowe":
+                PDF_SprawozdanieSzczegolowe(filteredRaport, passedStartDate, passedEndDate, null, projectZleceniodawcaMapping);
                 break;
             case "Sprawozdanie z działalności - podsumowanie":
-                PDF_SprawozdaniePodsumowanie(raport, startDate, endDate);
+                PDF_SprawozdaniePodsumowanie(filteredRaport, passedStartDate, passedEndDate, null, projectZleceniodawcaMapping);
                 break;
             default:
                 break;
@@ -329,6 +401,8 @@ export default function RaportyPage() {
         setProjekt(null);
         setIgnorujDatyFirma(false);
         setPracownik(null);
+        // Trigger project reload when switching to company interface
+        fetchProjektyAndRaport();
         // Removed date reset to preserve dates between reports
     };
 
@@ -337,9 +411,16 @@ export default function RaportyPage() {
         setInterfacePracownik(true);
         setProjekt(null);
         setIgnorujDatyFirma(false);
+        
+        // Ensure employees are loaded when switching to employee interface
+        if (availablePracownicy.length === 0) {
+            fetchPracownicy();
+        }
+        
         if (accountType !== 'Pracownik') {
             setPracownik(null);
         }
+        // Auto-selection will be handled by the useEffect above
         // Removed date reset to preserve dates between reports
     };
 

@@ -4,7 +4,7 @@ import { notification } from 'antd';
 import axios from 'axios';
 const baseUrl = process.env.REACT_APP_BASE_URL;
 
-const PDF_SprawozdaniePodsumowanie = async (raport, startDate, endDate, Projekt) => {
+const PDF_SprawozdaniePodsumowanie = async (raport, startDate, endDate, Projekt, projectZleceniodawcaMapping) => {
     // --- Pobierz cennik z backendu ---
     let cennikData = [];
     try {
@@ -76,6 +76,9 @@ const PDF_SprawozdaniePodsumowanie = async (raport, startDate, endDate, Projekt)
     for (let i = 0; i < filteredProjectIds.length; i++) {
         const projectId = filteredProjectIds[i];
         const { projectName, entries } = groupedByProject[projectId];
+        
+        // Get zleceniodawca from mapping
+        const zleceniodawca = projectZleceniodawcaMapping?.[projectId] || entries[0]?.Zleceniodawca || '';
 
         // Filtrujemy wpisy po dacie
         let employeeEntries = [];
@@ -210,7 +213,13 @@ const PDF_SprawozdaniePodsumowanie = async (raport, startDate, endDate, Projekt)
         okresYPosition += 20;
         doc.setFontSize(10);
         doc.setTextColor(0, 0, 0);
-        doc.text(`Projekt: ${projectName}`, 40, okresYPosition);
+        
+        // Add zleceniodawca before project name
+        if (zleceniodawca) {
+            doc.text(`Projekt: ${zleceniodawca} / ${projectName}`, 40, okresYPosition);
+        } else {
+            doc.text(`Projekt: ${projectName}`, 40, okresYPosition);
+        }
 
         // --- Ustaw startY na większą wartość, aby nie ucinało nagłówka ---
         const tableStartY = Math.max(okresYPosition + 20, 80);
