@@ -67,6 +67,7 @@ const VacationPlanner = () => {
     const [vacationData, setVacationData] = useState([]); // dane o urlopach
     const [selectedWeekAndYear, setSelectedWeekAndYear] = useState([0, 0]); // wybrany tydzien i rok
     const [week, setWeek] = useState(0); // aktualny tydzien
+    const [isDownloading, setIsDownloading] = useState(false); // znacznik pobierania
     const plannerRef = useRef(); // referencja do elementu do eksportu PDF
 
     // nazwy miesiecy po polsku
@@ -110,6 +111,7 @@ const VacationPlanner = () => {
 
     // generowanie i pobieranie pliku PDF
     const downloadPDF = () => {
+        setIsDownloading(true); // ustaw znacznik na start
         const input = plannerRef.current;
 
         const firstWeek = tygodnie[0][0].data;
@@ -119,19 +121,21 @@ const VacationPlanner = () => {
         const timestamp = new Date().toISOString().split('.')[0].replace(/[:-]/g, '');
 
         html2canvas(input, {
-            scale: 2,
+            scale: 5,
             useCORS: true,
             logging: false,
             allowTaint: true
         }).then((canvas) => {
-            const imgData = canvas.toDataURL('image/png');
-            const pdf = new jsPDF('l', 'px', 'a4', true);
+            const pdf = new jsPDF('l', 'mm', [600, 420], true);
             const imgWidth = pdf.internal.pageSize.getWidth() - 20;
             const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-            pdf.addImage(imgData, 'PNG', 12, 12, imgWidth, imgHeight, undefined, 'FAST');
+            pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 12, 12, imgWidth, imgHeight, undefined, 'FAST');
             const fileName = `VacationPlan_${getYearLocalStorage()}_Week${getWeekLocalStorage()}_${dateStr}_${timestamp}.pdf`;
             pdf.save(fileName);
+            setIsDownloading(false); // wyłącz znacznik po zakończeniu
+        }).catch(() => {
+            setIsDownloading(false); // wyłącz znacznik w przypadku błędu
         });
     };
 
@@ -233,18 +237,33 @@ const VacationPlanner = () => {
     };
 
     return (
-        <div className="p-4">
-            <h1 className="text-2xl font-bold mb-4">Plan urlopow {getYearLocalStorage()}</h1>
-            <button onClick={downloadPDF} className="mb-4 p-2 bg-blue-500 text-white rounded">
-                Pobierz PDF
-            </button>
+        <div className="p-8">
+            <h1 className="text-4xl font-bold mb-8">Plan urlopów {getYearLocalStorage()}</h1>
+            <div className="flex items-center mb-8">
+                <button
+                    onClick={downloadPDF}
+                    className="p-4 bg-blue-600 text-white rounded text-xl font-bold"
+                    disabled={isDownloading}
+                >
+                    Pobierz PDF
+                </button>
+                {isDownloading && (
+                    <span className="ml-4 text-blue-700 font-semibold flex items-center">
+                        <svg className="animate-spin h-5 w-5 mr-2 text-blue-700" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 01-8 8z"/>
+                        </svg>
+                        Generowanie PDF...
+                    </span>
+                )}
+            </div>
             {/* tabela z kalendarzem */}
             <div ref={plannerRef} className="overflow-x-auto">
-                <table className="w-full border-collapse text-center table-fixed">
+                <table className="w-full border-collapse text-center table-fixed text-lg"> {/* Zwiększona czcionka */}
                     <thead>
                         {/* Header with month names */}
                         <tr>
-                            <th rowSpan="2" className="border border-gray-400" style={{width: '150px'}}>Pracownik</th>
+                            <th rowSpan="2" className="border border-gray-400 bg-gray-200" style={{width: '200px', fontSize: '1.3em'}}>Pracownik</th>
                             {(() => {
                                 const monthHeaders = [];
                                 let currentMonth = tygodnie[0][0].miesiac;
@@ -256,7 +275,7 @@ const VacationPlanner = () => {
                                         colspan++;
                                     } else {
                                         monthHeaders.push(
-                                            <th key={currentMonth + index} colSpan={colspan} className="border border-gray-400">
+                                            <th key={currentMonth + index} colSpan={colspan} className="border border-gray-400 bg-blue-300" style={{fontSize: '1.2em'}}>
                                                 {currentMonth}
                                             </th>
                                         );
@@ -266,7 +285,7 @@ const VacationPlanner = () => {
                                 });
 
                                 monthHeaders.push(
-                                    <th key={currentMonth + 'last'} colSpan={colspan} className="border border-gray-400">
+                                    <th key={currentMonth + 'last'} colSpan={colspan} className="border border-gray-400 bg-blue-300" style={{fontSize: '1.2em'}}>
                                         {currentMonth}
                                     </th>
                                 );
@@ -280,28 +299,28 @@ const VacationPlanner = () => {
                             {tygodnie.map((tydzien, index) => (
                                 <th 
                                     key={`days-${index}`} 
-                                    className="border border-gray-400 p-0"
+                                    className="border border-gray-400 p-0 bg-gray-100"
                                     style={{ 
-                                        width: '35px', 
-                                        minWidth: '35px', 
-                                        maxWidth: '35px',
-                                        fontSize: '0.7rem'
+                                        width: '22px', // Zmniejszona szerokość kolumny
+                                        minWidth: '22px', 
+                                        maxWidth: '22px',
+                                        fontSize: '1em'
                                     }}
                                 >
                                     {tydzien.map((dzien, dayIndex) => (
                                         <div key={`${dzien.data.toISOString()}`} className="leading-tight">
                                             {index === 0 ? (
-                                                <div className="text-[0.6rem]">
+                                                <div className="text-[0.9rem] font-bold">
                                                     <span className="font-bold">{dzien.nazwaDniaTygodnia}</span>
                                                     <span className="ml-0.5">{dzien.dzienMiesiaca}</span>
                                                 </div>
                                             ) : (
-                                                <div className="text-[0.6rem]">{`${dzien.dzienMiesiaca}`}</div>
+                                                <div className="text-[0.9rem]">{`${dzien.dzienMiesiaca}`}</div>
                                             )}
                                         </div>
                                     ))}
                                     <hr className="my-0.5 border-gray-400" />
-                                    <div className="text-[0.6rem] font-bold bg-gray-300 py-0.5 rounded">
+                                    <div className="text-[1rem] font-bold bg-yellow-300 py-0.5 rounded">
                                         {getWeekNumber(tydzien[0].data)}
                                     </div>
                                 </th>
@@ -311,13 +330,24 @@ const VacationPlanner = () => {
                     {/* dane pracownikow i ich urlopy */}
                     <tbody>
                         {vacationData.map((employee, index) => (
-                            <tr key={employee.id} className={index % 2 === 0 ? 'bg-gray-100' : 'bg-white'}>
-                                <td className="border border-gray-400 text-left pl-2 text-sm truncate">{employee.name}</td>
+                            <tr
+                                key={employee.id}
+                                className={
+                                    index % 2 === 0
+                                        ? 'bg-gray-100'
+                                        : 'bg-white'
+                                }
+                                style={{
+                                    borderBottom: '4px solid #2563eb', // mocniejsze odcięcie wierszy
+                                    boxShadow: '0 2px 0 #2563eb', // cień pod każdym wierszem
+                                }}
+                            >
+                                <td className="border border-gray-400 text-left pl-2 text-lg font-semibold truncate">{employee.name}</td>
                                 {tygodnie.map((tydzien, weekIndex) => (
                                     <td
                                         key={`${employee.id}-week-${weekIndex}`}
                                         className="p-0 relative"
-                                        style={{ height: '30px' }}
+                                        style={{ height: '40px' }} // Większa wysokość
                                     >
                                         <div className="grid grid-cols-7 h-full">
                                             {tydzien.map((dzien) => {
@@ -350,22 +380,22 @@ const VacationPlanner = () => {
                                                         {/* oznaczenie urlopu */}
                                                         {isVacationDay && (
                                                             <div
-                                                                className="absolute h-4 top-1/2 -translate-y-1/2 z-10"
+                                                                className="absolute h-6 top-1/2 -translate-y-1/2 z-10"
                                                                 style={{
                                                                     left: spanLeft,
                                                                     width: spanWidth,
                                                                     backgroundColor: vacation.typ === 'zielony'
-                                                                        ? '#22c55e'
+                                                                        ? '#16a34a' // żywszy zielony
                                                                         : vacation.typ === 'zolty'
-                                                                            ? '#eab308'
-                                                                            : '#ef4444',
-                                                                    borderRadius: '0.125rem'
+                                                                            ? '#facc15' // żywszy żółty
+                                                                            : '#dc2626', // żywszy czerwony
+                                                                    borderRadius: '0.25rem'
                                                                 }}
                                                             />
                                                         )}
                                                         {/* oznaczenie niedzieli */}
                                                         {isSunday && (
-                                                            <div className="absolute inset-0 bg-red-400" />
+                                                            <div className="absolute inset-0 bg-pink-300 opacity-60" />
                                                         )}
                                                     </div>
                                                 );
@@ -379,22 +409,22 @@ const VacationPlanner = () => {
                 </table>
                 
                 {/* Legend */}
-                <div className="mt-4 flex space-x-4 text-sm">
+                <div className="mt-8 flex space-x-8 text-xl">
                     <div className="flex items-center">
-                        <div className="w-3 h-3 mr-1" style={{backgroundColor: '#22c55e'}}></div>
-                        <span>Zatwierdzone</span>
+                        <div className="w-5 h-5 mr-2" style={{backgroundColor: '#16a34a', borderRadius: '0.25rem'}}></div>
+                        <span className="font-bold">Zatwierdzone</span>
                     </div>
                     <div className="flex items-center">
-                        <div className="w-3 h-3 mr-1" style={{backgroundColor: '#eab308'}}></div>
-                        <span>Do zatwierdzenia</span>
+                        <div className="w-5 h-5 mr-2" style={{backgroundColor: '#facc15', borderRadius: '0.25rem'}}></div>
+                        <span className="font-bold">Do zatwierdzenia</span>
                     </div>
                     <div className="flex items-center">
-                        <div className="w-3 h-3 mr-1" style={{backgroundColor: '#ef4444'}}></div>
-                        <span>Anulowane</span>
+                        <div className="w-5 h-5 mr-2" style={{backgroundColor: '#dc2626', borderRadius: '0.25rem'}}></div>
+                        <span className="font-bold">Anulowane</span>
                     </div>
                     <div className="flex items-center">
-                        <div className="w-3 h-3 mr-1 bg-red-100"></div>
-                        <span>Niedziela</span>
+                        <div className="w-5 h-5 mr-2 bg-pink-300 opacity-60 rounded"></div>
+                        <span className="font-bold">Niedziela</span>
                     </div>
                 </div>
             </div>

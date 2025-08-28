@@ -128,7 +128,6 @@ useEffect(() => {
         }
         //console.log(pracownikData); 
         PDF_Drukujgrupe(pracownikData, from, to);
-        console.log(pracownikData);
     }
 
     const handleUsunZaznaczone = async () => {

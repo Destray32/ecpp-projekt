@@ -60,15 +60,18 @@ export default function UrlopyPage() {
 
     const extractId = (idWithPrefix) => idWithPrefix.replace('cb-', '');
 
-    const RenderTable = ({ data, title, groupSelections, setGroupSelections, expandedGroups, setExpandedGroups, selectedItems, setSelectedItems }) => {
+    const RenderTable = ({
+        data, title, groupSelections, setGroupSelections,
+        expandedGroups, setExpandedGroups, selectedItems, setSelectedItems
+    }) => {
         const inputRef = useRef(null);
-    
+
         useEffect(() => {
             if (editingVacationId && inputRef.current) {
                 inputRef.current.focus();
             }
         }, [editingVacationId]);
-    
+
         const handleEdit = (vacation) => {
             setEditingVacationId(vacation.id);
             setEditVacationData({
@@ -78,24 +81,25 @@ export default function UrlopyPage() {
                 komentarz: vacation.komentarz
             });
         };
-    
+
+        // Popraw funkcję handleGroupToggle, aby działała poprawnie
+        const handleGroupToggleLocal = (groupName) => {
+            setExpandedGroups(prevExpandedGroups => ({
+                ...prevExpandedGroups,
+                [groupName]: !prevExpandedGroups[groupName],
+            }));
+        };
+
         return (
             <>
                 <div className="overflow-x-auto">
                     <table className="w-full border-collapse text-center">
-                        <thead>
-                            <tr>
-                                <th className="border border-gray-400 bg-gray-200">Pracownik</th>
-                                <th className="border border-gray-400 bg-blue-200">Tydzień</th>
-                                <th className="border border-gray-400 bg-gray-100">Dzień</th>
-                            </tr>
-                        </thead>
                         <tbody className="text-center">
                             {Object.keys(data).map((name) => (
                                 <React.Fragment key={name}>
                                     <tr>
-                                        <td colSpan="7" className="cursor-pointer bg-gray-100 hover:bg-gray-200">
-                                            <div className="flex items-center"  onClick={() => handleGroupToggle(name, setExpandedGroups, expandedGroups)}>
+                                        <td colSpan="7" className="cursor-pointer bg-gray-100 hover:bg-gray-200 font-semibold text-lg">
+                                            <div className="flex items-center" onClick={() => handleGroupToggleLocal(name)}>
                                                 <Checkbox
                                                     inputId={`cb-${name}`}
                                                     checked={groupSelections[name] || false}
@@ -106,12 +110,23 @@ export default function UrlopyPage() {
                                                     }}
                                                 />
                                                 <p className="ml-2">{name}</p>
-                                                <span className="ml-auto" onClick={() => handleGroupToggle(name, setExpandedGroups, expandedGroups)}>{expandedGroups[name] ? '−' : '+'}</span>
+                                                <span className="ml-auto font-bold text-lg" style={{cursor: 'pointer'}}>
+                                                    {expandedGroups[name] ? '▼' : '▶'}
+                                                </span>
                                             </div>
                                         </td>
                                     </tr>
                                     {expandedGroups[name] && data[name].map((urlopy) => (
-                                        <tr key={urlopy.id} className="border-b even:bg-gray-200 odd:bg-gray-300">
+                                        <tr
+                                            key={urlopy.id}
+                                            className={
+                                                urlopy.status === "Do zatwierdzenia"
+                                                    ? "even:bg-yellow-50 odd:bg-yellow-100"
+                                                    : urlopy.status === "Zatwierdzone"
+                                                        ? "even:bg-green-50 odd:bg-green-100"
+                                                        : "even:bg-gray-200 odd:bg-gray-300"
+                                            }
+                                        >
                                             <td className="border-r px-2 py-1">
                                                 <Checkbox
                                                     inputId={`cb-${urlopy.id}`}
@@ -423,11 +438,12 @@ export default function UrlopyPage() {
     const fetchUrlopy = () => {
         Axios.get(`${baseUrl}/api/urlopy`, { withCredentials: true })
             .then((response) => {
-                if(accountType === 'Administrator') {
-                urlopyData = response.data.urlopy;
-                }
-                else {
-                urlopyData = response.data.urlopy.filter(item => item.imie === imie && item.nazwisko === nazwisko);
+                if (accountType === 'Administrator') {
+                    // Administrator widzi wszystko
+                    urlopyData = response.data.urlopy;
+                } else {
+                    // Pracownik widzi tylko swoje urlopy
+                    urlopyData = response.data.urlopy.filter(item => item.imie === imie && item.nazwisko === nazwisko);
                 }
 
                 //console.log(urlopyData);    
@@ -738,49 +754,53 @@ export default function UrlopyPage() {
                 </table>
             </div>
             <AmberBox style={"justify-around bg-blue-500 text-white"}>
-            <div>
-                <div className="flex items-center">
-                    <Checkbox
-                        inputId="master-checkbox"
-                        checked={allGroupsSelected}
-                        onChange={handleMasterCheckboxChange}
-                        disabled={accountType !== 'Administrator'}
-                    />
-                    <span className="ml-2 font-bold">Zaznacz wszystkie</span>
-                </div>
-                {dostepneGrupy.map((grupa) => (
-                    <div key={grupa.id}>
-                        <Checkbox
-                            disabled={accountType !== 'Administrator'}
-                            inputId={`grupa-${grupa.id}`}
-                            checked={selectedGrupy[grupa.id] || false}
-                            onChange={() => handleGrupaCheckboxChange(grupa.id, grupa.Zleceniodawca)}
-                        />
-                        <span className="ml-2">{grupa.Zleceniodawca}</span>
-                    </div>
-                ))}
+    <div className="flex flex-row items-center space-x-8">
+        {/* Checkboxy zleceniodawców w słupku (kolumnie) */}
+        <div className="flex flex-col items-start space-y-2">
+            <div className="flex flex-row items-center">
+                <Checkbox
+                    inputId="master-checkbox"
+                    checked={allGroupsSelected}
+                    onChange={handleMasterCheckboxChange}
+                    disabled={accountType !== 'Administrator'}
+                />
+                <span className="ml-2 font-bold">Zaznacz wszystkie</span>
             </div>
-                <Button label="Szukaj" onClick={handleSearch} disabled={accountType !== 'Administrator'} />
-                <div className="flex flex-row items-center space-x-4">
-                    <Dropdown
-                        value={selectedWeek}
-                        options={weeks}
-                        onChange={(e) => setSelectedWeek(e.value)}
-                        placeholder="Tydzień"
+            {dostepneGrupy.map((grupa) => (
+                <div key={grupa.id} className="flex flex-row items-center mt-2">
+                    <Checkbox
                         disabled={accountType !== 'Administrator'}
-                        className="text-black text-sm py-1 px-2 h-12"
+                        inputId={`grupa-${grupa.id}`}
+                        checked={selectedGrupy[grupa.id] || false}
+                        onChange={() => handleGrupaCheckboxChange(grupa.id, grupa.Zleceniodawca)}
                     />
-                    <Dropdown
-                        value={selectedYear}
-                        options={years}
-                        onChange={(e) => setSelectedYear(e.value)}
-                        placeholder="Rok"
-                        disabled={accountType !== 'Administrator'}
-                        className="text-black text-sm py-1 px-2 h-12"
-                    />
-                    <Button label="Drukuj" onClick={handlePdfDownloadClick} disabled={accountType !== 'Administrator'} />
+                    <span className="ml-2">{grupa.Zleceniodawca}</span>
                 </div>
-            </AmberBox>
+            ))}
+        </div>
+        {/* Wybór tygodnia/roku i drukowanie obok */}
+        <div className="flex flex-row items-center space-x-4">
+            <Dropdown
+                value={selectedWeek}
+                options={weeks}
+                onChange={(e) => setSelectedWeek(e.value)}
+                placeholder="Tydzień"
+                disabled={accountType !== 'Administrator'}
+                className="text-black text-sm py-1 px-2 h-12"
+            />
+            <Dropdown
+                value={selectedYear}
+                options={years}
+                onChange={(e) => setSelectedYear(e.value)}
+                placeholder="Rok"
+                disabled={accountType !== 'Administrator'}
+                className="text-black text-sm py-1 px-2 h-12"
+            />
+            {/* Drukowanie dostępne dla wszystkich */}
+            <Button label="Drukuj" onClick={handlePdfDownloadClick} />
+        </div>
+    </div>
+</AmberBox>
             <div className="w-auto bg-gray-300 h-full m-2 outline outline-1 outline-gray-500">
                 <table className="w-full">
                     <RemainingTable />
