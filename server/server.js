@@ -476,16 +476,16 @@ app.put('/api/urlopy/:vacationId', (req, res) => {
 
 /////////////////////////////////////////
 
-app.get('/api/cennik', authorizeRole('Administrator', 'Kierownik', 'Biuro'), (req, res) => {
+app.get('/api/cennik', (req, res) => {
     PobierzCennik(req, res);
 });
 
 
-app.put('/api/cennik/stawka', authorizeRole('Administrator', 'Kierownik'), (req, res) => {
+app.put('/api/cennik/stawka', (req, res) => {
     AktualizujStawke(req, res);
 });
 
-app.put('/api/cennik/globalna', authorizeRole('Administrator', 'Kierownik'), (req, res) => {
+app.put('/api/cennik/globalna', (req, res) => {
     AktualizujStawkeGlobalna(req, res);
 });
 

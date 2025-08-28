@@ -360,7 +360,7 @@ export default function RaportyPage() {
 
         switch (wybranyRaport) {
             case "Sprawozdanie z działalności - szczegółowe":
-                PDF_SprawozdanieSzczegól(filteredRaport, passedStartDate, passedEndDate, null, projectZleceniodawcaMapping);
+                PDF_SprawozdanieSzczegolowe(filteredRaport, passedStartDate, passedEndDate, null, projectZleceniodawcaMapping);
                 break;
             case "Sprawozdanie z działalności - podsumowanie":
                 PDF_SprawozdaniePodsumowanie(filteredRaport, passedStartDate, passedEndDate, null, projectZleceniodawcaMapping);
@@ -381,13 +381,18 @@ export default function RaportyPage() {
 
         const [sd, ed] = [new Date(startDate), new Date(endDate)];
 
-        const filtered = raport.filter(e => {
+        let filtered = raport.filter(e => {
             if (!e.Data) return false;
             const [datePart] = e.Data.split(' ');
             const [d, m, y] = datePart.split('.');
             const dt = new Date(`${y}-${m}-${d}`);
             return dt >= sd && dt <= ed;
         });
+
+        // If user is Pracownik, filter to show only their data
+        if (accountType === 'Pracownik' && pracownik) {
+            filtered = filtered.filter(e => e.PracownikID === pracownik);
+        }
 
         switch (wybranyRaport) {
             case "Analiza świadczeń pracowniczych":
@@ -630,7 +635,7 @@ export default function RaportyPage() {
             <div className="w-auto bg-gray-300 h-full m-2 outline outline-1 outline-gray-500">
             <table className="w-full">
                 <tbody className="text-left cursor-pointer">
-                    <tr className="border-b hover:underline even:bg-gray-200 odd:bg-gray-300"
+                    <tr className={`border-b ${accountType !== 'Pracownik' ? 'hover:underline cursor-pointer' : 'cursor-not-allowed opacity-50'} even:bg-gray-200 odd:bg-gray-300`}
                         onClick={() => {
                             if (accountType !== 'Pracownik') {
                                 setShowRaportyFirma(!showRaportyFirma);
@@ -638,7 +643,7 @@ export default function RaportyPage() {
                         }}>
                         <th className="border-r">Raporty dla firmy</th>
                     </tr>
-                    <tr className={`${showRaportyFirma ? "" : "hidden"}`}>
+                    <tr className={`${showRaportyFirma && accountType !== 'Pracownik' ? "" : "hidden"}`}>
                         <td onClick={() => {
                             if (accountType !== 'Pracownik') {
                                 handleRowClick("Sprawozdanie z działalności - szczegółowe");
@@ -649,7 +654,7 @@ export default function RaportyPage() {
                             Szczegółowy
                         </td>
                     </tr>
-                    <tr className={`${showRaportyFirma ? "" : "hidden"}`}>
+                    <tr className={`${showRaportyFirma && accountType !== 'Pracownik' ? "" : "hidden"}`}>
                         <td onClick={() => {
                             if (accountType !== 'Pracownik') {
                                 handleRowClick("Sprawozdanie z działalności - podsumowanie");
