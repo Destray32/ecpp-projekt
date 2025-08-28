@@ -160,7 +160,8 @@ export default function ProjektyPage() {
     };
 
     const fetchUnusedProjects = () => {
-        Axios.get(`${baseUrl}/api/czas/projekty/nieuzywane`, {
+        const timestamp = new Date().getTime();
+        Axios.get(`${baseUrl}/api/czas/projekty/nieuzywane?_t=${timestamp}`, { 
             withCredentials: true,
             headers: {
                 'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -169,6 +170,7 @@ export default function ProjektyPage() {
             }
         })
             .then((response) => {
+                // console.log('fetch:', new Date().toLocaleTimeString());
                 if (response.data && Array.isArray(response.data.nieuzywaneProjekty)) {
                     const unusedData = response.data.nieuzywaneProjekty.reduce((acc, item) => {
                         acc[item.id] = item.DaysUnused === null ? 'Nigdy' : Math.floor(item.DaysUnused / 7);
