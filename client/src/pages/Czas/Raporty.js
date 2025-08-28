@@ -84,9 +84,14 @@ export default function RaportyPage() {
             );
             if (currentUser) {
                 setPracownik(currentUser.value);
+                // Filter to show only current user for Pracownik account type
+                setAvailablePracownicy([currentUser]);
             }
+        } else if (accountType !== 'Pracownik' && allPracownicyOptions.length > 0) {
+            // For non-Pracownik accounts, show all employees
+            setAvailablePracownicy(allPracownicyOptions);
         }
-    }, [accountType, availablePracownicy, imie, nazwisko]);
+    }, [accountType, allPracownicyOptions, imie, nazwisko]);
 
     useEffect(() => {
         setStartDate('');
@@ -355,7 +360,7 @@ export default function RaportyPage() {
 
         switch (wybranyRaport) {
             case "Sprawozdanie z działalności - szczegółowe":
-                PDF_SprawozdanieSzczegolowe(filteredRaport, passedStartDate, passedEndDate, null, projectZleceniodawcaMapping);
+                PDF_SprawozdanieSzczegól(filteredRaport, passedStartDate, passedEndDate, null, projectZleceniodawcaMapping);
                 break;
             case "Sprawozdanie z działalności - podsumowanie":
                 PDF_SprawozdaniePodsumowanie(filteredRaport, passedStartDate, passedEndDate, null, projectZleceniodawcaMapping);
@@ -417,8 +422,18 @@ export default function RaportyPage() {
             fetchPracownicy();
         }
         
-        if (accountType !== 'Pracownik') {
+        if (accountType === 'Pracownik') {
+            // For Pracownik account type, auto-select current user and filter options
+            const currentUser = allPracownicyOptions.find(p => 
+                p.label.includes(imie) && p.label.includes(nazwisko)
+            );
+            if (currentUser) {
+                setPracownik(currentUser.value);
+                setAvailablePracownicy([currentUser]);
+            }
+        } else {
             setPracownik(null);
+            setAvailablePracownicy(allPracownicyOptions);
         }
         // Auto-selection will be handled by the useEffect above
         // Removed date reset to preserve dates between reports
@@ -624,16 +639,24 @@ export default function RaportyPage() {
                         <th className="border-r">Raporty dla firmy</th>
                     </tr>
                     <tr className={`${showRaportyFirma ? "" : "hidden"}`}>
-                        <td onClick={() => handleRowClick("Sprawozdanie z działalności - szczegółowe")}
+                        <td onClick={() => {
+                            if (accountType !== 'Pracownik') {
+                                handleRowClick("Sprawozdanie z działalności - szczegółowe");
+                            }
+                        }}
                             style={getRowStyle("Sprawozdanie z działalności - szczegółowe")}
-                            className="border-r hover:underline even:bg-gray-200 odd:bg-gray-300">
+                            className={`border-r ${accountType !== 'Pracownik' ? 'hover:underline cursor-pointer' : 'cursor-not-allowed opacity-50'} even:bg-gray-200 odd:bg-gray-300`}>
                             Szczegółowy
                         </td>
                     </tr>
                     <tr className={`${showRaportyFirma ? "" : "hidden"}`}>
-                        <td onClick={() => handleRowClick("Sprawozdanie z działalności - podsumowanie")}
+                        <td onClick={() => {
+                            if (accountType !== 'Pracownik') {
+                                handleRowClick("Sprawozdanie z działalności - podsumowanie");
+                            }
+                        }}
                             style={getRowStyle("Sprawozdanie z działalności - podsumowanie")}
-                            className="border-r hover:underline even:bg-gray-200 odd:bg-gray-300">
+                            className={`border-r ${accountType !== 'Pracownik' ? 'hover:underline cursor-pointer' : 'cursor-not-allowed opacity-50'} even:bg-gray-200 odd:bg-gray-300`}>
                             Podsumowanie
                         </td>
                     </tr>
