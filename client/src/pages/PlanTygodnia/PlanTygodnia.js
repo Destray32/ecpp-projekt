@@ -8,6 +8,7 @@ import 'jspdf-autotable';
 import { notification } from 'antd';
 import { Dialog } from "primereact/dialog";
 import { Checkbox } from "primereact/checkbox";
+import { Spin } from 'antd'; // dodaj import
 
 import PDF_Drukujgrupe from "../../Components/PlanTygodniaV/PDF_Drukujgrupe";
 
@@ -29,6 +30,7 @@ export default function PlanTygodniaPage() {
     const [selectAll, setSelectAll] = useState(false);
     const [error, setError] = useState(false);
     const [isDialogVisible, setIsDialogVisible] = useState(false);
+    const [loading, setLoading] = useState(false);
     const baseUrl = process.env.REACT_APP_BASE_URL;
     const dropdownRef = useRef(null);
 
@@ -278,26 +280,26 @@ useEffect(() => {
     }, [currentDate]);
 
     const fetchData = (selectedGroup = group) => {
-    Axios.get(`${baseUrl}/api/grupy`, { withCredentials: true })
-        .then(res => {
-            const groups = res.data.grupy;
-            const filteredGroups = groups.filter(group => group.Plan_tygodniaV === 1);
+        setLoading(true);
+        Axios.get(`${baseUrl}/api/grupy`, { withCredentials: true })
+            .then(res => {
+                const groups = res.data.grupy;
+                const filteredGroups = groups.filter(group => group.Plan_tygodniaV === 1);
 
-            setAvailableGroups(
-                filteredGroups.map(group => ({
-                    name: group.Zleceniodawca,
-                    id: group.id,
-                }))
-            );
-        })
-        .catch(err => console.error(err));
-    
- 
+                setAvailableGroups(
+                    filteredGroups.map(group => ({
+                        name: group.Zleceniodawca,
+                        id: group.id,
+                    }))
+                );
+            })
+            .catch(err => console.error(err));
+
         const url = `${baseUrl}/api/planTygodnia/zaplanuj?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}${selectedGroup ? `&group=${encodeURIComponent(selectedGroup.name)}` : ''}`;
-        
         Axios.get(url, { withCredentials: true })
             .then(res => {
                 const data = res.data;
+                // Upewnij się, że backend zwraca m_value oraz Opis
                 const sortedData = data.sort((a, b) => {
                     if (a.pracownikId && !b.pracownikId) {
                         return -1;
@@ -308,7 +310,8 @@ useEffect(() => {
                 });
                 setPracownikData(sortedData);
             })
-            .catch(err => console.error(err));
+            .catch(err => console.error(err))
+            .finally(() => setLoading(false));
     };
 
         const confirmDeletion = () => {
@@ -367,42 +370,42 @@ useEffect(() => {
         });
     };
 
-    const handleRadioChange = (employeeId, selectedM) => {
-        const updatedData = pracownikData.map((item) =>
-            item.id === employeeId ? { ...item, M1_5: selectedM, m_value: selectedM } : item
+    const handleRadioChange = (planTygodniaId, selectedM) => {
+        setPracownikData(prev =>
+            prev.map(item =>
+                item.id === planTygodniaId ? { ...item, m_value: selectedM } : item
+            )
         );
-        setPracownikData(updatedData);
-    
-        Axios.put(`${baseUrl}/api/planTygodnia/${employeeId}`, {
+        Axios.put(`${baseUrl}/api/planTygodnia/${planTygodniaId}`, {
             M1_5: selectedM,
         }, { withCredentials: true })
-            .then((res) => {
-                // Usuń fetchData() - już zaktualizowaliśmy stan lokalnie
-                // fetchData();
-            })
             .catch((err) => {
+                notification.error({
+                    message: 'Błąd',
+                    description: 'Nie udało się zapisać zmiany M1-M5',
+                    placement: 'topRight',
+                });
                 console.error('Error updating employee:', err);
             });
     };
 
-    // Dodaj funkcję do obsługi zmiany opisu
-const handleOpisChange = (employeeId, newOpis) => {
-    setPracownikData(prevData =>
-        prevData.map(item =>
-            item.id === employeeId ? { ...item, Opis: newOpis } : item
+    // Zapisuj opis od razu po zmianie (onChange)
+const handleOpisChange = (planTygodniaId, newOpis) => {
+    setPracownikData(prev =>
+        prev.map(item =>
+            item.id === planTygodniaId ? { ...item, Opis: newOpis } : item
         )
     );
-};
-
-const handleOpisBlur = (employeeId, newOpis) => {
-    Axios.put(`${baseUrl}/api/planTygodnia/${employeeId}`, {
-        Opis: newOpis,
+    Axios.put(`${baseUrl}/api/planTygodnia/zaplanuj/opis`, {
+        idPlanTygodnia: planTygodniaId,
+        opis: newOpis
     }, { withCredentials: true })
-        .then(() => {
-            // Usuń fetchData() - nie potrzebujemy ponownie pobierać wszystkich danych
-            // fetchData();
-        })
         .catch((err) => {
+            notification.error({
+                message: 'Błąd',
+                description: 'Nie udało się zapisać opisu',
+                placement: 'topRight',
+            });
             console.error('Error updating Opis:', err);
         });
 };
@@ -411,6 +414,20 @@ const handleOpisBlur = (employeeId, newOpis) => {
 
     return (
         <main>
+            {/* Dyskretny spinner w prawym górnym rogu */}
+            {loading && (
+                <div style={{
+                    position: 'fixed',
+                    top: 16,
+                    right: 16,
+                    zIndex: 1000,
+                    background: 'rgba(255,255,255,0.7)',
+                    borderRadius: '50%',
+                    padding: 8
+                }}>
+                    <Spin />
+                </div>
+            )}
             <div className="w-auto h-auto m-2 p-3 bg-amber-100 outline outline-1
             outline-gray-500 flex flex-row items-center space-x-4">
                 <div className="w-3/4 h-40 flex flex-col space-y-2 items-start">
@@ -552,72 +569,82 @@ const handleOpisBlur = (employeeId, newOpis) => {
                                 </tr>
                             </thead>
                             <tbody className="text-center">
-                                {pracownikData.map((item, idx) => {
-                                    return (
-                                        <tr key={item.id} className="border-b even:bg-gray-200 odd:bg-gray-300">
-                                            <td className="border-r">
+                                {/* Pracownicy */}
+                                {pracownikData.filter(item => item.pracownikId).map((item, idx) => (
+                                    <tr key={item.id} className="border-b even:bg-gray-200 odd:bg-gray-300">
+                                        <td className="border-r">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedRowIds.includes(item.id)}
+                                                onChange={() => handleRowCheckboxChange(item.id)}
+                                            />
+                                        </td>
+                                        <td className="border-r">{item.nazwisko}</td>
+                                        <td className="border-r">{item.imie}</td>
+                                        <td className="border-r">{item.Zleceniodawca}</td>
+                                        {/* Checkboxy M1-M5 */}
+                                        {['M1','M2','M3','M4','M5'].map(m => (
+                                            <td className="border-r" key={m}>
                                                 <input
                                                     type="checkbox"
-                                                    checked={selectedRowIds.includes(item.id)}
-                                                    onChange={() => handleRowCheckboxChange(item.id)}
+                                                    checked={item.m_value === m}
+                                                    onChange={() => handleRadioChange(item.id, item.m_value === m ? '' : m)}
                                                 />
                                             </td>
-                                            <td className="border-r">{item.nazwisko ? item.nazwisko : item.pojazd || 'No Data'}</td>
-                                            <td className="border-r">{item.imie}</td>
-                                            <td className="border-r">{item.Zleceniodawca}</td>
-                                            <td className="border-r">
+                                        ))}
+                                        <td className="border-r">
+                                            {accountType === 'Administrator'
+                                                ? (
+                                                    <input
+                                                        type="text"
+                                                        value={item.Opis || ''}
+                                                        onChange={e => handleOpisChange(item.id, e.target.value)}
+                                                        className="w-full px-1 py-0.5 bg-transparent border-none text-gray-900"
+                                                    />
+                                                )
+                                                : (item.Opis || '')
+                                            }
+                                        </td>
+                                    </tr>
+                                ))}
+                                {/* Pojazdy */}
+                                {pracownikData.filter(item => item.pojazdId).map((item, idx) => (
+                                    <tr key={item.id} className="border-b even:bg-blue-100 odd:bg-blue-200">
+                                        <td className="border-r">
                                             <input
-                                                type="radio"
-                                                checked={item.m_value === 'M1'}
-                                                onChange={() => handleRadioChange(item.id, 'M1')}
+                                                type="checkbox"
+                                                checked={selectedRowIds.includes(item.id)}
+                                                onChange={() => handleRowCheckboxChange(item.id)}
                                             />
-                                            </td>
-                                            <td className="border-r">
+                                        </td>
+                                        <td className="border-r">{item.pojazd}</td>
+                                        <td className="border-r">-</td>
+                                        <td className="border-r">{item.Zleceniodawca}</td>
+                                        {/* Checkboxy S1-S5 */}
+                                        {['S1','S2','S3','S4','S5'].map(s => (
+                                            <td className="border-r" key={s}>
                                                 <input
-                                                    type="radio"
-                                                    checked={item.m_value === 'M2'}
-                                                    onChange={() => handleRadioChange(item.id, 'M2')}
+                                                    type="checkbox"
+                                                    checked={item.m_value === s}
+                                                    onChange={() => handleRadioChange(item.id, item.m_value === s ? '' : s)}
                                                 />
                                             </td>
-                                            <td className="border-r">
-                                                <input
-                                                    type="radio"
-                                                    checked={item.m_value === 'M3'}
-                                                    onChange={() => handleRadioChange(item.id, 'M3')}
-                                                />
-                                            </td>
-                                            <td className="border-r">
-                                                <input
-                                                    type="radio"
-                                                    checked={item.m_value === 'M4'}
-                                                    onChange={() => handleRadioChange(item.id, 'M4')}
-                                                />
-                                            </td>
-                                            <td className="border-r">
-                                                <input
-                                                    type="radio"
-                                                    checked={item.m_value === 'M5'}
-                                                    onChange={() => handleRadioChange(item.id, 'M5')}
-                                                />
-                                            </td>
-                                            <td className="border-r">
-                                                {item.Opis && accountType !== 'Administrator'
-                                                    ? item.Opis
-                                                    : accountType === 'Administrator'
-                                                        ? (
-                                                            <input
-                                                                type="text"
-                                                                value={item.Opis || ''}
-                                                                onChange={e => handleOpisChange(item.id, e.target.value)}
-                                                                onBlur={e => handleOpisBlur(item.id, e.target.value)}
-                                                                className="w-full px-1 py-0.5 bg-transparent border-none text-gray-900"
-                                                            />
-                                                        )
-                                                        : item.Opis
-                                                }</td>
-                                        </tr>
-                                    );
-                                })}
+                                        ))}
+                                        <td className="border-r">
+                                            {accountType === 'Administrator'
+                                                ? (
+                                                    <input
+                                                        type="text"
+                                                        value={item.Opis || ''}
+                                                        onChange={e => handleOpisChange(item.id, e.target.value)}
+                                                        className="w-full px-1 py-0.5 bg-transparent border-none text-gray-900"
+                                                    />
+                                                )
+                                                : (item.Opis || '')
+                                            }
+                                        </td>
+                                    </tr>
+                                ))}
                             </tbody>
                         </table>
                     </div>
