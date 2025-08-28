@@ -199,10 +199,16 @@ export default function ProjektyPage() {
     };
 
 
-    useEffect(() => {
-        fetchProjects();
-        fetchUnusedProjects();
-    }, []);
+useEffect(() => {
+    const loadData = async () => {
+        await fetchProjects();
+        setTimeout(() => {
+            fetchUnusedProjects();
+        }, 500); // Daj czas na załadowanie podstawowych danych
+    };
+    
+    loadData();
+}, []);
 
 
     return (
