@@ -160,34 +160,41 @@ export default function ProjektyPage() {
     };
 
     const fetchUnusedProjects = () => {
-    Axios.get(`${baseUrl}/api/czas/projekty/nieuzywane`, { withCredentials: true })
-        .then((response) => {
-            if (response.data && Array.isArray(response.data.nieuzywaneProjekty)) {
-                const unusedData = response.data.nieuzywaneProjekty.reduce((acc, item) => {
-                    acc[item.id] = item.DaysUnused === null ? 'Nigdy' : Math.floor(item.DaysUnused / 7);
-                    return acc;
-                }, {});
-
-                setData(prevData =>
-                    prevData.map(projekt => ({
-                        ...projekt,
-                        WeeksUnused: unusedData[projekt.id] !== undefined ? unusedData[projekt.id] : '—'
-                    }))
-                );
-            } else {
-                console.error('Unexpected response structure:', response.data);
-                setData(prevData =>
-                    prevData.map(projekt => ({
-                        ...projekt,
-                        WeeksUnused: '—'
-                    }))
-                );
+        Axios.get(`${baseUrl}/api/czas/projekty/nieuzywane`, {
+            withCredentials: true,
+            headers: {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0'
             }
         })
-        .catch((error) => {
-            console.error('Error fetching unused projects:', error);
-        });
-};
+            .then((response) => {
+                if (response.data && Array.isArray(response.data.nieuzywaneProjekty)) {
+                    const unusedData = response.data.nieuzywaneProjekty.reduce((acc, item) => {
+                        acc[item.id] = item.DaysUnused === null ? 'Nigdy' : Math.floor(item.DaysUnused / 7);
+                        return acc;
+                    }, {});
+
+                    setData(prevData =>
+                        prevData.map(projekt => ({
+                            ...projekt,
+                            WeeksUnused: unusedData[projekt.id] !== undefined ? unusedData[projekt.id] : '—'
+                        }))
+                    );
+                } else {
+                    console.error('Unexpected response structure:', response.data);
+                    setData(prevData =>
+                        prevData.map(projekt => ({
+                            ...projekt,
+                            WeeksUnused: '—'
+                        }))
+                    );
+                }
+            })
+            .catch((error) => {
+                console.error('Error fetching unused projects:', error);
+            });
+    };
 
 
     useEffect(() => {
