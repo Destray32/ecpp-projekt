@@ -254,25 +254,107 @@ const AdditionalProjects = ({
         );
     };
 
-    const handleDeleteProject = (projectId) => {
-        // na podstawie id projektu ustawionego poprzez uuid4 wchodzimy do tego projektu i
-        // wyciągamy wszystkie id nadesłane z bazy dla każdego dzien_projekty i usuwamy
-        additionalProjects.forEach(project => {
-            if (project.id === projectId) {
-                //console.log(project);
-                Object.values(project.hours).forEach(async hour => {
-                    try {
-                        await Axios.delete(`${baseUrl}/api/czas/projekt/${hour.id}`, { withCredentials: true });
-                    } catch (error) {
-                        console.error("Error deleting project", error);
-                    }
-                });
-            }
-        });
+    const handleDeleteProject = async (projectId) => {
+        console.log("Deleting project:", additionalProjects);
 
-        setAdditionalProjects(prevProjects =>
-            prevProjects.filter(project => project.id !== projectId)
+        const projectToDelete = additionalProjects.find(project => project.id === projectId);
+        if (!projectToDelete) return;
+
+        // Sprawdź czy projekt ma jakiekolwiek wypełnione dane
+        const hasData = Object.values(projectToDelete.hours).some(hour =>
+            hour.hoursWorked > 0 ||
+            hour.comment ||
+            hour.parking ||
+            hour.km ||
+            hour.diet ||
+            hour.tools
         );
+
+        // Jeśli projekt ma dane, sprawdź ID z bazy
+        if (hasData) {
+            let databaseIds = [];
+
+            // Najpierw sprawdź czy już mamy ID
+            Object.values(projectToDelete.hours).forEach(hour => {
+                if (hour.id && hour.id !== 'undefined' && !isNaN(hour.id)) {
+                    databaseIds.push(hour.id);
+                }
+            });
+
+            // Jeśli nie ma ID ale są dane, pobierz aktualne dane z bazy
+            if (databaseIds.length === 0) {
+                try {
+                    console.log("No IDs found, refreshing project data...");
+                    await refreshProjectData(projectId);
+
+                    // Poczekaj moment na aktualizację stanu, następnie pobierz zaktualizowane dane
+                    setTimeout(() => {
+                        const updatedProject = additionalProjects.find(project => project.id === projectId);
+                        console.log("Project after refresh:", updatedProject);
+
+                        if (updatedProject) {
+                            Object.values(updatedProject.hours).forEach(hour => {
+                                if (hour.id && hour.id !== 'undefined' && !isNaN(hour.id)) {
+                                    databaseIds.push(hour.id);
+                                }
+                            });
+                        }
+
+                        console.log("Found IDs after refresh:", databaseIds);
+
+                        // Kontynuuj proces usuwania
+                        continueDelete(databaseIds);
+                    }, 200);
+                    return; // Wyjdź z funkcji, continueDelete dokończy usuwanie
+                } catch (error) {
+                    console.error("Error refreshing project data before delete", error);
+                    // Jeśli nie udało się pobrać danych, kontynuuj z lokalnym usunięciem
+                }
+            }
+
+            continueDelete(databaseIds);
+        } else {
+            // Jeśli nie ma danych, usuń tylko lokalnie
+            removeFromLocal();
+        }
+
+        // Funkcja pomocnicza do kontynuowania usuwania
+        async function continueDelete(ids) {
+            // Usuń z bazy danych jeśli są ID
+            if (ids.length > 0) {
+                try {
+                    console.log("Deleting from database, IDs:", ids);
+                    for (const id of ids) {
+                        await Axios.delete(`${baseUrl}/api/czas/projekt/${id}`, { withCredentials: true });
+                        console.log(`Deleted record with ID: ${id}`);
+                    }
+                } catch (error) {
+                    console.error("Error deleting project from database", error);
+                    notification.error({
+                        message: "Błąd",
+                        description: "Nie udało się usunąć projektu z bazy danych",
+                    });
+                    return; // Nie usuwaj z frontendu jeśli nie udało się usunąć z bazy
+                }
+            }
+
+            removeFromLocal();
+        }
+
+        // Funkcja pomocnicza do usuwania z lokalnego stanu
+        function removeFromLocal() {
+            // Usuń projekt z lokalnego stanu
+            setAdditionalProjects(prevProjects =>
+                prevProjects.filter(project => project.id !== projectId)
+            );
+
+            notification.success({
+                message: "Sukces",
+                description: "Projekt został usunięty",
+            });
+
+            console.log("Project deleted successfully");
+        }
     };
 
     const handleInputFocus = (projectId, date) => {
@@ -290,6 +372,87 @@ const AdditionalProjects = ({
         });
         return sum % 1 === 0 ? sum.toString() : sum.toFixed(2);
     });
+
+    const refreshProjectData = async (projectId) => {
+        try {
+            const project = additionalProjects.find(p => p.id === projectId);
+            if (!project) return;
+
+            const weekData = getWeek(currentDate, { weekStartsOn: 1 });
+            const year = currentDate.getFullYear();
+
+            const response = await Axios.get(`${baseUrl}/api/czas/projekty/dodane`, {
+                params: {
+                    pracownikName: loggedUserName,
+                    weekData: weekData,
+                    year: year
+                },
+                withCredentials: true
+            });
+
+            console.log("Refreshed data from server:", response.data);
+
+            // Sprawdź czy odpowiedź zawiera projekty dla tego użytkownika
+            if (response.data.projects) {
+                // Znajdź projekt o tej samej nazwie w odpowiedzi z serwera
+                const serverProject = response.data.projects.find(p => p.projekt === project.projekt);
+                console.log("projekt na serwerze:", serverProject);
+
+                if (serverProject && serverProject.hours) {
+                    // Mapowanie nazw dni z API na daty w formacie ISO
+                    const dayMapping = {
+                        'Poniedziałek': daysOfWeek[0], // Monday
+                        'Wtorek': daysOfWeek[1],       // Tuesday
+                        'Środa': daysOfWeek[2],        // Wednesday
+                        'Czwartek': daysOfWeek[3],     // Thursday
+                        'Piątek': daysOfWeek[4],       // Friday
+                        'Sobota': daysOfWeek[5],       // Saturday
+                        'Niedziela': daysOfWeek[6]     // Sunday
+                    };
+
+                    // Zaktualizuj projekt z prawdziwymi ID z bazy danych
+                    setAdditionalProjects(prevProjects =>
+                        prevProjects.map(p => {
+                            if (p.id === projectId) {
+                                const updatedProject = { ...p };
+
+                                // Przejdź przez mapowanie i zaktualizuj ID
+                                Object.entries(dayMapping).forEach(([polishDay, dateObject]) => {
+                                    const dateKey = format(dateObject, 'yyyy-MM-dd');
+                                    const serverHour = serverProject.hours[polishDay];
+
+                                    if (updatedProject.hours[dateKey] && serverHour && serverHour.id) {
+                                        updatedProject.hours[dateKey] = {
+                                            ...updatedProject.hours[dateKey],
+                                            id: serverHour.id // Dodaj prawdziwe ID z bazy danych
+                                        };
+                                        console.log(`Updated ${dateKey} with ID: ${serverHour.id}`);
+                                    }
+                                });
+
+                                console.log("Updated project with IDs:", updatedProject);
+                                return updatedProject;
+                            }
+                            return p;
+                        })
+                    );
+
+                    // Zwróć zaktualizowany projekt dla handleDeleteProject
+                    return new Promise(resolve => {
+                        setTimeout(() => {
+                            const finalProject = additionalProjects.find(p => p.id === projectId);
+                            resolve(finalProject);
+                        }, 100); // Krótkie opóźnienie aby setAdditionalProjects się wykonał
+                    });
+                }
+            }
+
+        } catch (error) {
+            console.error("Error refreshing project data", error);
+            throw error; // Przekaż błąd dalej aby handleDeleteProject mógł go obsłużyć
+        }
+    };
+
 
     return (
         blockStatus === false ? (
