@@ -109,34 +109,94 @@ const VacationPlanner = () => {
         }
     }, []);
 
-    // generowanie i pobieranie pliku PDF
+    // generowanie i pobieranie pliku PDF z podziałem na strony
     const downloadPDF = () => {
-        setIsDownloading(true); // ustaw znacznik na start
-        const input = plannerRef.current;
-
+        setIsDownloading(true);
+        
         const firstWeek = tygodnie[0][0].data;
         const lastWeek = tygodnie[tygodnie.length - 1][6].data;
-
         const dateStr = `${firstWeek.toISOString().split('T')[0]}_to_${lastWeek.toISOString().split('T')[0]}`;
         const timestamp = new Date().toISOString().split('.')[0].replace(/[:-]/g, '');
 
-        html2canvas(input, {
-            scale: 5,
-            useCORS: true,
-            logging: false,
-            allowTaint: true
-        }).then((canvas) => {
-            const pdf = new jsPDF('l', 'mm', [600, 420], true);
-            const imgWidth = pdf.internal.pageSize.getWidth() - 20;
-            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        const employeesPerPage = 25; // zwiększona liczba pracowników na stronę
+        const totalPages = Math.ceil(vacationData.length / employeesPerPage);
+        
+        if (totalPages === 1) {
+            // Jeśli tylko jedna strona, użyj oryginalnej metody
+            const input = plannerRef.current;
+            html2canvas(input, {
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                allowTaint: true
+            }).then((canvas) => {
+                const pdf = new jsPDF('l', 'mm', 'a2', true); // zwiększony format na A2
+                const imgWidth = pdf.internal.pageSize.getWidth() - 20;
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-            pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 12, 12, imgWidth, imgHeight, undefined, 'FAST');
+                pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 10, 10, imgWidth, imgHeight, undefined, 'FAST');
+                const fileName = `VacationPlan_${getYearLocalStorage()}_Week${getWeekLocalStorage()}_${dateStr}_${timestamp}.pdf`;
+                pdf.save(fileName);
+                setIsDownloading(false);
+            }).catch(() => {
+                setIsDownloading(false);
+            });
+        } else {
+            // Wielostronicowy PDF
+            generateMultiPagePDF(employeesPerPage, totalPages, dateStr, timestamp);
+        }
+    };
+
+    const generateMultiPagePDF = async (employeesPerPage, totalPages, dateStr, timestamp) => {
+        try {
+            const pdf = new jsPDF('l', 'mm', 'a1', true); // zwiększony format na A1 dla wielostronicowych
+            
+            for (let page = 0; page < totalPages; page++) {
+                const startIndex = page * employeesPerPage;
+                const endIndex = Math.min(startIndex + employeesPerPage, vacationData.length);
+                const pageEmployees = vacationData.slice(startIndex, endIndex);
+                
+                // Tymczasowo ustaw dane tylko dla aktualnej strony
+                setVacationData(pageEmployees);
+                
+                // Czekaj na ponowne renderowanie
+                await new Promise(resolve => setTimeout(resolve, 200));
+                
+                const input = plannerRef.current;
+                const canvas = await html2canvas(input, {
+                    scale: 1.5, // zmniejszona skala dla większych formatów
+                    useCORS: true,
+                    logging: false,
+                    allowTaint: true
+                });
+                
+                if (page > 0) {
+                    pdf.addPage();
+                }
+                
+                const imgWidth = pdf.internal.pageSize.getWidth() - 30; // zwiększone marginesy
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                
+                pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 15, 15, imgWidth, imgHeight, undefined, 'FAST');
+            }
+            
+            // Przywróć oryginalne dane
+            const storedVacationData = localStorage.getItem('vacationData');
+            if (storedVacationData) {
+                setVacationData(JSON.parse(storedVacationData));
+            }
+            
             const fileName = `VacationPlan_${getYearLocalStorage()}_Week${getWeekLocalStorage()}_${dateStr}_${timestamp}.pdf`;
             pdf.save(fileName);
-            setIsDownloading(false); // wyłącz znacznik po zakończeniu
-        }).catch(() => {
-            setIsDownloading(false); // wyłącz znacznik w przypadku błędu
-        });
+            setIsDownloading(false);
+        } catch (error) {
+            // Przywróć oryginalne dane w przypadku błędu
+            const storedVacationData = localStorage.getItem('vacationData');
+            if (storedVacationData) {
+                setVacationData(JSON.parse(storedVacationData));
+            }
+            setIsDownloading(false);
+        }
     };
 
     const getFirstDayOfISOWeek = (week, year) => {
@@ -407,26 +467,6 @@ const VacationPlanner = () => {
                         ))}
                     </tbody>
                 </table>
-                
-                {/* Legend */}
-                <div className="mt-8 flex space-x-8 text-xl">
-                    <div className="flex items-center">
-                        <div className="w-5 h-5 mr-2" style={{backgroundColor: '#16a34a', borderRadius: '0.25rem'}}></div>
-                        <span className="font-bold">Zatwierdzone</span>
-                    </div>
-                    <div className="flex items-center">
-                        <div className="w-5 h-5 mr-2" style={{backgroundColor: '#facc15', borderRadius: '0.25rem'}}></div>
-                        <span className="font-bold">Do zatwierdzenia</span>
-                    </div>
-                    <div className="flex items-center">
-                        <div className="w-5 h-5 mr-2" style={{backgroundColor: '#dc2626', borderRadius: '0.25rem'}}></div>
-                        <span className="font-bold">Anulowane</span>
-                    </div>
-                    <div className="flex items-center">
-                        <div className="w-5 h-5 mr-2 bg-pink-300 opacity-60 rounded"></div>
-                        <span className="font-bold">Niedziela</span>
-                    </div>
-                </div>
             </div>
         </div>
     );

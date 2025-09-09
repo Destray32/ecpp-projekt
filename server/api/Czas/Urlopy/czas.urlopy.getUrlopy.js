@@ -16,11 +16,12 @@ function GetUrlopy(req, res, db) {
             u.Urlop_do, 
             u.Komentarz, 
             u.Status,
-            g.Zleceniodawca
+            COALESCE(g.Zleceniodawca, 'Brak grupy') as Zleceniodawca
         FROM Urlopy u
-        JOIN Pracownik p ON u.FK_idPracownik = p.idPracownik
-        JOIN Informacje_o_firmie i ON p.FK_Informacje_o_firmie = i.idInformacje_o_firmie
-        JOIN Grupa_urlopowa g ON i.FK_idGrupa_urlopowa = g.idGrupa_urlopowa
+        LEFT JOIN Pracownik p ON u.FK_idPracownik = p.idPracownik
+        LEFT JOIN Informacje_o_firmie i ON p.FK_Informacje_o_firmie = i.idInformacje_o_firmie
+        LEFT JOIN Grupa_urlopowa g ON i.FK_idGrupa_urlopowa = g.idGrupa_urlopowa
+        ORDER BY u.idUrlopy DESC
     `;
 
     db.query(sql, (err, result) => {
