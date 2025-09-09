@@ -161,7 +161,7 @@ const VacationPlanner = () => {
             await new Promise(resolve => setTimeout(resolve, 100));
 
             const canvas = await html2canvas(element, {
-                scale: 2, // Higher scale for better quality
+                scale: 2.5, // Increased scale for better text clarity
                 useCORS: true,
                 logging: false,
                 allowTaint: true,
@@ -173,15 +173,15 @@ const VacationPlanner = () => {
             const pdf = new jsPDF('l', 'mm', 'a4', true);
             const pageWidth = pdf.internal.pageSize.getWidth();
             const pageHeight = pdf.internal.pageSize.getHeight();
-            const margin = 10;
+            const margin = 8; // Slightly larger margin for better text display
             const imgWidth = pageWidth - (2 * margin);
             const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
             pdf.addImage(
                 canvas.toDataURL('image/png'),
                 'PNG',
-                isMultiPage ? 15 : 10,
-                isMultiPage ? 15 : 10,
+                margin,
+                margin,
                 imgWidth,
                 imgHeight,
                 undefined,
@@ -231,7 +231,7 @@ const VacationPlanner = () => {
 
                     // Copy the page from pagePdf to main pdf
                     const canvas = await html2canvas(plannerRef.current, {
-                        scale: 1,
+                        scale: 2.5,
                         useCORS: true,
                         logging: false,
                         allowTaint: true,
@@ -240,10 +240,12 @@ const VacationPlanner = () => {
                         windowHeight: Math.max(plannerRef.current.scrollHeight, 1000)
                     });
 
-                    const imgWidth = pdf.internal.pageSize.getWidth() - 30;
+                    const pageWidth = pdf.internal.pageSize.getWidth();
+                    const margin = 5; // Minimal margin
+                    const imgWidth = pageWidth - (2 * margin);
                     const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-                    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 15, 15, imgWidth, imgHeight, undefined, 'FAST');
+                    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', margin, margin, imgWidth, imgHeight, undefined, 'FAST');
                 }
             }
 
@@ -403,7 +405,7 @@ const VacationPlanner = () => {
                                         colspan++;
                                     } else {
                                         monthHeaders.push(
-                                            <th key={currentMonth + index} colSpan={colspan} className="border border-gray-400 bg-blue-300" style={{fontSize: '1.2em'}}>
+                                            <th key={currentMonth + index} colSpan={colspan} className="border border-gray-400 bg-blue-300" style={{fontSize: '1.2em', padding: '6px 0'}}>
                                                 {currentMonth}
                                             </th>
                                         );
