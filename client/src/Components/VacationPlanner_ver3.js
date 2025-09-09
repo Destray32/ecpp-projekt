@@ -118,7 +118,7 @@ const VacationPlanner = () => {
         const dateStr = `${firstWeek.toISOString().split('T')[0]}_to_${lastWeek.toISOString().split('T')[0]}`;
         const timestamp = new Date().toISOString().split('.')[0].replace(/[:-]/g, '');
 
-        const employeesPerPage = 25; // zwiększona liczba pracowników na stronę
+        const employeesPerPage = 20; // zoptymalizowana liczba pracowników na stronę
         const totalPages = Math.ceil(vacationData.length / employeesPerPage);
 
         if (totalPages === 1) {
@@ -478,7 +478,7 @@ const VacationPlanner = () => {
                                     <td
                                         key={`${employee.id}-week-${weekIndex}`}
                                         className="p-0 relative"
-                                        style={{ height: '40px' }} // Większa wysokość
+                                        style={{ height: '40px', minHeight: '40px' }} // Stała wysokość
                                     >
                                         <div className="grid grid-cols-7 h-full gap-0">
                                             {tydzien.map((dzien) => {
