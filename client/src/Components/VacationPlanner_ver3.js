@@ -112,7 +112,7 @@ const VacationPlanner = () => {
     // generowanie i pobieranie pliku PDF z podziałem na strony
     const downloadPDF = () => {
         setIsDownloading(true);
-        
+
         const firstWeek = tygodnie[0][0].data;
         const lastWeek = tygodnie[tygodnie.length - 1][6].data;
         const dateStr = `${firstWeek.toISOString().split('T')[0]}_to_${lastWeek.toISOString().split('T')[0]}`;
@@ -120,72 +120,136 @@ const VacationPlanner = () => {
 
         const employeesPerPage = 25; // zwiększona liczba pracowników na stronę
         const totalPages = Math.ceil(vacationData.length / employeesPerPage);
-        
+
         if (totalPages === 1) {
             // Jeśli tylko jedna strona, użyj oryginalnej metody
-            const input = plannerRef.current;
-            html2canvas(input, {
-                scale: 2,
-                useCORS: true,
-                logging: false,
-                allowTaint: true
-            }).then((canvas) => {
-                const pdf = new jsPDF('l', 'mm', 'a2', true); // zwiększony format na A2
-                const imgWidth = pdf.internal.pageSize.getWidth() - 20;
-                const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-                pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 10, 10, imgWidth, imgHeight, undefined, 'FAST');
-                const fileName = `VacationPlan_${getYearLocalStorage()}_Week${getWeekLocalStorage()}_${dateStr}_${timestamp}.pdf`;
-                pdf.save(fileName);
-                setIsDownloading(false);
-            }).catch(() => {
-                setIsDownloading(false);
-            });
+            captureElementAsPDF(plannerRef.current, false, dateStr, timestamp);
         } else {
             // Wielostronicowy PDF
             generateMultiPagePDF(employeesPerPage, totalPages, dateStr, timestamp);
         }
     };
 
+    const captureElementAsPDF = async (element, isMultiPage = false, dateStr, timestamp) => {
+        // Store original styles
+        const originalStyles = {
+            width: element.style.width,
+            minWidth: element.style.minWidth,
+            maxWidth: element.style.maxWidth,
+            transform: element.style.transform,
+            transformOrigin: element.style.transformOrigin,
+            position: element.style.position,
+            left: element.style.left,
+            top: element.style.top,
+            zIndex: element.style.zIndex
+        };
+
+        try {
+            // Apply fixed dimensions for consistent PDF output
+            const fixedWidth = 3000; // Large fixed width in pixels
+            element.style.width = `${fixedWidth}px`;
+            element.style.minWidth = `${fixedWidth}px`;
+            element.style.maxWidth = `${fixedWidth}px`;
+            element.style.transform = 'scale(1)';
+            element.style.transformOrigin = 'top left';
+            element.style.position = 'absolute';
+            element.style.left = '-9999px';
+            element.style.top = '0';
+            element.style.zIndex = '-1000';
+
+            // Wait for layout to settle
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            const canvas = await html2canvas(element, {
+                scale: 1, // Use scale 1 since we're already using large dimensions
+                useCORS: true,
+                logging: false,
+                allowTaint: true,
+                width: fixedWidth,
+                windowWidth: fixedWidth,
+                windowHeight: Math.max(element.scrollHeight, 1000)
+            });
+
+            const pdf = new jsPDF('l', 'mm', isMultiPage ? 'a1' : 'a2', true);
+            const imgWidth = pdf.internal.pageSize.getWidth() - (isMultiPage ? 30 : 20);
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+            pdf.addImage(
+                canvas.toDataURL('image/png'),
+                'PNG',
+                isMultiPage ? 15 : 10,
+                isMultiPage ? 15 : 10,
+                imgWidth,
+                imgHeight,
+                undefined,
+                'FAST'
+            );
+
+            if (!isMultiPage) {
+                const fileName = `VacationPlan_${getYearLocalStorage()}_Week${getWeekLocalStorage()}_${dateStr}_${timestamp}.pdf`;
+                pdf.save(fileName);
+                setIsDownloading(false);
+            }
+
+            return pdf;
+
+        } catch (error) {
+            console.error('Error capturing PDF:', error);
+            setIsDownloading(false);
+            throw error;
+        } finally {
+            // Restore original styles
+            Object.keys(originalStyles).forEach(key => {
+                element.style[key] = originalStyles[key];
+            });
+        }
+    };
+
     const generateMultiPagePDF = async (employeesPerPage, totalPages, dateStr, timestamp) => {
         try {
-            const pdf = new jsPDF('l', 'mm', 'a1', true); // zwiększony format na A1 dla wielostronicowych
-            
+            let pdf = null;
+
             for (let page = 0; page < totalPages; page++) {
                 const startIndex = page * employeesPerPage;
                 const endIndex = Math.min(startIndex + employeesPerPage, vacationData.length);
                 const pageEmployees = vacationData.slice(startIndex, endIndex);
-                
+
                 // Tymczasowo ustaw dane tylko dla aktualnej strony
                 setVacationData(pageEmployees);
-                
+
                 // Czekaj na ponowne renderowanie
-                await new Promise(resolve => setTimeout(resolve, 200));
-                
-                const input = plannerRef.current;
-                const canvas = await html2canvas(input, {
-                    scale: 1.5, // zmniejszona skala dla większych formatów
-                    useCORS: true,
-                    logging: false,
-                    allowTaint: true
-                });
-                
-                if (page > 0) {
+                await new Promise(resolve => setTimeout(resolve, 300));
+
+                if (page === 0) {
+                    pdf = await captureElementAsPDF(plannerRef.current, true, dateStr, timestamp);
+                } else {
+                    const pagePdf = await captureElementAsPDF(plannerRef.current, true, dateStr, timestamp);
                     pdf.addPage();
+
+                    // Copy the page from pagePdf to main pdf
+                    const canvas = await html2canvas(plannerRef.current, {
+                        scale: 1,
+                        useCORS: true,
+                        logging: false,
+                        allowTaint: true,
+                        width: 3000,
+                        windowWidth: 3000,
+                        windowHeight: Math.max(plannerRef.current.scrollHeight, 1000)
+                    });
+
+                    const imgWidth = pdf.internal.pageSize.getWidth() - 30;
+                    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+                    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 15, 15, imgWidth, imgHeight, undefined, 'FAST');
                 }
-                
-                const imgWidth = pdf.internal.pageSize.getWidth() - 30; // zwiększone marginesy
-                const imgHeight = (canvas.height * imgWidth) / canvas.width;
-                
-                pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 15, 15, imgWidth, imgHeight, undefined, 'FAST');
             }
-            
+
             // Przywróć oryginalne dane
             const storedVacationData = localStorage.getItem('vacationData');
             if (storedVacationData) {
                 setVacationData(JSON.parse(storedVacationData));
             }
-            
+
             const fileName = `VacationPlan_${getYearLocalStorage()}_Week${getWeekLocalStorage()}_${dateStr}_${timestamp}.pdf`;
             pdf.save(fileName);
             setIsDownloading(false);
@@ -196,6 +260,7 @@ const VacationPlanner = () => {
                 setVacationData(JSON.parse(storedVacationData));
             }
             setIsDownloading(false);
+            console.error('Error generating multi-page PDF:', error);
         }
     };
 
@@ -399,7 +464,7 @@ const VacationPlanner = () => {
                                 }
                                 style={{
                                     borderBottom: '4px solid #2563eb', // mocniejsze odcięcie wierszy
-                                    boxShadow: '0 2px 0 #2563eb', // cień pod każdym wierszem
+                                    boxShadow: '0 2px 0 #f2f4f7', // cień pod każdym wierszem
                                 }}
                             >
                                 <td className="border border-gray-400 text-left pl-2 text-lg font-semibold truncate">{employee.name}</td>
