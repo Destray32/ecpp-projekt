@@ -389,7 +389,7 @@ const VacationPlanner = () => {
             </div>
             {/* tabela z kalendarzem */}
             <div ref={plannerRef} className="overflow-x-auto">
-                <table className="w-full border-collapse text-center table-fixed text-lg"> {/* Zwiększona czcionka */}
+                                <table className="w-full border-collapse text-center table-fixed text-lg" style={{ borderSpacing: 0, borderCollapse: 'collapse' }}> {/* Zwiększona czcionka */}
                     <thead>
                         {/* Header with month names */}
                         <tr>
@@ -478,7 +478,12 @@ const VacationPlanner = () => {
                                     <td
                                         key={`${employee.id}-week-${weekIndex}`}
                                         className="p-0 relative"
-                                        style={{ height: '40px', minHeight: '40px' }} // Stała wysokość
+                                        style={{ 
+                                            height: '40px', 
+                                            minHeight: '40px',
+                                            boxSizing: 'border-box',
+                                            verticalAlign: 'middle'
+                                        }}
                                     >
                                         <div className="grid grid-cols-7 h-full gap-0">
                                             {tydzien.map((dzien) => {
