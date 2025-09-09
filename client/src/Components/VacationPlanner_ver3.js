@@ -146,7 +146,7 @@ const VacationPlanner = () => {
 
         try {
             // Apply fixed dimensions for consistent PDF output
-            const fixedWidth = 3000; // Large fixed width in pixels
+            const fixedWidth = 2100; // Optimized for A4 landscape
             element.style.width = `${fixedWidth}px`;
             element.style.minWidth = `${fixedWidth}px`;
             element.style.maxWidth = `${fixedWidth}px`;
@@ -161,7 +161,7 @@ const VacationPlanner = () => {
             await new Promise(resolve => setTimeout(resolve, 100));
 
             const canvas = await html2canvas(element, {
-                scale: 1, // Use scale 1 since we're already using large dimensions
+                scale: 2, // Higher scale for better quality
                 useCORS: true,
                 logging: false,
                 allowTaint: true,
@@ -170,8 +170,11 @@ const VacationPlanner = () => {
                 windowHeight: Math.max(element.scrollHeight, 1000)
             });
 
-            const pdf = new jsPDF('l', 'mm', isMultiPage ? 'a1' : 'a2', true);
-            const imgWidth = pdf.internal.pageSize.getWidth() - (isMultiPage ? 30 : 20);
+            const pdf = new jsPDF('l', 'mm', 'a4', true);
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            const margin = 10;
+            const imgWidth = pageWidth - (2 * margin);
             const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
             pdf.addImage(
@@ -232,8 +235,8 @@ const VacationPlanner = () => {
                         useCORS: true,
                         logging: false,
                         allowTaint: true,
-                        width: 3000,
-                        windowWidth: 3000,
+                        width: 2100,
+                        windowWidth: 2100,
                         windowHeight: Math.max(plannerRef.current.scrollHeight, 1000)
                     });
 
@@ -426,21 +429,22 @@ const VacationPlanner = () => {
                                     key={`days-${index}`} 
                                     className="border border-gray-400 p-0 bg-gray-100"
                                     style={{ 
-                                        width: '22px', // Zmniejszona szerokość kolumny
-                                        minWidth: '22px', 
-                                        maxWidth: '22px',
-                                        fontSize: '1em'
+                                        width: '14px', // Jeszcze bardziej zmniejszona szerokość kolumny
+                                        minWidth: '14px', 
+                                        maxWidth: '14px',
+                                        fontSize: '0.8em',
+                                        padding: '0'
                                     }}
                                 >
                                     {tydzien.map((dzien, dayIndex) => (
                                         <div key={`${dzien.data.toISOString()}`} className="leading-tight">
                                             {index === 0 ? (
-                                                <div className="text-[0.9rem] font-bold">
+                                                <div className="text-[0.7rem] font-bold">
                                                     <span className="font-bold">{dzien.nazwaDniaTygodnia}</span>
-                                                    <span className="ml-0.5">{dzien.dzienMiesiaca}</span>
+                                                    <span className="ml-0">{dzien.dzienMiesiaca}</span>
                                                 </div>
                                             ) : (
-                                                <div className="text-[0.9rem]">{`${dzien.dzienMiesiaca}`}</div>
+                                                <div className="text-[0.7rem]">{`${dzien.dzienMiesiaca}`}</div>
                                             )}
                                         </div>
                                     ))}
@@ -474,7 +478,7 @@ const VacationPlanner = () => {
                                         className="p-0 relative"
                                         style={{ height: '40px' }} // Większa wysokość
                                     >
-                                        <div className="grid grid-cols-7 h-full">
+                                        <div className="grid grid-cols-7 h-full gap-0">
                                             {tydzien.map((dzien) => {
                                                 const isSunday = dzien.dzienTygodnia === 0;
                                                 const vacation = aktywnosci[employee.name]?.find(
@@ -500,7 +504,7 @@ const VacationPlanner = () => {
                                                 return (
                                                     <div
                                                         key={dzien.data.toISOString()}
-                                                        className="h-full relative border border-gray-300"
+                                                        className="h-full relative border border-gray-600"
                                                     >
                                                         {/* oznaczenie urlopu */}
                                                         {isVacationDay && (
