@@ -480,22 +480,24 @@ const VacationPlanner = () => {
                     </thead>
                     {/* dane pracownikow i ich urlopy */}
                     <tbody>
-                        {vacationData.map((employee, index) => (
+                        {[...vacationData, { id: '', name: '', vacations: [] }].map((employee, index) => (
                             <tr
-                                key={employee.id}
+                                key={employee.id || 'spacer-row'}
                                 className={
                                     index % 2 === 0
                                         ? 'bg-gray-100'
                                         : 'bg-white'
                                 }
-                                style={{
-                                    height: '40px',
-                                    minHeight: '40px',
-                                    boxSizing: 'border-box',
-                                    borderBottom: '1px solid #2563eb',
-                                    margin: 0,
-                                    padding: 0
-                                }}
+                                style={employee.id === 'spacer' ? 
+                                    { visibility: 'hidden', height: '40px' } : 
+                                    {
+                                        height: '40px',
+                                        minHeight: '40px',
+                                        boxSizing: 'border-box',
+                                        borderBottom: '1px solid #2563eb',
+                                        margin: 0,
+                                        padding: 0
+                                    }}
                             >
                                 <td className="border border-gray-400 text-left pl-2 text-lg font-semibold truncate">{employee.name}</td>
                                 {tygodnie.map((tydzien, weekIndex) => (
