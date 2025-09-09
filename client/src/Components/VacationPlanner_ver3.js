@@ -118,7 +118,7 @@ const VacationPlanner = () => {
         const dateStr = `${firstWeek.toISOString().split('T')[0]}_to_${lastWeek.toISOString().split('T')[0]}`;
         const timestamp = new Date().toISOString().split('.')[0].replace(/[:-]/g, '');
 
-        const employeesPerPage = 20; // zoptymalizowana liczba pracowników na stronę
+        const employeesPerPage = 25; // zoptymalizowana liczba pracowników na stronę
         const totalPages = Math.ceil(vacationData.length / employeesPerPage);
 
         if (totalPages === 1) {
@@ -388,8 +388,28 @@ const VacationPlanner = () => {
                 )}
             </div>
             {/* tabela z kalendarzem */}
-            <div ref={plannerRef} className="overflow-x-auto">
-                                <table className="w-full border-collapse text-center table-fixed text-lg" style={{ borderSpacing: 0, borderCollapse: 'collapse' }}> {/* Zwiększona czcionka */}
+            <div ref={plannerRef} className="overflow-x-auto" style={{ margin: 0, padding: 0, boxSizing: 'border-box' }}>
+                                <style>
+                                    {`
+                                    table, tr, td, th {
+                                        margin: 0;
+                                        padding: 0;
+                                        box-sizing: border-box;
+                                        border-collapse: collapse;
+                                        line-height: normal;
+                                    }
+                                    tr {
+                                        height: 40px;
+                                        min-height: 40px;
+                                    }
+                                    `}
+                                </style>
+                                <table className="w-full border-collapse text-center table-fixed text-lg" style={{ 
+                                    borderSpacing: 0, 
+                                    borderCollapse: 'collapse',
+                                    width: '100%',
+                                    tableLayout: 'fixed'
+                                }}> {/* Zwiększona czcionka */}
                     <thead>
                         {/* Header with month names */}
                         <tr>
@@ -469,8 +489,12 @@ const VacationPlanner = () => {
                                         : 'bg-white'
                                 }
                                 style={{
-                                    borderBottom: '4px solid #2563eb', // mocniejsze odcięcie wierszy
-                                    boxShadow: '0 2px 0 #f2f4f7', // cień pod każdym wierszem
+                                    height: '40px',
+                                    minHeight: '40px',
+                                    boxSizing: 'border-box',
+                                    borderBottom: '1px solid #2563eb',
+                                    margin: 0,
+                                    padding: 0
                                 }}
                             >
                                 <td className="border border-gray-400 text-left pl-2 text-lg font-semibold truncate">{employee.name}</td>
