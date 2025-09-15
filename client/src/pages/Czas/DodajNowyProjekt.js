@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import AmberBox from "../../Components/AmberBox";
-import { Input, Select, Button, AutoComplete } from "antd";
+import { Input, Select, Button, AutoComplete, notification } from "antd";
 import Axios from "axios";
 
 const { Option } = Select;
@@ -59,12 +59,30 @@ export default function DodajNowyProjektPage() {
     }, []);
 
     const handleSave = () => {
-        //console.log('Form:', form);
-        Axios.post(`${baseUrl}/api/czas/projekty`, form, { withCredentials: true })
-            .then(res => {
+        // Normalize the project name by trimming whitespace
+        const normalizedInputName = form.nazwa.trim().toLowerCase();
+
+        // Check if the project already exists
+        const projectExists = availableProjects.some(
+            (project) => project.name.toLowerCase() === normalizedInputName
+        );
+
+        if (projectExists) {
+            // Show notification if the project exists
+            notification.error({
+                message: 'Błąd',
+                description: 'Projekt o podanej nazwie już istnieje.',
+                placement: 'topRight',
+            });
+            return;
+        }
+
+        // Proceed with saving if the project does not exist
+        Axios.post(`${baseUrl}/api/czas/projekty`, { ...form, nazwa: normalizedInputName }, { withCredentials: true })
+            .then(() => {
                 window.location.href = '/home/projekty';
             })
-            .catch(err => {
+            .catch((err) => {
                 console.error(err);
             });
     };
@@ -81,6 +99,44 @@ export default function DodajNowyProjektPage() {
             ...prevState,
             zleceniodawca: value
         }));
+
+        // Filter projects based on the selected zleceniodawca ID
+        if (value) {
+            Axios.get(`${baseUrl}/api/czas/projekty`, { withCredentials: true })
+                .then((response) => {
+                    const filteredProjects = response.data.projekty
+                        .filter(projekt => projekt.Grupa_urlopowa_idGrupa_urlopowa === value) // Match zleceniodawca ID
+                        .map(projekty => ({
+                            name: projekty.NazwaKod_Projektu,
+                            value: projekty.NazwaKod_Projektu // Use project name as value
+                        }));
+
+                    // Sort filtered projects alphabetically
+                    filteredProjects.sort((a, b) => a.name.localeCompare(b.name));
+
+                    setAvailableProjects(filteredProjects);
+                })
+                .catch((error) => {
+                    console.error(error);
+                });
+        } else {
+            // If no zleceniodawca is selected, show all projects
+            Axios.get(`${baseUrl}/api/czas/projekty`, { withCredentials: true })
+                .then((response) => {
+                    const allProjects = response.data.projekty.map(projekty => ({
+                        name: projekty.NazwaKod_Projektu,
+                        value: projekty.NazwaKod_Projektu // Use project name as value
+                    }));
+
+                    // Sort all projects alphabetically
+                    allProjects.sort((a, b) => a.name.localeCompare(b.name));
+
+                    setAvailableProjects(allProjects);
+                })
+                .catch((error) => {
+                    console.error(error);
+                });
+        }
     };
 
     return (

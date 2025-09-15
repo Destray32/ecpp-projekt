@@ -6,10 +6,13 @@ import { Link, useActionData } from "react-router-dom";
 import Axios from "axios";
 import { useEffect, useState } from "react";
 import checkUserType from '../../utils/accTypeUtils';
+import { Dialog } from 'primereact/dialog';
 
 export default function GrupyProjektowPage() {
     const [availableGroups, setAvailableGroups] = React.useState([]);
     const [accountType, setAccountType] = useState('');
+    const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
+    const [deleteGroupId, setDeleteGroupId] = useState(null);
 
     useEffect(() => {
         checkUserType(setAccountType);
@@ -29,22 +32,46 @@ export default function GrupyProjektowPage() {
             });
     };
 
-    const handleDelete = (id) => {
-        if (id === undefined || id === null) {
-            console.log('Invalid ID:', id);
-            console.error('Invalid ID:', id);
-            return;
-        }
-        console.log(id);
-        Axios.delete(`${baseUrl}/api/grupy/${id}`, { withCredentials: true })
+    const confirmDelete = (id) => {
+        setDeleteGroupId(id);
+        setDeleteDialogVisible(true);
+    };
+
+    const handleDelete = () => {
+        if (deleteGroupId === null) return;
+
+        Axios.delete(`${baseUrl}/api/grupy/${deleteGroupId}`, { withCredentials: true })
             .then((response) => {
-                //console.log(response.data);
-                fetchGroups(); 
+                fetchGroups();
+                setDeleteDialogVisible(false);
+                setDeleteGroupId(null);
             })
             .catch((error) => {
                 console.error(error);
+                setDeleteDialogVisible(false);
+                setDeleteGroupId(null);
             });
     };
+
+    // Dialog footer buttons with centered alignment
+    const deleteDialogFooter = (
+        <div className="flex justify-content-center gap-4">
+            <Button 
+                label="Nie" 
+                icon="pi pi-times" 
+                onClick={() => setDeleteDialogVisible(false)} 
+                className="p-button-danger" 
+                style={{ color: 'white', backgroundColor: '#dc3545', border: 'none', padding: '0.5rem 1.5rem' }}
+            />
+            <Button 
+                label="Tak" 
+                icon="pi pi-check" 
+                onClick={handleDelete} 
+                className="p-button-success" 
+                style={{ color: 'white', backgroundColor: '#28a745', border: 'none', padding: '0.5rem 1.5rem' }}
+            />
+        </div>
+    );
 
     return (
         <div>
@@ -102,10 +129,10 @@ export default function GrupyProjektowPage() {
                                 />
                             </Link>
                             <Button 
-                                onClick={() => handleDelete(group.id)}
-                                label="Usuń"
-                                className="bg-red-500 text-white p-1 m-0.5"
-                                disabled={accountType !== 'Administrator'}
+                                onClick={() => confirmDelete(group.id)} 
+                                label="Usuń" 
+                                className="bg-red-500 text-white p-1 m-0.5" 
+                                disabled={accountType !== 'Administrator'} 
                             />
                         </td>
                     </tr>
@@ -115,6 +142,19 @@ export default function GrupyProjektowPage() {
 
         </table>
     </div>
+    <Dialog 
+        visible={deleteDialogVisible} 
+        style={{ width: '400px', textAlign: 'center' }} 
+        header={<h3 style={{ margin: 0 }}>Potwierdzenie</h3>} 
+        modal 
+        footer={deleteDialogFooter} 
+        onHide={() => setDeleteDialogVisible(false)}
+    >
+        <div className="confirmation-content" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+            <i className="pi pi-exclamation-triangle" style={{ fontSize: '3rem', color: '#ffc107' }} />
+            <span style={{ fontSize: '1.2rem' }}>Czy na pewno chcesz usunąć grupę projektową "{availableGroups.find(group => group.id === deleteGroupId)?.Zleceniodawca}"?</span>
+        </div>
+    </Dialog>
     </div>
     )
 }

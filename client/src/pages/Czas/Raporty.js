@@ -132,15 +132,14 @@ export default function RaportyPage() {
             
             const raportData = raportResponse.data.raport;
             setRaport(raportData);
-    
+
             let filteredProjekty = projekty;
 
-            // Only filter by date range if dates are selected AND not ignored AND we're in company interface
-            if (interfaceFirma && !ignorujDatyFirma && startDate && endDate) {
-                const startDateObj = new Date(startDate);
-                const endDateObj = new Date(endDate);
-    
-                // Extract all project IDs that have entries within the date range
+            // Filter by date range dynamically
+            if (startDate || endDate) {
+                const startDateObj = startDate ? new Date(startDate) : null;
+                const endDateObj = endDate ? new Date(endDate) : null;
+
                 const projectsInDateRange = new Set(
                     raportData
                         .filter(entry => {
@@ -148,24 +147,23 @@ export default function RaportyPage() {
                             const datePart = entry.Data.split(' ')[0]; 
                             const [day, month, year] = datePart.split('.'); 
                             const entryDate = new Date(`${year}-${month}-${day}`);
-                            return entryDate >= startDateObj && entryDate <= endDateObj;
+                            return (!startDateObj || entryDate >= startDateObj) && (!endDateObj || entryDate <= endDateObj);
                         })
                         .map(entry => entry.ProjektID)
                 );
-    
-                // Filter the projects to only include those used in the date range
+
                 filteredProjekty = projekty.filter(projekt => 
                     projectsInDateRange.has(projekt.value)
                 );
-                
             }
 
-            // Extract unique zleceniodawcy from ALL projects if no date range is applied
-            // or from filtered projects if date range is applied
-            const sourceForZleceniodawcy = (interfaceFirma && !ignorujDatyFirma && startDate && endDate) ? filteredProjekty : projekty;
-            const zleceniodawcySet = new Set(sourceForZleceniodawcy.map(projekt => projekt.zleceniodawca || 'Bez zleceniodawcy'));
+            // Extract unique zleceniodawcy from filtered projects
+            const zleceniodawcySet = new Set(filteredProjekty.map(projekt => projekt.zleceniodawca || 'Bez zleceniodawcy'));
+
+            // Include already selected zleceniodawcy to prevent them from disappearing
+            selectedZleceniodawcy.forEach(zleceniodawca => zleceniodawcySet.add(zleceniodawca));
             
-            // Define special order for zleceniodawcy (same as in grupy.dostepnegrupy.js)
+            // Define special order for zleceniodawcy
             const specialOrder = {
                 "NCW Plåt": 1,
                 "NCC": 2,
@@ -185,15 +183,15 @@ export default function RaportyPage() {
             });
             
             setUniqueZleceniodawcy(zleceniodawcyList);
-            
-            // If we have selected zleceniodawcy, filter projects by them
+
+            // Filter by selected zleceniodawca
             if (selectedZleceniodawcy.length > 0) {
                 filteredProjekty = filteredProjekty.filter(projekt => 
                     selectedZleceniodawcy.includes(projekt.zleceniodawca || 'Bez zleceniodawcy')
                 );
             }
-    
-            // Group projects by zleceniodawca for display (restore grouped structure)
+            
+            // Group projects by zleceniodawca for display
             const groupedProjekty = filteredProjekty.reduce((groups, projekt) => {
                 const zleceniodawca = projekt.zleceniodawca || 'Bez zleceniodawcy';
                 if (!groups[zleceniodawca]) {
@@ -203,7 +201,7 @@ export default function RaportyPage() {
                 return groups;
             }, {});
             
-            // Convert to PrimeReact's optgroup format with special order
+            // Convert to PrimeReact's optgroup format
             const groupedOptions = zleceniodawcyList
                 .filter(zleceniodawca => groupedProjekty[zleceniodawca] && groupedProjekty[zleceniodawca].length > 0)
                 .map(zleceniodawca => ({
@@ -212,9 +210,6 @@ export default function RaportyPage() {
                 }));
             
             setProjektyOptions(groupedOptions);
-            
-            // Remove the duplicate project availability check from here
-            // It's now handled in the useEffect above
         })
         .catch((error) => {
             console.error(error);
@@ -481,6 +476,28 @@ export default function RaportyPage() {
     useEffect(() => {
         setSelectedZleceniodawcy([]);
     }, [startDate, endDate, ignorujDatyFirma]);
+
+    // Filter pracownicy for selected date range when 'Raporty dla pracownika' is open
+    useEffect(() => {
+        if (showRaportyPracownik && startDate && endDate && raport.length > 0) {
+            // Get IDs of employees who have entries in the selected date range
+            const [sd, ed] = [new Date(startDate), new Date(endDate)];
+            const pracownicyInRange = new Set(
+                raport.filter(e => {
+                    if (!e.Data) return false;
+                    const [datePart] = e.Data.split(' ');
+                    const [d, m, y] = datePart.split('.');
+                    const dt = new Date(`${y}-${m}-${d}`);
+                    return dt >= sd && dt <= ed;
+                }).map(e => e.PracownikID)
+            );
+            // Filter allPracownicyOptions to only those in the set
+            const filtered = allPracownicyOptions.filter(p => pracownicyInRange.has(p.value));
+            setAvailablePracownicy(filtered);
+        } else if (!showRaportyPracownik && allPracownicyOptions.length > 0) {
+            setAvailablePracownicy(allPracownicyOptions);
+        }
+    }, [showRaportyPracownik, startDate, endDate, raport, allPracownicyOptions]);
 
     return (
         <div>

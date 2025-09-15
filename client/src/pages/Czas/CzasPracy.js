@@ -351,7 +351,8 @@ export default function CzasPracyPage() {
                     label: projekt.NazwaKod_Projektu,
                     value: projekt.NazwaKod_Projektu,
                     Firma_idFirma: projekt.Firma_idFirma,
-                    Grupa_urlopowa_idGrupa_urlopowa: projekt.Grupa_urlopowa_idGrupa_urlopowa
+                    Grupa_urlopowa_idGrupa_urlopowa: projekt.Grupa_urlopowa_idGrupa_urlopowa,
+                    data_dodania: projekt.data_dodania,
                 })));
             })
             .catch((error) => {

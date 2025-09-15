@@ -8,6 +8,7 @@ import { format, getWeek } from 'date-fns';
 import { notification } from 'antd';
 
 import AdditionalProjectRow from './AdditionalProjectRow';
+import { id } from 'date-fns/locale';
 
 /**
  * Komponent AdditionalProjects.
@@ -154,19 +155,73 @@ const AdditionalProjects = ({
     }, [Firma, zleceniodawcy]);
 
 
-    useEffect(() => {
-        if (Zleceniodawca) {
-            const filteredProjekty = dostepneProjekty.filter(projekt =>
-                projekt.Grupa_urlopowa_idGrupa_urlopowa === Zleceniodawca
-            );
+useEffect(() => {
+    if (Zleceniodawca) {
+        Axios.get(`${baseUrl}/api/generujRaport`, { withCredentials: true })
+            .then(res => {
+                const raportData = res.data?.raport;
+                if (Array.isArray(raportData)) {
+                    const twoWeeksAgo = new Date();
+                    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 15);
 
-            setFilteredProjekty(filteredProjekty);
-            setProjekty(null);
-        } else {
-            setFilteredProjekty([]);
-            setProjekty(null);
-        }
-    }, [Firma, Zleceniodawca, dostepneProjekty]);
+                    const filteredData = raportData.filter(record => {
+                        const [day, month, year] = record.Data.split('.').map(Number);
+                        const recordDate = new Date(year, month - 1, day); 
+                        return record.Pracownik === loggedUserName && recordDate >= twoWeeksAgo;
+                    });
+
+                    const projektyZleceniodawcy = [
+                        ...new Map(
+                            filteredData.map(record => [
+                                record.Projekt,
+                                { Projekt: record.Projekt, idGrupa_urlopowa: record.idGrupa_urlopowa }
+                            ])
+                        ).values()
+                    ];
+
+                    const ostatnioUzywane = dostepneProjekty.filter(projekt =>
+                        projektyZleceniodawcy.some(
+                            p => 
+                                p.Projekt === projekt.value &&
+                                p.idGrupa_urlopowa === Zleceniodawca // Match only the selected Zleceniodawca
+                        )
+                    ).map(projekt => ({
+                        ...projekt,
+                        label: `Ostatnio używane: ${projekt.label}`,
+                        className: 'text-blue-500 font-bold'
+                    }));
+
+                    const pozostałeProjekty = dostepneProjekty
+                        .filter(projekt =>
+                            projekt.Grupa_urlopowa_idGrupa_urlopowa === Zleceniodawca && // Match only the selected Zleceniodawca
+                            !projektyZleceniodawcy.some(p => p.Projekt === projekt.value)
+                        )
+                        .sort((a, b) => {
+                            if (!a.data_dodania) return 1;  // traktujemy null jako najstarsze
+                            if (!b.data_dodania) return -1;
+
+                            const dateA = new Date(a.data_dodania.split(',')[0].split('.').reverse().join('-'));
+                            const dateB = new Date(b.data_dodania.split(',')[0].split('.').reverse().join('-'));
+
+                            return dateB - dateA; // malejąco: najnowsze na górze
+                        });
+
+                    setFilteredProjekty([...ostatnioUzywane, ...pozostałeProjekty]);
+                } else {
+                    console.error("Unexpected response format:", res.data);
+                }
+
+                setProjekty(null);
+            })
+            .catch(err => {
+                console.error("Błąd pobierania danych z /api/czas/projekty/dane:", err);
+            });
+    } else {
+        setFilteredProjekty([]);
+        setProjekty(null);
+    }
+}, [Firma, Zleceniodawca, dostepneProjekty]);
+
 
     const addWeek = async () => {
         const weekData = getWeek(currentDate, { weekStartsOn: 1 });

@@ -36,7 +36,8 @@ function generujRaport(req, res, db) {
                       dp.Kilometry AS Kilometry,
                       dp.Parking as Parking,
                       dp.Diety as Diety,
-                      dp.Inne_koszty as Inne_koszty
+                      dp.Inne_koszty as Inne_koszty,
+                      gr.idGrupa_urlopowa As idGrupa_urlopowa
                   FROM
                       Dzien_Projekty dp
                   JOIN

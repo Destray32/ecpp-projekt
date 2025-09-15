@@ -138,6 +138,13 @@ export default function HomePage() {
         setMobileMenuOpen(false);
     };
 
+    // Handler for top Urlopy tab
+    const handleTopUrlopyClick = () => {
+        setMenu('Czas');
+        setShowSubMenu(true);
+        navigate('/home/urlopy');
+    };
+
     return (
         <>
             <div className='flex flex-col min-h-screen overflow-x-auto'>
@@ -259,7 +266,7 @@ export default function HomePage() {
                         </div>
                     </nav>
                     <main className={`w-full min-w-[1250px]`}>
-                        <GorneMenu setMenu={setMenu} activeMenu={menu} />
+                        <GorneMenu setMenu={setMenu} activeMenu={menu} onUrlopyClick={handleTopUrlopyClick} />
                         <Outlet />
                     </main>
                 </div>

@@ -14,6 +14,7 @@ function GetProjekty(req, res, db) {
                 Grupa_urlopowa_idGrupa_urlopowa: row.Grupa_urlopowa_idGrupa_urlopowa,
                 Firma_idFirma: row.Firma_idFirma,
                 Zleceniodawca: row.Zleceniodawca,
+                data_dodania: new Date(row.data_dodania).toLocaleString('pl-PL', { timeZone: 'Europe/Warsaw' }),
             }));
             res.status(200).send({ projekty: formattedRows });
         }

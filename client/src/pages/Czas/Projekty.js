@@ -119,7 +119,24 @@ export default function ProjektyPage() {
             { withCredentials: true }
         )
             .then((response) => {
-                fetchProjects();
+                // Reload projects based on the current filter and search criteria
+                if (searchZleceniodawca) {
+                    Axios.get(`${baseUrl}/api/czas/szukajZleceniodawca?name=${searchZleceniodawca}`, { withCredentials: true })
+                        .then((response) => {
+                            if (response.data && Array.isArray(response.data.projekty)) {
+                                setData(response.data.projekty);
+                            } else {
+                                console.error('Unexpected response structure:', response.data);
+                                setData([]);
+                            }
+                        })
+                        .catch((error) => {
+                            console.error('Error searching projects:', error);
+                            setData([]);
+                        });
+                } else {
+                    fetchProjects();
+                }
             })
             .catch((error) => {
                 console.error(error);
@@ -132,7 +149,24 @@ export default function ProjektyPage() {
             { withCredentials: true }
         )
             .then((response) => {
-                fetchProjects();
+                // Reload projects based on the current filter and search criteria
+                if (searchZleceniodawca) {
+                    Axios.get(`${baseUrl}/api/czas/szukajZleceniodawca?name=${searchZleceniodawca}`, { withCredentials: true })
+                        .then((response) => {
+                            if (response.data && Array.isArray(response.data.projekty)) {
+                                setData(response.data.projekty);
+                            } else {
+                                console.error('Unexpected response structure:', response.data);
+                                setData([]);
+                            }
+                        })
+                        .catch((error) => {
+                            console.error('Error searching projects:', error);
+                            setData([]);
+                        });
+                } else {
+                    fetchProjects();
+                }
             })
             .catch((error) => {
                 console.error(error);
@@ -147,7 +181,6 @@ export default function ProjektyPage() {
                         a.Zleceniodawca.localeCompare(b.Zleceniodawca)
                     );
                     setData(sortedProjects);
-                    console.log(sortedProjects);
                 } else {
                     console.error('Unexpected response structure:', response.data);
                     setData([]);
@@ -210,6 +243,26 @@ useEffect(() => {
     loadData();
 }, []);
 
+useEffect(() => {
+    if (searchZleceniodawca) {
+        Axios.get(`${baseUrl}/api/czas/szukajZleceniodawca?name=${searchZleceniodawca}`, { withCredentials: true })
+            .then((response) => {
+                if (response.data && Array.isArray(response.data.projekty)) {
+                    setData(response.data.projekty);
+                } else {
+                    console.error('Unexpected response structure:', response.data);
+                    setData([]);
+                }
+            })
+            .catch((error) => {
+                console.error('Error searching projects:', error);
+                setData([]);
+            });
+    } else {
+        fetchProjects();
+    }
+}, [searchZleceniodawca]);
+
 
     return (
         <div>
@@ -235,7 +288,6 @@ useEffect(() => {
                                 resetFilterOnHide
                                 filterInputAutoFocus
                             />
-                            <Button onClick={handleSearchZleceniodawca} label="Szukaj" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2" />
                             <div className="flex flex-row items-center">
                                 <Button onClick={handlePrzeniesAktyw} label="Przenieś do aktywnych" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2" />
                                 <Button onClick={handlePrzeniesNieaktyw} label="Przenieś do nieaktywnych" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2" />

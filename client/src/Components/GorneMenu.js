@@ -12,7 +12,7 @@ import checkUserType from '../utils/accTypeUtils';
  * )
  */
 
-export default function GorneMenu({ setMenu, activeMenu }) {
+export default function GorneMenu({ setMenu, activeMenu, onUrlopyClick }) {
     const [accountType, setAccountType] = useState('');
 
     useEffect(() => {
@@ -32,14 +32,18 @@ export default function GorneMenu({ setMenu, activeMenu }) {
     };
 
     return (
-        <div className='bg-szary flex justify-center items-center'>
-            <Link to="/home/pracownik" className={`cursor-pointer w-full h-12 flex justify-center items-center hover:bg-hover-szary transition-colors duration-300 
+        <div className='bg-szary flex justify-center items-center border-b'>
+            <Link to="/home/pracownik" className={`cursor-pointer w-full h-12 flex justify-center items-center hover:bg-hover-szary transition-colors duration-300 border-r border-black 
                     ${activeMenu === 'Pracownik' ? 'bg-hover-szary text-black' : 'text-gray-700 hover:text-black'}`}  onClick={() => handleMenuClick('Pracownik')}>
                 Pracownik
             </Link>
-            <Link to="/home/czas" className={`cursor-pointer w-full h-12 flex justify-center items-center hover:bg-hover-szary transition-colors duration-300 
+            <Link to="/home/czas" className={`cursor-pointer w-full h-12 flex justify-center items-center hover:bg-hover-szary transition-colors duration-300 border-r border-black
                     ${activeMenu === 'Czas' ? 'bg-hover-szary text-black' : 'text-gray-700 hover:text-black'}`} onClick={() => handleMenuClick('Czas')}>
-                Czas
+                Czas Pracy
+            </Link>
+            <Link to="/home/urlopy" className={`cursor-pointer w-full h-12 flex justify-center items-center hover:bg-hover-szary transition-colors duration-300 border-r border-black
+                    ${activeMenu === 'Urlopy' ? 'bg-hover-szary text-black' : 'text-gray-700 hover:text-black'}`} onClick={onUrlopyClick ? onUrlopyClick : () => handleMenuClick('Urlopy')}>
+                Urlopy
             </Link>
             <Link 
                 to={accountType === 'Pracownik' ? '#' : '/home/plan'} 

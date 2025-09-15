@@ -641,6 +641,18 @@ export default function UrlopyPage() {
         }
     };
 
+    useEffect(() => {
+        if (accountType === 'Pracownik') {
+            // Automatically select all groups for employees
+            const allGroupNames = dostepneGrupy.map(grupa => grupa.Zleceniodawca);
+            setSelectedGrupyNazwa(allGroupNames);
+            setAllGroupsSelected(true);
+
+            // Pre-fill "Dodaj urlop dla" with the logged-in employee
+            setUrlopDla(`${nazwisko} ${imie}`);
+        }
+    }, [accountType, dostepneGrupy, imie, nazwisko]);
+
     return (
         <div>
             <AmberBox>
@@ -666,6 +678,7 @@ export default function UrlopyPage() {
                                     filterInputAutoFocus
                                     showFilterClear
                                     showClear
+                                    disabled={accountType !== 'Administrator'}
                                 />
                             </div>
                             <div className="flex flex-col w-4/12 p-4">
@@ -797,7 +810,7 @@ export default function UrlopyPage() {
                 className="text-black text-sm py-1 px-2 h-12"
             />
             {/* Drukowanie dostępne dla wszystkich */}
-            <Button label="Drukuj" onClick={handlePdfDownloadClick} />
+            <Button label="Drukuj" onClick={handlePdfDownloadClick} disabled={accountType === 'Administrator' && selectedGrupyNazwa.length === 0} />
         </div>
     </div>
 </AmberBox>
