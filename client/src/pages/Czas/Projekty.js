@@ -6,6 +6,7 @@ import { Button } from 'primereact/button';
 import { Link } from "react-router-dom";
 import { Checkbox } from 'primereact/checkbox';
 import Axios from "axios";
+import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 
 import checkUserType from "../../utils/accTypeUtils";
 
@@ -69,13 +70,27 @@ export default function ProjektyPage() {
     };
 
     const handleDelete = (id) => {
-        Axios.delete(`${baseUrl}/api/czas/usun?id=${id}`, { withCredentials: true })
-            .then((response) => {
-                fetchProjects();
-            })
-            .catch((error) => {
-                console.error(error);
-            });
+        confirmDialog({
+            message: 'Czy na pewno chcesz usunąć ten projekt?',
+            header: 'Potwierdzenie usunięcia',
+            icon: 'pi pi-exclamation-triangle',
+            acceptLabel: 'Tak',
+            rejectLabel: 'Nie',
+            acceptClassName: 'p-button-danger p-mr-3', // Added margin-right for spacing
+            rejectClassName: 'p-button-secondary p-mr-3',
+            accept: () => {
+                Axios.delete(`${baseUrl}/api/czas/usun?id=${id}`, { withCredentials: true })
+                    .then((response) => {
+                        fetchProjects();
+                    })
+                    .catch((error) => {
+                        console.error(error);
+                    });
+            },
+            reject: () => {
+                console.log('Usunięcie anulowane');
+            }
+        });
     };
 
     const handleSzukaj = () => {
@@ -369,6 +384,7 @@ useEffect(() => {
                     </tbody>
                 </table>
             </div>
+            <ConfirmDialog />
         </div>
     )
 }

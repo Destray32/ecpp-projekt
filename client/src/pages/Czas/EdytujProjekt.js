@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import AmberBox from "../../Components/AmberBox";
-import { Input, Select, Button, AutoComplete } from "antd";
+import { Input, Select, Button, AutoComplete, message } from "antd";
 import Axios from "axios";
 
 const { Option } = Select;
@@ -41,7 +41,8 @@ export default function EdytujProjektPage() {
             .then((response) => {
                 const transformedDataProjects = response.data.projekty.map(projekty => ({
                     name: projekty.NazwaKod_Projektu,
-                    value: projekty.idProjekty
+                    value: projekty.Grupa_urlopowa_idGrupa_urlopowa, // Ensure group ID is included
+                    idProjekty: projekty.idProjekty // Ensure project ID is included
                 }));
                 setAvailableProjects(transformedDataProjects);
             })
@@ -80,13 +81,42 @@ export default function EdytujProjektPage() {
     }, [id]);
 
     const handleSave = () => {
+        // Check for duplicate project in the selected group
+        const duplicateInGroup = availableProjects.some(
+            (project) =>
+                project.name === form.nazwa &&
+                project.value === form.zleceniodawca &&
+                project.idProjekty !== parseInt(id) // Ensure the current project is excluded
+        );
+
+        if (duplicateInGroup) {
+            message.error("Projekt o tej nazwie już istnieje w wybranej grupie.");
+            return;
+        }
+
+        const duplicateNameInSameGroup = availableProjects.some(
+            (project) =>
+                project.name === form.nazwa &&
+                project.value === form.zleceniodawca &&
+                project.idProjekty !== parseInt(id)
+        );
+
+        if (duplicateNameInSameGroup) {
+            message.error("Nie można zmienić nazwy projektu na już istniejącą w tej samej grupie.");
+            return;
+        }
+
         Axios.put(`${baseUrl}/api/czas/edytujProjekt/${id}`, form, { 
             withCredentials: true 
         })
         .then(res => {
-            window.location.href = "/home/projekty";
+            message.success("Projekt został zaktualizowany pomyślnie.");
+            setTimeout(() => {
+                window.location.href = "/home/projekty";
+            }, 1500);
         })
         .catch(err => {
+            message.error("Wystąpił błąd podczas aktualizacji projektu.");
             console.error("Error updating project:", err.response ? err.response.data : err.message);
         });
     };
@@ -97,6 +127,17 @@ export default function EdytujProjektPage() {
             [field]: value
         }));
     };
+
+    const filteredProjects = availableProjects.filter(
+        (project) =>
+            form.zleceniodawca && project.value === form.zleceniodawca 
+    );
+
+    const projectOptions = filteredProjects.map((project) => ({
+        key: project.idProjekty, 
+        value: project.name, 
+        label: project.name 
+    }));
 
     return (
         <div>
@@ -144,10 +185,7 @@ export default function EdytujProjektPage() {
                             onChange={(value) => handleChange(value, 'nazwa')}
                             className="w-full"
                             value={form.nazwa}
-                            options={availableProjects.map(project => ({
-                                value: project.value,
-                                label: project.name
-                            }))}
+                            options={projectOptions} // Use the updated options
                             placeholder="Wybierz projekt"
                             filterOption={(inputValue, option) =>
                                 option.label.toLowerCase().includes(inputValue.toLowerCase())
