@@ -8,7 +8,7 @@ import { Checkbox } from 'primereact/checkbox';
 import Axios from "axios";
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 
-import checkUserType from "../../utils/accTypeUtils";
+import checkUserType, { hasSpecialAccess } from "../../utils/accTypeUtils";
 
 export default function ProjektyPage() {
     const [filtr, setFiltr] = useState('Wszystkie');
@@ -18,7 +18,23 @@ export default function ProjektyPage() {
     const [selectAll, setSelectAll] = useState(false);
     const [searchZleceniodawca, setSearchZleceniodawca] = useState('');
     const [zleceniodawcyOptions, setZleceniodawcyOptions] = useState([]);
+    const [imie, setImie] = useState('');
+    const [nazwisko, setNazwisko] = useState('');
     const baseUrl = process.env.REACT_APP_BASE_URL;
+
+    useEffect(() => {
+        const getImie = async () => {
+            try {
+                const response = await Axios.get(`${baseUrl}/api/imie`, { withCredentials: true });
+                const { name, surename } = response.data;
+                setImie(name);
+                setNazwisko(surename);
+            } catch (error) {
+                console.error(error);
+            }
+        };
+        getImie();
+    }, []);
     useEffect(() => {
         checkUserType(setAccountType);
     }, []);
@@ -304,22 +320,37 @@ useEffect(() => {
                                 filterInputAutoFocus
                             />
                             <div className="flex flex-row items-center">
-                                <Button onClick={handlePrzeniesAktyw} label="Przenieś do aktywnych" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2" />
-                                <Button onClick={handlePrzeniesNieaktyw} label="Przenieś do nieaktywnych" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2" />
+                                <Button 
+                                    onClick={handlePrzeniesAktyw} 
+                                    label="Przenieś do aktywnych" 
+                                    className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2"
+                                    disabled={accountType !== 'Administrator' && !hasSpecialAccess(imie, nazwisko, 'projekty')}
+                                />
+                                <Button 
+                                    onClick={handlePrzeniesNieaktyw} 
+                                    label="Przenieś do nieaktywnych" 
+                                    className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2"
+                                    disabled={accountType !== 'Administrator' && !hasSpecialAccess(imie, nazwisko, 'projekty')}
+                                />
                             </div>
                             <Link to="/home/grupy-projektow">
-                                <Button label="Grupy projektów" className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2" />
+                                <Button 
+                                    label="Grupy projektów" 
+                                    className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2"
+                                    disabled={accountType !== 'Administrator' && !hasSpecialAccess(imie, nazwisko, 'projekty')}
+                                />
                             </Link>
                             <Link to="/home/nowy-projekt"
                                 onClick={(e) => {
-                                    if (accountType !== 'Administrator' && accountType !== 'Biuro' && accountType !== 'Kierownik') {
+                                    if (accountType !== 'Administrator' && !hasSpecialAccess(imie, nazwisko, 'projekty')) {
                                         e.preventDefault();
                                     }
                                 }}
                             >
-                                <Button label="Dodaj nowy projekt"
+                                <Button 
+                                    label="Dodaj nowy projekt"
                                     className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2"
-                                    disabled={accountType === 'Pracownik'}
+                                    disabled={accountType !== 'Administrator' && !hasSpecialAccess(imie, nazwisko, 'projekty')}
                                 />
                             </Link>
                         </div>

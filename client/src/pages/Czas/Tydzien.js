@@ -6,6 +6,7 @@ import Axios from 'axios';
 
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import checkUserType, { hasSpecialAccess } from "../../utils/accTypeUtils";
 
 export default function TydzienPage() {
     const [selectedWeek, setSelectedWeek] = useState('');
@@ -16,7 +17,25 @@ export default function TydzienPage() {
     const [refresh, setRefresh] = useState(false);
     const [selectAll, setSelectAll] = useState(false);
     const [isLoaded, setIsLoaded] = useState(false);
+    const [accountType, setAccountType] = useState('');
+    const [imie, setImie] = useState('');
+    const [nazwisko, setNazwisko] = useState('');
     const baseUrl = process.env.REACT_APP_BASE_URL;
+
+    useEffect(() => {
+        checkUserType(setAccountType);
+        const getImie = async () => {
+            try {
+                const response = await Axios.get(`${baseUrl}/api/imie`, { withCredentials: true });
+                const { name, surename } = response.data;
+                setImie(name);
+                setNazwisko(surename);
+            } catch (error) {
+                console.error(error);
+            }
+        };
+        getImie();
+    }, []);
 
     // Function to get the current week in the format "YYYY-Www"
     const getCurrentWeek = () => {
@@ -175,7 +194,6 @@ export default function TydzienPage() {
     };
 
     const handleDrukuj = () => {
-        console.log('Drukuj');
         generatePDF();
     };
 
@@ -256,12 +274,23 @@ export default function TydzienPage() {
                                 {weekRange.start && weekRange.end ? ` ${weekRange.start} - ${weekRange.end}` : 'Wybierz tydzień, aby zobaczyć przedział dni'}
                             </p>
                         </div>
-                        <Button label="Otwórz tydzień" onClick={handleOtworz}
-                            className="p-button-outlined border-2 p-1 bg-white" />
-                        <Button label="Zamknij tydzień" onClick={handleZamknij}
-                            className="p-button-outlined border-2 p-1 bg-white" />
-                        <Button label="Drukuj" onClick={handleDrukuj}
-                            className="p-button-outlined border-2 p-1 bg-white" />
+                        <Button 
+                            label="Otwórz tydzień" 
+                            onClick={handleOtworz}
+                            disabled={accountType !== 'Administrator' && !hasSpecialAccess(imie, nazwisko, 'tydzien')}
+                            className="p-button-outlined border-2 p-1 bg-white" 
+                        />
+                        <Button 
+                            label="Zamknij tydzień" 
+                            onClick={handleZamknij}
+                            disabled={accountType !== 'Administrator' && !hasSpecialAccess(imie, nazwisko, 'tydzien')}
+                            className="p-button-outlined border-2 p-1 bg-white" 
+                        />
+                        <Button 
+                            label="Drukuj" 
+                            onClick={handleDrukuj}
+                            className="p-button-outlined border-2 p-1 bg-white" 
+                        />
                     </div>
                 </div>
             </AmberBox>

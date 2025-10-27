@@ -4,6 +4,11 @@ function convertDateFormat(dateStr) {
 }
 
 function EdytujUrlop(req, res, db) {
+    // Sprawdź czy użytkownik ma odpowiednie uprawnienia
+    if (!req.user.role === 'Administrator' && !hasSpecialAccess(req.user, 'urlopy')) {
+        return res.status(403).json({ error: 'Brak uprawnień do edycji urlopów' });
+    }
+
     const { urlopOd, urlopDo, status, komentarz } = req.body;
     const { vacationId } = req.params;
 

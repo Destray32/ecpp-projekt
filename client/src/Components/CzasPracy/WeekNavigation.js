@@ -3,6 +3,7 @@ import { Button } from 'primereact/button';
 import { Dropdown } from "primereact/dropdown";
 import { getWeek, subWeeks, addWeeks } from 'date-fns';
 import { formatWeek } from '../../utils/dateUtils';
+import { hasSpecialAccess } from '../../utils/accTypeUtils';
 
 /**
  * Komponent nawigacji tygodniowej.
@@ -20,6 +21,8 @@ import { formatWeek } from '../../utils/dateUtils';
  * @param {Date|null} props.lastSaved - Czas ostatniego lokalnego zapisu.
  * @param {string} props.saveStatus - Status zapisu (idle, saving, saved, error)
  * @param {boolean} props.hasUnsavedChanges - Czy są niezapisane zmiany
+ * @param {string} props.imie - Imię zalogowanego użytkownika
+ * @param {string} props.nazwisko - Nazwisko zalogowanego użytkownika
  * 
  * @returns {JSX.Element} Element JSX reprezentujący nawigację tygodniową.
  */
@@ -34,7 +37,9 @@ const WeekNavigation = ({
     isOnline,
     lastSaved,
     saveStatus,
-    hasUnsavedChanges
+    hasUnsavedChanges,
+    imie,
+    nazwisko
 }) => {
     const previousWeek = () => setCurrentDate(subWeeks(currentDate, 1));
     const nextWeek = () => setCurrentDate(addWeeks(currentDate, 1));
@@ -85,7 +90,7 @@ const WeekNavigation = ({
                                 placeholder="Pracownik"
                                 autoComplete="off"
                                 className="w-3/4 float-right"
-                                disabled={userType === "Pracownik" || userType === "Kierownik"}
+                                disabled={(userType === "Pracownik" || userType === "Kierownik") && !hasSpecialAccess(imie, nazwisko, 'tydzien')}
                                 filter
                                 resetFilterOnHide
                                 filterInputAutoFocus

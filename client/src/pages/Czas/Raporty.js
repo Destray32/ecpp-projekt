@@ -10,7 +10,7 @@ import PDF_AnalizaSwiadczenPracowniczych from "../../Components/Raporty/PDF_Anal
 import PDF_SprawozdanieSzczegolowe from "../../Components/Raporty/PDF_SprawozdanieSzczegolowe";
 import PDF_SprawozdaniePodsumowanie from "../../Components/Raporty/PDF_SprawozdaniePodsumowanie";
 import { notification } from "antd";
-import checkUserType from "../../utils/accTypeUtils";
+import checkUserType, { hasSpecialAccess } from "../../utils/accTypeUtils";
 
 export default function RaportyPage() {
     const [startDate, setStartDate] = useState('');
@@ -34,6 +34,7 @@ export default function RaportyPage() {
     const [selectedZleceniodawcy, setSelectedZleceniodawcy] = useState([]);
     const [uniqueZleceniodawcy, setUniqueZleceniodawcy] = useState([]);
     const baseUrl = process.env.REACT_APP_BASE_URL;
+    
     useEffect(() => {
         checkUserType(setAccountType);
         getImie();

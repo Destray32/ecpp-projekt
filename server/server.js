@@ -92,9 +92,36 @@ const authenticateJWT = (req, res, next) => {
 // app.get('/api/protected', authorizeRole('Administrator') <----- tutaj typ konta z bazy danych z tabeli "pracownik", (req, res) => {
 //     res.json({ message: 'Protected endpoint' });
 // });
+const specialUsers = ['Jarosław Pajor', 'Paweł Wójtowicz', 'Małgorzata Tylicki'];
+
+const hasSpecialAccess = (user, feature) => {
+    const userFullName = `${user.name} ${user.surname}`;
+    switch(feature) {
+        case 'urlopy':
+            return ['Jarosław Pajor', 'Paweł Wójtowicz'].includes(userFullName);
+        case 'projekty':
+            return ['Jarosław Pajor', 'Paweł Wójtowicz'].includes(userFullName);
+        case 'raporty':
+            return ['Jarosław Pajor', 'Małgorzata Tylicki'].includes(userFullName);
+        case 'tydzien':
+            return ['Jarosław Pajor', 'Paweł Wójtowicz', 'Małgorzata Tylicki'].includes(userFullName);
+        default:
+            return false;
+    }
+};
+
 const authorizeRole = (...roles) => {
     return (req, res, next) => {
-        if (req.user && roles.includes(req.user.role)) {
+        if (req.user && (
+            roles.includes(req.user.role) || 
+            roles.some(role => {
+                if (role === 'urlopy') return hasSpecialAccess(req.user, 'urlopy');
+                if (role === 'projekty') return hasSpecialAccess(req.user, 'projekty');
+                if (role === 'raporty') return hasSpecialAccess(req.user, 'raporty');
+                if (role === 'tydzien') return hasSpecialAccess(req.user, 'tydzien');
+                return false;
+            })
+        )) {
             next();
         } else {
             res.status(403).json({ error: 'Forbidden' });

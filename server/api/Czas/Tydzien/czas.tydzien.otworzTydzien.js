@@ -1,6 +1,10 @@
 function OtworzTydzienCzas(req, res, db) {
+    // Sprawdź czy użytkownik ma odpowiednie uprawnienia
+    if (!req.user.role === 'Administrator' && !hasSpecialAccess(req.user, 'tydzien')) {
+        return res.status(403).json({ error: 'Brak uprawnień do otwierania tygodnia' });
+    }
+
     const { tydzienRoku, pracownikId } = req.body; 
-    console.log(tydzienRoku, pracownikId);
 
     const sql = "UPDATE tydzien SET Status_tygodnia = 'Otwarty' WHERE tydzienRoku = ? AND Pracownik_idPracownik IN (?)";
     

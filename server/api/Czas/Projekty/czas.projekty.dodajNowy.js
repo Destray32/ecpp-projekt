@@ -1,4 +1,9 @@
 function DodajNowyProjekt(req, res, db) {
+    // Sprawdź czy użytkownik ma odpowiednie uprawnienia
+    if (!req.user.role === 'Administrator' && !hasSpecialAccess(req.user, 'projekty')) {
+        return res.status(403).json({ error: 'Brak uprawnień do dodawania projektów' });
+    }
+
     const {firma, zleceniodawca, nazwa, ulica, miejscowosc, kodPocztowy, kraj} = req.body;
     const dodanePrzez = req.user.id; // Assuming user ID is available in req.user
 

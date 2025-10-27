@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button } from 'primereact/button';
 import { Modal } from 'antd';
+import { hasSpecialAccess } from '../../utils/accTypeUtils';
 
 /**
  * PrzyciskAkcji
@@ -14,6 +15,8 @@ import { Modal } from 'antd';
  * @param {boolean} props.blockStatus - Status blokady użytkownika - jeśli przekracza 60h w tygodniu czesto
  * @param {boolean} props.isOnline - Status połączenia z internetem
  * @param {string} props.saveStatus - Status zapisu (idle, saving, saved, error)
+ * @param {string} props.imie - Imię użytkownika
+ * @param {string} props.nazwisko - Nazwisko użytkownika
  */
 const PrzyciskAkcji = ({ 
     handleSave, 
@@ -24,7 +27,9 @@ const PrzyciskAkcji = ({
     userType, 
     blockStatus,
     isOnline,
-    saveStatus
+    saveStatus,
+    imie,
+    nazwisko
 }) => {
     const handleOpenModal = () => {
         Modal.confirm({
@@ -69,7 +74,7 @@ const PrzyciskAkcji = ({
                                 label="Otwórz tydzień" 
                                 className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 flex-grow" 
                                 onClick={handleOpenWeek}
-                                disabled={(userType !== 'Biuro' && userType !== 'Administrator') || !isOnline}
+                                disabled={(userType !== 'Biuro' && userType !== 'Administrator' && !hasSpecialAccess(imie, nazwisko, 'tydzien')) || !isOnline}
                             />
                             <Button 
                                 label="Drukuj raport" 

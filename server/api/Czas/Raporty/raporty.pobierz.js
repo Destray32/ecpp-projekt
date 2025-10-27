@@ -1,4 +1,9 @@
 function PobierzRaporty(req, res) {
+    // Sprawdź czy użytkownik ma odpowiednie uprawnienia
+    if (!req.user.role === 'Administrator' && !hasSpecialAccess(req.user, 'raporty')) {
+        return res.status(403).json({ error: 'Brak uprawnień do przeglądania raportów' });
+    }
+
     const projekty = [
         {
             id: 1,

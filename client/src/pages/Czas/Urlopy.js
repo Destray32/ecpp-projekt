@@ -8,7 +8,7 @@ import { Checkbox } from 'primereact/checkbox';
 import Axios from "axios";
 import ZatwierdzWindow from '../../Components/Urlopy/ZatwierdzWindow';
 import { notification } from 'antd';
-import checkUserType from '../../utils/accTypeUtils';
+import checkUserType, { hasSpecialAccess } from '../../utils/accTypeUtils';
 
 export default function UrlopyPage() {
     const [urlopOd, setUrlopOd] = useState('');
@@ -22,7 +22,6 @@ export default function UrlopyPage() {
     const [selectedGrupy, setSelectedGrupy] = useState({});
     const [selectedGrupyNazwa, setSelectedGrupyNazwa] = useState([]);
     const [allGroupsSelected, setAllGroupsSelected] = useState(false);
-    
     const [selectedWeekAndYear, setSelectedWeekAndYear] = useState([]); // state do tygodnia i roku dla pdf
     const [editingVacationId, setEditingVacationId] = useState(null);
     const [editVacationData, setEditVacationData] = useState({ urlopOd: '', urlopDo: '', status: '' });
@@ -151,7 +150,12 @@ export default function UrlopyPage() {
                                                         />
                                                     </td>
                                                     <td className="border-r px-2 py-1">
-                                                        <Dropdown value={editVacationData.status} options={["Do zatwierdzenia", "Zatwierdzone", "Anulowane"]} onChange={(e) => setEditVacationData({ ...editVacationData, status: e.value })} />
+                                                        <Dropdown 
+                                                            value={editVacationData.status} 
+                                                            options={["Do zatwierdzenia", "Zatwierdzone", "Anulowane"]} 
+                                                            onChange={(e) => setEditVacationData({ ...editVacationData, status: e.value })} 
+                                                            disabled={accountType !== 'Administrator'}
+                                                        />
                                                     </td>
                                                     <td className="px-2 py-1">
                                                         <Button label="Zapisz" onClick={() => handleSave(urlopy.id)} className="bg-blue-700 text-white p-1 m-0.5 text-xs" />
@@ -165,10 +169,30 @@ export default function UrlopyPage() {
                                                     <td className="border-r px-2 py-1">{urlopy.komentarz}</td>
                                                     <td className={`border-r px-2 py-1 ${getStatusClass(urlopy.status)}`}>{urlopy.status}</td>
                                                     <td className="px-2 py-1">
-                                                        <Button label="Edytuj" onClick={() => handleEdit(urlopy)} disabled={accountType !== 'Administrator'} className="bg-blue-700 text-white p-1 m-0.5 text-sm" />
-                                                        <Button label="Usuń" onClick={() => handleUsun(urlopy.id)} disabled={accountType !== 'Administrator'} className="bg-red-500 text-white p-1 m-0.5 text-sm" />
-                                                        <Button label="Zatwierdź" onClick={() => handleZatwierdz(urlopy.id, false)} disabled={accountType !== 'Administrator'} className="bg-green-500 text-white p-1 m-0.5 text-sm" />
-                                                        <Button label="Anuluj" onClick={() => handleAnuluj(urlopy.id, false)} disabled={accountType !== 'Administrator'} className="bg-red-500 text-white p-1 m-0.5 text-sm" />
+                                                        <Button 
+                                                            label="Edytuj" 
+                                                            onClick={() => handleEdit(urlopy)} 
+                                                            disabled={accountType !== 'Administrator' && !hasSpecialAccess(imie, nazwisko, 'urlopy')} 
+                                                            className="bg-blue-700 text-white p-1 m-0.5 text-sm" 
+                                                        />
+                                                        <Button 
+                                                            label="Usuń" 
+                                                            onClick={() => handleUsun(urlopy.id)} 
+                                                            disabled={accountType !== 'Administrator'} 
+                                                            className="bg-red-500 text-white p-1 m-0.5 text-sm" 
+                                                        />
+                                                        <Button 
+                                                            label="Zatwierdź" 
+                                                            onClick={() => handleZatwierdz(urlopy.id, false)} 
+                                                            disabled={accountType !== 'Administrator'} 
+                                                            className="bg-green-500 text-white p-1 m-0.5 text-sm" 
+                                                        />
+                                                        <Button 
+                                                            label="Anuluj" 
+                                                            onClick={() => handleAnuluj(urlopy.id, false)} 
+                                                            disabled={accountType !== 'Administrator'} 
+                                                            className="bg-red-500 text-white p-1 m-0.5 text-sm" 
+                                                        />
                                                     </td>
                                                 </>
                                             )}
@@ -326,7 +350,6 @@ export default function UrlopyPage() {
             .then((response) => {
                 setPracownicy(response.data); // skróciłem do response.data, 
                 // bo mi nie wypełniało dropdowna
-                //console.log(response.data);
             })
             .catch((error) => {
                 console.error("There was an error fetching the data:", error);
@@ -364,8 +387,8 @@ export default function UrlopyPage() {
         try {
             const response = await Axios.get(`${baseUrl}/api/imie`, { withCredentials: true });
             const { name, surename } = response.data;
-            setImie(`${name}`);
-            setNazwisko(`${surename}`);
+            setImie(name);
+            setNazwisko(surename);
         } catch (error) {
             console.error(error);
         }
@@ -438,15 +461,14 @@ export default function UrlopyPage() {
     const fetchUrlopy = () => {
         Axios.get(`${baseUrl}/api/urlopy`, { withCredentials: true })
             .then((response) => {
-                if (accountType === 'Administrator') {
-                    // Administrator widzi wszystko
+                // Administrator i użytkownicy ze specjalnymi uprawnieniami widzą wszystko
+                if (accountType === 'Administrator' || hasSpecialAccess(imie, nazwisko, 'urlopy')) {
                     urlopyData = response.data.urlopy;
                 } else {
-                    // Pracownik widzi tylko swoje urlopy
+                    // Zwykły pracownik widzi tylko swoje urlopy
                     urlopyData = response.data.urlopy.filter(item => item.imie === imie && item.nazwisko === nazwisko);
                 }
-
-                //console.log(urlopyData);    
+    
                 const filterBySelectedGroups = (data) => {
                     if (selectedGrupyNazwa.length === 0) return data;
                     return data.filter(item => selectedGrupyNazwa.includes(item.zleceniodawca));
@@ -501,7 +523,6 @@ export default function UrlopyPage() {
         Axios.get(`${baseUrl}/api/grupy`, { withCredentials: true })
             .then((response) => {
                 setDostepneGrupy(response.data.grupy);
-                console.log(response.data.grupy);
             })
             .catch((error) => {
                 console.error("There was an error fetching the data:", error);
@@ -642,7 +663,7 @@ export default function UrlopyPage() {
     };
 
     useEffect(() => {
-        if (accountType === 'Pracownik') {
+        if (accountType === 'Pracownik' && imie && nazwisko) {
             // Automatically select all groups for employees
             const allGroupNames = dostepneGrupy.map(grupa => grupa.Zleceniodawca);
             setSelectedGrupyNazwa(allGroupNames);
@@ -650,8 +671,20 @@ export default function UrlopyPage() {
 
             // Pre-fill "Dodaj urlop dla" with the logged-in employee
             setUrlopDla(`${nazwisko} ${imie}`);
+        } else if (hasSpecialAccess(imie, nazwisko, 'urlopy') && imie && nazwisko) {
+            // Dla użytkowników ze specjalnymi uprawnieniami też wypełnij domyślnie swoim imieniem
+            setUrlopDla(`${nazwisko} ${imie}`);
         }
     }, [accountType, dostepneGrupy, imie, nazwisko]);
+
+    // Dodatkowy efekt do ustawienia UrlopDla gdy dane się załadują
+    useEffect(() => {
+        if (imie && nazwisko) {
+            if (accountType === 'Pracownik' || hasSpecialAccess(imie, nazwisko, 'urlopy')) {
+                setUrlopDla(`${nazwisko} ${imie}`);
+            }
+        }
+    }, [imie, nazwisko, accountType]);
 
     return (
         <div>
@@ -665,7 +698,7 @@ export default function UrlopyPage() {
                                     value={UrlopDla}
                                     onChange={(e) => setUrlopDla(e.value)}
                                     options={
-                                        accountType === 'Administrator'
+                                        accountType === 'Administrator' || hasSpecialAccess(imie, nazwisko, 'urlopy')
                                             ? pracownicy.map(pracownik => `${pracownik.surname} ${pracownik.name}`)
                                             : pracownicy
                                                   .filter(pracownik => pracownik.name === imie && pracownik.surname === nazwisko)
@@ -678,7 +711,7 @@ export default function UrlopyPage() {
                                     filterInputAutoFocus
                                     showFilterClear
                                     showClear
-                                    disabled={accountType !== 'Administrator'}
+                                    disabled={accountType !== 'Administrator' && !hasSpecialAccess(imie, nazwisko, 'urlopy')}
                                 />
                             </div>
                             <div className="flex flex-col w-4/12 p-4">
@@ -775,14 +808,14 @@ export default function UrlopyPage() {
                     inputId="master-checkbox"
                     checked={allGroupsSelected}
                     onChange={handleMasterCheckboxChange}
-                    disabled={accountType !== 'Administrator'}
+                    disabled={accountType !== 'Administrator' && !hasSpecialAccess(imie, nazwisko, 'urlopy')}
                 />
                 <span className="ml-2 font-bold">Zaznacz wszystkie</span>
             </div>
             {dostepneGrupy.map((grupa) => (
                 <div key={grupa.id} className="flex flex-row items-center mt-2">
                     <Checkbox
-                        disabled={accountType !== 'Administrator'}
+                        disabled={accountType !== 'Administrator' && !hasSpecialAccess(imie, nazwisko, 'urlopy')}
                         inputId={`grupa-${grupa.id}`}
                         checked={selectedGrupy[grupa.id] || false}
                         onChange={() => handleGrupaCheckboxChange(grupa.id, grupa.Zleceniodawca)}
@@ -798,7 +831,7 @@ export default function UrlopyPage() {
                 options={weeks}
                 onChange={(e) => setSelectedWeek(e.value)}
                 placeholder="Tydzień"
-                disabled={accountType !== 'Administrator'}
+                disabled={accountType !== 'Administrator' && !hasSpecialAccess(imie, nazwisko, 'urlopy')}
                 className="text-black text-sm py-1 px-2 h-12"
             />
             <Dropdown
@@ -806,11 +839,15 @@ export default function UrlopyPage() {
                 options={years}
                 onChange={(e) => setSelectedYear(e.value)}
                 placeholder="Rok"
-                disabled={accountType !== 'Administrator'}
+                disabled={accountType !== 'Administrator' && !hasSpecialAccess(imie, nazwisko, 'urlopy')}
                 className="text-black text-sm py-1 px-2 h-12"
             />
             {/* Drukowanie dostępne dla wszystkich */}
-            <Button label="Drukuj" onClick={handlePdfDownloadClick} disabled={accountType === 'Administrator' && selectedGrupyNazwa.length === 0} />
+            <Button 
+                label="Drukuj" 
+                onClick={handlePdfDownloadClick} 
+                disabled={(accountType !== 'Administrator' && !hasSpecialAccess(imie, nazwisko, 'urlopy')) && selectedGrupyNazwa.length === 0} 
+            />
         </div>
     </div>
 </AmberBox>

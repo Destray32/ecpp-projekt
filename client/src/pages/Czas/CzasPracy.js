@@ -48,6 +48,8 @@ export default function CzasPracyPage() {
     const [userType, setUserType] = useState(null);
     const [Pracownik, setPracownik] = useState(null);
     const [currentUserId, setCurrentUserId] = useState(null);
+    const [imie, setImie] = useState('');
+    const [nazwisko, setNazwisko] = useState('');
     const [currentDate, setCurrentDate] = useState(new Date());
     const [pracownicy, setPracownicy] = useState([]);
     const [Firma, setFirma] = useState("PC Husbyggen");
@@ -295,6 +297,8 @@ export default function CzasPracyPage() {
                 const fullName = `${response.data.name} ${response.data.surename}`;
                 setPracownik(fullName);
                 setUserType(response.data.accountType);
+                setImie(response.data.name);
+                setNazwisko(response.data.surename);
             })
             .catch((error) => {
                 console.error(error);
@@ -783,7 +787,6 @@ const handleZamknijTydzien = async () => {
                 fetchUserId();
                 try {
             const weeklyHoursDecimal = (totalMinutes / 60).toFixed(2); // np. 42.50
-            console.log(weeklyHoursDecimal);
             const warning_response = await Axios.post(`${baseUrl}/api/czas/warnings`, {
                 weeklyHours: weeklyHoursDecimal,
                 id: currentUserId,
@@ -946,6 +949,8 @@ const handleZamknijTydzien = async () => {
                 lastSaved={lastSaved}
                 saveStatus={saveStatus}
                 hasUnsavedChanges={hasUnsavedChanges}
+                imie={imie}
+                nazwisko={nazwisko}
             />
             <TimeInputs
                 daysOfWeek={daysOfWeek}
@@ -993,6 +998,8 @@ const handleZamknijTydzien = async () => {
                 blockStatus={blockStatus}
                 isOnline={isOnline}
                 saveStatus={saveStatus}
+                imie={imie}
+                nazwisko={nazwisko}
             />
             {!isOnline && (
                 <div className="fixed bottom-4 right-4 bg-amber-100 p-4 rounded-md shadow-lg border border-amber-500">
