@@ -3,6 +3,7 @@ import { Button } from 'primereact/button';
 import AmberBox from '../../Components/AmberBox';
 import { Checkbox } from 'primereact/checkbox';
 import Axios from 'axios';
+import { getWeek } from 'date-fns';
 
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -37,13 +38,12 @@ export default function TydzienPage() {
         getImie();
     }, []);
 
-    // Function to get the current week in the format "YYYY-Www"
+    // Function to get the current week in the format "YYYY-Www" using date-fns for consistency
     const getCurrentWeek = () => {
         const now = new Date();
-        const firstDayOfYear = new Date(now.getFullYear(), 0, 1);
-        const days = Math.floor((now - firstDayOfYear) / (24 * 60 * 60 * 1000));
-        const weekNumber = Math.ceil((days + firstDayOfYear.getDay() + 1) / 7);
-        return `${now.getFullYear()}-W${weekNumber.toString().padStart(2, '0')}`;
+        const weekNumber = getWeek(now, { weekStartsOn: 1 }); // ISO week starts on Monday
+        const year = now.getFullYear();
+        return `${year}-W${weekNumber.toString().padStart(2, '0')}`;
     };
 
     // Set the current week as the default week on load
@@ -160,6 +160,29 @@ export default function TydzienPage() {
             return;
         }
 
+        // Tylko Administrator może otwierać dowolne tygodnie
+        const isAdmin = accountType === 'Administrator';
+        
+        if (!isAdmin) {
+            const currentWeek = getCurrentWeek(); // Format: "2025-W43"
+            console.log('Current week:', currentWeek);
+            console.log('Selected week:', selectedWeek);
+            console.log('Selected tydzienRoku:', selectedItems[0].tydzienRoku);
+            
+            // Wyciągnij numer tygodnia z obu wartości
+            const currentWeekNumber = parseInt(currentWeek.substring(6)); // "2025-W43" -> 43
+            const selectedWeekNumber = parseInt(selectedWeek.substring(6)); // "2025-W43" -> 43
+            const currentYear = parseInt(currentWeek.substring(0, 4));
+            const selectedYear = parseInt(selectedWeek.substring(0, 4));
+            
+            console.log('Comparing:', { currentWeekNumber, selectedWeekNumber, currentYear, selectedYear });
+            
+            if (currentYear !== selectedYear || currentWeekNumber !== selectedWeekNumber) {
+                alert(`Można otwierać tylko bieżący tydzień (${currentWeekNumber}). Wybrany tydzień: ${selectedWeekNumber}. Tylko Administrator może otwierać dowolne tygodnie.`);
+                return;
+            }
+        }
+
         Axios.post(`${baseUrl}/api/tydzien`, {
             tydzienRoku: selectedItems[0].tydzienRoku,
             pracownikId: selectedItems.map(item => item.Pracownik_idPracownik)
@@ -169,7 +192,12 @@ export default function TydzienPage() {
                 setSelectedItems([]);
                 setSelectAll(false);
             })
-            .catch(error => console.error(error));
+            .catch(error => {
+                console.error(error);
+                if (error.response && error.response.data && error.response.data.message) {
+                    alert(error.response.data.message);
+                }
+            });
     };
 
     const handleZamknij = () => {
@@ -277,8 +305,13 @@ export default function TydzienPage() {
                         <Button 
                             label="Otwórz tydzień" 
                             onClick={handleOtworz}
-                            disabled={accountType !== 'Administrator' && !hasSpecialAccess(imie, nazwisko, 'tydzien')}
+                            disabled={
+                                (accountType !== 'Administrator' && !hasSpecialAccess(imie, nazwisko, 'tydzien')) ||
+                                (accountType !== 'Administrator' && selectedWeek !== getCurrentWeek())
+                            }
                             className="p-button-outlined border-2 p-1 bg-white" 
+                            tooltip={accountType !== 'Administrator' && selectedWeek !== getCurrentWeek() ? "Tylko Administrator może otwierać tygodnie wstecz" : ""}
+                            tooltipOptions={{ position: 'top' }}
                         />
                         <Button 
                             label="Zamknij tydzień" 

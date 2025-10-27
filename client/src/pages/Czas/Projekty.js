@@ -324,25 +324,31 @@ useEffect(() => {
                                     onClick={handlePrzeniesAktyw} 
                                     label="Przenieś do aktywnych" 
                                     className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2"
-                                    disabled={accountType !== 'Administrator' && !hasSpecialAccess(imie, nazwisko, 'projekty')}
+                                    disabled={accountType !== 'Administrator'}
                                 />
                                 <Button 
                                     onClick={handlePrzeniesNieaktyw} 
                                     label="Przenieś do nieaktywnych" 
                                     className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2"
-                                    disabled={accountType !== 'Administrator' && !hasSpecialAccess(imie, nazwisko, 'projekty')}
+                                    disabled={accountType !== 'Administrator'}
                                 />
                             </div>
-                            <Link to="/home/grupy-projektow">
+                            <Link to="/home/grupy-projektow"
+                                onClick={(e) => {
+                                    if (accountType !== 'Administrator') {
+                                        e.preventDefault();
+                                    }
+                                }}
+                            >
                                 <Button 
                                     label="Grupy projektów" 
                                     className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2"
-                                    disabled={accountType !== 'Administrator' && !hasSpecialAccess(imie, nazwisko, 'projekty')}
+                                    disabled={accountType !== 'Administrator'}
                                 />
                             </Link>
                             <Link to="/home/nowy-projekt"
                                 onClick={(e) => {
-                                    if (accountType !== 'Administrator' && !hasSpecialAccess(imie, nazwisko, 'projekty')) {
+                                    if (accountType !== 'Administrator' && accountType !== 'Biuro' && accountType !== 'Kierownik' && !hasSpecialAccess(imie, nazwisko, 'projekty')) {
                                         e.preventDefault();
                                     }
                                 }}
@@ -350,7 +356,7 @@ useEffect(() => {
                                 <Button 
                                     label="Dodaj nowy projekt"
                                     className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2"
-                                    disabled={accountType !== 'Administrator' && !hasSpecialAccess(imie, nazwisko, 'projekty')}
+                                    disabled={accountType !== 'Administrator' && accountType !== 'Biuro' && accountType !== 'Kierownik' && !hasSpecialAccess(imie, nazwisko, 'projekty')}
                                 />
                             </Link>
                         </div>
@@ -398,16 +404,26 @@ useEffect(() => {
                                     <td className="border-r border-black">{projekty.DodanePrzez}</td>
                                     <td className="border-r border-black">{projekty.WeeksUnused}</td>
                                     <td>
-                                        <Link to={`/home/projekt/${projekty.id}`}>
+                                        <Link 
+                                            to={`/home/projekt/${projekty.id}`}
+                                            onClick={(e) => {
+                                                if (accountType !== 'Administrator') {
+                                                    e.preventDefault();
+                                                }
+                                            }}
+                                        >
                                             <Button
                                                 label="Edytuj"
                                                 className="bg-blue-700 text-white p-1 m-0.5"
+                                                disabled={accountType !== 'Administrator'}
                                             />
                                         </Link>
                                         <Button
                                             onClick={() => handleDelete(projekty.id)}
                                             label="Usuń"
-                                            className="bg-red-500 text-white p-1 m-0.5" />
+                                            className="bg-red-500 text-white p-1 m-0.5"
+                                            disabled={accountType !== 'Administrator'}
+                                        />
                                     </td>
                                 </tr>
                             );

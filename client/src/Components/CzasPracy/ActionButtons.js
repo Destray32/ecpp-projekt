@@ -2,6 +2,7 @@ import React from 'react';
 import { Button } from 'primereact/button';
 import { Modal } from 'antd';
 import { hasSpecialAccess } from '../../utils/accTypeUtils';
+import { getWeek } from 'date-fns';
 
 /**
  * PrzyciskAkcji
@@ -17,6 +18,7 @@ import { hasSpecialAccess } from '../../utils/accTypeUtils';
  * @param {string} props.saveStatus - Status zapisu (idle, saving, saved, error)
  * @param {string} props.imie - Imię użytkownika
  * @param {string} props.nazwisko - Nazwisko użytkownika
+ * @param {Date} props.currentDate - Aktualnie wybrany tydzień
  */
 const PrzyciskAkcji = ({ 
     handleSave, 
@@ -29,7 +31,8 @@ const PrzyciskAkcji = ({
     isOnline,
     saveStatus,
     imie,
-    nazwisko
+    nazwisko,
+    currentDate
 }) => {
     const handleOpenModal = () => {
         Modal.confirm({
@@ -49,6 +52,23 @@ const PrzyciskAkcji = ({
             okText: 'Zamknij tydzień',
             cancelText: 'Anuluj',
         });
+    };
+
+    // Sprawdź czy wybrany tydzień to bieżący tydzień (tylko Administrator może otwierać dowolne tygodnie)
+    const isCurrentWeek = () => {
+        if (!currentDate) return true; // domyślnie pozwól jeśli brak daty
+        
+        // Tylko Administrator może otwierać dowolne tygodnie
+        const isAdmin = userType === 'Administrator';
+        if (isAdmin) return true;
+        
+        // Wszyscy inni (Biuro, specjalne uprawnienia) - tylko bieżący tydzień
+        const today = new Date();
+        const currentWeekNumber = getWeek(today, { weekStartsOn: 1 });
+        const selectedWeekNumber = getWeek(currentDate, { weekStartsOn: 1 });
+        const currentYear = today.getFullYear();
+        const selectedYear = currentDate.getFullYear();
+        return currentYear === selectedYear && currentWeekNumber === selectedWeekNumber;
     };
 
     return (
@@ -74,7 +94,13 @@ const PrzyciskAkcji = ({
                                 label="Otwórz tydzień" 
                                 className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 flex-grow" 
                                 onClick={handleOpenWeek}
-                                disabled={(userType !== 'Biuro' && userType !== 'Administrator' && !hasSpecialAccess(imie, nazwisko, 'tydzien')) || !isOnline}
+                                disabled={
+                                    (userType !== 'Biuro' && userType !== 'Administrator' && !hasSpecialAccess(imie, nazwisko, 'tydzien')) || 
+                                    !isOnline ||
+                                    !isCurrentWeek()
+                                }
+                                tooltip={!isCurrentWeek() ? "Tylko Administrator może otwierać tygodnie wstecz" : ""}
+                                tooltipOptions={{ position: 'top' }}
                             />
                             <Button 
                                 label="Drukuj raport" 

@@ -12,6 +12,7 @@ import AdditionalProjects from "../../Components/CzasPracy/AdditionalProjects/Ad
 import ActionButtons from "../../Components/CzasPracy/ActionButtons";
 import { generateWeek, formatWeek, calculateWeeklyTotal, calculateProjectTotal, calculateDailyTotal } from '../../utils/dateUtils';
 import { font } from "../../fonts/OpenSans-Regular-normal";
+import { hasSpecialAccess } from "../../utils/accTypeUtils";
 
 // Utility function for debouncing
 const debounce = (func, delay) => {
@@ -131,9 +132,21 @@ export default function CzasPracyPage() {
         } else if (Pracownik && dostepneProjekty.length > 0 && (userType === "Pracownik" || userType === "Kierownik" || userType === "Biuro")) {
             fetchWorkHours(Pracownik, currentDate);
             fetchAdditionalProjects(Pracownik, currentDate);
-            setPracownicy([{ label: Pracownik, value: Pracownik }]);
+            
+            // Administrator i Biuro widzą wszystkich
+            // Pracownik/Kierownik ze specjalnymi uprawnieniami też widzą wszystkich
+            // Pozostali (Pracownik/Kierownik bez specjalnych uprawnień) - tylko siebie
+            const hasSpecial = hasSpecialAccess(imie, nazwisko, 'tydzien');
+            console.log('User has special access to tydzien:', hasSpecial, 'User:', imie, nazwisko, 'UserType:', userType);
+            
+            if ((userType === "Pracownik" || userType === "Kierownik") && !hasSpecial) {
+                console.log('Limiting pracownicy list to self:', Pracownik);
+                setPracownicy([{ label: Pracownik, value: Pracownik }]);
+            } else {
+                console.log('User can see all pracownicy (Biuro or has special access)');
+            }
         }
-    }, [Pracownik, currentDate, dostepneProjekty]);
+    }, [Pracownik, currentDate, dostepneProjekty, imie, nazwisko, userType]);
 
     useEffect(() => {
         if (currentUserId) {
@@ -318,7 +331,12 @@ export default function CzasPracyPage() {
     const fetchPracownicy = () => {
         Axios.get(`${baseUrl}/api/pracownicy`, { withCredentials: true })
             .then((response) => {
-                setPracownicy(response.data.map(pracownik => ({ label: `${pracownik.name} ${pracownik.surname}`, value: `${pracownik.name} ${pracownik.surname}` })));
+                const allPracownicy = response.data.map(pracownik => ({ 
+                    label: `${pracownik.name} ${pracownik.surname}`, 
+                    value: `${pracownik.name} ${pracownik.surname}` 
+                }));
+                console.log('Fetched all pracownicy:', allPracownicy.length);
+                setPracownicy(allPracownicy);
             })
             .catch((error) => {
                 console.error(error);
@@ -827,6 +845,26 @@ const handleZamknijTydzien = async () => {
     };
 
     const handleOtworzTydzien = async () => {
+        // Tylko Administrator może otwierać dowolne tygodnie
+        const isAdmin = userType === 'Administrator';
+        
+        if (!isAdmin) {
+            const today = new Date();
+            const currentWeekNumber = getWeek(today, { weekStartsOn: 1 });
+            const selectedWeekNumber = getWeek(currentDate, { weekStartsOn: 1 });
+            const currentYear = today.getFullYear();
+            const selectedYear = currentDate.getFullYear();
+
+            if (currentYear !== selectedYear || currentWeekNumber !== selectedWeekNumber) {
+                notification.warning({
+                    message: 'Uwaga',
+                    description: 'Można otwierać tylko bieżący tydzień. Nie można otwierać tygodni wstecz ani przyszłych. Tylko Administrator może otwierać dowolne tygodnie.',
+                    placement: 'topRight',
+                });
+                return;
+            }
+        }
+
         try {
             fetchUserId();
             const response = await Axios.post(`${baseUrl}/api/tydzien`, {
@@ -845,6 +883,13 @@ const handleZamknijTydzien = async () => {
             }
         } catch (error) {
             console.error(error);
+            if (error.response && error.response.data && error.response.data.message) {
+                notification.error({
+                    message: 'Błąd',
+                    description: error.response.data.message,
+                    placement: 'topRight',
+                });
+            }
         }
     }
 
@@ -1000,6 +1045,7 @@ const handleZamknijTydzien = async () => {
                 saveStatus={saveStatus}
                 imie={imie}
                 nazwisko={nazwisko}
+                currentDate={currentDate}
             />
             {!isOnline && (
                 <div className="fixed bottom-4 right-4 bg-amber-100 p-4 rounded-md shadow-lg border border-amber-500">
