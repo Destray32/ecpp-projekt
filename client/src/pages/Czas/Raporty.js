@@ -402,42 +402,54 @@ export default function RaportyPage() {
 
 
     const przejscieDoInterfejsuFirma = () => {
+        // Reset all states first
+        setProjekt(null);
+        setPracownik(null);
+        setIgnorujDatyFirma(false);
+        setSelectedZleceniodawcy([]);
+        
+        // Then switch interface
         setInterfaceFirma(true);
         setInterfacePracownik(false);
-        setProjekt(null);
-        setIgnorujDatyFirma(false);
-        setPracownik(null);
+        
         // Trigger project reload when switching to company interface
-        fetchProjektyAndRaport();
-        // Removed date reset to preserve dates between reports
+        // Use setTimeout to ensure state is updated before fetching
+        setTimeout(() => {
+            fetchProjektyAndRaport();
+        }, 0);
     };
 
     const przejscieDoInterfejsuPracownik = () => {
-        setInterfaceFirma(false);
-        setInterfacePracownik(true);
+        // Reset states first
         setProjekt(null);
         setIgnorujDatyFirma(false);
+        setSelectedZleceniodawcy([]);
+        
+        // Switch interface
+        setInterfaceFirma(false);
+        setInterfacePracownik(true);
         
         // Ensure employees are loaded when switching to employee interface
-        if (availablePracownicy.length === 0) {
+        if (allPracownicyOptions.length === 0) {
             fetchPracownicy();
         }
         
-        if (accountType === 'Pracownik') {
-            // For Pracownik account type, auto-select current user and filter options
-            const currentUser = allPracownicyOptions.find(p => 
-                p.label.includes(imie) && p.label.includes(nazwisko)
-            );
-            if (currentUser) {
-                setPracownik(currentUser.value);
-                setAvailablePracownicy([currentUser]);
+        // Use setTimeout to ensure state updates are processed
+        setTimeout(() => {
+            if (accountType === 'Pracownik') {
+                // For Pracownik account type, auto-select current user and filter options
+                const currentUser = allPracownicyOptions.find(p => 
+                    p.label.includes(imie) && p.label.includes(nazwisko)
+                );
+                if (currentUser) {
+                    setPracownik(currentUser.value);
+                    setAvailablePracownicy([currentUser]);
+                }
+            } else {
+                setPracownik(null);
+                setAvailablePracownicy(allPracownicyOptions);
             }
-        } else {
-            setPracownik(null);
-            setAvailablePracownicy(allPracownicyOptions);
-        }
-        // Auto-selection will be handled by the useEffect above
-        // Removed date reset to preserve dates between reports
+        }, 0);
     };
 
     const handleRowClick = (rowName) => {
@@ -480,7 +492,8 @@ export default function RaportyPage() {
 
     // Filter pracownicy for selected date range when 'Raporty dla pracownika' is open
     useEffect(() => {
-        if (showRaportyPracownik && startDate && endDate && raport.length > 0) {
+        // Only apply date filtering if interfacePracownik is active
+        if (interfacePracownik && startDate && endDate && raport.length > 0) {
             // Get IDs of employees who have entries in the selected date range
             const [sd, ed] = [new Date(startDate), new Date(endDate)];
             const pracownicyInRange = new Set(
@@ -495,10 +508,10 @@ export default function RaportyPage() {
             // Filter allPracownicyOptions to only those in the set
             const filtered = allPracownicyOptions.filter(p => pracownicyInRange.has(p.value));
             setAvailablePracownicy(filtered);
-        } else if (!showRaportyPracownik && allPracownicyOptions.length > 0) {
+        } else if (interfacePracownik && allPracownicyOptions.length > 0) {
             setAvailablePracownicy(allPracownicyOptions);
         }
-    }, [showRaportyPracownik, startDate, endDate, raport, allPracownicyOptions]);
+    }, [interfacePracownik, startDate, endDate, raport, allPracownicyOptions]);
 
     return (
         <div>
@@ -540,16 +553,18 @@ export default function RaportyPage() {
           
                   {interfacePracownik && (
                       <Dropdown
+                          key={`pracownik-dropdown-${interfacePracownik}-${availablePracownicy.length}`}
                           value={pracownik}
                           options={availablePracownicy}
                           onChange={(e) => setPracownik(e.value)}
                           showClear={accountType !== 'Pracownik'}
                           filter
-                          className=""
+                          className="w-96"
                           filterInputAutoFocus
                           resetFilterOnHide
                           placeholder="Wybierz pracownika"
                           disabled={accountType === 'Pracownik'}
+                          emptyMessage="Brak pracowników"
                       />
                   )}
           
@@ -595,6 +610,7 @@ export default function RaportyPage() {
                           <div className="flex-1 flex justify-center">
                               <div className="w-96 flex flex-col items-center">
                                   <Dropdown
+                                      key={`projekt-dropdown-${interfaceFirma}-${projektyOptions.length}`}
                                       value={Projekt}
                                       options={projektyOptions}
                                       onChange={(e) => setProjekt(e.value)}
