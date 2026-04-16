@@ -1,6 +1,6 @@
 function OtworzTydzienCzas(req, res, db) {
     // Sprawdź czy użytkownik ma odpowiednie uprawnienia
-    if (!req.user.role === 'Administrator' && !hasSpecialAccess(req.user, 'tydzien')) {
+    if (!['Administrator', 'Biuro'].includes(req.user.role)) {
         return res.status(403).json({ error: 'Brak uprawnień do otwierania tygodnia' });
     }
 

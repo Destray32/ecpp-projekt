@@ -7,7 +7,7 @@ import { InputText } from 'primereact/inputtext';
 import { Checkbox } from 'primereact/checkbox';
 import Axios from "axios";
 import ZatwierdzWindow from '../../Components/Urlopy/ZatwierdzWindow';
-import { notification } from 'antd';
+import { notification, Modal } from 'antd';
 import checkUserType, { hasSpecialAccess } from '../../utils/accTypeUtils';
 import CalendarIsoInput from '../../Components/CalendarIsoInput';
 
@@ -549,31 +549,114 @@ export default function UrlopyPage() {
         }
     }, [imie, nazwisko, accountType]);
 
-    const handleDodaj = () => {
-        Axios.post(`${baseUrl}/api/urlopy`, {
+    const formatApiDate = (dateStr) => {
+        if (!dateStr) return '';
+        const dateOnly = String(dateStr).split('T')[0];
+        const [year, month, day] = dateOnly.split('-');
+        if (!year || !month || !day) return dateStr;
+        return `${day}/${month}/${year}`;
+    };
+
+    const getErrorDescription = (responseData, fallback = 'Nie udało się dodać urlopu') => {
+        if (!responseData) return fallback;
+        if (typeof responseData === 'string') return responseData;
+        if (typeof responseData?.message === 'string' && responseData.message.trim()) return responseData.message;
+        return fallback;
+    };
+
+    const submitUrlop = async (mergeOverlap = false) => {
+        const response = await Axios.post(`${baseUrl}/api/urlopy`, {
             nazwisko_imie: UrlopDla,
             status: Status,
             urlop_od: urlopOd,
             urlop_do: urlopDo,
             komentarz: komentarz,
-        }, { withCredentials: true }
-        )
-            .then(() => {
-                fetchUrlopy();
-                notification.success({
-                    message: 'Dodano urlop',
-                    description: `Dodano urlop dla ${UrlopDla}`,
-                    placement: 'topRight'
-                });
-            })
-            .catch((error) => {
-                console.error("There was an error adding the leave:", error.response.data);
-                notification.error({
-                    message: 'Błąd dodawania urlopu',
-                    description: error.response.data,
-                    placement: 'topRight'
-                });
+            mergeOverlap,
+        }, {
+            withCredentials: true,
+            validateStatus: (status) => (status >= 200 && status < 300) || status === 409,
+        });
+
+        if (response.status === 409 && response.data?.code === 'VACATION_OVERLAP') {
+            return {
+                overlap: true,
+                data: response.data,
+            };
+        }
+
+        fetchUrlopy();
+
+        if (response.data?.merged) {
+            notification.success({
+                message: 'Połączono urlopy',
+                description: `Scalony zakres: ${formatApiDate(response.data?.mergedRange?.urlop_od)} - ${formatApiDate(response.data?.mergedRange?.urlop_do)}`,
+                placement: 'topRight'
             });
+            return;
+        }
+
+        notification.success({
+            message: 'Dodano urlop',
+            description: `Dodano urlop dla ${UrlopDla}`,
+            placement: 'topRight'
+        });
+
+        return { overlap: false };
+    };
+
+    const handleDodaj = async () => {
+        try {
+            const result = await submitUrlop(false);
+
+            if (result?.overlap) {
+                const responseData = result.data;
+                const overlaps = responseData?.overlaps || [];
+                const suggested = responseData?.suggestedRange;
+
+                Modal.confirm({
+                    title: 'Wykryto nakładający się urlop',
+                    content: (
+                        <div>
+                            <p>Istnieje już urlop w wybranym zakresie.</p>
+                            {suggested?.urlop_od && suggested?.urlop_do && (
+                                <p><strong>Proponowany zakres po połączeniu:</strong> {formatApiDate(suggested.urlop_od)} - {formatApiDate(suggested.urlop_do)}</p>
+                            )}
+                            {overlaps.length > 0 && (
+                                <ul>
+                                    {overlaps.map((item) => (
+                                        <li key={item.id}>
+                                            {formatApiDate(item.urlop_od)} - {formatApiDate(item.urlop_do)} ({item.status})
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                            <p>Czy chcesz scalić nakładające się urlopy w jeden wpis?</p>
+                        </div>
+                    ),
+                    okText: 'Połącz urlopy',
+                    cancelText: 'Anuluj',
+                    onOk: async () => {
+                        try {
+                            await submitUrlop(true);
+                        } catch (mergeError) {
+                            const mergeResponseData = mergeError?.response?.data;
+                            notification.error({
+                                message: 'Błąd łączenia urlopów',
+                                description: getErrorDescription(mergeResponseData, 'Nie udało się połączyć nakładających się urlopów'),
+                                placement: 'topRight'
+                            });
+                        }
+                    },
+                });
+            }
+        } catch (error) {
+            const responseData = error?.response?.data;
+            notification.error({
+                message: 'Błąd dodawania urlopu',
+                description: getErrorDescription(responseData),
+                placement: 'topRight'
+            });
+        }
     };
 
     const handleUsun = (itemId) => {
