@@ -67,8 +67,8 @@ export default function PracownikPage() {
     });
 };
 
-  const handleSearch = (selectedKeys, confirm, dataIndex) => {
-    confirm();
+  const handleSearch = (selectedKeys, confirm, dataIndex, options = {}) => {
+    confirm(options);
     setSearchText(selectedKeys[0]);
     setSearchedColumn(dataIndex);
   };
@@ -89,7 +89,11 @@ export default function PracownikPage() {
           }}
           placeholder={`Szukaj`}
           value={selectedKeys[0]}
-          onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+          onChange={e => {
+            const nextSelectedKeys = e.target.value ? [e.target.value] : [];
+            setSelectedKeys(nextSelectedKeys);
+            handleSearch(nextSelectedKeys, confirm, dataIndex, { closeDropdown: false });
+          }}
           onPressEnter={() => handleSearch(selectedKeys, confirm, dataIndex)}
           style={{ width: 188, marginBottom: 8, display: 'block' }}
         />
@@ -220,6 +224,29 @@ export default function PracownikPage() {
       dataIndex: 'email',
       key: 'email',
       ...getColumnSearchProps('email'),
+      render: (text) => {
+        const normalizedEmail = (text || '').toString().trim();
+        const highlightedText = searchedColumn === 'email' ? (
+          <Highlighter
+            highlightStyle={{ backgroundColor: '#ffc069', padding: 0 }}
+            searchWords={[searchText]}
+            autoEscape
+            textToHighlight={normalizedEmail}
+          />
+        ) : (
+          normalizedEmail
+        );
+
+        if (!normalizedEmail) {
+          return '';
+        }
+
+        return (
+          <a href={`mailto:${normalizedEmail}`} className="text-blue-600 underline">
+            {highlightedText}
+          </a>
+        );
+      },
     },
     {
       title: 'Akcje',

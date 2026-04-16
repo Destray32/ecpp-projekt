@@ -526,6 +526,7 @@ useEffect(() => {
                                 resetFilterOnHide
                                 disabled={statusTyg === "Zamkniety"}
                                 filterInputAutoFocus
+                                scrollHeight='420px'
                             />
                         </div>
                         <div className="flex flex-col w-3/12">
@@ -540,6 +541,7 @@ useEffect(() => {
                                 filterInputAutoFocus
                                 showClear
                                 disabled={statusTyg === "Zamkniety"}
+                                scrollHeight='420px'
                             />
                         </div>
                         <div className="flex flex-col w-3/12">
@@ -554,7 +556,7 @@ useEffect(() => {
                                 filterInputAutoFocus
                                 showClear
                                 disabled={statusTyg === "Zamkniety"}
-                                scrollHeight='400px'
+                                scrollHeight='420px'
                             />
                         </div>
                         <div className="flex flex-col">
