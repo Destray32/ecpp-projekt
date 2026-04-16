@@ -140,7 +140,7 @@ const NODE_ENV = process.env.NODE_ENV;
 const pool = mysql.createPool({
     host: 'localhost',
     user: 'root',
-    password: 'root',
+    password: '',
     database: 'mydb',
     waitForConnections: true,
     connectionLimit: 30,
