@@ -282,7 +282,10 @@ export default function PracownikPage() {
   const fetchEmployees = async () => {
     try {
       const response = await axios.get(`${baseUrl}/api/pracownicy`, { withCredentials: true });
-      setTableData(response.data);
+      const activeEmployees = (response.data || []).filter(
+        (item) => item.accountStatus !== 'Nieaktywne'
+      );
+      setTableData(activeEmployees);
     } catch (error) {
       console.log(error);
     }
@@ -434,6 +437,11 @@ export default function PracownikPage() {
               {isAdmin && (
                 <Link to="/home/zablokowani-pracownicy">
                 <Button label="Zablokowani pracownicy" className="bg-white outline outline-1 outline-gray-500 p-2 mx-2" />
+                </Link>
+                )}
+              {isAdmin && (
+                <Link to="/home/nieaktywni-pracownicy">
+                <Button label="Nieaktywni pracownicy" className="bg-white outline outline-1 outline-gray-500 p-2 mx-2" />
                 </Link>
                 )}
             </div>

@@ -13,6 +13,7 @@ function ListaPracownikow(req, res) {
             do.TelefonSzwecja AS phone2,
             iof.Plan_TygodniaV as weeklyPlan,
             do.Email AS email,
+            p.Status_konta AS accountStatus,
             (SELECT CONCAT(do2.Imie, ' ', do2.Nazwisko) 
             FROM dane_osobowe do2 
             JOIN pracownik p2 ON p2.FK_Dane_osobowe = do2.idDane_osobowe

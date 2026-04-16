@@ -50,6 +50,7 @@ export default function HomePage() {
         if (path === '/home/dodaj-pracownika' ||
             path.startsWith('/home/edytuj-pracownika/') ||
             path === '/home/zablokowani-pracownicy' ||
+            path === '/home/nieaktywni-pracownicy' ||
             path === '/home/logowanie' ||
             path === '/home/cennik' ||
             path === '/home/archiwum' ||
