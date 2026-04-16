@@ -557,8 +557,8 @@ const handleOpisChange = (planTygodniaId, newOpis) => {
                             <thead className="bg-blue-700 text-white">
                                 <tr>
                                     <th className="border-r"></th>
-                                    <th className="border-r">Nazwisko</th>
                                     <th className="border-r">Imię</th>
+                                    <th className="border-r">Nazwisko</th>
                                     <th className="border-r w-1/6">Grupa</th>
                                     <th className="border-r">M1</th>
                                     <th className="border-r">M2</th>
@@ -579,8 +579,8 @@ const handleOpisChange = (planTygodniaId, newOpis) => {
                                                 onChange={() => handleRowCheckboxChange(item.id)}
                                             />
                                         </td>
-                                        <td className="border-r">{item.nazwisko}</td>
                                         <td className="border-r">{item.imie}</td>
+                                        <td className="border-r">{item.nazwisko}</td>
                                         <td className="border-r">{item.Zleceniodawca}</td>
                                         {/* Checkboxy M1-M5 */}
                                         {['M1','M2','M3','M4','M5'].map(m => (
@@ -617,8 +617,8 @@ const handleOpisChange = (planTygodniaId, newOpis) => {
                                                 onChange={() => handleRowCheckboxChange(item.id)}
                                             />
                                         </td>
-                                        <td className="border-r">{item.pojazd}</td>
                                         <td className="border-r">-</td>
+                                        <td className="border-r">{item.pojazd}</td>
                                         <td className="border-r">{item.Zleceniodawca}</td>
                                         {/* Checkboxy S1-S5 */}
                                         {['S1','S2','S3','S4','S5'].map(s => (

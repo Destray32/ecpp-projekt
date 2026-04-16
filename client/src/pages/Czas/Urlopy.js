@@ -33,13 +33,10 @@ export default function UrlopyPage() {
     const [nazwisko, setNazwisko] = useState('');
     let urlopyData = [];
     const baseUrl = process.env.REACT_APP_BASE_URL;
-    const [selectAllApprovalChecked, setSelectAllApprovalChecked] = useState(false);
 
     // RenderTable component 
-    const [remainingGroupSelections, setRemainingGroupSelections] = useState({});
     const [remainingExpandedGroups, setRemainingExpandedGroups] = useState({});
     const [remainingSelectedItems, setRemainingSelectedItems] = useState([]);
-    const [approvedGroupSelections, setApprovedGroupSelections] = useState({});
     const [approvedExpandedGroups, setApprovedExpandedGroups] = useState({});
     const [approvedSelectedItems, setApprovedSelectedItems] = useState([]);
 
@@ -60,10 +57,7 @@ export default function UrlopyPage() {
 
     const extractId = (idWithPrefix) => idWithPrefix.replace('cb-', '');
 
-    const RenderTable = ({
-        data, title, groupSelections, setGroupSelections,
-        expandedGroups, setExpandedGroups, selectedItems, setSelectedItems
-    }) => {
+    const RenderTable = ({ data, expandedGroups, setExpandedGroups, selectedItems, setSelectedItems }) => {
         const inputRef = useRef(null);
 
         useEffect(() => {
@@ -82,12 +76,22 @@ export default function UrlopyPage() {
             });
         };
 
-        // Popraw funkcję handleGroupToggle, aby działała poprawnie
         const handleGroupToggleLocal = (groupName) => {
             setExpandedGroups(prevExpandedGroups => ({
                 ...prevExpandedGroups,
                 [groupName]: !prevExpandedGroups[groupName],
             }));
+        };
+
+        const getGroupItemIds = (groupData) => groupData.map(item => `cb-${item.id}`);
+        const areAllGroupItemsSelected = (groupData) => {
+            const itemIds = getGroupItemIds(groupData);
+            return itemIds.length > 0 && itemIds.every((id) => selectedItems.includes(id));
+        };
+        const isGroupIndeterminate = (groupData) => {
+            const itemIds = getGroupItemIds(groupData);
+            const selectedCount = itemIds.filter((id) => selectedItems.includes(id)).length;
+            return selectedCount > 0 && selectedCount < itemIds.length;
         };
 
         return (
@@ -99,20 +103,28 @@ export default function UrlopyPage() {
                                 <React.Fragment key={name}>
                                     <tr>
                                         <td colSpan="7" className="cursor-pointer bg-gray-100 hover:bg-gray-200 font-semibold text-lg">
-                                            <div className="flex items-center" onClick={() => handleGroupToggleLocal(name)}>
+                                            <div className="flex items-center">
                                                 <Checkbox
                                                     inputId={`cb-${name}`}
-                                                    checked={groupSelections[name] || false}
+                                                    checked={areAllGroupItemsSelected(data[name])}
+                                                    indeterminate={isGroupIndeterminate(data[name])}
                                                     className="ml-2 bg-gray-500"
                                                     onChange={(e) => {
-                                                        e.stopPropagation();
-                                                        handleGroupCheckboxChange(name, setGroupSelections, groupSelections, setSelectedItems, data[name]);
+                                                        e.originalEvent?.stopPropagation();
+                                                        handleGroupCheckboxChange(setSelectedItems, data[name]);
                                                     }}
+                                                    onClick={(e) => e.stopPropagation()}
                                                 />
-                                                <p className="ml-2">{name}</p>
+                                                <button
+                                                    type="button"
+                                                    className="ml-2 flex items-center w-full text-left"
+                                                    onClick={() => handleGroupToggleLocal(name)}
+                                                >
+                                                <p>{name}</p>
                                                 <span className="ml-auto font-bold text-lg" style={{cursor: 'pointer'}}>
                                                     {expandedGroups[name] ? '▼' : '▶'}
                                                 </span>
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -225,9 +237,6 @@ export default function UrlopyPage() {
         return (
             <RenderTable
                 data={filteredDane.ApprovedUrlopy}
-                title='Zatwierdzone urlopy'
-                groupSelections={approvedGroupSelections}
-                setGroupSelections={setApprovedGroupSelections}
                 expandedGroups={approvedExpandedGroups}
                 setExpandedGroups={setApprovedExpandedGroups}
                 selectedItems={approvedSelectedItems}
@@ -240,9 +249,6 @@ export default function UrlopyPage() {
         return (
             <RenderTable
                 data={filteredDane.Pozostale}
-                title='Pozostałe urlopy'
-                groupSelections={remainingGroupSelections}
-                setGroupSelections={setRemainingGroupSelections}
                 expandedGroups={remainingExpandedGroups}
                 setExpandedGroups={setRemainingExpandedGroups}
                 selectedItems={remainingSelectedItems}
@@ -251,12 +257,12 @@ export default function UrlopyPage() {
         );
     };
 
+    const allApprovalIds = Object.values(filteredDane.ApprovedUrlopy).flat().map((item) => `cb-${item.id}`);
+    const areAllApprovalsSelected = allApprovalIds.length > 0 && allApprovalIds.every((id) => approvedSelectedItems.includes(id));
+
     const handleZaznaczWszystkieDoZatwierdzenia = () => {
-    const allApproved = Object.values(filteredDane.ApprovedUrlopy).flat();
-    const allIds = allApproved.map(item => `cb-${item.id}`);
-    setApprovedSelectedItems(prev => selectAllApprovalChecked ? [] : allIds);
-    setSelectAllApprovalChecked(prev => !prev);
-};
+        setApprovedSelectedItems(() => areAllApprovalsSelected ? [] : allApprovalIds);
+    };
 
     const handlePdfDownloadClick = () => {
 
@@ -313,21 +319,16 @@ export default function UrlopyPage() {
             });
     };
 
-    const handleGroupCheckboxChange = (groupName, setGroupSelections, groupSelections, setSelectedItems, data) => {
-        const isChecked = !groupSelections[groupName];
-        
-        setGroupSelections(prevSelections => ({
-            ...prevSelections,
-            [groupName]: isChecked,
-        }));
-        
-        const itemIds = data.map(item => `cb-${item.id}`);
-        
-        setSelectedItems(prevSelectedItems => 
-            isChecked 
-                ? [...new Set([...prevSelectedItems, ...itemIds])]
-                : prevSelectedItems.filter(item => !itemIds.includes(item)) 
-        );
+    const handleGroupCheckboxChange = (setSelectedItems, groupData) => {
+        const itemIds = groupData.map((item) => `cb-${item.id}`);
+
+        setSelectedItems((prevSelectedItems) => {
+            const areAllSelected = itemIds.every((id) => prevSelectedItems.includes(id));
+            if (areAllSelected) {
+                return prevSelectedItems.filter((item) => !itemIds.includes(item));
+            }
+            return [...new Set([...prevSelectedItems, ...itemIds])];
+        });
     };
     
     const handleCheckboxChange = (checkboxId, setSelectedItems, selectedItems) => {
@@ -338,13 +339,6 @@ export default function UrlopyPage() {
         );
     };
     
-    const handleGroupToggle = (groupName, setExpandedGroups, expandedGroups) => {
-        setExpandedGroups(prevExpandedGroups => ({
-            ...prevExpandedGroups,
-            [groupName]: !prevExpandedGroups[groupName],
-        }));
-    };
-
     const handleMasterCheckboxChange = () => {
         const newState = !allGroupsSelected;
         setAllGroupsSelected(newState);
@@ -378,9 +372,7 @@ export default function UrlopyPage() {
         }, { withCredentials: true })
             .then(() => {
                 fetchUrlopy();
-                setApprovedSelectedItems([]);
                 setZatwierdzWindowVisible(false);
-                setApprovedGroupSelections({});
                 setApprovedSelectedItems([]);
                 
             })
@@ -804,7 +796,7 @@ export default function UrlopyPage() {
                     disabled={accountType !== 'Administrator'}
                 />
                 <Button 
-                    label={selectAllApprovalChecked ? "Odznacz wszystkie" : "Zaznacz wszystkie"} 
+                    label={areAllApprovalsSelected ? "Odznacz wszystkie" : "Zaznacz wszystkie"} 
                     onClick={handleZaznaczWszystkieDoZatwierdzenia} 
                     className="bg-yellow-500 text-white p-1 m-0.5 text-sm w-24"
                     disabled={accountType !== 'Administrator'}

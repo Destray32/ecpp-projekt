@@ -196,8 +196,8 @@ export default function ZaplanujTydzienPage() {
                             <tr>
                                 <th className="border-r w-1/8">Data od</th>
                                 <th className="border-r w-1/8">Data do</th>
-                                <th className="border-r w-1/10">Nazwisko</th>
                                 <th className="border-r w-1/8">Imię</th>
+                                <th className="border-r w-1/10">Nazwisko</th>
                                 <th className="border-r w-1/6">Grupa</th>
                                 <th className="border-r w-1/4">Opis</th>
                                 <th className="border-r w-1/10"></th>
@@ -208,8 +208,8 @@ export default function ZaplanujTydzienPage() {
                                 <tr key={item.id} className="border-b even:bg-gray-200 odd:bg-gray-300">
                                     <td className="border-r">{formatDate(item.data_od)}</td>
                                     <td className="border-r">{formatDate(item.data_do)}</td>
-                                    <td className="border-r">{item.nazwisko ? item.nazwisko : item.pojazd || 'No Data'}</td>
                                     <td className="border-r">{item.imie}</td>
+                                    <td className="border-r">{item.nazwisko ? item.nazwisko : item.pojazd || 'No Data'}</td>
                                     <td className="border-r">{item.Zleceniodawca}</td>
                                     <td className="border-r">{item.Opis}</td>
                                     <td className="border-r">
