@@ -318,6 +318,19 @@ useEffect(() => {
                 <div className="w-full h-2/5 flex flex-col space-y-2 items-start">
                     <div className="w-full h-2/6">
                         <div className="w-full flex flex-row items-center p-4">
+                            <Link to="/home/nowy-projekt"
+                                onClick={(e) => {
+                                    if (accountType !== 'Administrator' && accountType !== 'Biuro' && accountType !== 'Kierownik' && !hasSpecialAccess(imie, nazwisko, 'projekty')) {
+                                        e.preventDefault();
+                                    }
+                                }}
+                            >
+                                <Button 
+                                    label="Dodaj nowy projekt"
+                                    className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-6"
+                                    disabled={accountType !== 'Administrator' && accountType !== 'Biuro' && accountType !== 'Kierownik' && !hasSpecialAccess(imie, nazwisko, 'projekty')}
+                                />
+                            </Link>
                             <p className="mr-6">Filtr</p>
                             <Dropdown value={filtr} onChange={(e) => setFiltr(e.value)} options={["Aktywny", "Nieaktywny", "Wszystkie"]} placeholder="Filtrowanie"
                                 autoComplete="off"
@@ -376,19 +389,6 @@ useEffect(() => {
                                     label="Grupy projektów" 
                                     className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2"
                                     disabled={accountType !== 'Administrator'}
-                                />
-                            </Link>
-                            <Link to="/home/nowy-projekt"
-                                onClick={(e) => {
-                                    if (accountType !== 'Administrator' && accountType !== 'Biuro' && accountType !== 'Kierownik' && !hasSpecialAccess(imie, nazwisko, 'projekty')) {
-                                        e.preventDefault();
-                                    }
-                                }}
-                            >
-                                <Button 
-                                    label="Dodaj nowy projekt"
-                                    className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 mr-2"
-                                    disabled={accountType !== 'Administrator' && accountType !== 'Biuro' && accountType !== 'Kierownik' && !hasSpecialAccess(imie, nazwisko, 'projekty')}
                                 />
                             </Link>
                         </div>

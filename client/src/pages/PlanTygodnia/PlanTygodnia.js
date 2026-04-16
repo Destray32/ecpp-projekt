@@ -456,6 +456,7 @@ const handleOpisChange = (planTygodniaId, newOpis) => {
                                         filter
                                         resetFilterOnHide
                                         filterInputAutoFocus
+                                        scrollHeight="420px"
                                     />
                                 </div>
                                 {/* Przenieś zaznaczone do */}

@@ -140,7 +140,7 @@ const NODE_ENV = process.env.NODE_ENV;
 const pool = mysql.createPool({
     host: 'localhost',
     user: 'root',
-    password: '',
+    password: 'root',
     database: 'mydb',
     waitForConnections: true,
     connectionLimit: 30,
@@ -303,7 +303,15 @@ app.post('/api/logout', (req, res) => {
 app.use(authenticateJWT);
 
 app.get('/api/check-token', (req, res) => {
-    res.json({ message: 'Token is valid' });
+    const nowInSeconds = Math.floor(Date.now() / 1000);
+    const expiresAt = req.user?.exp || null;
+    const remainingSeconds = expiresAt ? Math.max(expiresAt - nowInSeconds, 0) : 0;
+
+    res.json({
+        message: 'Token is valid',
+        expiresAt,
+        remainingSeconds,
+    });
 });
 
 app.get('/api/imie', (req, res) => {

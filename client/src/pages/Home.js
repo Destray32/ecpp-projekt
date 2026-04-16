@@ -7,7 +7,7 @@ import axios from 'axios';
 
 import GorneMenu from '../Components/GorneMenu';
 import ButtonLewy from '../Components/ButtonLeweMenu';
-import checkUserType from '../utils/accTypeUtils';
+import checkUserType, { hasSpecialAccess } from '../utils/accTypeUtils';
 
 export default function HomePage() {
     const [data, setData] = useState([]);
@@ -20,7 +20,69 @@ export default function HomePage() {
     const [badgeCount, setBadgeCount] = useState(0);
     const [isAdmin, setIsAdmin] = useState(false);
     const [accountType, setAccountType] = useState('');
+    const [sessionRemainingSeconds, setSessionRemainingSeconds] = useState(0);
+    const [name, setName] = useState('');
+    const [surname, setSurname] = useState('');
     const baseUrl = process.env.REACT_APP_BASE_URL;
+
+    const formatSessionTime = (totalSeconds) => {
+        const safeSeconds = Math.max(totalSeconds || 0, 0);
+        const hours = String(Math.floor(safeSeconds / 3600)).padStart(2, '0');
+        const minutes = String(Math.floor((safeSeconds % 3600) / 60)).padStart(2, '0');
+        const seconds = String(safeSeconds % 60).padStart(2, '0');
+        return `${hours}:${minutes}:${seconds}`;
+    };
+
+    const canAccessRoute = (path) => {
+        if (!accountType) {
+            return true;
+        }
+
+        if (path === '/home' || path === '/home/pracownik' || path === '/home/zmien-dane' || path === '/home/pobierz' || path === '/home/ogloszenia') {
+            return true;
+        }
+
+        if (accountType === 'Administrator') {
+            return true;
+        }
+
+        if (path === '/home/dodaj-pracownika' ||
+            path.startsWith('/home/edytuj-pracownika/') ||
+            path === '/home/zablokowani-pracownicy' ||
+            path === '/home/logowanie' ||
+            path === '/home/cennik' ||
+            path === '/home/archiwum' ||
+            path === '/home/zaplanuj' ||
+            path.startsWith('/home/projekt/') ||
+            path === '/home/grupy-projektow' ||
+            path === '/home/nowa-grupa' ||
+            path.startsWith('/home/grupa/') ||
+            path === '/home/nowy-pojazd') {
+            return false;
+        }
+
+        if (path === '/home/czas' || path === '/home/urlopy' || path === '/home/raporty') {
+            return true;
+        }
+
+        if (path === '/home/projekty' || path === '/home/nowy-projekt') {
+            return accountType === 'Biuro' || accountType === 'Kierownik' || hasSpecialAccess(name, surname, 'projekty');
+        }
+
+        if (path === '/home/pojazdy' || path === '/home/sprawdzsamochod') {
+            return accountType === 'Biuro' || accountType === 'Kierownik';
+        }
+
+        if (path === '/home/tydzien') {
+            return accountType === 'Biuro' || hasSpecialAccess(name, surname, 'tydzien');
+        }
+
+        if (path === '/home/plan') {
+            return accountType !== 'Pracownik';
+        }
+
+        return true;
+    };
 
     useEffect(() => {
         checkUserType(setAccountType);
@@ -49,7 +111,8 @@ export default function HomePage() {
 
     const checkTokenValidity = async () => {
         try {
-            await axios.get(`${baseUrl}/api/check-token`, { withCredentials: true });
+            const response = await axios.get(`${baseUrl}/api/check-token`, { withCredentials: true });
+            setSessionRemainingSeconds(response.data?.remainingSeconds || 0);
         } catch (error) {
             if (error.response && error.response.status === 401) {
                 navigate('/');
@@ -78,6 +141,8 @@ export default function HomePage() {
         try {
             const response = await axios.get(`${baseUrl}/api/imie`, { withCredentials: true });
             const { name, surename } = response.data;
+            setName(name);
+            setSurname(surename);
             setImie(`${name} ${surename}`);
         } catch (error) {
             console.error(error);
@@ -108,13 +173,29 @@ export default function HomePage() {
 
         const timer = setInterval(() => {
             setData(moment().format('DD/MM/YYYY'));
+            setSessionRemainingSeconds((prev) => Math.max((prev || 0) - 1, 0));
         }, 1000);
+
+        const tokenRefreshTimer = setInterval(() => {
+            checkTokenValidity();
+        }, 60000);
 
         return () => {
             clearInterval(timer);
+            clearInterval(tokenRefreshTimer);
             //window.removeEventListener('beforeunload', handlePageUnload);
         }
     }, []);
+
+    useEffect(() => {
+        if (!accountType) {
+            return;
+        }
+
+        if (!canAccessRoute(location.pathname)) {
+            navigate('/home/czas', { replace: true });
+        }
+    }, [accountType, location.pathname, name, surname]);
 
     // useEffect(() => {
     //     const unlisten = navigate((location, action) => {
@@ -157,7 +238,7 @@ export default function HomePage() {
                     </button>
                     <h1 className="text-2xl font-bold">ECPP</h1>
                     <div className="flex items-center">
-                        <span className="mr-4">{imie + ' ' + data}</span>
+                        <span className="mr-4">{imie + ' ' + data} | Sesja: {formatSessionTime(sessionRemainingSeconds)}</span>
                         <Link to="/home/ogloszenia" className='mr-4'>
                             <Badge count={badgeCount}>
                                 <Button type="primary" size="large">
