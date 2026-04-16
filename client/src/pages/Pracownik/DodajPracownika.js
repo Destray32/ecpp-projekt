@@ -18,6 +18,13 @@ export default function DodajPracownikaPage() {
     const [pojazd, setPojazd] = useState([]);
     const baseUrl = process.env.REACT_APP_BASE_URL;
 
+    const trimStringValues = (obj) => Object.fromEntries(
+        Object.entries(obj).map(([key, value]) => [
+            key,
+            typeof value === 'string' ? value.trim() : value,
+        ])
+    );
+
     useEffect(() => {
         axios.get(`${baseUrl}/api/pracownik/firmy`, { withCredentials: true })
             .then(res => {
@@ -60,7 +67,7 @@ export default function DodajPracownikaPage() {
     }, []);
     
     const handleSubmit = (values) => {
-        const filteredValues = { ...values };
+        const filteredValues = trimStringValues({ ...values });
         
         if (!filteredValues.vehicle) delete filteredValues.vehicle;
         if (!filteredValues.vacationGroup) delete filteredValues.vacationGroup;
@@ -84,17 +91,19 @@ export default function DodajPracownikaPage() {
 
     const onValuesChange = (changedValues, allValues) => {
         const { surename, name, newPassword, confirmPassword } = allValues;
+        const trimmedSurname = typeof surename === 'string' ? surename.trim() : surename;
+        const trimmedName = typeof name === 'string' ? name.trim() : name;
 
-        if (surename && name) {
+        if (trimmedSurname && trimmedName) {
             // Set login as combination of surname and name with space
-            const login = `${surename} ${name}`;
+            const login = `${trimmedSurname} ${trimmedName}`;
             form.setFieldsValue({
                 login: login,
             });
             
             // Set default password if not already set
             if (!newPassword && !confirmPassword) {
-                const password = surename + name[0] + '123';
+                const password = trimmedSurname + trimmedName[0] + '123';
                 form.setFieldsValue({
                     newPassword: password,
                     confirmPassword: password,

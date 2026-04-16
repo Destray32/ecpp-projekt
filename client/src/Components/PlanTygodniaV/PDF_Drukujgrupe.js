@@ -162,7 +162,7 @@ const PDF_Drukujgrupe = (data, startDate, endDate) => {
           if (x + osobaWidth + opisWidth + commaWidth > maxW) {
             yPos += 16;
             if (yPos > pageH) { doc.addPage(); yPos = topY; }
-            x = marginL + doc.getTextWidth(`${mKey}: Pracownicy: `);
+            x = marginL + doc.getTextWidth(`${mKey}: `);
           }
           doc.setFont('OpenSans','normal').setFontSize(14).setTextColor(0,0,0);
           doc.text(osobaText, x, yPos, { baseline: 'top' });
@@ -178,12 +178,12 @@ const PDF_Drukujgrupe = (data, startDate, endDate) => {
             x += commaWidth;
           }
         });
-  yPos += 30; // Większy odstęp po sekcji pracowników
+  yPos += 24;
       }
 
       // Pojazdy
       if (byM[sKey]?.c.length) {
-  yPos += 12; // Większy odstęp przed sekcją pojazdów
+  yPos += 12;
         let x = marginL + doc.getTextWidth(`${sKey}: `);
         doc.setFont('OpenSansB','bold').setFontSize(14).setTextColor(0,102,204);
         doc.text(`${sKey}:`, marginL, yPos, { baseline: 'top' });
@@ -210,10 +210,45 @@ const PDF_Drukujgrupe = (data, startDate, endDate) => {
       }
     }
 
+    const standaloneVehicleKeys = Object.keys(byM)
+      .filter((k) => /^S\d+$/.test(k) && !byM[k.replace(/^S/, 'M')]?.p?.length)
+      .sort((a, b) => Number(a.slice(1)) - Number(b.slice(1)));
+
+    for (const sKey of standaloneVehicleKeys) {
+      const vehicles = byM[sKey]?.c || [];
+      if (!vehicles.length) continue;
+
+      yPos += 12;
+      let x = marginL + doc.getTextWidth(`${sKey}: `);
+      doc.setFont('OpenSansB','bold').setFontSize(14).setTextColor(0,102,204);
+      doc.text(`${sKey}:`, marginL, yPos, { baseline: 'top' });
+      doc.setFont('OpenSans','normal').setFontSize(14).setTextColor(0,102,204);
+
+      vehicles.forEach((name, idx) => {
+        const pojazdWidth = doc.getTextWidth(name);
+        const commaWidth = (idx < vehicles.length - 1) ? doc.getTextWidth(', ') : 0;
+        if (x + pojazdWidth + commaWidth > maxW) {
+          yPos += 16;
+          if (yPos > pageH) { doc.addPage(); yPos = topY; }
+          x = marginL + doc.getTextWidth(`${sKey}: `);
+        }
+        doc.text(name, x, yPos, { baseline: 'top' });
+        x += pojazdWidth;
+        if (idx < vehicles.length - 1) {
+          doc.text(', ', x, yPos, { baseline: 'top' });
+          x += commaWidth;
+        }
+      });
+
+      doc.setTextColor(0,0,0);
+      yPos += 16;
+    }
+
     // na koniec pojazdy bez klucza
     if (emptyVehicles.length) {
+    yPos += 12;
     doc.setTextColor(0, 102, 204);
-    safeWrap(emptyVehicles.join(', '));
+    safeWrap(emptyVehicles.join(', '), 14);
     doc.setTextColor(0, 0, 0);
     }
 

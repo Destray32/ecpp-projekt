@@ -2,7 +2,12 @@ const db = require('../../../server');
 const bcrypt = require('bcryptjs');
 
 function DodajPracownika(req, res) {
-    console.log(req.body);
+    const sanitizeString = (value) => (typeof value === 'string' ? value.trim() : value);
+    const payload = Object.fromEntries(
+        Object.entries(req.body || {}).map(([key, value]) => [key, sanitizeString(value)])
+    );
+
+    console.log(payload);
     const {
         surename,
         name,
@@ -31,7 +36,7 @@ function DodajPracownika(req, res) {
         role,
         newPassword,
         confirmPassword
-    } = req.body;
+    } = payload;
 
     console.log('newPassword:', newPassword);
     console.log('confirmPassword:', confirmPassword);

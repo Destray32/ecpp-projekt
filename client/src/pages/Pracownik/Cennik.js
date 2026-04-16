@@ -12,6 +12,7 @@ export default function CennikPage() {
     const [accountType, setAccountType] = useState('');
     const [globalRates, setGlobalRates] = useState({});
     const baseUrl = process.env.REACT_APP_BASE_URL;
+    const hiddenGroupNames = new Set(['Do dyspozycji', 'Urlopy', 'Urlop tacierzyński', 'Urlop tacierzyński / L4']);
 
     useEffect(() => {
         checkUserType(setAccountType);
@@ -178,7 +179,7 @@ export default function CennikPage() {
     // Sortowanie zleceniodawców
     const sortedClients = Object.entries(globalRates).sort((a, b) => 
         a[1].nazwa.localeCompare(b[1].nazwa, 'pl')
-    );
+    ).filter(([, grupa]) => !hiddenGroupNames.has(grupa.nazwa));
 
     const canEdit = accountType === 'Administrator' || accountType === 'Kierownik';
 
