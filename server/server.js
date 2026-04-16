@@ -292,7 +292,12 @@ app.get('/api/logins', (req, res) => {
 });
 
 app.post('/api/logout', (req, res) => {
-    res.cookie("token", "", { httpOnly: true, secure: process.env.NODE_ENV === "production", expires: new Date(0) });
+    res.cookie("token", "", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: 'strict',
+        expires: new Date(0)
+    });
     res.json({ message: "Logged out successfully" });
 });
 
@@ -303,9 +308,22 @@ app.post('/api/logout', (req, res) => {
 app.use(authenticateJWT);
 
 app.get('/api/check-token', (req, res) => {
+    const refreshedToken = jwt.sign(
+        { id: req.user.id, role: req.user.role },
+        process.env.JWT_SECRET,
+        { expiresIn: '1h' }
+    );
+
+    res.cookie('token', refreshedToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 3600000,
+    });
+
     const nowInSeconds = Math.floor(Date.now() / 1000);
-    const expiresAt = req.user?.exp || null;
-    const remainingSeconds = expiresAt ? Math.max(expiresAt - nowInSeconds, 0) : 0;
+    const expiresAt = nowInSeconds + 3600;
+    const remainingSeconds = 3600;
 
     res.json({
         message: 'Token is valid',

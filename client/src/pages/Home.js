@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import moment from 'moment';
 import { Button, Badge, Modal } from 'antd';
@@ -23,6 +23,7 @@ export default function HomePage() {
     const [sessionRemainingSeconds, setSessionRemainingSeconds] = useState(0);
     const [name, setName] = useState('');
     const [surname, setSurname] = useState('');
+    const lastSessionRefreshRef = useRef(0);
     const baseUrl = process.env.REACT_APP_BASE_URL;
 
     const formatSessionTime = (totalSeconds) => {
@@ -103,22 +104,34 @@ export default function HomePage() {
     const handleLogout = async () => {
         try {
             await axios.post(`${baseUrl}/api/logout`, {}, { withCredentials: true });
+            localStorage.removeItem('selectedMenu');
             navigate('/');
         } catch (error) {
             console.error(error);
         }
     }
 
-    const checkTokenValidity = async () => {
+    const checkTokenValidity = useCallback(async () => {
         try {
             const response = await axios.get(`${baseUrl}/api/check-token`, { withCredentials: true });
             setSessionRemainingSeconds(response.data?.remainingSeconds || 0);
+            lastSessionRefreshRef.current = Date.now();
         } catch (error) {
             if (error.response && error.response.status === 401) {
                 navigate('/');
             }
         }
-    }
+    }, [baseUrl, navigate]);
+
+    const refreshSessionOnActivity = useCallback(() => {
+        const now = Date.now();
+        // Avoid sending a request for every mouse move; one refresh per minute is enough.
+        if (now - lastSessionRefreshRef.current < 60000) {
+            return;
+        }
+
+        checkTokenValidity();
+    }, [checkTokenValidity]);
 
     const daneUzupelnione = async () => {
         try {
@@ -176,16 +189,34 @@ export default function HomePage() {
             setSessionRemainingSeconds((prev) => Math.max((prev || 0) - 1, 0));
         }, 1000);
 
-        const tokenRefreshTimer = setInterval(() => {
-            checkTokenValidity();
-        }, 60000);
+        const activityEvents = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
+        activityEvents.forEach((eventName) => {
+            window.addEventListener(eventName, refreshSessionOnActivity, { passive: true });
+        });
+
+        const visibilityHandler = () => {
+            if (document.visibilityState === 'visible') {
+                refreshSessionOnActivity();
+            }
+        };
+
+        document.addEventListener('visibilitychange', visibilityHandler);
 
         return () => {
             clearInterval(timer);
-            clearInterval(tokenRefreshTimer);
+            activityEvents.forEach((eventName) => {
+                window.removeEventListener(eventName, refreshSessionOnActivity);
+            });
+            document.removeEventListener('visibilitychange', visibilityHandler);
             //window.removeEventListener('beforeunload', handlePageUnload);
         }
-    }, []);
+    }, [checkTokenValidity, refreshSessionOnActivity]);
+
+    useEffect(() => {
+        if (location.pathname === '/home' || location.pathname === '/home/') {
+            navigate('/home/czas', { replace: true });
+        }
+    }, [location.pathname, navigate]);
 
     useEffect(() => {
         if (!accountType) {
@@ -195,7 +226,7 @@ export default function HomePage() {
         if (!canAccessRoute(location.pathname)) {
             navigate('/home/czas', { replace: true });
         }
-    }, [accountType, location.pathname, name, surname]);
+    }, [accountType, location.pathname, name, surname, navigate]);
 
     // useEffect(() => {
     //     const unlisten = navigate((location, action) => {

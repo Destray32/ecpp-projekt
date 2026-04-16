@@ -29,7 +29,8 @@ export default function LoginPage() {
                 setIsLoading(true);
                 await axios.get(`${baseUrl}/api/check-token`, { withCredentials: true });
                 // If request is successful, token is valid, redirect to home
-                navigate('/home/czas');
+                localStorage.setItem('selectedMenu', 'Czas');
+                navigate('/home/czas', { replace: true });
             } catch (error) {
                 // If token is invalid or doesn't exist, show login form
                 console.log('Token is invalid or not present, showing login form');
@@ -69,7 +70,8 @@ export default function LoginPage() {
             const loginToUse = login === "" ? "twachala" : login;
             const response = await axios.post(`${baseUrl}/api/logowanie`, { firma, login: loginToUse, password }, { withCredentials: true });
             notification.success({ message: 'Zalogowano', description: 'Zalogowano pomyślnie' });
-            navigate('/home/czas');
+            localStorage.setItem('selectedMenu', 'Czas');
+            navigate('/home/czas', { replace: true });
         } catch (error) {
             notification.error({
                 message: 'Logowanie nieudane',
