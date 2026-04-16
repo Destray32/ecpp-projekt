@@ -17,6 +17,7 @@ export default function ProjektyPage() {
     const [accountType, setAccountType] = useState('');
     const [selectAll, setSelectAll] = useState(false);
     const [searchZleceniodawca, setSearchZleceniodawca] = useState('');
+    const [searchProjekt, setSearchProjekt] = useState('');
     const [zleceniodawcyOptions, setZleceniodawcyOptions] = useState([]);
     const [imie, setImie] = useState('');
     const [nazwisko, setNazwisko] = useState('');
@@ -50,7 +51,12 @@ export default function ProjektyPage() {
 
     const handleSelectAllChange = () => {
         setSelectAll(!selectAll);
-        setSelectedItems(!selectAll ? data.map(projekty => projekty.id) : []);
+        const visibleProjects = data.filter((projekt) => {
+            const query = searchProjekt.trim().toLowerCase();
+            if (!query) return true;
+            return String(projekt.NazwaKod_Projektu || '').toLowerCase().includes(query);
+        });
+        setSelectedItems(!selectAll ? visibleProjects.map(projekty => projekty.id) : []);
     };
 
     useEffect(() => {
@@ -294,6 +300,17 @@ useEffect(() => {
     }
 }, [searchZleceniodawca]);
 
+    const filteredProjects = data.filter((projekt) => {
+        const query = searchProjekt.trim().toLowerCase();
+        if (!query) return true;
+        return String(projekt.NazwaKod_Projektu || '').toLowerCase().includes(query);
+    });
+
+    const projectSuggestions = filteredProjects
+        .map((projekt) => projekt.NazwaKod_Projektu)
+        .filter((value, index, arr) => value && arr.indexOf(value) === index)
+        .slice(0, 30);
+
 
     return (
         <div>
@@ -304,7 +321,7 @@ useEffect(() => {
                             <p className="mr-6">Filtr</p>
                             <Dropdown value={filtr} onChange={(e) => setFiltr(e.value)} options={["Aktywny", "Nieaktywny", "Wszystkie"]} placeholder="Filtrowanie"
                                 autoComplete="off"
-                                className="w-2/12 mr-6" // Adjusted width to make it smaller
+                                className="w-40 mr-4" // Slightly narrower for better header spacing
                                 filter
                                 resetFilterOnHide
                                 filterInputAutoFocus
@@ -314,11 +331,26 @@ useEffect(() => {
                                 onChange={(e) => setSearchZleceniodawca(e.value)}
                                 options={zleceniodawcyOptions}
                                 placeholder="Szukaj według Zleceniodawcy"
-                                className="w-2/12 mr-6" // Adjusted width to make it smaller
+                                className="w-48 mr-4" // Slightly narrower for better header spacing
                                 filter
                                 resetFilterOnHide
                                 filterInputAutoFocus
                             />
+                            <div className="mr-4">
+                                <input
+                                    type="text"
+                                    value={searchProjekt}
+                                    onChange={(e) => setSearchProjekt(e.target.value)}
+                                    placeholder="Szukaj projektu, np. 10"
+                                    className="w-56 p-2 border border-gray-300 rounded"
+                                    list="projekty-suggestions"
+                                />
+                                <datalist id="projekty-suggestions">
+                                    {projectSuggestions.map((name) => (
+                                        <option key={name} value={name} />
+                                    ))}
+                                </datalist>
+                            </div>
                             <div className="flex flex-row items-center">
                                 <Button 
                                     onClick={handlePrzeniesAktyw} 
@@ -383,7 +415,7 @@ useEffect(() => {
                         </tr>
                     </thead>
                     <tbody className="text-center">
-                        {data.map((projekty, index) => {
+                        {filteredProjects.map((projekty, index) => {
                             const statusClass = projekty.Status === 'Aktywny'
                                 ? 'text-green-500'
                                 : 'text-red-500';
@@ -416,6 +448,14 @@ useEffect(() => {
                                                 label="Edytuj"
                                                 className="bg-blue-700 text-white p-1 m-0.5"
                                                 disabled={accountType !== 'Administrator'}
+                                            />
+                                        </Link>
+                                        <Link 
+                                            to={`/home/projekt/${projekty.id}/materialy`}
+                                        >
+                                            <Button
+                                                label="Materiały"
+                                                className="bg-amber-600 text-white p-1 m-0.5"
                                             />
                                         </Link>
                                         <Button

@@ -231,6 +231,11 @@ const UsunPojazd = require('./api/Czas/Pojazdy/pojazdy.usun');
 const DodajPojazd = require('./api/Czas/Pojazdy/pojazdy.dodaj');
 const EdytujPojazd = require('./api/Czas/Pojazdy/pojazdy.edytuj');
 
+// Czas > Materialy
+const PobierzMaterialy = require('./api/Czas/Materialy/czas.materialy.pobierz');
+const DodajMaterial = require('./api/Czas/Materialy/czas.materialy.dodaj');
+const UsunMaterial = require('./api/Czas/Materialy/czas.materialy.usun');
+
 // Czas > Tydzien
 const GetTydzien = require('./api/Czas/Tydzien/czas.tydzien.getTydzien');
 const OtworzTydzienCzas = require('./api/Czas/Tydzien/czas.tydzien.otworzTydzien');
@@ -479,6 +484,18 @@ app.get('/api/czas/pobierzGrupe/:id', (req, res) => {
 app.put('/api/czas/edytujGrupe/:id', authorizeRole('Administrator', 'Kierownik', 'Biuro'), (req, res) => {
     EdytujGrupe(req, res, pool);
 });
+
+/////////////////////////////////////////
+// CZAS > MATERIALY //
+app.get('/api/czas/materialy/:id', (req, res) => {
+    PobierzMaterialy(req, res, pool);
+});
+app.post('/api/czas/materialy/:id', (req, res) => {
+    DodajMaterial(req, res, pool);
+});
+app.delete('/api/czas/materialy/:id/:materialId', (req, res) => {
+    UsunMaterial(req, res, pool);
+});
 /////////////////////////////////////////
 
 // CZAS > URLOPY //
@@ -627,27 +644,27 @@ app.get('/api/firmy', (req, res) => {
     PobierzDostepneFirmy(req, res, pool);
 });
 
-const server = https.createServer(loadTLS(), app);
+// const server = https.createServer(loadTLS(), app);
 
-server.listen(5000, () => {
-  console.log('Server running on https://qubis.pl:5000');
-});
-
-// automatyczne przeładowanie TLS po odnowieniu certów
-function reloadTLS() {
-  try {
-    server.setSecureContext(loadTLS());
-    console.log('TLS context reloaded (cert renewed)');
-  } catch (e) {
-    console.error('TLS reload failed:', e);
-  }
-}
-
-[KEY, CERT].forEach(f => fs.watchFile(f, { interval: 30000 }, reloadTLS));
-
-// app.listen(port, () => {
-//     console.log(`Server running on http://localhost:${port}`);
+// server.listen(5000, () => {
+//   console.log('Server running on https://qubis.pl:5000');
 // });
+
+// // automatyczne przeładowanie TLS po odnowieniu certów
+// function reloadTLS() {
+//   try {
+//     server.setSecureContext(loadTLS());
+//     console.log('TLS context reloaded (cert renewed)');
+//   } catch (e) {
+//     console.error('TLS reload failed:', e);
+//   }
+// }
+
+// [KEY, CERT].forEach(f => fs.watchFile(f, { interval: 30000 }, reloadTLS));
+
+app.listen(port, () => {
+    console.log(`Server running on http://localhost:${port}`);
+});
 
 
 

@@ -37,6 +37,15 @@ function generujRaport(req, res, db) {
                       dp.Parking as Parking,
                       dp.Diety as Diety,
                       dp.Inne_koszty as Inne_koszty,
+                                            (
+                                                SELECT pm.NazwaFaktury
+                                                FROM projekt_materialy pm
+                                                WHERE pm.ProjektID = pr.idProjekty
+                                                ORDER BY pm.Data DESC, pm.id DESC
+                                                LIMIT 1
+                                            ) AS DomyslnaNazwaFaktury,
+                      gr.Cennik AS StawkaGodzinowa,
+                      gr.Stawka AS StawkaKilometrowa,
                       gr.idGrupa_urlopowa As idGrupa_urlopowa
                   FROM
                       Dzien_Projekty dp
@@ -55,7 +64,9 @@ function generujRaport(req, res, db) {
                   JOIN
                       Grupa_urlopowa gr ON pr.Grupa_urlopowa_idGrupa_urlopowa = gr.idGrupa_urlopowa
                   WHERE
-                      dp.Godziny_przepracowane > 0;`;
+                      COALESCE(dp.Godziny_przepracowane, 0) > 0
+                      OR COALESCE(dp.Kilometry, 0) > 0
+                      OR COALESCE(dp.Parking, 0) > 0;`;
 
     db.query(sql, (err, result) => {
         if (err) {
