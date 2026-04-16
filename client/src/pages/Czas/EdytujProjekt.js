@@ -81,12 +81,15 @@ export default function EdytujProjektPage() {
     }, [id]);
 
     const handleSave = () => {
+        const inputName = String(form.nazwa || '').trim();
+        const normalizedInputName = inputName.toLowerCase();
+
         // Check for duplicate project in the selected group
         const duplicateInGroup = availableProjects.some(
             (project) =>
-                project.name === form.nazwa &&
+                String(project.name || '').trim().toLowerCase() === normalizedInputName &&
                 project.value === form.zleceniodawca &&
-                project.idProjekty !== parseInt(id) // Ensure the current project is excluded
+                project.idProjekty !== parseInt(id, 10) // Ensure the current project is excluded
         );
 
         if (duplicateInGroup) {
@@ -94,19 +97,7 @@ export default function EdytujProjektPage() {
             return;
         }
 
-        const duplicateNameInSameGroup = availableProjects.some(
-            (project) =>
-                project.name === form.nazwa &&
-                project.value === form.zleceniodawca &&
-                project.idProjekty !== parseInt(id)
-        );
-
-        if (duplicateNameInSameGroup) {
-            message.error("Nie można zmienić nazwy projektu na już istniejącą w tej samej grupie.");
-            return;
-        }
-
-        Axios.put(`${baseUrl}/api/czas/edytujProjekt/${id}`, form, { 
+        Axios.put(`${baseUrl}/api/czas/edytujProjekt/${id}`, { ...form, nazwa: inputName }, { 
             withCredentials: true 
         })
         .then(res => {

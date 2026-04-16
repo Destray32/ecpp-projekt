@@ -59,12 +59,13 @@ export default function DodajNowyProjektPage() {
     }, []);
 
     const handleSave = () => {
-        // Normalize the project name by trimming whitespace
-        const normalizedInputName = form.nazwa.trim().toLowerCase();
+        // Preserve the original casing for saved value.
+        const inputName = form.nazwa.trim();
+        const normalizedInputName = inputName.toLowerCase();
 
         // Check if the project already exists
         const projectExists = availableProjects.some(
-            (project) => project.name.toLowerCase() === normalizedInputName
+            (project) => String(project.name || '').trim().toLowerCase() === normalizedInputName
         );
 
         if (projectExists) {
@@ -78,7 +79,7 @@ export default function DodajNowyProjektPage() {
         }
 
         // Proceed with saving if the project does not exist
-        Axios.post(`${baseUrl}/api/czas/projekty`, { ...form, nazwa: normalizedInputName }, { withCredentials: true })
+        Axios.post(`${baseUrl}/api/czas/projekty`, { ...form, nazwa: inputName }, { withCredentials: true })
             .then(() => {
                 window.location.href = '/home/projekty';
             })
