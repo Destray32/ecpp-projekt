@@ -644,27 +644,40 @@ app.get('/api/firmy', (req, res) => {
     PobierzDostepneFirmy(req, res, pool);
 });
 
-// const server = https.createServer(loadTLS(), app);
+const isProduction = NODE_ENV === 'production';
 
-// server.listen(5000, () => {
-//   console.log('Server running on https://qubis.pl:5000');
-// });
+if (isProduction) {
+    try {
+        const server = https.createServer(loadTLS(), app);
 
-// // automatyczne przeładowanie TLS po odnowieniu certów
-// function reloadTLS() {
-//   try {
-//     server.setSecureContext(loadTLS());
-//     console.log('TLS context reloaded (cert renewed)');
-//   } catch (e) {
-//     console.error('TLS reload failed:', e);
-//   }
-// }
+        server.listen(port, () => {
+            console.log(`Server running on https://qubis.pl:${port}`);
+        });
 
-// [KEY, CERT].forEach(f => fs.watchFile(f, { interval: 30000 }, reloadTLS));
+        // automatyczne przeładowanie TLS po odnowieniu certów
+        const reloadTLS = () => {
+            try {
+                server.setSecureContext(loadTLS());
+                console.log('TLS context reloaded (cert renewed)');
+            } catch (e) {
+                console.error('TLS reload failed:', e);
+            }
+        };
 
-app.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}`);
-});
+        [KEY, CERT].forEach((filePath) => {
+            fs.watchFile(filePath, { interval: 30000 }, reloadTLS);
+        });
+    } catch (error) {
+        console.error('HTTPS startup failed, fallback to HTTP:', error);
+        app.listen(port, () => {
+            console.log(`Server running on http://localhost:${port}`);
+        });
+    }
+} else {
+    app.listen(port, () => {
+        console.log(`Server running on http://localhost:${port}`);
+    });
+}
 
 
 

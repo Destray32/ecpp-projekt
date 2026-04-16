@@ -9,6 +9,7 @@ import Axios from "axios";
 import ZatwierdzWindow from '../../Components/Urlopy/ZatwierdzWindow';
 import { notification } from 'antd';
 import checkUserType, { hasSpecialAccess } from '../../utils/accTypeUtils';
+import CalendarIsoInput from '../../Components/CalendarIsoInput';
 
 export default function UrlopyPage() {
     const [urlopOd, setUrlopOd] = useState('');
@@ -137,10 +138,23 @@ export default function UrlopyPage() {
                                             {editingVacationId === urlopy.id ? (
                                                 <>
                                                     <td className="border-r px-2 py-1">
-                                                        <InputText value={editVacationData.urlopOd} type="date" onChange={(e) => setEditVacationData({ ...editVacationData, urlopOd: e.target.value })} />
+                                                        <CalendarIsoInput
+                                                            value={editVacationData.urlopOd}
+                                                            onChange={(value) => setEditVacationData({ ...editVacationData, urlopOd: value })}
+                                                            placeholder="Urlop od"
+                                                            className="w-44"
+                                                            inputClassName="w-full rounded p-2"
+                                                        />
                                                     </td>
                                                     <td className="border-r px-2 py-1">
-                                                        <InputText value={editVacationData.urlopDo} type="date" onChange={(e) => setEditVacationData({ ...editVacationData, urlopDo: e.target.value })} />
+                                                        <CalendarIsoInput
+                                                            value={editVacationData.urlopDo}
+                                                            onChange={(value) => setEditVacationData({ ...editVacationData, urlopDo: value })}
+                                                            min={editVacationData.urlopOd || undefined}
+                                                            placeholder="Urlop do"
+                                                            className="w-44"
+                                                            inputClassName="w-full rounded p-2"
+                                                        />
                                                     </td>
                                                     <td className="border-r px-2 py-1">
                                                         <InputText
@@ -735,11 +749,24 @@ export default function UrlopyPage() {
                     <div className="w-full flex flex-row space-x-4 p-4 ml-4">
                         <div className="flex flex-col w-2/12">
                             <p className="text-sm text-gray-600 mb-2">Urlop od:</p>
-                            <InputText id="UrlopOd" value={urlopOd} onChange={(e) => setUrlopOd(e.target.value)} type="date" />
+                            <CalendarIsoInput
+                                value={urlopOd}
+                                onChange={setUrlopOd}
+                                placeholder="Urlop od"
+                                className="w-full"
+                                inputClassName="w-full rounded p-2"
+                            />
                         </div>
                         <div className="flex flex-col w-2/12 ">
                             <p className="text-sm text-gray-600 mb-2">Urlop do:</p>
-                            <InputText id="UrlopDo" value={urlopDo} onChange={(e) => setUrlopDo(e.target.value)} type="date" min={urlopOd} />
+                            <CalendarIsoInput
+                                value={urlopDo}
+                                onChange={setUrlopDo}
+                                min={urlopOd || undefined}
+                                placeholder="Urlop do"
+                                className="w-full"
+                                inputClassName="w-full rounded p-2"
+                            />
                         </div>
                     </div>
                     <div className="flex justify-start w-full p-4 ml-4">

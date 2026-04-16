@@ -4,6 +4,7 @@ import { Dropdown } from "primereact/dropdown";
 import { getWeek, subWeeks, addWeeks } from 'date-fns';
 import { formatWeek } from '../../utils/dateUtils';
 import { hasSpecialAccess } from '../../utils/accTypeUtils';
+import CalendarIsoInput from '../CalendarIsoInput';
 
 /**
  * Komponent nawigacji tygodniowej.
@@ -43,7 +44,7 @@ const WeekNavigation = ({
 }) => {
     const previousWeek = () => setCurrentDate(subWeeks(currentDate, 1));
     const nextWeek = () => setCurrentDate(addWeeks(currentDate, 1));
-    const handleDateChange = (e) => setCurrentDate(new Date(e.target.value));
+    const handleDateChange = (value) => setCurrentDate(new Date(value));
 
     return (
         <div className="w-auto h-full m-2 bg-amber-100 outline outline-1 outline-gray-500 flex flex-col space-y-4">
@@ -55,11 +56,12 @@ const WeekNavigation = ({
                             <div className="flex flex-col items-center">
                                 <p>{formatWeek(currentDate)}</p>
                                 <p className="text-lg font-bold">Tydzień {getWeek(currentDate, { weekStartsOn: 1 })}</p>
-                                <input 
-                                    type="date" 
-                                    value={currentDate.toISOString().split('T')[0]} // Format date as YYYY-MM-DD
-                                    onChange={handleDateChange} 
-                                    className="mt-2 p-1 border border-gray-300 rounded text-sm w-32 text-center"
+                                <CalendarIsoInput
+                                    value={currentDate.toISOString().split('T')[0]}
+                                    onChange={handleDateChange}
+                                    placeholder="Wybierz date"
+                                    className="mt-2 w-40"
+                                    inputClassName="w-full rounded border border-gray-300 p-1 text-center text-sm"
                                 />
                             </div>
                             <Button icon="pi pi-arrow-right" iconPos="right" className="p-button-outlined" onClick={nextWeek} />

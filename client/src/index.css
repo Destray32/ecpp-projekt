@@ -2,6 +2,51 @@
 @tailwind components;
 @tailwind utilities;
 
+.materialy-kalendarz-panel {
+  font-size: 14.5px !important;
+  min-width: 20rem !important;
+  width: 20rem !important;
+}
+
+.materialy-kalendarz-panel .p-datepicker-header {
+  padding: 0.35rem 0.52rem !important;
+}
+
+.materialy-kalendarz-panel .p-datepicker-title {
+  font-size: 0.94rem !important;
+}
+
+.materialy-kalendarz-panel .p-datepicker-prev,
+.materialy-kalendarz-panel .p-datepicker-next {
+  width: 2rem !important;
+  height: 2rem !important;
+}
+
+.materialy-kalendarz-panel table th {
+  padding: 0.16rem !important;
+  font-size: 0.8rem !important;
+}
+
+.materialy-kalendarz-panel table td {
+  padding: 0.12rem !important;
+}
+
+.materialy-kalendarz-panel table td > span {
+  width: 1.82rem !important;
+  height: 1.82rem !important;
+  font-size: 0.9rem !important;
+}
+
+.materialy-kalendarz-panel .p-datepicker-weeknumber {
+  color: #1d4ed8;
+  font-weight: 600;
+  font-size: 0.83rem !important;
+}
+
+.materialy-kalendarz-panel .p-datepicker-group {
+  width: 100% !important;
+}
+
 
 #password-oczko .p-input-icon {
   transform: translateX(-105%);

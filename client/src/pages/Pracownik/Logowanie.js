@@ -3,6 +3,7 @@ import axios from "axios";
 import { Dropdown } from 'primereact/dropdown';
 import { Button } from 'primereact/button';
 import AmberBox from "../../Components/AmberBox";
+import CalendarIsoInput from '../../Components/CalendarIsoInput';
 
 export default function LogowaniePage() {
     const [logData, setLogData] = useState([]);
@@ -92,8 +93,20 @@ export default function LogowaniePage() {
                 <AmberBox>
                     <div className="flex flex-row items-center justify-center space-x-4 w-full">
                         <p>Wybierz okres</p>
-                        <input type="date" className="p-2.5 rounded" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-                        <input type="date" className="p-2.5 rounded" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                        <CalendarIsoInput
+                            value={startDate}
+                            onChange={setStartDate}
+                            placeholder="Data od"
+                            className="w-44"
+                            inputClassName="w-full rounded p-2.5"
+                        />
+                        <CalendarIsoInput
+                            value={endDate}
+                            onChange={setEndDate}
+                            placeholder="Data do"
+                            className="w-44"
+                            inputClassName="w-full rounded p-2.5"
+                        />
                         <Dropdown value={name} options={nameOptions} onChange={(e) => setName(e.value)} showClear placeholder="Wybierz imię" />
                         <Dropdown value={surname} options={surnameOptions} onChange={(e) => setSurname(e.value)} showClear placeholder="Wybierz nazwisko" />
                         <Button onClick={resetFilters} label="Reset" className="p-button-outlined border-2 p-2.5 bg-white text-black" />

@@ -7,6 +7,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
 import { font } from "../../fonts/OpenSans-Regular-normal";
+import CalendarIsoInput from '../../Components/CalendarIsoInput';
 
 export default function SprawdzSamochodPage() {
     const [allData, setAllData] = useState([]);
@@ -141,17 +142,19 @@ export default function SprawdzSamochodPage() {
             <AmberBox>
                 <div className="flex flex-row items-center justify-center space-x-4 w-full flex-wrap">
                     <p>Wybierz okres</p>
-                    <input
-                        type="date"
-                        className="p-2.5 rounded"
+                    <CalendarIsoInput
                         value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
+                        onChange={setStartDate}
+                        placeholder="Data od"
+                        className="w-44"
+                        inputClassName="w-full rounded p-2.5"
                     />
-                    <input
-                        type="date"
-                        className="p-2.5 rounded"
+                    <CalendarIsoInput
                         value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
+                        onChange={setEndDate}
+                        placeholder="Data do"
+                        className="w-44"
+                        inputClassName="w-full rounded p-2.5"
                     />
                     <Dropdown
                         value={Pojazd}

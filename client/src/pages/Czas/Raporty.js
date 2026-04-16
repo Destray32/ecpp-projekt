@@ -11,6 +11,7 @@ import PDF_SprawozdanieSzczegolowe from "../../Components/Raporty/PDF_Sprawozdan
 import PDF_SprawozdaniePodsumowanie from "../../Components/Raporty/PDF_SprawozdaniePodsumowanie";
 import { notification } from "antd";
 import checkUserType, { hasSpecialAccess } from "../../utils/accTypeUtils";
+import CalendarIsoInput from "../../Components/CalendarIsoInput";
 
 export default function RaportyPage() {
     const [startDate, setStartDate] = useState('');
@@ -930,20 +931,22 @@ export default function RaportyPage() {
                       <>
                           <p>Wybierz okres raportowania</p>
                           <div className="flex flex-row items-center space-x-4">
-                            <input
-                                type="date"
-                                className="p-2.5 rounded"
+                            <CalendarIsoInput
                                 value={startDate}
-                                onChange={(e) => setStartDate(e.target.value)}
+                                onChange={setStartDate}
+                                placeholder="Data od"
                                 disabled={interfaceFirma && ignorujDatyFirma}
+                                className="w-44"
+                                inputClassName="w-full rounded p-2.5"
                             />
-                            <input
-                                type="date"
-                                className="p-2.5 rounded"
+                            <CalendarIsoInput
                                 value={endDate}
-                                onChange={(e) => setEndDate(e.target.value)}
+                                onChange={setEndDate}
+                                placeholder="Data do"
                                 disabled={interfaceFirma && ignorujDatyFirma}
                                 min={startDate || undefined}
+                                className="w-44"
+                                inputClassName="w-full rounded p-2.5"
                             />
                         </div>
                       </>
