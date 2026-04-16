@@ -16,10 +16,7 @@ export default function EdytujProjektPage() {
         zleceniodawca: '',
         nazwa: '',
         kodProjektu: '',
-        ulica: '',
-        miejscowosc: '',
-        kodPocztowy: '',
-        kraj: ''
+        ulica: ''
     });
 
     const fetchGroups = () => {
@@ -61,10 +58,7 @@ export default function EdytujProjektPage() {
                         zleceniodawca: project.Grupa_urlopowa_idGrupa_urlopowa || '',
                         nazwa: project.NazwaKod_Projektu || '',
                         kodProjektu: project.NazwaKod_Projektu || '',
-                        ulica: project.Ulica || '',
-                        miejscowosc: project.Miejscowosc || '',
-                        kodPocztowy: project.Kod_pocztowy || '',
-                        kraj: project.Kraj || ''
+                        ulica: project.Ulica || ''
                     });
                     //console.log(project);
                 }
@@ -188,21 +182,6 @@ export default function EdytujProjektPage() {
                     <div className="w-6/12 lg:w-4/12">
                         <label htmlFor="ulica">Ulica</label>
                         <Input onChange={(e) => handleChange(e.target.value, 'ulica')} value={form.ulica} />
-                    </div>
-
-                    <div className="w-6/12 lg:w-4/12">
-                        <label htmlFor="miejscowosc">Miejscowość</label>
-                        <Input onChange={(e) => handleChange(e.target.value, 'miejscowosc')} value={form.miejscowosc} />
-                    </div>
-
-                    <div className="w-6/12 lg:w-4/12">
-                        <label htmlFor="kodPocztowy">Kod pocztowy</label>
-                        <Input onChange={(e) => handleChange(e.target.value, 'kodPocztowy')} value={form.kodPocztowy} />
-                    </div>
-
-                    <div className="w-6/12 lg:w-4/12">
-                        <label htmlFor="kraj">Kraj</label>
-                        <Input onChange={(e) => handleChange(e.target.value, 'kraj')} value={form.kraj} />
                     </div>
 
                     <div className="flex space-x-4 mt-8">
