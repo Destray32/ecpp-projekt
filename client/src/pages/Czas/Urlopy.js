@@ -557,6 +557,22 @@ export default function UrlopyPage() {
         return `${day}/${month}/${year}`;
     };
 
+    const normalizeDateForCompare = (value) => {
+        if (!value) return '';
+        const raw = String(value).trim();
+
+        if (/^\d{4}-\d{2}-\d{2}/.test(raw)) {
+            return raw.slice(0, 10);
+        }
+
+        if (/^\d{2}\/\d{2}\/\d{4}$/.test(raw)) {
+            const [day, month, year] = raw.split('/');
+            return `${year}-${month}-${day}`;
+        }
+
+        return raw;
+    };
+
     const getErrorDescription = (responseData, fallback = 'Nie udało się dodać urlopu') => {
         if (!responseData) return fallback;
         if (typeof responseData === 'string') return responseData;
@@ -612,18 +628,44 @@ export default function UrlopyPage() {
                 const responseData = result.data;
                 const overlaps = responseData?.overlaps || [];
                 const suggested = responseData?.suggestedRange;
+                const suggestedKey = suggested?.urlop_od && suggested?.urlop_do
+                    ? `${normalizeDateForCompare(suggested.urlop_od)}|${normalizeDateForCompare(suggested.urlop_do)}`
+                    : '';
+
+                const uniqueOverlaps = overlaps.filter((item, index, self) => {
+                    const currentKey = `${normalizeDateForCompare(item.urlop_od)}|${normalizeDateForCompare(item.urlop_do)}|${item.status || ''}`;
+                    return index === self.findIndex((candidate) => {
+                        const candidateKey = `${normalizeDateForCompare(candidate.urlop_od)}|${normalizeDateForCompare(candidate.urlop_do)}|${candidate.status || ''}`;
+                        return candidateKey === currentKey;
+                    });
+                });
+
+                const overlapsToDisplay = uniqueOverlaps.filter((item) => {
+                    const overlapRangeKey = `${normalizeDateForCompare(item.urlop_od)}|${normalizeDateForCompare(item.urlop_do)}`;
+                    return !suggestedKey || overlapRangeKey !== suggestedKey;
+                });
+                const overlapStatus = uniqueOverlaps.length > 0 ? uniqueOverlaps[0].status : null;
+                const hasSuggestedRange = Boolean(suggested?.urlop_od && suggested?.urlop_do);
 
                 Modal.confirm({
                     title: 'Wykryto nakładający się urlop',
                     content: (
                         <div>
                             <p>Istnieje już urlop w wybranym zakresie.</p>
-                            {suggested?.urlop_od && suggested?.urlop_do && (
-                                <p><strong>Proponowany zakres po połączeniu:</strong> {formatApiDate(suggested.urlop_od)} - {formatApiDate(suggested.urlop_do)}</p>
-                            )}
-                            {overlaps.length > 0 && (
+                            {hasSuggestedRange ? (
+                                <p>
+                                    <strong>Proponowany zakres po połączeniu:</strong><br />
+                                    {formatApiDate(suggested.urlop_od)} - {formatApiDate(suggested.urlop_do)}{overlapStatus ? ` (${overlapStatus})` : ''}
+                                </p>
+                            ) : uniqueOverlaps.length > 0 ? (
+                                <p>
+                                    <strong>Proponowany zakres po połączeniu:</strong><br />
+                                    {formatApiDate(uniqueOverlaps[0].urlop_od)} - {formatApiDate(uniqueOverlaps[0].urlop_do)} ({uniqueOverlaps[0].status})
+                                </p>
+                            ) : null}
+                            {!hasSuggestedRange && uniqueOverlaps.length === 0 && overlapsToDisplay.length > 0 && (
                                 <ul>
-                                    {overlaps.map((item) => (
+                                    {overlapsToDisplay.map((item) => (
                                         <li key={item.id}>
                                             {formatApiDate(item.urlop_od)} - {formatApiDate(item.urlop_do)} ({item.status})
                                         </li>

@@ -51,6 +51,52 @@ export default function RaportyPage() {
         return Number.isNaN(parsed.getTime()) ? null : parsed;
     };
 
+    const getIsoWeekAndYear = (dateValue) => {
+        if (!(dateValue instanceof Date) || Number.isNaN(dateValue.getTime())) {
+            return null;
+        }
+
+        const utcDate = new Date(Date.UTC(
+            dateValue.getFullYear(),
+            dateValue.getMonth(),
+            dateValue.getDate()
+        ));
+
+        const day = utcDate.getUTCDay() || 7;
+        utcDate.setUTCDate(utcDate.getUTCDate() + 4 - day);
+
+        const isoYear = utcDate.getUTCFullYear();
+        const yearStart = new Date(Date.UTC(isoYear, 0, 1));
+        const week = Math.ceil((((utcDate - yearStart) / 86400000) + 1) / 7);
+
+        return { year: isoYear, week };
+    };
+
+    const getIsoWeekKeyFromEntry = (entry) => {
+        const entryDate = parseDataToDate(entry?.Data);
+        const iso = getIsoWeekAndYear(entryDate);
+        if (!iso) return null;
+        return `${iso.year}-${String(iso.week).padStart(2, '0')}`;
+    };
+
+    const getIsoWeekDateRange = (isoYear, isoWeek) => {
+        const jan4 = new Date(Date.UTC(isoYear, 0, 4));
+        const jan4Day = jan4.getUTCDay() || 7;
+        const week1Monday = new Date(jan4);
+        week1Monday.setUTCDate(jan4.getUTCDate() - (jan4Day - 1));
+
+        const monday = new Date(week1Monday);
+        monday.setUTCDate(week1Monday.getUTCDate() + ((isoWeek - 1) * 7));
+
+        const sunday = new Date(monday);
+        sunday.setUTCDate(monday.getUTCDate() + 6);
+
+        return {
+            start: new Date(monday.getUTCFullYear(), monday.getUTCMonth(), monday.getUTCDate()),
+            end: new Date(sunday.getUTCFullYear(), sunday.getUTCMonth(), sunday.getUTCDate()),
+        };
+    };
+
     const formatNumber = (value, fractionDigits = 2) => {
         const safeValue = Number(value || 0);
         return safeValue.toLocaleString('pl-PL', {
@@ -70,6 +116,13 @@ export default function RaportyPage() {
         const safeValue = Number(value || 0);
         if (!Number.isFinite(safeValue)) return '0,00';
         return safeValue.toFixed(2).replace('.', ',');
+    };
+
+    const parseDecimal = (value) => {
+        if (value === null || value === undefined) return 0;
+        const normalized = String(value).replace(',', '.').trim();
+        const parsed = Number(normalized);
+        return Number.isFinite(parsed) ? parsed : 0;
     };
 
     const sanitizeCopyCell = (value) => {
@@ -120,26 +173,18 @@ export default function RaportyPage() {
         if (!Array.isArray(raport) || raport.length === 0) return [];
 
         const grouped = raport.reduce((acc, entry) => {
-            if (!entry.Rok || !entry.TydzienRoku) return acc;
-
-            const key = `${entry.Rok}-${entry.TydzienRoku}`;
             const currentDate = parseDataToDate(entry.Data);
+            const iso = getIsoWeekAndYear(currentDate);
+            if (!iso) return acc;
+
+            const key = `${iso.year}-${String(iso.week).padStart(2, '0')}`;
 
             if (!acc[key]) {
                 acc[key] = {
                     key,
-                    rok: entry.Rok,
-                    tydzien: entry.TydzienRoku,
-                    minDate: currentDate,
-                    maxDate: currentDate,
+                    rok: iso.year,
+                    tydzien: iso.week,
                 };
-            } else if (currentDate) {
-                if (!acc[key].minDate || currentDate < acc[key].minDate) {
-                    acc[key].minDate = currentDate;
-                }
-                if (!acc[key].maxDate || currentDate > acc[key].maxDate) {
-                    acc[key].maxDate = currentDate;
-                }
             }
 
             return acc;
@@ -151,7 +196,7 @@ export default function RaportyPage() {
                 return b.tydzien - a.tydzien;
             })
             .map((weekItem) => ({
-                label: `V${weekItem.tydzien} (${formatDateLabel(weekItem.minDate)} - ${formatDateLabel(weekItem.maxDate)})`,
+                label: `V${weekItem.tydzien} (${formatDateLabel(getIsoWeekDateRange(weekItem.rok, weekItem.tydzien).start)} - ${formatDateLabel(getIsoWeekDateRange(weekItem.rok, weekItem.tydzien).end)})`,
                 value: weekItem.key,
                 tydzien: weekItem.tydzien,
                 rok: weekItem.rok,
@@ -167,7 +212,10 @@ export default function RaportyPage() {
 
         const unique = new Set(
             raport
-                .filter((entry) => Number(entry.Rok) === rok && Number(entry.TydzienRoku) === tydzien)
+                .filter((entry) => {
+                    const iso = getIsoWeekAndYear(parseDataToDate(entry.Data));
+                    return iso && Number(iso.year) === rok && Number(iso.week) === tydzien;
+                })
                 .map((entry) => entry.Zleceniodawca || 'Bez zleceniodawcy')
         );
 
@@ -214,6 +262,26 @@ export default function RaportyPage() {
             console.error(error);
         }
     }
+
+    const weekItemTemplate = (option) => {
+    if (!option) return null;
+
+    // Zakładamy, że format to "V16 (data - data)"
+    // Szukamy spacji, która oddziela "V16" od reszty
+    const firstSpaceIndex = option.label.indexOf(' ');
+    
+    if (firstSpaceIndex === -1) return <span>{option.label}</span>;
+
+    const vPart = option.label.substring(0, firstSpaceIndex); // np. "V16"
+    const restPart = option.label.substring(firstSpaceIndex); // np. " (20.04.2026 - 26.04.2026)"
+
+    return (
+        <span>
+            <strong className="font-bold">{vPart}</strong>
+            <span className="text-gray-500">{restPart}</span>
+        </span>
+    );
+};
 
     // Add this new function after getImie()
     const fetchPracownicy = async () => {
@@ -401,8 +469,10 @@ export default function RaportyPage() {
 
         const filtered = raport.filter((entry) => {
             const entryZleceniodawca = entry.Zleceniodawca || 'Bez zleceniodawcy';
-            return Number(entry.Rok) === selectedRok &&
-                Number(entry.TydzienRoku) === selectedTydzien &&
+            const iso = getIsoWeekAndYear(parseDataToDate(entry.Data));
+            return iso &&
+                Number(iso.year) === selectedRok &&
+                Number(iso.week) === selectedTydzien &&
                 entryZleceniodawca === selectedWysylkaZleceniodawca;
         });
 
@@ -418,12 +488,21 @@ export default function RaportyPage() {
 
         const groupedByProject = filtered.reduce((acc, entry) => {
             const projectName = entry.Projekt || 'Bez nazwy projektu';
+            const entryHours = normalizeLegacyHours(entry.GodzinyPrzepracowane);
+            const entryKm = parseDecimal(entry.Kilometry);
+            const entryParking = parseDecimal(entry.Parking);
+            const entryHoursRate = parseDecimal(entry.StawkaGodzinowa);
+            const entryKmRate = parseDecimal(entry.StawkaKilometrowa);
+
             if (!acc[projectName]) {
                 acc[projectName] = {
                     projectName,
                     hours: 0,
                     km: 0,
                     parking: 0,
+                    material: 0,
+                    hoursAmount: 0,
+                    kmAmount: 0,
                     defaultInvoiceName: entry.DomyslnaNazwaFaktury || '',
                 };
             }
@@ -432,50 +511,40 @@ export default function RaportyPage() {
                 acc[projectName].defaultInvoiceName = entry.DomyslnaNazwaFaktury;
             }
 
-            acc[projectName].hours += normalizeLegacyHours(entry.GodzinyPrzepracowane);
-            acc[projectName].km += Number(entry.Kilometry || 0);
-            acc[projectName].parking += Number(entry.Parking || 0);
+            if (acc[projectName].material === 0 && parseDecimal(entry.DomyslnyKosztFaktury) > 0) {
+                acc[projectName].material = parseDecimal(entry.DomyslnyKosztFaktury);
+            }
+
+            acc[projectName].hours += entryHours;
+            acc[projectName].km += entryKm;
+            acc[projectName].parking += entryParking;
+            acc[projectName].hoursAmount += entryHours * entryHoursRate;
+            acc[projectName].kmAmount += entryKm * entryKmRate;
             return acc;
         }, {});
 
         const projects = Object.values(groupedByProject)
             .sort((a, b) => a.projectName.localeCompare(b.projectName, 'pl', { sensitivity: 'base' }));
 
-        const hoursRate = Number(
-            filtered.find(entry => entry.StawkaGodzinowa !== null && entry.StawkaGodzinowa !== undefined)?.StawkaGodzinowa || 0
+        const hoursRate = parseDecimal(
+            filtered.find(entry => parseDecimal(entry.StawkaGodzinowa) > 0)?.StawkaGodzinowa
         );
-        const kmRate = Number(
-            filtered.find(entry => entry.StawkaKilometrowa !== null && entry.StawkaKilometrowa !== undefined)?.StawkaKilometrowa || 0
+        const kmRate = parseDecimal(
+            filtered.find(entry => parseDecimal(entry.StawkaKilometrowa) > 0)?.StawkaKilometrowa
         );
 
         const totalHours = projects.reduce((sum, project) => sum + project.hours, 0);
         const totalKm = projects.reduce((sum, project) => sum + project.km, 0);
         const totalParking = projects.reduce((sum, project) => sum + project.parking, 0);
+        const totalMaterial = projects.reduce((sum, project) => sum + project.material, 0);
 
         const projectsWithAmounts = projects.map((project) => ({
             ...project,
-            hoursAmount: project.hours * hoursRate,
-            kmAmount: project.km * kmRate,
-            amount: (project.hours * hoursRate) + (project.km * kmRate) + project.parking,
+            amount: project.hoursAmount + project.kmAmount + project.parking + project.material,
         }));
 
-        setWysylkaInvoiceNames((prev) => {
-            const next = { ...prev };
-            projectsWithAmounts.forEach((project) => {
-                const key = getInvoiceFieldKey(
-                    project.projectName,
-                    selectedWysylkaWeekKey,
-                    selectedWysylkaZleceniodawca
-                );
 
-                if (next[key] === undefined) {
-                    next[key] = project.defaultInvoiceName || '';
-                }
-            });
-            return next;
-        });
-
-        const kmAmount = totalKm * kmRate;
+        const kmAmount = projectsWithAmounts.reduce((sum, project) => sum + project.kmAmount, 0);
         const grandTotal = projectsWithAmounts.reduce((sum, project) => sum + project.amount, 0);
 
         const selectedWeekLabel = weekOptionsWysylka.find(option => option.value === selectedWysylkaWeekKey)?.label || `V${selectedTydzien}`;
@@ -487,6 +556,7 @@ export default function RaportyPage() {
             kmRate,
             kmAmount,
             totalParking,
+            totalMaterial,
             grandTotal,
             hoursRate,
             totalHours,
@@ -499,13 +569,14 @@ export default function RaportyPage() {
         const tab = '\t';
         const lines = [
             sanitizeCopyCell(wysylkaSummary.weekLabel),
-            ['Pozycja', 'Godz', 'km', 'Parking', 'Suma', 'Nazwa faktury', 'OK'].join(tab),
+            ['Pozycja', 'Godz', 'km', 'Parking', 'Materiał', 'Suma', 'Nazwa faktury', 'OK'].join(tab),
             ...wysylkaSummary.projects.map(project =>
                 [
                     sanitizeCopyCell(project.projectName),
                     formatNumberForCopy(project.hours),
                     formatNumberForCopy(project.km),
                     formatNumberForCopy(project.parking),
+                    formatNumberForCopy(project.material),
                     formatNumberForCopy(project.amount),
                     sanitizeCopyCell(wysylkaInvoiceNames[getInvoiceFieldKey(project.projectName)] || ''),
                     '[ ]',
@@ -516,6 +587,7 @@ export default function RaportyPage() {
                 formatNumberForCopy(wysylkaSummary.totalHours),
                 formatNumberForCopy(wysylkaSummary.totalKm),
                 formatNumberForCopy(wysylkaSummary.totalParking),
+                formatNumberForCopy(wysylkaSummary.totalMaterial),
                 formatNumberForCopy(wysylkaSummary.grandTotal),
                 '',
                 '',
@@ -542,12 +614,13 @@ export default function RaportyPage() {
         if (!wysylkaSummary) return;
 
         const tab = '\t';
-        const headers = ['Pozycja', 'Godz', 'km', 'Parking', 'Suma', 'Nazwa faktury', 'OK'];
+        const headers = ['Pozycja', 'Godz', 'km', 'Parking', 'Materiał', 'Suma', 'Nazwa faktury', 'OK'];
         const rows = wysylkaSummary.projects.map((project) => ([
             sanitizeCopyCell(project.projectName),
             formatNumberForCopy(project.hours),
             formatNumberForCopy(project.km),
             formatNumberForCopy(project.parking),
+            formatNumberForCopy(project.material),
             formatNumberForCopy(project.amount),
             sanitizeCopyCell(wysylkaInvoiceNames[getInvoiceFieldKey(project.projectName)] || ''),
             '[ ]',
@@ -558,6 +631,7 @@ export default function RaportyPage() {
             formatNumberForCopy(wysylkaSummary.totalHours),
             formatNumberForCopy(wysylkaSummary.totalKm),
             formatNumberForCopy(wysylkaSummary.totalParking),
+            formatNumberForCopy(wysylkaSummary.totalMaterial),
             formatNumberForCopy(wysylkaSummary.grandTotal),
             '',
             '',
@@ -571,18 +645,18 @@ export default function RaportyPage() {
         ].join('\n');
 
         const htmlRows = rows
-            .map((row) => `<tr>${row.map((cell, idx) => `<td style="padding:4px 8px; line-height:1.3; text-align:${idx === 0 || idx === 5 ? 'left' : 'right'};">${escapeHtml(cell)}</td>`).join('')}</tr>`)
+            .map((row) => `<tr>${row.map((cell, idx) => `<td style="padding:4px 8px; line-height:1.3; text-align:${idx === 0 || idx === 6 ? 'left' : 'right'};">${escapeHtml(cell)}</td>`).join('')}</tr>`)
             .join('');
 
         const htmlTable = `
             <table border="1" style="border-collapse: collapse; font-family: Calibri, Arial, sans-serif; font-size: 11pt;">
                 <caption style="caption-side: top; text-align: left; font-weight: 700; padding-bottom: 6px;">${escapeHtml(wysylkaSummary.weekLabel)}</caption>
                 <thead>
-                    <tr>${headers.map((header, idx) => `<th style="padding:5px 8px; background:#f2f2f2; text-align:${idx === 0 || idx === 5 ? 'left' : 'right'};">${escapeHtml(header)}</th>`).join('')}</tr>
+                    <tr>${headers.map((header, idx) => `<th style="padding:5px 8px; background:#f2f2f2; text-align:${idx === 0 || idx === 6 ? 'left' : 'right'};">${escapeHtml(header)}</th>`).join('')}</tr>
                 </thead>
                 <tbody>
                     ${htmlRows}
-                    <tr style="font-weight:700; background:#e6f0ff;">${totalRow.map((cell, idx) => `<td style="padding:5px 8px; text-align:${idx === 0 || idx === 5 ? 'left' : 'right'};">${escapeHtml(cell)}</td>`).join('')}</tr>
+                    <tr style="font-weight:700; background:#e6f0ff;">${totalRow.map((cell, idx) => `<td style="padding:5px 8px; text-align:${idx === 0 || idx === 6 ? 'left' : 'right'};">${escapeHtml(cell)}</td>`).join('')}</tr>
                 </tbody>
             </table>
         `;
@@ -1062,19 +1136,20 @@ export default function RaportyPage() {
                       <div className="w-full max-w-5xl bg-white border rounded p-4 space-y-4">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <Dropdown
-                                  value={selectedWysylkaWeekKey}
-                                  options={weekOptionsWysylka}
-                                  onChange={(e) => {
-                                      setSelectedWysylkaWeekKey(e.value);
-                                      setWysylkaSummary(null);
-                                  }}
-                                  showClear
-                                  filter
-                                  className="w-full"
-                                  placeholder="Wybierz tydzień (Vxx)"
-                                  emptyMessage="Brak tygodni"
-                              />
-
+                                    value={selectedWysylkaWeekKey}
+                                    options={weekOptionsWysylka}
+                                    onChange={(e) => {
+                                        setSelectedWysylkaWeekKey(e.value);
+                                        setWysylkaSummary(null);
+                                    }}
+                                    itemTemplate={weekItemTemplate}
+                                    valueTemplate={(option, props) => option ? weekItemTemplate(option) : props.placeholder} // Wygląd po wybraniu
+                                    showClear
+                                    filter
+                                    className="w-full"
+                                    placeholder="Wybierz tydzień (Vxx)"
+                                    emptyMessage="Brak tygodni"
+                                />
                               <Dropdown
                                   value={selectedWysylkaZleceniodawca}
                                   options={zleceniodawcyWysylkaOptions}
@@ -1113,47 +1188,50 @@ export default function RaportyPage() {
 
                           {wysylkaSummary && (
                               <div className="border rounded overflow-hidden">
-                                  <div className="bg-gray-100 px-3 py-2 font-semibold">{wysylkaSummary.weekLabel}</div>
-                                  <table className="w-full text-sm">
+                                  <div className="bg-gray-100 px-3 py-2 font-extrabold text-base">{wysylkaSummary.weekLabel}</div>
+                                  <table className="w-full text-sm table-fixed">
                                       <thead className="bg-gray-200">
                                           <tr>
-                                              <th className="text-left px-3 py-2.5 border-b">Pozycja</th>
-                                              <th className="text-right px-3 py-2.5 border-b">Godziny</th>
-                                              <th className="text-right px-3 py-2.5 border-b">km</th>
-                                              <th className="text-right px-3 py-2.5 border-b">Parking</th>
-                                              <th className="text-right px-3 py-2.5 border-b">Suma</th>
-                                              <th className="text-left px-3 py-2.5 border-b">Nazwa faktury</th>
-                                              <th className="text-center px-3 py-2.5 border-b">OK</th>
+                                              <th className="text-left px-2 py-2 border-b w-2/6">Pozycja</th>
+                                              <th className="text-right px-2 py-2 border-b w-1/12">Godziny</th>
+                                              <th className="text-right px-2 py-2 border-b w-1/12">km</th>
+                                              <th className="text-right px-2 py-2 border-b w-1/12">Parking</th>
+                                              <th className="text-right px-2 py-2 border-b w-1/12">Materiał</th>
+                                              <th className="text-right px-2 py-2 border-b w-1/12">Suma</th>
+                                              <th className="text-left px-2 py-2 border-b w-1/12">Nazwa faktury</th>
+                                              <th className="text-center px-2 py-2 border-b w-1/12">OK</th>
                                           </tr>
                                       </thead>
                                       <tbody>
                                           {wysylkaSummary.projects.map((project) => (
                                               <tr key={project.projectName} className="odd:bg-white even:bg-gray-50">
-                                                  <td className="px-3 py-2.5 border-b">{project.projectName}</td>
-                                                  <td className="px-3 py-2.5 border-b text-right">{formatNumber(project.hours, 2)}</td>
-                                                  <td className="px-3 py-2.5 border-b text-right">{formatNumber(project.km, 2)}</td>
-                                                  <td className="px-3 py-2.5 border-b text-right">{formatNumber(project.parking, 2)}</td>
-                                                  <td className="px-3 py-2.5 border-b text-right">{formatNumber(project.amount, 2)}</td>
-                                                  <td className="px-3 py-2.5 border-b">
+                                                  <td className="px-2 py-2 border-b truncate" title={project.projectName}>{project.projectName}</td>
+                                                  <td className="px-2 py-2 border-b text-right">{formatNumber(project.hours, 2)}</td>
+                                                  <td className="px-2 py-2 border-b text-right">{formatNumber(project.km, 2)}</td>
+                                                  <td className="px-2 py-2 border-b text-right">{formatNumber(project.parking, 2)}</td>
+                                                  <td className="px-2 py-2 border-b text-right">{formatNumber(project.material, 2)}</td>
+                                                  <td className="px-2 py-2 border-b text-right">{formatNumber(project.amount, 2)}</td>
+                                                  <td className="px-2 py-2 border-b">
                                                       <input
                                                           type="text"
                                                           value={wysylkaInvoiceNames[getInvoiceFieldKey(project.projectName)] || ''}
                                                           onChange={(e) => updateWysylkaInvoiceName(project.projectName, e.target.value)}
                                                           placeholder="np. f12652"
-                                                          className="w-full border rounded px-2 py-1"
+                                                          className="w-full border rounded px-1.5 py-1"
                                                       />
                                                   </td>
-                                                  <td className="px-3 py-2.5 border-b text-center">[ ]</td>
+                                                  <td className="px-2 py-2 border-b text-center">[ ]</td>
                                               </tr>
                                           ))}
                                           <tr className="bg-blue-100 font-bold">
-                                              <td className="px-3 py-2.5">TOTAL</td>
-                                              <td className="px-3 py-2.5 text-right">{formatNumber(wysylkaSummary.totalHours, 2)}</td>
-                                              <td className="px-3 py-2.5 text-right">{formatNumber(wysylkaSummary.totalKm, 2)}</td>
-                                              <td className="px-3 py-2.5 text-right">{formatNumber(wysylkaSummary.totalParking, 2)}</td>
-                                              <td className="px-3 py-2.5 text-right">{formatNumber(wysylkaSummary.grandTotal, 2)}</td>
-                                              <td className="px-3 py-2.5">-</td>
-                                              <td className="px-3 py-2.5 text-center">-</td>
+                                              <td className="px-2 py-2">TOTAL</td>
+                                              <td className="px-2 py-2 text-right">{formatNumber(wysylkaSummary.totalHours, 2)}</td>
+                                              <td className="px-2 py-2 text-right">{formatNumber(wysylkaSummary.totalKm, 2)}</td>
+                                              <td className="px-2 py-2 text-right">{formatNumber(wysylkaSummary.totalParking, 2)}</td>
+                                              <td className="px-2 py-2 text-right">{formatNumber(wysylkaSummary.totalMaterial, 2)}</td>
+                                              <td className="px-2 py-2 text-right">{formatNumber(wysylkaSummary.grandTotal, 2)}</td>
+                                              <td className="px-2 py-2">-</td>
+                                              <td className="px-2 py-2 text-center">-</td>
                                           </tr>
                                       </tbody>
                                   </table>

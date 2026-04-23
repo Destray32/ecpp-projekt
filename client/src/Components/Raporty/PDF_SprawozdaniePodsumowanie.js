@@ -76,6 +76,7 @@ const PDF_SprawozdaniePodsumowanie = async (raport, startDate, endDate, Projekt,
     for (let i = 0; i < filteredProjectIds.length; i++) {
         const projectId = filteredProjectIds[i];
         const { projectName, entries } = groupedByProject[projectId];
+        const invoiceMaterialCost = parseFloat(entries[0]?.DomyslnyKosztFaktury) || 0;
         
         // Get zleceniodawca from mapping
         const zleceniodawca = projectZleceniodawcaMapping?.[projectId] || entries[0]?.Zleceniodawca || '';
@@ -112,7 +113,6 @@ const PDF_SprawozdaniePodsumowanie = async (raport, startDate, endDate, Projekt,
                     kilometry: 0,
                     parking: 0,
                     diety: 0,
-                    inneKoszty: 0,
                     zleceniodawca: entry.Zleceniodawca,
                     pracownikId: entry.PracownikID
                 };
@@ -144,7 +144,6 @@ const PDF_SprawozdaniePodsumowanie = async (raport, startDate, endDate, Projekt,
             acc[employee].kilometry += parseFloat(entry.Kilometry) || 0;
             acc[employee].parking += parseFloat(entry.Parking) || 0;
             acc[employee].diety += parseFloat(entry.Diety) || 0;
-            acc[employee].inneKoszty += parseFloat(entry.Inne_koszty) || 0;
             return acc;
         }, {});
 
@@ -155,6 +154,7 @@ const PDF_SprawozdaniePodsumowanie = async (raport, startDate, endDate, Projekt,
 
         // Suma całości
         let totalH = 0, totalM = 0;
+        let totalKm = 0, totalParking = 0, totalDiety = 0, totalSuma = 0;
         Object.values(groupedByEmployee).forEach(obj => {
             totalH += obj.h;
             totalM += obj.m;
@@ -164,7 +164,7 @@ const PDF_SprawozdaniePodsumowanie = async (raport, startDate, endDate, Projekt,
         totalM = totalM % 60;
 
         const tableData = Object.keys(groupedByEmployee).map(employee => {
-            const { h, m, kilometry, parking, diety, inneKoszty, zleceniodawca, pracownikId } = groupedByEmployee[employee];
+            const { h, m, kilometry, parking, diety, zleceniodawca, pracownikId } = groupedByEmployee[employee];
             // --- Pobierz stawkę godzinową z cennika po Zleceniodawca i idPracownik ---
             let entryCennik = cennikData.find(c =>
                 c.idPracownik === pracownikId &&
@@ -174,6 +174,13 @@ const PDF_SprawozdaniePodsumowanie = async (raport, startDate, endDate, Projekt,
             // Normalizuj tylko do wyświetlenia
             let normH = h + Math.floor(m / 60);
             let normM = m % 60;
+            const suma = ((h + (m / 60)) * stawkaGodzinowa) + kilometry + parking + diety;
+
+            totalKm += kilometry;
+            totalParking += parking;
+            totalDiety += diety;
+            totalSuma += suma;
+
             return [
                 employee,
                 `${normH}:${normM.toString().padStart(2, '0')}`,
@@ -181,12 +188,22 @@ const PDF_SprawozdaniePodsumowanie = async (raport, startDate, endDate, Projekt,
                 kilometry.toFixed(2),
                 parking.toFixed(2),
                 diety.toFixed(2),
-                inneKoszty.toFixed(2)
+                '',
+                suma.toFixed(2)
             ];
         });
 
+        const totalSumaZMaterialem = totalSuma + invoiceMaterialCost;
+
         tableData.push([
-            'Suma: ', `${totalH}:${totalM.toString().padStart(2, '0')}`, '', '', '', '', 'Suma: 0.00'
+            'Suma:',
+            `${totalH}:${totalM.toString().padStart(2, '0')}`,
+            '',
+            totalKm.toFixed(2),
+            totalParking.toFixed(2),
+            totalDiety.toFixed(2),
+            invoiceMaterialCost.toFixed(2),
+            totalSumaZMaterialem.toFixed(2)
         ]);
 
         if (i > 0) {
@@ -226,7 +243,7 @@ const PDF_SprawozdaniePodsumowanie = async (raport, startDate, endDate, Projekt,
 
         doc.autoTable({
             startY: tableStartY,
-            head: [['Pracownik', 'Czas', '1h=kr', 'Kilometry', 'Parking', 'Diety', 'Inne koszty']],
+            head: [['Pracownik', 'Czas', '1h=kr', 'Kilometry', 'Parking', 'Diety', 'Materiał', 'Suma']],
             body: tableData,
             theme: 'grid',
             headStyles: { fillColor: [238, 238, 223], textColor: [0, 0, 0], font: 'Roboto' },
@@ -239,13 +256,14 @@ const PDF_SprawozdaniePodsumowanie = async (raport, startDate, endDate, Projekt,
                 font: 'Roboto'
             },
             columnStyles: {
-                0: { cellWidth: 150, halign: 'center', overflow: 'linebreak' },
-                1: { cellWidth: 100, halign: 'center' },
-                2: { cellWidth: 100, halign: 'center' },
-                3: { cellWidth: 100, halign: 'center' },
-                4: { cellWidth: 100, halign: 'center' },
-                5: { cellWidth: 100, halign: 'center' },
-                6: { cellWidth: 100, halign: 'center' }
+                0: { cellWidth: 120, halign: 'center', overflow: 'linebreak' },
+                1: { cellWidth: 70, halign: 'center' },
+                2: { cellWidth: 70, halign: 'center' },
+                3: { cellWidth: 65, halign: 'center' },
+                4: { cellWidth: 65, halign: 'center' },
+                5: { cellWidth: 65, halign: 'center' },
+                6: { cellWidth: 75, halign: 'center' },
+                7: { cellWidth: 75, halign: 'center' }
             },
             margin: { horizontal: 10, top: 10, left: 30, right: 30 },
             tableWidth: 'auto',

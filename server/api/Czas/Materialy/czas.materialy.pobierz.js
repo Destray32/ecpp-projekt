@@ -9,7 +9,7 @@ module.exports = (req, res, db) => {
         id,
         ProjektID,
         NazwaFaktury,
-        Data,
+                DATE_FORMAT(Data, '%Y-%m-%d') AS Data,
         Koszty,
         Opis
       FROM projekt_materialy

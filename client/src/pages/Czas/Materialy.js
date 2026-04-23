@@ -23,7 +23,8 @@ export default function MateriialyPage() {
     const navigate = useNavigate();
     const [projektName, setProjektName] = useState('');
     const [zleceniodawcaName, setZleceniodawcaName] = useState('');
-    const [materialId, setMaterialId] = useState(null);
+    const [materialy, setMaterialy] = useState([]);
+    const [editingMaterialId, setEditingMaterialId] = useState(null);
     const [loading, setLoading] = useState(true);
     const [formData, setFormData] = useState({
         nazwafaktury: '',
@@ -32,6 +33,19 @@ export default function MateriialyPage() {
         opis: ''
     });
     const baseUrl = process.env.REACT_APP_BASE_URL;
+
+    const normalizeDateOnly = (value) => {
+        if (!value) return '';
+        const raw = String(value).trim();
+        if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+        if (/^\d{4}-\d{2}-\d{2}T/.test(raw)) return raw.slice(0, 10);
+        const parsed = new Date(raw);
+        if (Number.isNaN(parsed.getTime())) return '';
+        const year = parsed.getFullYear();
+        const month = String(parsed.getMonth() + 1).padStart(2, '0');
+        const day = String(parsed.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
 
     useEffect(() => {
         fetchProjektName();
@@ -60,24 +74,7 @@ export default function MateriialyPage() {
                 withCredentials: true
             });
             if (response.data && Array.isArray(response.data.materialy)) {
-                const firstMaterial = response.data.materialy[0];
-                if (firstMaterial) {
-                    setMaterialId(firstMaterial.id || null);
-                    setFormData({
-                        nazwafaktury: firstMaterial.NazwaFaktury || '',
-                        data: firstMaterial.Data ? new Date(firstMaterial.Data).toISOString().slice(0, 10) : '',
-                        koszty: firstMaterial.Koszty ?? '',
-                        opis: firstMaterial.Opis || ''
-                    });
-                } else {
-                    setMaterialId(null);
-                    setFormData({
-                        nazwafaktury: '',
-                        data: '',
-                        koszty: '',
-                        opis: ''
-                    });
-                }
+                setMaterialy(response.data.materialy);
             }
         } catch (error) {
             console.error('Błąd pobierania materiałów:', error);
@@ -129,6 +126,7 @@ export default function MateriialyPage() {
             const response = await Axios.post(
                 `${baseUrl}/api/czas/materialy/${id}`,
                 {
+                    materialId: editingMaterialId,
                     nazwafaktury: formData.nazwafaktury,
                     data: formData.data,
                     koszty: parseFloat(formData.koszty),
@@ -138,12 +136,60 @@ export default function MateriialyPage() {
             );
 
             if (response.data && response.data.success) {
-                message.success(materialId ? 'Faktura zaktualizowana pomyślnie' : 'Faktura zapisana pomyślnie');
+                message.success(editingMaterialId ? 'Faktura zaktualizowana pomyślnie' : 'Faktura zapisana pomyślnie');
+                setFormData({
+                    nazwafaktury: '',
+                    data: '',
+                    koszty: '',
+                    opis: ''
+                });
+                setEditingMaterialId(null);
                 fetchMaterialy();
             }
         } catch (error) {
             console.error('Błąd zapisu faktury:', error);
             message.error('Nie udało się zapisać faktury');
+        }
+    };
+
+    const handleEditMaterial = (item) => {
+        setEditingMaterialId(item.id);
+        setFormData({
+            nazwafaktury: item.NazwaFaktury || '',
+            data: normalizeDateOnly(item.Data),
+            koszty: item.Koszty ?? '',
+            opis: item.Opis || ''
+        });
+    };
+
+    const handleCancelEdit = () => {
+        setEditingMaterialId(null);
+        setFormData({
+            nazwafaktury: '',
+            data: '',
+            koszty: '',
+            opis: ''
+        });
+    };
+
+    const handleDeleteMaterial = async (materialId) => {
+        try {
+            const response = await Axios.delete(`${baseUrl}/api/czas/materialy/${id}/${materialId}`, {
+                withCredentials: true
+            });
+
+            if (response.data?.success) {
+                message.success('Faktura usunięta pomyślnie');
+
+                if (editingMaterialId === materialId) {
+                    handleCancelEdit();
+                }
+
+                fetchMaterialy();
+            }
+        } catch (error) {
+            console.error('Błąd usuwania faktury:', error);
+            message.error('Nie udało się usunąć faktury');
         }
     };
 
@@ -174,7 +220,7 @@ export default function MateriialyPage() {
                 <div className="mt-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm md:p-6">
                     <div className="mb-6 flex flex-col gap-1">
                         <h2 className="text-xl font-semibold text-gray-900">Faktura materiałowa</h2>
-                        <p className="text-sm text-gray-500">Edycja jednej faktury przypisanej do projektu.</p>
+                        <p className="text-sm text-gray-500">Dodaj jedną lub wiele faktur przypisanych do projektu.</p>
                     </div>
 
                     {loading ? (
@@ -249,14 +295,72 @@ export default function MateriialyPage() {
                             </div>
 
                             <div className="flex items-center justify-end pt-2">
+                                {editingMaterialId && (
+                                    <button
+                                        type="button"
+                                        onClick={handleCancelEdit}
+                                        className="mr-2 inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-800 shadow-sm transition hover:bg-gray-50"
+                                    >
+                                        Anuluj edycję
+                                    </button>
+                                )}
                                 <button
                                     type="button"
                                     onClick={handleSaveMaterial}
                                     className="inline-flex items-center gap-2 rounded-md bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800"
                                 >
                                     <span aria-hidden="true">&#10003;</span>
-                                    Zapisz
+                                    {editingMaterialId ? 'Zapisz zmiany' : 'Zapisz'}
                                 </button>
+                            </div>
+
+                            <div className="pt-4">
+                                <h3 className="mb-3 text-base font-semibold text-gray-800">Lista faktur</h3>
+                                {materialy.length === 0 ? (
+                                    <div className="rounded-lg border border-dashed border-gray-300 p-4 text-sm text-gray-600">
+                                        Brak zapisanych faktur dla tego projektu.
+                                    </div>
+                                ) : (
+                                    <div className="overflow-x-auto rounded-lg border border-gray-200">
+                                        <table className="w-full text-sm">
+                                            <thead className="bg-gray-100">
+                                                <tr>
+                                                    <th className="px-3 py-2 text-left">Nazwa faktury</th>
+                                                    <th className="px-3 py-2 text-left">Data</th>
+                                                    <th className="px-3 py-2 text-right">Koszty</th>
+                                                    <th className="px-3 py-2 text-left">Opis</th>
+                                                    <th className="px-3 py-2 text-right">Akcje</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {materialy.map((item) => (
+                                                    <tr key={item.id} className="border-t border-gray-200 odd:bg-white even:bg-gray-50">
+                                                        <td className="px-3 py-2">{item.NazwaFaktury || '-'}</td>
+                                                        <td className="px-3 py-2">{normalizeDateOnly(item.Data) || '-'}</td>
+                                                        <td className="px-3 py-2 text-right">{Number(item.Koszty || 0).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                                        <td className="px-3 py-2">{item.Opis || '-'}</td>
+                                                        <td className="px-3 py-2 text-right">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleEditMaterial(item)}
+                                                                className="mr-2 rounded border border-blue-600 px-2 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-50"
+                                                            >
+                                                                Edytuj
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleDeleteMaterial(item.id)}
+                                                                className="rounded border border-red-600 px-2 py-1 text-xs font-semibold text-red-700 hover:bg-red-50"
+                                                            >
+                                                                Usuń
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}

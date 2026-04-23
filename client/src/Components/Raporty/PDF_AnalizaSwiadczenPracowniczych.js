@@ -184,14 +184,14 @@ const PDF_AnalizaSwiadczenPracowniczych = async (raport, startDate, endDate, pra
         font: 'Roboto'
       },
       columnStyles: {
-        0: { cellWidth: 120, halign: 'center', overflow: 'linebreak' },
-        1: { cellWidth: 80, halign: 'center' },
-        2: { cellWidth: 80, halign: 'center' },
-        3: { cellWidth: 80, halign: 'center' },
-        4: { cellWidth: 80, halign: 'center' },
-        5: { cellWidth: 80, halign: 'center' },
-        6: { cellWidth: 80, halign: 'center' },
-        7: { cellWidth: 80, halign: 'center' }
+        0: { cellWidth: 110, halign: 'center', overflow: 'linebreak' },
+        1: { cellWidth: 65, halign: 'center' },
+        2: { cellWidth: 65, halign: 'center' },
+        3: { cellWidth: 65, halign: 'center' },
+        4: { cellWidth: 65, halign: 'center' },
+        5: { cellWidth: 65, halign: 'center' },
+        6: { cellWidth: 75, halign: 'center' },
+        7: { cellWidth: 75, halign: 'center' }
       },
       margin: { horizontal: 10, top: 10, left: 30, right: 30 },
       tableWidth: 'auto',

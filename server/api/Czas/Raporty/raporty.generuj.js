@@ -35,16 +35,26 @@ function generujRaport(req, res, db) {
                       dp.Komentarz AS Komentarz,
                       dp.Kilometry AS Kilometry,
                       dp.Parking as Parking,
+                      dp.Zuzyte_materialy as Material,
                       dp.Diety as Diety,
                       dp.Inne_koszty as Inne_koszty,
                                             (
                                                 SELECT pm.NazwaFaktury
                                                 FROM projekt_materialy pm
                                                 WHERE pm.ProjektID = pr.idProjekty
+                                                                                                    AND pm.Data >= STR_TO_DATE(CONCAT(t.Rok, ' ', LPAD(t.tydzienRoku, 2, '0'), ' 1'), '%x %v %w')
+                                                                                                    AND pm.Data < DATE_ADD(STR_TO_DATE(CONCAT(t.Rok, ' ', LPAD(t.tydzienRoku, 2, '0'), ' 1'), '%x %v %w'), INTERVAL 7 DAY)
                                                 ORDER BY pm.Data DESC, pm.id DESC
                                                 LIMIT 1
                                             ) AS DomyslnaNazwaFaktury,
-                      gr.Cennik AS StawkaGodzinowa,
+                                            (
+                                                SELECT COALESCE(SUM(pm.Koszty), 0)
+                                                FROM projekt_materialy pm
+                                                WHERE pm.ProjektID = pr.idProjekty
+                                                                                                    AND pm.Data >= STR_TO_DATE(CONCAT(t.Rok, ' ', LPAD(t.tydzienRoku, 2, '0'), ' 1'), '%x %v %w')
+                                                                                                    AND pm.Data < DATE_ADD(STR_TO_DATE(CONCAT(t.Rok, ' ', LPAD(t.tydzienRoku, 2, '0'), ' 1'), '%x %v %w'), INTERVAL 7 DAY)
+                                            ) AS DomyslnyKosztFaktury,
+                      COALESCE(ps.stawka_indywidualna, gr.Cennik) AS StawkaGodzinowa,
                       gr.Stawka AS StawkaKilometrowa,
                       gr.idGrupa_urlopowa As idGrupa_urlopowa
                   FROM
@@ -63,10 +73,17 @@ function generujRaport(req, res, db) {
                       Projekty pr ON dp.Projekty_idProjekty = pr.idProjekty
                   JOIN
                       Grupa_urlopowa gr ON pr.Grupa_urlopowa_idGrupa_urlopowa = gr.idGrupa_urlopowa
+                  LEFT JOIN
+                      pracownik_stawki ps ON ps.FK_idPracownik = p.idPracownik
+                        AND ps.FK_idGrupa_urlopowa = gr.idGrupa_urlopowa
+                        AND ps.aktywna = 1
                   WHERE
                       COALESCE(dp.Godziny_przepracowane, 0) > 0
                       OR COALESCE(dp.Kilometry, 0) > 0
-                      OR COALESCE(dp.Parking, 0) > 0;`;
+                      OR COALESCE(dp.Parking, 0) > 0
+                      OR COALESCE(dp.Zuzyte_materialy, 0) > 0
+                      OR COALESCE(dp.Diety, 0) > 0
+                      OR COALESCE(dp.Inne_koszty, 0) > 0;`;
 
     db.query(sql, (err, result) => {
         if (err) {
