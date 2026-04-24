@@ -68,16 +68,6 @@ export default function MateriialyPage() {
         fetchMaterialy();
     }, [id, accountType, navigate]);
 
-    useEffect(() => {
-        checkUserType(setAccountType);
-    }, []);
-
-    useEffect(() => {
-        if (accountType && accountType !== 'Administrator') {
-            message.error('Brak uprawnien do materialow projektu');
-            navigate('/home/projekty');
-        }
-    }, [accountType, navigate]);
 
     const fetchProjektName = async () => {
         try {
