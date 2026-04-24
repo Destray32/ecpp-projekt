@@ -5,6 +5,9 @@ import { Calendar } from 'primereact/calendar';
 import { addLocale } from 'primereact/api';
 import { message } from 'antd';
 import Axios from 'axios';
+import { PDFDocument } from 'pdf-lib';
+import checkUserType from '../../utils/accTypeUtils';
+
 
 addLocale('pl-materialy-v2', {
     firstDayOfWeek: 1,
@@ -26,6 +29,8 @@ export default function MateriialyPage() {
     const [materialy, setMaterialy] = useState([]);
     const [editingMaterialId, setEditingMaterialId] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [uploadingMaterialId, setUploadingMaterialId] = useState(null);
+    const [accountType, setAccountType] = useState('');
     const [formData, setFormData] = useState({
         nazwafaktury: '',
         data: '',
@@ -48,9 +53,31 @@ export default function MateriialyPage() {
     };
 
     useEffect(() => {
+        checkUserType(setAccountType);
+    }, []);
+
+    useEffect(() => {
+        if (!accountType) return;
+        if (accountType !== 'Administrator') {
+            message.error('Brak uprawnien do materialow projektu');
+            navigate('/home');
+            return;
+        }
+
         fetchProjektName();
         fetchMaterialy();
-    }, [id]);
+    }, [id, accountType, navigate]);
+
+    useEffect(() => {
+        checkUserType(setAccountType);
+    }, []);
+
+    useEffect(() => {
+        if (accountType && accountType !== 'Administrator') {
+            message.error('Brak uprawnien do materialow projektu');
+            navigate('/home/projekty');
+        }
+    }, [accountType, navigate]);
 
     const fetchProjektName = async () => {
         try {
@@ -193,6 +220,52 @@ export default function MateriialyPage() {
         }
     };
 
+    const compressPdfFile = async (file) => {
+        try {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdfDoc = await PDFDocument.load(arrayBuffer);
+            const compressedBytes = await pdfDoc.save({ useObjectStreams: true });
+            return new File([compressedBytes], file.name, { type: 'application/pdf' });
+        } catch (error) {
+            console.warn('Nie udalo sie skompresowac PDF, wysylam oryginal.', error);
+            return file;
+        }
+    };
+
+    const handlePdfUpload = async (item, file) => {
+        if (!file) return;
+        if (file.type !== 'application/pdf') {
+            message.error('Dozwolony jest tylko format PDF');
+            return;
+        }
+
+        setUploadingMaterialId(item.id);
+        try {
+            const compressedFile = await compressPdfFile(file);
+            const formDataPayload = new FormData();
+            formDataPayload.append('pdf', compressedFile, compressedFile.name);
+
+            const response = await Axios.post(
+                `${baseUrl}/api/czas/materialy/${id}/${item.id}/pdf`,
+                formDataPayload,
+                {
+                    withCredentials: true,
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                }
+            );
+
+            if (response.data?.success) {
+                message.success('PDF zaladowany pomyslnie');
+                fetchMaterialy();
+            }
+        } catch (error) {
+            console.error('Blad uploadu PDF:', error);
+            message.error('Nie udalo sie przeslac PDF');
+        } finally {
+            setUploadingMaterialId(null);
+        }
+    };
+
     const handleGoBack = () => {
         navigate('/home/projekty');
     };
@@ -329,6 +402,7 @@ export default function MateriialyPage() {
                                                     <th className="px-3 py-2 text-left">Data</th>
                                                     <th className="px-3 py-2 text-right">Koszty</th>
                                                     <th className="px-3 py-2 text-left">Opis</th>
+                                                    <th className="px-3 py-2 text-left">PDF</th>
                                                     <th className="px-3 py-2 text-right">Akcje</th>
                                                 </tr>
                                             </thead>
@@ -339,6 +413,38 @@ export default function MateriialyPage() {
                                                         <td className="px-3 py-2">{normalizeDateOnly(item.Data) || '-'}</td>
                                                         <td className="px-3 py-2 text-right">{Number(item.Koszty || 0).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                                         <td className="px-3 py-2">{item.Opis || '-'}</td>
+                                                        <td className="px-3 py-2">
+                                                            <div className="flex items-center gap-2">
+                                                                {item.PdfDriveLink ? (
+                                                                    <a
+                                                                        href={item.PdfDriveLink}
+                                                                        target="_blank"
+                                                                        rel="noreferrer"
+                                                                        className="text-xs font-semibold text-blue-700 hover:underline"
+                                                                    >
+                                                                        Podglad
+                                                                    </a>
+                                                                ) : (
+                                                                    <span className="text-xs text-gray-500">Brak</span>
+                                                                )}
+                                                                <label className="cursor-pointer rounded border border-gray-300 px-2 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50">
+                                                                    {uploadingMaterialId === item.id ? 'Wysylanie...' : 'Dodaj PDF'}
+                                                                    <input
+                                                                        type="file"
+                                                                        accept="application/pdf"
+                                                                        className="hidden"
+                                                                        disabled={uploadingMaterialId === item.id}
+                                                                        onChange={(e) => {
+                                                                            const file = e.target.files?.[0];
+                                                                            if (file) {
+                                                                                handlePdfUpload(item, file);
+                                                                            }
+                                                                            e.target.value = '';
+                                                                        }}
+                                                                    />
+                                                                </label>
+                                                            </div>
+                                                        </td>
                                                         <td className="px-3 py-2 text-right">
                                                             <button
                                                                 type="button"

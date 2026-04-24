@@ -132,3 +132,6 @@ fullchain.pem
 privkey.pem
 fullchain.pem.*
 privkey.pem.*
+server/google-service-account.json
+server/drive-oauth-client.json
+server/drive-oauth-token.json

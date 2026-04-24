@@ -233,8 +233,11 @@ const EdytujPojazd = require('./api/Czas/Pojazdy/pojazdy.edytuj');
 
 // Czas > Materialy
 const PobierzMaterialy = require('./api/Czas/Materialy/czas.materialy.pobierz');
+const PobierzMaterialyLista = require('./api/Czas/Materialy/czas.materialy.lista');
 const DodajMaterial = require('./api/Czas/Materialy/czas.materialy.dodaj');
 const UsunMaterial = require('./api/Czas/Materialy/czas.materialy.usun');
+const UploadMaterialPdf = require('./api/Czas/Materialy/czas.materialy.pdf');
+const DriveOAuth = require('./api/Drive/drive.oauth');
 
 // Czas > Tydzien
 const GetTydzien = require('./api/Czas/Tydzien/czas.tydzien.getTydzien');
@@ -300,6 +303,10 @@ app.post('/api/logout', (req, res) => {
     });
     res.json({ message: "Logged out successfully" });
 });
+
+// Drive OAuth (bez JWT)
+app.get('/api/drive/oauth/start', DriveOAuth.startOAuth);
+app.get('/api/drive/oauth/callback', DriveOAuth.handleOAuthCallback);
 
 //                                                                                  WAŻNE!!!!
 //                                                   JAKBY NIE DZIAŁ JWT MIDDLEWARE TO ZAKOMENTOWAĆ TEN APP.USE POD KOMENTAŻEM
@@ -513,13 +520,17 @@ app.put('/api/czas/edytujGrupe/:id', authorizeRole('Administrator', 'Kierownik',
 
 /////////////////////////////////////////
 // CZAS > MATERIALY //
-app.get('/api/czas/materialy/:id', (req, res) => {
+app.get('/api/czas/materialy/lista', authorizeRole('Administrator'), (req, res) => {
+    PobierzMaterialyLista(req, res, pool);
+});
+app.get('/api/czas/materialy/:id', authorizeRole('Administrator'), (req, res) => {
     PobierzMaterialy(req, res, pool);
 });
-app.post('/api/czas/materialy/:id', (req, res) => {
+app.post('/api/czas/materialy/:id', authorizeRole('Administrator'), (req, res) => {
     DodajMaterial(req, res, pool);
 });
-app.delete('/api/czas/materialy/:id/:materialId', (req, res) => {
+app.post('/api/czas/materialy/:id/:materialId/pdf', authorizeRole('Administrator'), UploadMaterialPdf(pool));
+app.delete('/api/czas/materialy/:id/:materialId', authorizeRole('Administrator'), (req, res) => {
     UsunMaterial(req, res, pool);
 });
 /////////////////////////////////////////

@@ -11,7 +11,13 @@ module.exports = (req, res, db) => {
         NazwaFaktury,
                 DATE_FORMAT(Data, '%Y-%m-%d') AS Data,
         Koszty,
-        Opis
+                Opis,
+                pdf_drive_id AS PdfDriveId,
+                pdf_drive_name AS PdfDriveName,
+                pdf_drive_link AS PdfDriveLink,
+                pdf_mime AS PdfMime,
+                pdf_size AS PdfSize,
+                pdf_uploaded_at AS PdfUploadedAt
       FROM projekt_materialy
       WHERE ProjektID = ?
       ORDER BY Data DESC, id DESC`;

@@ -452,10 +452,16 @@ useEffect(() => {
                                         </Link>
                                         <Link 
                                             to={`/home/projekt/${projekty.id}/materialy`}
+                                            onClick={(e) => {
+                                                if (accountType !== 'Administrator') {
+                                                    e.preventDefault();
+                                                }
+                                            }}
                                         >
                                             <Button
                                                 label="Materiały"
                                                 className="bg-amber-600 text-white p-1 m-0.5"
+                                                disabled={accountType !== 'Administrator'}
                                             />
                                         </Link>
                                         <Button

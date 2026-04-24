@@ -24,6 +24,28 @@ const PDF_SprawozdaniePodsumowanie = async (raport, startDate, endDate, Projekt,
     doc.addFont('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-Regular.ttf', 'Roboto', 'normal');
     doc.setFont('Roboto');
 
+    const parseDateOnly = (value) => {
+        if (!value) return null;
+        const [year, month, day] = value.split('-');
+        if (!year || !month || !day) return null;
+        const parsed = new Date(`${year}-${month}-${day}`);
+        return Number.isNaN(parsed.getTime()) ? null : parsed;
+    };
+
+    const fetchMaterialsForProject = async (projectId) => {
+        try {
+            const response = await axios.get(`${baseUrl}/api/czas/materialy/${projectId}`, { withCredentials: true });
+            return response?.data?.materialy || [];
+        } catch (err) {
+            notification.error({
+                message: 'Błąd',
+                description: 'Nie udało się pobrać faktur materiałowych',
+                placement: 'topRight',
+            });
+            return [];
+        }
+    };
+
     // Grupowanie danych po ProjektID
     const groupedByProject = raport.reduce((acc, row) => {
         const projectId = row.ProjektID;
@@ -76,7 +98,18 @@ const PDF_SprawozdaniePodsumowanie = async (raport, startDate, endDate, Projekt,
     for (let i = 0; i < filteredProjectIds.length; i++) {
         const projectId = filteredProjectIds[i];
         const { projectName, entries } = groupedByProject[projectId];
-        const invoiceMaterialCost = parseFloat(entries[0]?.DomyslnyKosztFaktury) || 0;
+        const materials = await fetchMaterialsForProject(projectId);
+        const start = startDate ? new Date(startDate) : null;
+        const end = endDate ? new Date(endDate) : null;
+        const materialsInRange = (start && end)
+            ? materials.filter(material => {
+                const materialDate = parseDateOnly(material.Data);
+                return materialDate && materialDate >= start && materialDate <= end;
+            })
+            : materials;
+        const invoiceMaterialCost = materialsInRange
+            .reduce((sum, material) => sum + (parseFloat(material.Koszty) || 0), 0);
+        const kmMultiplier = 10;
         
         // Get zleceniodawca from mapping
         const zleceniodawca = projectZleceniodawcaMapping?.[projectId] || entries[0]?.Zleceniodawca || '';
@@ -174,7 +207,8 @@ const PDF_SprawozdaniePodsumowanie = async (raport, startDate, endDate, Projekt,
             // Normalizuj tylko do wyświetlenia
             let normH = h + Math.floor(m / 60);
             let normM = m % 60;
-            const suma = ((h + (m / 60)) * stawkaGodzinowa) + kilometry + parking + diety;
+            const kmCost = kilometry * kmMultiplier;
+            const suma = ((h + (m / 60)) * stawkaGodzinowa) + kmCost + parking + diety;
 
             totalKm += kilometry;
             totalParking += parking;
@@ -194,12 +228,13 @@ const PDF_SprawozdaniePodsumowanie = async (raport, startDate, endDate, Projekt,
         });
 
         const totalSumaZMaterialem = totalSuma + invoiceMaterialCost;
+        const totalKmCost = totalKm * kmMultiplier;
 
         tableData.push([
             'Suma:',
             `${totalH}:${totalM.toString().padStart(2, '0')}`,
             '',
-            totalKm.toFixed(2),
+            `${totalKm.toFixed(2)} (${totalKmCost.toFixed(2)})`,
             totalParking.toFixed(2),
             totalDiety.toFixed(2),
             invoiceMaterialCost.toFixed(2),

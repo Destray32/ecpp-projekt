@@ -28,6 +28,7 @@ export default function RaportyPage() {
     const [selectedRow, setSelectedRow] = useState(null);
     const [wybranyRaport, setWybranyRaport] = useState(null);
     const [raport, setRaport] = useState([]);
+    const [materialyRaport, setMaterialyRaport] = useState([]);
     const [accountType, setAccountType] = useState('');
     const [imie, setImie] = useState('');
     const [nazwisko, setNazwisko] = useState('');
@@ -47,6 +48,13 @@ export default function RaportyPage() {
         if (!dataStr) return null;
         const [datePart] = dataStr.split(' ');
         const [day, month, year] = datePart.split('.');
+        const parsed = new Date(`${year}-${month}-${day}`);
+        return Number.isNaN(parsed.getTime()) ? null : parsed;
+    };
+
+    const parseIsoDateOnly = (dataStr) => {
+        if (!dataStr) return null;
+        const [year, month, day] = dataStr.split('-');
         const parsed = new Date(`${year}-${month}-${day}`);
         return Number.isNaN(parsed.getTime()) ? null : parsed;
     };
@@ -121,7 +129,8 @@ export default function RaportyPage() {
     const parseDecimal = (value) => {
         if (value === null || value === undefined) return 0;
         const normalized = String(value).replace(',', '.').trim();
-        const parsed = Number(normalized);
+        const match = normalized.match(/-?\d+(?:\.\d+)?/);
+        const parsed = match ? parseFloat(match[0]) : Number(normalized);
         return Number.isFinite(parsed) ? parsed : 0;
     };
 
@@ -170,7 +179,9 @@ export default function RaportyPage() {
     };
 
     const weekOptionsWysylka = useMemo(() => {
-        if (!Array.isArray(raport) || raport.length === 0) return [];
+        if ((!Array.isArray(raport) || raport.length === 0) && (!Array.isArray(materialyRaport) || materialyRaport.length === 0)) {
+            return [];
+        }
 
         const grouped = raport.reduce((acc, entry) => {
             const currentDate = parseDataToDate(entry.Data);
@@ -190,6 +201,22 @@ export default function RaportyPage() {
             return acc;
         }, {});
 
+        materialyRaport.forEach((material) => {
+            const currentDate = parseIsoDateOnly(material.Data);
+            const iso = getIsoWeekAndYear(currentDate);
+            if (!iso) return;
+
+            const key = `${iso.year}-${String(iso.week).padStart(2, '0')}`;
+
+            if (!grouped[key]) {
+                grouped[key] = {
+                    key,
+                    rok: iso.year,
+                    tydzien: iso.week,
+                };
+            }
+        });
+
         return Object.values(grouped)
             .sort((a, b) => {
                 if (a.rok !== b.rok) return b.rok - a.rok;
@@ -201,28 +228,35 @@ export default function RaportyPage() {
                 tydzien: weekItem.tydzien,
                 rok: weekItem.rok,
             }));
-    }, [raport]);
+    }, [raport, materialyRaport]);
 
     const zleceniodawcyWysylkaOptions = useMemo(() => {
-        if (!selectedWysylkaWeekKey || !Array.isArray(raport) || raport.length === 0) return [];
+        if (!selectedWysylkaWeekKey) return [];
 
         const [rokStr, tydzienStr] = selectedWysylkaWeekKey.split('-');
         const rok = Number(rokStr);
         const tydzien = Number(tydzienStr);
 
-        const unique = new Set(
-            raport
-                .filter((entry) => {
-                    const iso = getIsoWeekAndYear(parseDataToDate(entry.Data));
-                    return iso && Number(iso.year) === rok && Number(iso.week) === tydzien;
-                })
-                .map((entry) => entry.Zleceniodawca || 'Bez zleceniodawcy')
-        );
+        const unique = new Set();
+
+        raport
+            .filter((entry) => {
+                const iso = getIsoWeekAndYear(parseDataToDate(entry.Data));
+                return iso && Number(iso.year) === rok && Number(iso.week) === tydzien;
+            })
+            .forEach((entry) => unique.add(entry.Zleceniodawca || 'Bez zleceniodawcy'));
+
+        materialyRaport
+            .filter((material) => {
+                const iso = getIsoWeekAndYear(parseIsoDateOnly(material.Data));
+                return iso && Number(iso.year) === rok && Number(iso.week) === tydzien;
+            })
+            .forEach((material) => unique.add(material.Zleceniodawca || 'Bez zleceniodawcy'));
 
         return Array.from(unique)
             .sort((a, b) => a.localeCompare(b, 'pl', { sensitivity: 'base' }))
             .map((zleceniodawca) => ({ label: zleceniodawca, value: zleceniodawca }));
-    }, [raport, selectedWysylkaWeekKey]);
+    }, [raport, materialyRaport, selectedWysylkaWeekKey]);
 
     useEffect(() => {
         if (isWysylkaReport) {
@@ -350,9 +384,11 @@ export default function RaportyPage() {
     const fetchProjektyAndRaport = () => {
         Promise.all([
             axios.get(`${baseUrl}/api/czas/projekty`, { withCredentials: true }),
-            axios.get(`${baseUrl}/api/generujRaport`, { withCredentials: true })
+            axios.get(`${baseUrl}/api/generujRaport`, { withCredentials: true }),
+            axios.get(`${baseUrl}/api/czas/materialy/lista`, { withCredentials: true })
+                .catch(() => ({ data: { materialy: [] } }))
         ])
-        .then(([projektyResponse, raportResponse]) => {
+        .then(([projektyResponse, raportResponse, materialyResponse]) => {
             const projekty = projektyResponse.data.projekty.map(projekt => ({
                 label: projekt.NazwaKod_Projektu,
                 value: projekt.id,
@@ -364,6 +400,7 @@ export default function RaportyPage() {
             
             const raportData = raportResponse.data.raport;
             setRaport(raportData);
+            setMaterialyRaport(materialyResponse?.data?.materialy || []);
 
             let filteredProjekty = projekty;
 
@@ -454,6 +491,7 @@ export default function RaportyPage() {
     };
 
     const handleGenerateWysylkaReport = () => {
+        const kmMultiplier = 10;
         if (!selectedWysylkaWeekKey || !selectedWysylkaZleceniodawca) {
             notification.info({
                 message: 'Informacja',
@@ -467,16 +505,44 @@ export default function RaportyPage() {
         const selectedRok = Number(rokStr);
         const selectedTydzien = Number(tydzienStr);
 
-        const filtered = raport.filter((entry) => {
-            const entryZleceniodawca = entry.Zleceniodawca || 'Bez zleceniodawcy';
-            const iso = getIsoWeekAndYear(parseDataToDate(entry.Data));
-            return iso &&
-                Number(iso.year) === selectedRok &&
-                Number(iso.week) === selectedTydzien &&
-                entryZleceniodawca === selectedWysylkaZleceniodawca;
+        const projectIdsForZleceniodawca = new Set(
+            projektyOptions.flatMap(group =>
+                (group.items || []).filter(item =>
+                    (item.zleceniodawca || 'Bez zleceniodawcy') === selectedWysylkaZleceniodawca
+                ).map(item => item.value)
+            )
+        );
+
+        const materialsForWeek = materialyRaport.filter((material) => {
+            const iso = getIsoWeekAndYear(parseIsoDateOnly(material.Data));
+            return iso && Number(iso.year) === selectedRok && Number(iso.week) === selectedTydzien;
         });
 
-        if (filtered.length === 0) {
+        const materialsForWeekFiltered = materialsForWeek.filter((material) => {
+            if (projectIdsForZleceniodawca.size > 0) {
+                return projectIdsForZleceniodawca.has(material.ProjektID);
+            }
+
+            const materialZleceniodawca = material.Zleceniodawca || 'Bez zleceniodawcy';
+            return materialZleceniodawca === selectedWysylkaZleceniodawca;
+        });
+
+        const filtered = raport.filter((entry) => {
+            const iso = getIsoWeekAndYear(parseDataToDate(entry.Data));
+            const matchesWeek = iso &&
+                Number(iso.year) === selectedRok &&
+                Number(iso.week) === selectedTydzien;
+            if (!matchesWeek) return false;
+
+            if (projectIdsForZleceniodawca.size > 0) {
+                return projectIdsForZleceniodawca.has(entry.ProjektID);
+            }
+
+            const entryZleceniodawca = entry.Zleceniodawca || 'Bez zleceniodawcy';
+            return entryZleceniodawca === selectedWysylkaZleceniodawca;
+        });
+
+        if (filtered.length === 0 && materialsForWeekFiltered.length === 0) {
             setWysylkaSummary(null);
             notification.info({
                 message: 'Brak danych',
@@ -486,13 +552,35 @@ export default function RaportyPage() {
             return;
         }
 
-        const groupedByProject = filtered.reduce((acc, entry) => {
+        const groupedByProject = materialsForWeekFiltered.reduce((acc, material) => {
+            const projectName = material.Projekt || 'Bez nazwy projektu';
+            const materialCost = parseDecimal(material.Koszty);
+
+            if (!acc[projectName]) {
+                acc[projectName] = {
+                    projectName,
+                    hours: 0,
+                    km: 0,
+                    parking: 0,
+                    material: 0,
+                    hoursAmount: 0,
+                    kmAmount: 0,
+                    defaultInvoiceName: '',
+                };
+            }
+
+            acc[projectName].material += materialCost;
+            return acc;
+        }, {});
+
+        const hasMaterialsForWeek = materialsForWeekFiltered.length > 0;
+
+        filtered.reduce((acc, entry) => {
             const projectName = entry.Projekt || 'Bez nazwy projektu';
             const entryHours = normalizeLegacyHours(entry.GodzinyPrzepracowane);
             const entryKm = parseDecimal(entry.Kilometry);
             const entryParking = parseDecimal(entry.Parking);
             const entryHoursRate = parseDecimal(entry.StawkaGodzinowa);
-            const entryKmRate = parseDecimal(entry.StawkaKilometrowa);
 
             if (!acc[projectName]) {
                 acc[projectName] = {
@@ -511,7 +599,7 @@ export default function RaportyPage() {
                 acc[projectName].defaultInvoiceName = entry.DomyslnaNazwaFaktury;
             }
 
-            if (acc[projectName].material === 0 && parseDecimal(entry.DomyslnyKosztFaktury) > 0) {
+            if (!hasMaterialsForWeek && acc[projectName].material === 0 && parseDecimal(entry.DomyslnyKosztFaktury) > 0) {
                 acc[projectName].material = parseDecimal(entry.DomyslnyKosztFaktury);
             }
 
@@ -519,9 +607,9 @@ export default function RaportyPage() {
             acc[projectName].km += entryKm;
             acc[projectName].parking += entryParking;
             acc[projectName].hoursAmount += entryHours * entryHoursRate;
-            acc[projectName].kmAmount += entryKm * entryKmRate;
+            acc[projectName].kmAmount += entryKm * kmMultiplier;
             return acc;
-        }, {});
+        }, groupedByProject);
 
         const projects = Object.values(groupedByProject)
             .sort((a, b) => a.projectName.localeCompare(b.projectName, 'pl', { sensitivity: 'base' }));
@@ -529,9 +617,7 @@ export default function RaportyPage() {
         const hoursRate = parseDecimal(
             filtered.find(entry => parseDecimal(entry.StawkaGodzinowa) > 0)?.StawkaGodzinowa
         );
-        const kmRate = parseDecimal(
-            filtered.find(entry => parseDecimal(entry.StawkaKilometrowa) > 0)?.StawkaKilometrowa
-        );
+        const kmRate = kmMultiplier;
 
         const totalHours = projects.reduce((sum, project) => sum + project.hours, 0);
         const totalKm = projects.reduce((sum, project) => sum + project.km, 0);
@@ -545,6 +631,7 @@ export default function RaportyPage() {
 
 
         const kmAmount = projectsWithAmounts.reduce((sum, project) => sum + project.kmAmount, 0);
+        const totalKmCost = totalKm * kmMultiplier;
         const grandTotal = projectsWithAmounts.reduce((sum, project) => sum + project.amount, 0);
 
         const selectedWeekLabel = weekOptionsWysylka.find(option => option.value === selectedWysylkaWeekKey)?.label || `V${selectedTydzien}`;
@@ -555,6 +642,7 @@ export default function RaportyPage() {
             totalKm,
             kmRate,
             kmAmount,
+            totalKmCost,
             totalParking,
             totalMaterial,
             grandTotal,
@@ -585,7 +673,7 @@ export default function RaportyPage() {
             [
                 'TOTAL',
                 formatNumberForCopy(wysylkaSummary.totalHours),
-                formatNumberForCopy(wysylkaSummary.totalKm),
+                `${formatNumberForCopy(wysylkaSummary.totalKm)} (${formatNumberForCopy(wysylkaSummary.totalKmCost)})`,
                 formatNumberForCopy(wysylkaSummary.totalParking),
                 formatNumberForCopy(wysylkaSummary.totalMaterial),
                 formatNumberForCopy(wysylkaSummary.grandTotal),
@@ -629,7 +717,7 @@ export default function RaportyPage() {
         const totalRow = [
             'TOTAL',
             formatNumberForCopy(wysylkaSummary.totalHours),
-            formatNumberForCopy(wysylkaSummary.totalKm),
+            `${formatNumberForCopy(wysylkaSummary.totalKm)} (${formatNumberForCopy(wysylkaSummary.totalKmCost)})`,
             formatNumberForCopy(wysylkaSummary.totalParking),
             formatNumberForCopy(wysylkaSummary.totalMaterial),
             formatNumberForCopy(wysylkaSummary.grandTotal),
@@ -927,6 +1015,9 @@ export default function RaportyPage() {
     };
 
     const handleRowClick = (rowName) => {
+        if (rowName === WYSYLKA_REPORT_NAME && accountType !== 'Administrator') {
+            return;
+        }
         setSelectedRow(rowName);
         setWysylkaSummary(null);
 
@@ -1226,7 +1317,9 @@ export default function RaportyPage() {
                                           <tr className="bg-blue-100 font-bold">
                                               <td className="px-2 py-2">TOTAL</td>
                                               <td className="px-2 py-2 text-right">{formatNumber(wysylkaSummary.totalHours, 2)}</td>
-                                              <td className="px-2 py-2 text-right">{formatNumber(wysylkaSummary.totalKm, 2)}</td>
+                                              <td className="px-2 py-2 text-right">
+                                                  {formatNumber(wysylkaSummary.totalKm, 2)} ({formatNumber(wysylkaSummary.totalKmCost, 2)})
+                                              </td>
                                               <td className="px-2 py-2 text-right">{formatNumber(wysylkaSummary.totalParking, 2)}</td>
                                               <td className="px-2 py-2 text-right">{formatNumber(wysylkaSummary.totalMaterial, 2)}</td>
                                               <td className="px-2 py-2 text-right">{formatNumber(wysylkaSummary.grandTotal, 2)}</td>
@@ -1293,6 +1386,7 @@ export default function RaportyPage() {
                             Podsumowanie
                         </td>
                     </tr>
+                    {accountType === 'Administrator' && (
                     <tr className={`${showRaportyFirma && accountType !== 'Pracownik' ? "" : "hidden"}`}>
                         <td onClick={() => {
                             if (accountType !== 'Pracownik') {
@@ -1304,6 +1398,7 @@ export default function RaportyPage() {
                             Podsumowanie(wysyłka)
                         </td>
                     </tr>
+                    )}
 
                     <tr className="border-b hover:underline even:bg-gray-200 odd:bg-gray-300"
                         onClick={() => setShowRaportyPracownik(!showRaportyPracownik)}>
