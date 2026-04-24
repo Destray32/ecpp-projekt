@@ -52,6 +52,28 @@ export default function MateriialyPage() {
         return `${year}-${month}-${day}`;
     };
 
+    const handleDeletePdf = async (materialId) => {
+        // Opcjonalne: proste potwierdzenie usunięcia
+        if (!window.confirm('Czy na pewno chcesz usunąć ten plik PDF?')) {
+            return;
+        }
+
+        try {
+            const response = await Axios.delete(
+                `${baseUrl}/api/czas/materialy/${id}/${materialId}/pdf`, 
+                { withCredentials: true }
+            );
+
+            if (response.data?.success) {
+                message.success('Plik PDF został usunięty');
+                fetchMaterialy(); // Odświeżenie listy po usunięciu
+            }
+        } catch (error) {
+            console.error('Błąd usuwania pliku PDF:', error);
+            message.error('Nie udało się usunąć pliku PDF');
+        }
+    };
+
     useEffect(() => {
         checkUserType(setAccountType);
     }, []);
@@ -406,19 +428,28 @@ export default function MateriialyPage() {
                                                         <td className="px-3 py-2">
                                                             <div className="flex items-center gap-2">
                                                                 {item.PdfDriveLink ? (
-                                                                    <a
-                                                                        href={item.PdfDriveLink}
-                                                                        target="_blank"
-                                                                        rel="noreferrer"
-                                                                        className="text-xs font-semibold text-blue-700 hover:underline"
-                                                                    >
-                                                                        Podglad
-                                                                    </a>
+                                                                    <>
+                                                                        <a
+                                                                            href={item.PdfDriveLink}
+                                                                            target="_blank"
+                                                                            rel="noreferrer"
+                                                                            className="text-xs font-semibold text-blue-700 hover:underline"
+                                                                        >
+                                                                            Podgląd
+                                                                        </a>
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => handleDeletePdf(item.id)}
+                                                                            className="text-xs font-semibold text-red-600 hover:underline"
+                                                                        >
+                                                                            Usuń PDF
+                                                                        </button>
+                                                                    </>
                                                                 ) : (
                                                                     <span className="text-xs text-gray-500">Brak</span>
                                                                 )}
                                                                 <label className="cursor-pointer rounded border border-gray-300 px-2 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50">
-                                                                    {uploadingMaterialId === item.id ? 'Wysylanie...' : 'Dodaj PDF'}
+                                                                    {uploadingMaterialId === item.id ? 'Wysyłanie...' : (item.PdfDriveLink ? 'Zmień PDF' : 'Dodaj PDF')}
                                                                     <input
                                                                         type="file"
                                                                         accept="application/pdf"
