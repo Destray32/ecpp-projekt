@@ -36,6 +36,7 @@ export default function RaportyPage() {
     const [allPracownicyOptions, setAllPracownicyOptions] = useState([]);
     const [selectedZleceniodawcy, setSelectedZleceniodawcy] = useState([]);
     const [uniqueZleceniodawcy, setUniqueZleceniodawcy] = useState([]);
+    const [projectOrderMap, setProjectOrderMap] = useState({});
     const [selectedWysylkaWeekKey, setSelectedWysylkaWeekKey] = useState(null);
     const [selectedWysylkaZleceniodawca, setSelectedWysylkaZleceniodawca] = useState(null);
     const [wysylkaSummary, setWysylkaSummary] = useState(null);
@@ -392,14 +393,13 @@ export default function RaportyPage() {
                 .catch(() => ({ data: [] }))
         ])
         .then(([projektyResponse, raportResponse, materialyResponse, cennikResponse]) => {
-            const projekty = projektyResponse.data.projekty.map(projekt => ({
+            const projekty = projektyResponse.data.projekty.map((projekt, index) => ({
                 label: projekt.NazwaKod_Projektu,
                 value: projekt.id,
                 zleceniodawca: projekt.Zleceniodawca,
+                order: index,
             }));
-            
-            // Sort projects alphabetically by label
-            projekty.sort((a, b) => a.label.localeCompare(b.label));
+            setProjectOrderMap(Object.fromEntries(projekty.map((projekt) => [projekt.value, projekt.order])));
             
             const raportData = raportResponse.data.raport;
             setRaport(raportData);
@@ -515,7 +515,6 @@ export default function RaportyPage() {
                 ).map(item => item.value)
             )
         );
-
         const selectedZleceniodawcaRate = parseDecimal(
             cennikData.find(entry => (entry.Zleceniodawca || 'Bez zleceniodawcy') === selectedWysylkaZleceniodawca)?.Stawka
         );
@@ -574,6 +573,7 @@ export default function RaportyPage() {
                     hoursAmount: 0,
                     kmAmount: 0,
                     defaultInvoiceName: '',
+                    order: projectOrderMap[material.ProjektID] ?? Number.MAX_SAFE_INTEGER,
                 };
             }
 
@@ -589,6 +589,7 @@ export default function RaportyPage() {
             const entryKm = parseDecimal(entry.Kilometry);
             const entryParking = parseDecimal(entry.Parking);
             const entryHoursRate = parseDecimal(entry.StawkaGodzinowa);
+            const entryOrder = projectOrderMap[entry.ProjektID] ?? Number.MAX_SAFE_INTEGER;
 
             if (!acc[projectName]) {
                 acc[projectName] = {
@@ -600,7 +601,12 @@ export default function RaportyPage() {
                     hoursAmount: 0,
                     kmAmount: 0,
                     defaultInvoiceName: entry.DomyslnaNazwaFaktury || '',
+                    order: entryOrder,
                 };
+            }
+
+            if (entryOrder < (acc[projectName].order ?? Number.MAX_SAFE_INTEGER)) {
+                acc[projectName].order = entryOrder;
             }
 
             if (!acc[projectName].defaultInvoiceName && entry.DomyslnaNazwaFaktury) {
@@ -620,7 +626,12 @@ export default function RaportyPage() {
         }, groupedByProject);
 
         const projects = Object.values(groupedByProject)
-            .sort((a, b) => a.projectName.localeCompare(b.projectName, 'pl', { sensitivity: 'base' }));
+            .sort((a, b) => {
+                const aOrder = Number.isFinite(Number(a.order)) ? Number(a.order) : Number.MAX_SAFE_INTEGER;
+                const bOrder = Number.isFinite(Number(b.order)) ? Number(b.order) : Number.MAX_SAFE_INTEGER;
+                if (aOrder !== bOrder) return aOrder - bOrder;
+                return a.projectName.localeCompare(b.projectName, 'pl', { sensitivity: 'base' });
+            });
 
         const hoursRate = parseDecimal(
             filtered.find(entry => parseDecimal(entry.StawkaGodzinowa) > 0)?.StawkaGodzinowa
@@ -860,7 +871,14 @@ export default function RaportyPage() {
             PDF_SprawozdanieSzczegolowe(filteredRaport, passedStartDate, passedEndDate, Projekt, projectZleceniodawcaMapping);
             break;
         case "Sprawozdanie z działalności - podsumowanie":
-            PDF_SprawozdaniePodsumowanie(filteredRaport, passedStartDate, passedEndDate, Projekt);
+            PDF_SprawozdaniePodsumowanie(
+                filteredRaport,
+                passedStartDate,
+                passedEndDate,
+                Projekt,
+                projectZleceniodawcaMapping,
+                projectOrderMap
+            );
             break;
         case "Analiza świadczeń pracowniczych":
             PDF_AnalizaSwiadczenPracowniczych(filteredRaport, passedStartDate, passedEndDate, pracownik);
@@ -929,7 +947,14 @@ export default function RaportyPage() {
                 PDF_SprawozdanieSzczegolowe(filteredRaport, passedStartDate, passedEndDate, null, projectZleceniodawcaMapping);
                 break;
             case "Sprawozdanie z działalności - podsumowanie":
-                PDF_SprawozdaniePodsumowanie(filteredRaport, passedStartDate, passedEndDate, null, projectZleceniodawcaMapping);
+                PDF_SprawozdaniePodsumowanie(
+                    filteredRaport,
+                    passedStartDate,
+                    passedEndDate,
+                    null,
+                    projectZleceniodawcaMapping,
+                    projectOrderMap
+                );
                 break;
             default:
                 break;

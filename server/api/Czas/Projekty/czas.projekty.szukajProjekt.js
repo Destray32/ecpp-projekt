@@ -8,6 +8,7 @@ function SzukajProjekt(req, res, db) {
             g.Zleceniodawca,
             p.NazwaKod_Projektu,
             p.Status,
+            p.data_dodania,
             CONCAT(do.Imie, ' ', do.Nazwisko) AS DodanePrzez
         FROM 
             Projekty p
@@ -33,6 +34,8 @@ function SzukajProjekt(req, res, db) {
         queryParams.push('%' + name + '%');
     }
 
+    sql += ' ORDER BY p.data_dodania DESC';
+
     db.query(sql, queryParams, (err, result) => {
         if (err) {
             console.log('SQL Error:', err);
@@ -43,6 +46,7 @@ function SzukajProjekt(req, res, db) {
                 Zleceniodawca: row.Zleceniodawca,
                 NazwaKod_Projektu: row.NazwaKod_Projektu,
                 Status: row.Status,
+                data_dodania: row.data_dodania,
                 DodanePrzez: row.DodanePrzez || '—'
             }));
             res.status(200).json({ projekty: formattedRows });

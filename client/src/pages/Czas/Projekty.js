@@ -119,10 +119,7 @@ export default function ProjektyPage() {
         Axios.get(`${baseUrl}/api/czas/szukaj?group=${filtr}`, { withCredentials: true })
             .then((response) => {
                 if (response.data && Array.isArray(response.data.projekty)) {
-                    const sortedProjects = [...response.data.projekty].sort((a, b) =>
-                        a.Zleceniodawca.localeCompare(b.Zleceniodawca)
-                    );
-                    setData(sortedProjects);
+                    setData(response.data.projekty);
                 } else {
                     console.error('Unexpected response structure:', response.data);
                     setData([]);
@@ -214,10 +211,7 @@ export default function ProjektyPage() {
         Axios.get(`${baseUrl}/api/czas/szukaj`, { withCredentials: true })
             .then((response) => {
                 if (response.data && Array.isArray(response.data.projekty)) {
-                    const sortedProjects = [...response.data.projekty].sort((a, b) =>
-                        a.Zleceniodawca.localeCompare(b.Zleceniodawca)
-                    );
-                    setData(sortedProjects);
+                    setData(response.data.projekty);
                 } else {
                     console.error('Unexpected response structure:', response.data);
                     setData([]);

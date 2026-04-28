@@ -6,8 +6,14 @@ module.exports = (req, res, db) => {
         DATE_FORMAT(pm.Data, '%Y-%m-%d') AS Data,
         pm.Koszty,
         pm.Opis,
-        pr.NazwaKod_Projektu AS Projekt,
-        gr.Zleceniodawca
+                pr.NazwaKod_Projektu AS Projekt,
+                gr.Zleceniodawca,
+                pm.pdf_drive_id AS PdfDriveId,
+                pm.pdf_drive_name AS PdfDriveName,
+                pm.pdf_drive_link AS PdfDriveLink,
+                pm.pdf_mime AS PdfMime,
+                pm.pdf_size AS PdfSize,
+                pm.pdf_uploaded_at AS PdfUploadedAt
       FROM projekt_materialy pm
       JOIN Projekty pr ON pm.ProjektID = pr.idProjekty
       JOIN Grupa_urlopowa gr ON pr.Grupa_urlopowa_idGrupa_urlopowa = gr.idGrupa_urlopowa

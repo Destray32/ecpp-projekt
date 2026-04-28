@@ -19,6 +19,20 @@ const PDF_SprawozdaniePodsumowanie = async (raport, startDate, endDate, Projekt,
         return;
     }
 
+    let backendProjectOrderMap = {};
+    try {
+        const projectsResponse = await axios.get(`${baseUrl}/api/czas/projekty`, { withCredentials: true });
+        const backendProjects = projectsResponse?.data?.projekty || [];
+        backendProjectOrderMap = Object.fromEntries(backendProjects.map((project, index) => [project.id, index]));
+    } catch (err) {
+        notification.error({
+            message: 'Błąd',
+            description: 'Nie udało się pobrać kolejności projektów',
+            placement: 'topRight',
+        });
+        return;
+    }
+
     const doc = new jsPDF('landscape', 'pt', 'a4');
     console.log(raport);
     doc.addFont('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-Regular.ttf', 'Roboto', 'normal');
@@ -94,6 +108,17 @@ const PDF_SprawozdaniePodsumowanie = async (raport, startDate, endDate, Projekt,
         });
         return;
     }
+
+    filteredProjectIds.sort((a, b) => {
+        const aOrder = Number.isFinite(Number(backendProjectOrderMap?.[a])) ? Number(backendProjectOrderMap[a]) : Number.MAX_SAFE_INTEGER;
+        const bOrder = Number.isFinite(Number(backendProjectOrderMap?.[b])) ? Number(backendProjectOrderMap[b]) : Number.MAX_SAFE_INTEGER;
+
+        if (aOrder !== bOrder) {
+            return aOrder - bOrder;
+        }
+
+        return String(a).localeCompare(String(b), 'pl', { sensitivity: 'base' });
+    });
 
     for (let i = 0; i < filteredProjectIds.length; i++) {
         const projectId = filteredProjectIds[i];
