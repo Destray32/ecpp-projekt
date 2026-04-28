@@ -109,10 +109,12 @@ const PDF_SprawozdaniePodsumowanie = async (raport, startDate, endDate, Projekt,
             : materials;
         const invoiceMaterialCost = materialsInRange
             .reduce((sum, material) => sum + (parseFloat(material.Koszty) || 0), 0);
-        const kmMultiplier = 10;
         
         // Get zleceniodawca from mapping
         const zleceniodawca = projectZleceniodawcaMapping?.[projectId] || entries[0]?.Zleceniodawca || '';
+        const kmMultiplier = parseFloat(
+            cennikData.find(c => (c.Zleceniodawca || '') === zleceniodawca)?.Stawka
+        ) || 0;
 
         // Filtrujemy wpisy po dacie
         let employeeEntries = [];

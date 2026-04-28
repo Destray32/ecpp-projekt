@@ -29,6 +29,7 @@ export default function RaportyPage() {
     const [wybranyRaport, setWybranyRaport] = useState(null);
     const [raport, setRaport] = useState([]);
     const [materialyRaport, setMaterialyRaport] = useState([]);
+    const [cennikData, setCennikData] = useState([]);
     const [accountType, setAccountType] = useState('');
     const [imie, setImie] = useState('');
     const [nazwisko, setNazwisko] = useState('');
@@ -386,9 +387,11 @@ export default function RaportyPage() {
             axios.get(`${baseUrl}/api/czas/projekty`, { withCredentials: true }),
             axios.get(`${baseUrl}/api/generujRaport`, { withCredentials: true }),
             axios.get(`${baseUrl}/api/czas/materialy/lista`, { withCredentials: true })
-                .catch(() => ({ data: { materialy: [] } }))
+                .catch(() => ({ data: { materialy: [] } })),
+            axios.get(`${baseUrl}/api/cennik`, { withCredentials: true })
+                .catch(() => ({ data: [] }))
         ])
-        .then(([projektyResponse, raportResponse, materialyResponse]) => {
+        .then(([projektyResponse, raportResponse, materialyResponse, cennikResponse]) => {
             const projekty = projektyResponse.data.projekty.map(projekt => ({
                 label: projekt.NazwaKod_Projektu,
                 value: projekt.id,
@@ -401,6 +404,7 @@ export default function RaportyPage() {
             const raportData = raportResponse.data.raport;
             setRaport(raportData);
             setMaterialyRaport(materialyResponse?.data?.materialy || []);
+            setCennikData(cennikResponse?.data || []);
 
             let filteredProjekty = projekty;
 
@@ -491,7 +495,6 @@ export default function RaportyPage() {
     };
 
     const handleGenerateWysylkaReport = () => {
-        const kmMultiplier = 10;
         if (!selectedWysylkaWeekKey || !selectedWysylkaZleceniodawca) {
             notification.info({
                 message: 'Informacja',
@@ -512,6 +515,11 @@ export default function RaportyPage() {
                 ).map(item => item.value)
             )
         );
+
+        const selectedZleceniodawcaRate = parseDecimal(
+            cennikData.find(entry => (entry.Zleceniodawca || 'Bez zleceniodawcy') === selectedWysylkaZleceniodawca)?.Stawka
+        );
+        const kmMultiplier = selectedZleceniodawcaRate > 0 ? selectedZleceniodawcaRate : 0;
 
         const materialsForWeek = materialyRaport.filter((material) => {
             const iso = getIsoWeekAndYear(parseIsoDateOnly(material.Data));
