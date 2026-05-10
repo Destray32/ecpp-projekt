@@ -112,8 +112,8 @@ function ZapiszCzasPracy(req, res, db) {
                                                             [project.projekt],
                                                             function (err, projektyResults) {
                                                                 if (err || projektyResults.length === 0) {
-                                                                    console.error(err);
-                                                                    return reject(new Error('Project not found'));
+                                                                    console.error('Project lookup error:', err, 'Project name:', project.projekt);
+                                                                    return reject(new Error(`Project not found: ${project.projekt}`));
                                                                 }
 
                                                                 const projektyId = projektyResults[0].idProjekty;
