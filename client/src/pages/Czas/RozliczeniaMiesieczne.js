@@ -6,7 +6,7 @@ const RozliczeniaMiesieczne = () => {
     const [pracownicy, setPracownicy] = useState([]);
     const [selectedPracownik, setSelectedPracownik] = useState('');
     const [miesiacRok, setMiesiacRok] = useState(new Date().toISOString().slice(0, 7));
-    
+
     const [rozliczenie, setRozliczenie] = useState({
         Godziny_przepracowane: 0,
         Mozliwe_godziny: '',
@@ -22,11 +22,12 @@ const RozliczeniaMiesieczne = () => {
         VAB: { from: '', to: '' },
         Pappaledi: { from: '', to: '' }
     });
-    
+
     const [isDraft, setIsDraft] = useState(true);
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState({ text: '', type: '' });
     const [carryoverHours, setCarryoverHours] = useState(0);
+    const [atfOtherMonthsTotal, setAtfOtherMonthsTotal] = useState(0);
 
     // 1. Weryfikacja użytkownika i pobranie listy pracowników
     useEffect(() => {
@@ -34,14 +35,22 @@ const RozliczeniaMiesieczne = () => {
             .then((response) => {
                 const data = response.data;
                 const loggedInUser = Array.isArray(data) ? data[0] : data;
-                const userId = loggedInUser.idPracownik || loggedInUser.id; 
+                const userId = loggedInUser.idPracownik || loggedInUser.id;
                 setSelectedPracownik(userId);
 
                 const hasAdminAccess = ['Administrator', 'Kierownik', 'Biuro'].includes(loggedInUser.Typ_konta);
 
                 if (hasAdminAccess) {
                     Axios.get(`${baseUrl}/api/pracownicy`, { withCredentials: true })
-                        .then((empResponse) => setPracownicy(empResponse.data))
+                        .then((empResponse) => {
+                            const activeEmployees = empResponse.data.filter(p => p.accountStatus === 'Aktywne');
+                            const formatted = activeEmployees.map(p => ({
+                                idPracownik: p.id,
+                                Imie: p.name,
+                                Nazwisko: p.surname
+                            }));
+                            setPracownicy(formatted);
+                        })
                         .catch(err => console.error('Błąd:', err));
                 } else {
                     setPracownicy([{
@@ -179,6 +188,7 @@ const RozliczeniaMiesieczne = () => {
                         Pappaledi: normalizeRange(parseJsonValue(result.data.Pappaledi, {}))
                     });
                     setIsDraft(result.isDraft);
+                    setAtfOtherMonthsTotal(result.atfOtherMonthsTotal || 0);
                 }
             })
             .catch(err => {
@@ -242,7 +252,7 @@ const RozliczeniaMiesieczne = () => {
         Axios.post(`${baseUrl}/api/rozliczenia`, payload, { withCredentials: true })
             .then((response) => {
                 const data = response.data;
-                if(data.message) {
+                if (data.message) {
                     setMessage({ text: 'Zapisano pomyślnie!', type: 'success' });
                     setIsDraft(false);
                 }
@@ -258,8 +268,8 @@ const RozliczeniaMiesieczne = () => {
             <div className="bg-white p-4 rounded-lg shadow mb-6 flex flex-col gap-4 md:flex-row md:items-end">
                 <div className="flex-1 min-w-[220px]">
                     <label className="block text-sm font-medium text-gray-700 mb-1">Pracownik</label>
-                    <select 
-                        value={selectedPracownik} 
+                    <select
+                        value={selectedPracownik}
                         onChange={(e) => setSelectedPracownik(e.target.value)}
                         disabled={pracownicy.length <= 1}
                         className={`w-full border border-gray-300 rounded p-2 ${pracownicy.length <= 1 ? 'bg-gray-100 cursor-not-allowed font-semibold' : 'bg-white'}`}
@@ -280,8 +290,8 @@ const RozliczeniaMiesieczne = () => {
                         >
                             &larr;
                         </button>
-                        <input 
-                            type="month" 
+                        <input
+                            type="month"
                             value={miesiacRok}
                             onChange={(e) => setMiesiacRok(e.target.value)}
                             className="w-full border border-gray-300 rounded p-2"
@@ -345,16 +355,11 @@ const RozliczeniaMiesieczne = () => {
                             <label className="block text-sm font-medium text-gray-700">Nadgodziny (do wypłaty)</label>
                             <input type="number" step="0.5" name="Nadgodziny_wyplata" value={rozliczenie.Nadgodziny_wyplata} onChange={handleInputChange} className="mt-1 w-full border border-gray-300 rounded p-2 focus:ring-blue-500 focus:border-blue-500" />
                         </div>
-                        
+
                         <div>
                             <label className="block text-sm font-medium text-gray-700">Z banku godzin z poprzedniego miesiąca</label>
                             <input type="number" step="0.5" name="Nadgodziny_z_poprzedniego" value={rozliczenie.Nadgodziny_z_poprzedniego} onChange={handleInputChange} className="mt-1 w-full border border-gray-300 rounded p-2 focus:ring-blue-500" />
                             <p className="text-xs text-gray-500 mt-1">Do wykorzystania z poprzedniego miesiaca: {carryoverHours} h</p>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Nadgodziny przeniesione na kolejny miesiąc</label>
-                            <input type="number" step="0.5" name="Nadgodziny_na_kolejny" value={rozliczenie.Nadgodziny_na_kolejny} onChange={handleInputChange} className="mt-1 w-full border border-gray-300 rounded p-2 focus:ring-blue-500" />
                         </div>
                     </div>
 
@@ -366,12 +371,28 @@ const RozliczeniaMiesieczne = () => {
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700">ATF (wybrane w tym miesiącu)</label>
-                            <input type="number" step="0.5" name="Atf_wykorzystane" value={rozliczenie.Atf_wykorzystane} onChange={handleInputChange} className="mt-1 w-full border border-gray-300 rounded p-2 focus:ring-blue-500" />
+                            <input type="number" step="0.5" name="Atf_wykorzystane" value={rozliczenie.Atf_wykorzystane} onChange={handleInputChange} className="mt-1 w-full border border-gray-300 rounded p-2 focus:ring-blue-500 focus:border-blue-500" />
                             <p className="text-xs text-gray-500 mt-1">Ilość wykorzystanych godzin w wybranym miesiącu</p>
+                            
+                            {/* Wskaźnik rocznego limitu ATF */}
+                            {miesiacRok && (
+                                <div className={`mt-2 p-2 rounded border text-xs flex justify-between items-center transition-colors ${
+                                    (atfOtherMonthsTotal + (Number(rozliczenie.Atf_wykorzystane) || 0)) > 40
+                                    ? 'bg-red-50 border-red-200 text-red-800'
+                                    : 'bg-blue-50 border-blue-200 text-blue-800'
+                                }`}>
+                                    <span>Wykorzystano w roku ({miesiacRok.slice(0, 4)}):</span>
+                                    <span className="font-bold">
+                                        {atfOtherMonthsTotal + (Number(rozliczenie.Atf_wykorzystane) || 0)} / 40 h
+                                        {(atfOtherMonthsTotal + (Number(rozliczenie.Atf_wykorzystane) || 0)) > 40 && ' (Przekroczono limit!)'}
+                                    </span>
+                                </div>
+                            )}
                         </div>
 
-                        <div className="rounded border border-gray-200 p-3">
-                            <p className="text-xs text-gray-600">Status weryfikacji ukryty w tym widoku.</p>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Nadgodziny przeniesione na kolejny miesiąc</label>
+                            <input type="number" step="0.5" name="Nadgodziny_na_kolejny" value={rozliczenie.Nadgodziny_na_kolejny} onChange={handleInputChange} className="mt-1 w-full border border-gray-300 rounded p-2 focus:ring-blue-500" />
                         </div>
                     </div>
                 </div>
@@ -383,73 +404,131 @@ const RozliczeniaMiesieczne = () => {
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
                                 <label className="block text-sm font-medium text-gray-700">Urlop (zakres + dni)</label>
-                                <button type="button" className="text-sm text-blue-600" onClick={() => addLeaveEntry('Urlop')}>Dodaj date</button>
+                                <button
+                                    type="button"
+                                    className="text-sm font-semibold text-blue-600 hover:text-blue-800 transition"
+                                    onClick={() => addLeaveEntry('Urlop')}
+                                >
+                                    + Dodaj datę
+                                </button>
                             </div>
                             {rozliczenie.Urlop.length === 0 && (
-                                <p className="text-xs text-gray-500">Brak wpisow.</p>
+                                <p className="text-xs text-gray-500 bg-gray-50 border border-dashed border-gray-300 rounded p-3 text-center">
+                                    Brak wpisów.
+                                </p>
                             )}
-                            {rozliczenie.Urlop.map((entry, index) => (
-                                <div key={`urlop-${index}`} className="flex items-center gap-2">
-                                    <input
-                                        type="date"
-                                        value={entry.from}
-                                        onChange={(e) => updateLeaveEntry('Urlop', index, 'from', e.target.value)}
-                                        className="flex-1 border border-gray-300 rounded p-2"
-                                    />
-                                    <input
-                                        type="date"
-                                        value={entry.to}
-                                        onChange={(e) => updateLeaveEntry('Urlop', index, 'to', e.target.value)}
-                                        className="flex-1 border border-gray-300 rounded p-2"
-                                    />
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        step="0.5"
-                                        value={entry.days}
-                                        onChange={(e) => updateLeaveEntry('Urlop', index, 'days', e.target.value)}
-                                        className="w-24 border border-gray-300 rounded p-2"
-                                        placeholder="dni"
-                                    />
-                                    <button type="button" className="text-sm text-red-600" onClick={() => removeLeaveEntry('Urlop', index)}>Usun</button>
-                                </div>
-                            ))}
+                            <div className="space-y-2">
+                                {rozliczenie.Urlop.map((entry, index) => (
+                                    <div key={`urlop-${index}`} className="p-3 bg-gray-50 border border-gray-200 rounded-lg space-y-2 shadow-sm transition hover:border-gray-300">
+                                        <div className="flex gap-2">
+                                            <div className="flex-1 min-w-0">
+                                                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Od</label>
+                                                <input
+                                                    type="date"
+                                                    value={entry.from}
+                                                    onChange={(e) => updateLeaveEntry('Urlop', index, 'from', e.target.value)}
+                                                    className="w-full border border-gray-300 rounded p-2 text-sm bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                                />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Do</label>
+                                                <input
+                                                    type="date"
+                                                    value={entry.to}
+                                                    onChange={(e) => updateLeaveEntry('Urlop', index, 'to', e.target.value)}
+                                                    className="w-full border border-gray-300 rounded p-2 text-sm bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center justify-between pt-1 border-t border-gray-100">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xs font-semibold text-gray-600">Dni:</span>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    step="0.5"
+                                                    value={entry.days}
+                                                    onChange={(e) => updateLeaveEntry('Urlop', index, 'days', e.target.value)}
+                                                    className="w-16 border border-gray-300 rounded p-1 text-center text-sm bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                                    placeholder="dni"
+                                                />
+                                            </div>
+                                            <button
+                                                type="button"
+                                                className="text-xs font-bold text-red-600 hover:text-red-800 transition"
+                                                onClick={() => removeLeaveEntry('Urlop', index)}
+                                            >
+                                                Usuń
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
 
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
-                                <label className="block text-sm font-medium text-gray-700">Urlop zalegly (zakres + dni)</label>
-                                <button type="button" className="text-sm text-blue-600" onClick={() => addLeaveEntry('Urlop_zalegly')}>Dodaj date</button>
+                                <label className="block text-sm font-medium text-gray-700">Urlop zaległy (zakres + dni)</label>
+                                <button
+                                    type="button"
+                                    className="text-sm font-semibold text-blue-600 hover:text-blue-800 transition"
+                                    onClick={() => addLeaveEntry('Urlop_zalegly')}
+                                >
+                                    + Dodaj datę
+                                </button>
                             </div>
                             {rozliczenie.Urlop_zalegly.length === 0 && (
-                                <p className="text-xs text-gray-500">Brak wpisow.</p>
+                                <p className="text-xs text-gray-500 bg-gray-50 border border-dashed border-gray-300 rounded p-3 text-center">
+                                    Brak wpisów.
+                                </p>
                             )}
-                            {rozliczenie.Urlop_zalegly.map((entry, index) => (
-                                <div key={`urlop-zalegly-${index}`} className="flex items-center gap-2">
-                                    <input
-                                        type="date"
-                                        value={entry.from}
-                                        onChange={(e) => updateLeaveEntry('Urlop_zalegly', index, 'from', e.target.value)}
-                                        className="flex-1 border border-gray-300 rounded p-2"
-                                    />
-                                    <input
-                                        type="date"
-                                        value={entry.to}
-                                        onChange={(e) => updateLeaveEntry('Urlop_zalegly', index, 'to', e.target.value)}
-                                        className="flex-1 border border-gray-300 rounded p-2"
-                                    />
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        step="0.5"
-                                        value={entry.days}
-                                        onChange={(e) => updateLeaveEntry('Urlop_zalegly', index, 'days', e.target.value)}
-                                        className="w-24 border border-gray-300 rounded p-2"
-                                        placeholder="dni"
-                                    />
-                                    <button type="button" className="text-sm text-red-600" onClick={() => removeLeaveEntry('Urlop_zalegly', index)}>Usun</button>
-                                </div>
-                            ))}
+                            <div className="space-y-2">
+                                {rozliczenie.Urlop_zalegly.map((entry, index) => (
+                                    <div key={`urlop-zalegly-${index}`} className="p-3 bg-gray-50 border border-gray-200 rounded-lg space-y-2 shadow-sm transition hover:border-gray-300">
+                                        <div className="flex gap-2">
+                                            <div className="flex-1 min-w-0">
+                                                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Od</label>
+                                                <input
+                                                    type="date"
+                                                    value={entry.from}
+                                                    onChange={(e) => updateLeaveEntry('Urlop_zalegly', index, 'from', e.target.value)}
+                                                    className="w-full border border-gray-300 rounded p-2 text-sm bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                                />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Do</label>
+                                                <input
+                                                    type="date"
+                                                    value={entry.to}
+                                                    onChange={(e) => updateLeaveEntry('Urlop_zalegly', index, 'to', e.target.value)}
+                                                    className="w-full border border-gray-300 rounded p-2 text-sm bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center justify-between pt-1 border-t border-gray-100">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xs font-semibold text-gray-600">Dni:</span>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    step="0.5"
+                                                    value={entry.days}
+                                                    onChange={(e) => updateLeaveEntry('Urlop_zalegly', index, 'days', e.target.value)}
+                                                    className="w-16 border border-gray-300 rounded p-1 text-center text-sm bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                                    placeholder="dni"
+                                                />
+                                            </div>
+                                            <button
+                                                type="button"
+                                                className="text-xs font-bold text-red-600 hover:text-red-800 transition"
+                                                onClick={() => removeLeaveEntry('Urlop_zalegly', index)}
+                                            >
+                                                Usuń
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </div>
 
@@ -461,13 +540,13 @@ const RozliczeniaMiesieczne = () => {
                                     type="date"
                                     value={rozliczenie.L4.from}
                                     onChange={(e) => updateRangeField('L4', 'from', e.target.value)}
-                                    className="flex-1 border border-gray-300 rounded p-2"
+                                    className="flex-1 min-w-0 border border-gray-300 rounded p-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                 />
                                 <input
                                     type="date"
                                     value={rozliczenie.L4.to}
                                     onChange={(e) => updateRangeField('L4', 'to', e.target.value)}
-                                    className="flex-1 border border-gray-300 rounded p-2"
+                                    className="flex-1 min-w-0 border border-gray-300 rounded p-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                 />
                             </div>
                             {getRangeDays(rozliczenie.L4) > 0 && (
@@ -482,13 +561,13 @@ const RozliczeniaMiesieczne = () => {
                                     type="date"
                                     value={rozliczenie.L4cd.from}
                                     onChange={(e) => updateRangeField('L4cd', 'from', e.target.value)}
-                                    className="flex-1 border border-gray-300 rounded p-2"
+                                    className="flex-1 min-w-0 border border-gray-300 rounded p-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                 />
                                 <input
                                     type="date"
                                     value={rozliczenie.L4cd.to}
                                     onChange={(e) => updateRangeField('L4cd', 'to', e.target.value)}
-                                    className="flex-1 border border-gray-300 rounded p-2"
+                                    className="flex-1 min-w-0 border border-gray-300 rounded p-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                 />
                             </div>
                         </div>
@@ -500,13 +579,13 @@ const RozliczeniaMiesieczne = () => {
                                     type="date"
                                     value={rozliczenie.VAB.from}
                                     onChange={(e) => updateRangeField('VAB', 'from', e.target.value)}
-                                    className="flex-1 border border-gray-300 rounded p-2"
+                                    className="flex-1 min-w-0 border border-gray-300 rounded p-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                 />
                                 <input
                                     type="date"
                                     value={rozliczenie.VAB.to}
                                     onChange={(e) => updateRangeField('VAB', 'to', e.target.value)}
-                                    className="flex-1 border border-gray-300 rounded p-2"
+                                    className="flex-1 min-w-0 border border-gray-300 rounded p-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                 />
                             </div>
                         </div>
@@ -518,13 +597,13 @@ const RozliczeniaMiesieczne = () => {
                                     type="date"
                                     value={rozliczenie.Pappaledi.from}
                                     onChange={(e) => updateRangeField('Pappaledi', 'from', e.target.value)}
-                                    className="flex-1 border border-gray-300 rounded p-2"
+                                    className="flex-1 min-w-0 border border-gray-300 rounded p-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                 />
                                 <input
                                     type="date"
                                     value={rozliczenie.Pappaledi.to}
                                     onChange={(e) => updateRangeField('Pappaledi', 'to', e.target.value)}
-                                    className="flex-1 border border-gray-300 rounded p-2"
+                                    className="flex-1 min-w-0 border border-gray-300 rounded p-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                 />
                             </div>
                         </div>

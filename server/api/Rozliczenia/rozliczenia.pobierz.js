@@ -10,7 +10,10 @@ function PobierzRozliczenia(req, res, db) {
     // %u = tydzień zaczynający się w poniedziałek (00-53)
     // %w = dzień tygodnia (0=Niedziela, 1=Poniedziałek... 6=Sobota)
     const sumHoursQuery = `
-        SELECT SUM(dp.Godziny_przepracowane) as suma_godzin
+        SELECT SUM(
+            FLOOR(dp.Godziny_przepracowane) + 
+            ROUND((dp.Godziny_przepracowane - FLOOR(dp.Godziny_przepracowane)) * 100) / 60
+        ) as suma_godzin
         FROM dzien_projekty dp
         JOIN dzien d ON dp.Dzien_idDzien = d.idDzien
         JOIN tydzien t ON d.Tydzien_idTydzien = t.idTydzien
@@ -90,36 +93,64 @@ function PobierzRozliczenia(req, res, db) {
                 db.query(checkQuery, [pracownikId, miesiacRok], (err, result) => {
                     if (err) return res.status(500).json({ error: err.message });
 
-                    if (result.length > 0) {
-                        let savedData = result[0];
+                    const year = miesiacRok.slice(0, 4);
+                    const atfOtherQuery = `
+                        SELECT SUM(Atf_wykorzystane) as other_atf
+                        FROM rozliczenia_miesieczne
+                        WHERE Pracownik_idPracownik = ?
+                          AND Miesiac_rok LIKE ?
+                          AND Miesiac_rok != ?
+                    `;
 
-                        // Zmiana: Zawsze używamy godzin wyliczonych na żywo z zablokowanych tygodni
-                        // Nie ufamy zapisowi w rozliczeniach, ufamy głównemu systemowi czasu pracy
-                        savedData.Godziny_przepracowane = obliczoneGodziny;
+                    db.query(atfOtherQuery, [pracownikId, `${year}-%`, miesiacRok], (atfErr, atfResult) => {
+                        if (atfErr) {
+                            console.error("Błąd SQL przy liczeniu ATF z innych miesięcy:", atfErr);
+                            return res.status(500).json({ error: atfErr.message });
+                        }
 
-                        return res.status(200).json({ status: 'success', data: savedData, isDraft: false });
-                    } else {
-                        // Brak wiersza - całkowicie czysty szkic
-                        const draftData = {
-                            Pracownik_idPracownik: parseInt(pracownikId),
-                            Miesiac_rok: miesiacRok,
-                            Godziny_przepracowane: obliczoneGodziny,
-                            Mozliwe_godziny: 0.00,
-                            Nadgodziny_wyplata: 0.00,
-                            Nadgodziny_z_poprzedniego: 0.00,
-                            Nadgodziny_na_kolejny: 0.00,
-                            Atf_wykorzystane: 0.00,
-                            Czerwone_dni: 0,
-                            Urlop: [],
-                            Urlop_zalegly: [],
-                            L4: { from: '', to: '' },
-                            L4cd: { from: '', to: '' },
-                            VAB: { from: '', to: '' },
-                            Pappaledi: { from: '', to: '' }
-                        };
+                        const otherAtf = Number(atfResult[0]?.other_atf) || 0;
 
-                        return res.status(200).json({ status: 'success', data: draftData, isDraft: true });
-                    }
+                        if (result.length > 0) {
+                            let savedData = result[0];
+
+                            // Zmiana: Zawsze używamy godzin wyliczonych na żywo z zablokowanych tygodni
+                            // Nie ufamy zapisowi w rozliczeniach, ufamy głównemu systemowi czasu pracy
+                            savedData.Godziny_przepracowane = obliczoneGodziny;
+
+                            return res.status(200).json({
+                                status: 'success',
+                                data: savedData,
+                                isDraft: false,
+                                atfOtherMonthsTotal: otherAtf
+                            });
+                        } else {
+                            // Brak wiersza - całkowicie czysty szkic
+                            const draftData = {
+                                Pracownik_idPracownik: parseInt(pracownikId),
+                                Miesiac_rok: miesiacRok,
+                                Godziny_przepracowane: obliczoneGodziny,
+                                Mozliwe_godziny: 0.00,
+                                Nadgodziny_wyplata: 0.00,
+                                Nadgodziny_z_poprzedniego: 0.00,
+                                Nadgodziny_na_kolejny: 0.00,
+                                Atf_wykorzystane: 0.00,
+                                Czerwone_dni: 0,
+                                Urlop: [],
+                                Urlop_zalegly: [],
+                                L4: { from: '', to: '' },
+                                L4cd: { from: '', to: '' },
+                                VAB: { from: '', to: '' },
+                                Pappaledi: { from: '', to: '' }
+                            };
+
+                            return res.status(200).json({
+                                status: 'success',
+                                data: draftData,
+                                isDraft: true,
+                                atfOtherMonthsTotal: otherAtf
+                            });
+                        }
+                    });
                 });
             };
 
@@ -129,7 +160,10 @@ function PobierzRozliczenia(req, res, db) {
             }
 
             const sumViewQuery = `
-                SELECT SUM(GodzinyPrzepracowane) AS suma_godzin
+                SELECT SUM(
+                    FLOOR(GodzinyPrzepracowane) + 
+                    ROUND((GodzinyPrzepracowane - FLOOR(GodzinyPrzepracowane)) * 100) / 60
+                ) AS suma_godzin
                 FROM view_dzien_projekty
                 WHERE Pracownik = (
                     SELECT CONCAT(do.Imie, ' ', do.Nazwisko)
@@ -145,7 +179,6 @@ function PobierzRozliczenia(req, res, db) {
                     console.error("Błąd SQL przy sumowaniu godzin z view:", viewErr);
                     return res.status(500).json({ error: viewErr.message });
                 }
-                consolelog("Wynik sumowania z view_dzien_projekty:", viewResult);
 
                 const viewSum = Number(viewResult[0]?.suma_godzin) || 0;
                 const obliczoneGodziny = Number((viewSum || 0).toFixed(2));
