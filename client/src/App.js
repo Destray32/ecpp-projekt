@@ -31,6 +31,7 @@ import SprawdzSamochodPage from './pages/Czas/SprawdzSamochod';
 import OgloszeniaPage from './pages/Ogloszenia';
 import PobierzSkrypt from './pages/Pobierz';
 import RozliczeniaMiesieczne from './pages/Czas/RozliczeniaMiesieczne';
+import Kapownik from './pages/Czas/Kapownik';
 import VacationPlannerNowy from './Components/VacationPlanner_ver3';
 import EdytujGrupePage from './pages/Czas/EdytujGrupe';
 
@@ -70,6 +71,7 @@ function App() {
           <Route path="sprawdzsamochod" element={<SprawdzSamochodPage />} />
           <Route path="ogloszenia" element={<OgloszeniaPage />} />
           <Route path="rozliczenia" element={<RozliczeniaMiesieczne />} />
+          <Route path="kapownik" element={<Kapownik />} />
         </Route>
       </Routes>
     </BrowserRouter>

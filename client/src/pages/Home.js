@@ -305,6 +305,7 @@ export default function HomePage() {
                                 {accountType === 'Administrator' ? (
                                     <>
                                     <ButtonLewy link="czas" nazwa='Czas Pracy' onClick={closeMobileMenu} isActive={location.pathname === '/home/czas'} />
+                                    <ButtonLewy link="kapownik" nazwa='Rozliczenie' onClick={closeMobileMenu} isActive={location.pathname === '/home/kapownik'} />
                                     <ButtonLewy nazwa='Administracja' onClick={() => { toggleSubMenu(); }} />
                                 {showSubMenu && (
                                     <div className='ml-5 space-y-2'>

@@ -194,6 +194,7 @@ const GetBlockStatus = require('./api/Czas/CzasPracy/czas.czaspracy.getBlockStat
 // Rozliczenia Szwecja
 const PobierzRozliczenia = require('./api/Rozliczenia/rozliczenia.pobierz.js');
 const ZapiszRozliczenia = require('./api/Rozliczenia/rozliczenia.zapisz.js');
+const PobierzKapownik = require('./api/Rozliczenia/rozliczenia.kapownik.js');
 
 // Plan Tygodnia
 const DostepneGrupy = require('./api/Grupy/grupy.dostepnegrupy');
@@ -549,6 +550,10 @@ app.route('/api/rozliczenia')
     .post((req, res) => { 
         ZapiszRozliczenia(req, res, pool);
     });
+
+app.get('/api/rozliczenia/kapownik', authorizeRole('Administrator'), (req, res) => {
+    PobierzKapownik(req, res, pool);
+});
 
 // CZAS > URLOPY //
 app.get('/api/urlopy', (req, res) => {

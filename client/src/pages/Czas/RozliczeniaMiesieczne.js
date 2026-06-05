@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import Axios from 'axios';
 
 const RozliczeniaMiesieczne = () => {
@@ -29,6 +30,8 @@ const RozliczeniaMiesieczne = () => {
     const [carryoverHours, setCarryoverHours] = useState(0);
     const [atfOtherMonthsTotal, setAtfOtherMonthsTotal] = useState(0);
 
+    const location = useLocation();
+
     // 1. Weryfikacja użytkownika i pobranie listy pracowników
     useEffect(() => {
         Axios.get(`${baseUrl}/api/mojedane`, { withCredentials: true })
@@ -36,7 +39,16 @@ const RozliczeniaMiesieczne = () => {
                 const data = response.data;
                 const loggedInUser = Array.isArray(data) ? data[0] : data;
                 const userId = loggedInUser.idPracownik || loggedInUser.id;
-                setSelectedPracownik(userId);
+                
+                if (location.state?.pracownikId) {
+                    setSelectedPracownik(location.state.pracownikId);
+                } else {
+                    setSelectedPracownik(userId);
+                }
+
+                if (location.state?.miesiacRok) {
+                    setMiesiacRok(location.state.miesiacRok);
+                }
 
                 const hasAdminAccess = ['Administrator', 'Kierownik', 'Biuro'].includes(loggedInUser.Typ_konta);
 
