@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { format, startOfWeek, addWeeks, endOfWeek, addDays, subWeeks, getWeek, set, parseISO, isWithinInterval } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { v4 as uuidv4 } from 'uuid';
@@ -46,6 +47,7 @@ const deepEqual = (obj1, obj2) => {
 };
 
 export default function CzasPracyPage() {
+    const navigate = useNavigate();
     const [userType, setUserType] = useState(null);
     const [Pracownik, setPracownik] = useState(null);
     const [currentUserId, setCurrentUserId] = useState(null);
@@ -137,10 +139,8 @@ export default function CzasPracyPage() {
             // Pracownik/Kierownik ze specjalnymi uprawnieniami też widzą wszystkich
             // Pozostali (Pracownik/Kierownik bez specjalnych uprawnień) - tylko siebie
             const hasSpecial = hasSpecialAccess(imie, nazwisko, 'tydzien');
-            console.log('User has special access to tydzien:', hasSpecial, 'User:', imie, nazwisko, 'UserType:', userType);
             
             if ((userType === "Pracownik" || userType === "Kierownik") && !hasSpecial) {
-                console.log('Limiting pracownicy list to self:', Pracownik);
                 setPracownicy([{ label: Pracownik, value: Pracownik }]);
             } else {
                 console.log('User can see all pracownicy (Biuro or has special access)');
@@ -1038,6 +1038,7 @@ const handleZamknijTydzien = async () => {
                 handleCloseWeek={handleZamknijTydzien} 
                 handleOpenWeek={handleOtworzTydzien} 
                 handlePrintReport={handleDrukujRaport}
+                handleGoToRozliczenia={() => navigate('/home/rozliczenia')}
                 statusTyg={statusTygodnia} 
                 userType={userType} 
                 blockStatus={blockStatus}

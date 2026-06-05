@@ -11,6 +11,7 @@ import { getWeek } from 'date-fns';
  * @param {Function} props.handleCloseWeek - Funkcja obsługująca zamknięcie tygodnia
  * @param {Function} props.handleOpenWeek - Funkcja obsługująca otwarcie tygodnia
  * @param {Function} props.handlePrintReport - Funkcja obsługująca drukowanie raportu
+ * @param {Function} props.handleGoToRozliczenia - Funkcja obsługująca przejście do rozliczeń
  * @param {string} props.statusTyg - Status tygodnia
  * @param {string} props.userType - Typ użytkownika
  * @param {boolean} props.blockStatus - Status blokady użytkownika - jeśli przekracza 60h w tygodniu czesto
@@ -25,6 +26,7 @@ const PrzyciskAkcji = ({
     handleCloseWeek, 
     handleOpenWeek, 
     handlePrintReport, 
+    handleGoToRozliczenia,
     statusTyg, 
     userType, 
     blockStatus,
@@ -107,6 +109,11 @@ const PrzyciskAkcji = ({
                                 className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 flex-grow" 
                                 onClick={handlePrintReport}
                                 disabled={userType !== 'Biuro' && userType !== 'Administrator'}
+                            />
+                            <Button 
+                                label="Rozliczenia" 
+                                className="p-button-outlined border-2 p-1 bg-white pr-2 pl-2 flex-grow" 
+                                onClick={handleGoToRozliczenia}
                             />
                         </div>
                     </div>

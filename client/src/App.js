@@ -30,7 +30,7 @@ import NowyPojazdPage from './pages/Czas/NowyPojazd';
 import SprawdzSamochodPage from './pages/Czas/SprawdzSamochod';
 import OgloszeniaPage from './pages/Ogloszenia';
 import PobierzSkrypt from './pages/Pobierz';
-
+import RozliczeniaMiesieczne from './pages/Czas/RozliczeniaMiesieczne';
 import VacationPlannerNowy from './Components/VacationPlanner_ver3';
 import EdytujGrupePage from './pages/Czas/EdytujGrupe';
 
@@ -69,6 +69,7 @@ function App() {
           <Route path="nowy-pojazd" element={<NowyPojazdPage />} />
           <Route path="sprawdzsamochod" element={<SprawdzSamochodPage />} />
           <Route path="ogloszenia" element={<OgloszeniaPage />} />
+          <Route path="rozliczenia" element={<RozliczeniaMiesieczne />} />
         </Route>
       </Routes>
     </BrowserRouter>

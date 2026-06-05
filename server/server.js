@@ -191,6 +191,10 @@ const UsunDodatkowyProject = require('./api/Czas/CzasPracy/czas.czaspracy.usun')
 const SetWarnings = require('./api/Czas/CzasPracy/czas.czaspracy.setWarnings');
 const GetBlockStatus = require('./api/Czas/CzasPracy/czas.czaspracy.getBlockStatus');
 
+// Rozliczenia Szwecja
+const PobierzRozliczenia = require('./api/Rozliczenia/rozliczenia.pobierz.js');
+const ZapiszRozliczenia = require('./api/Rozliczenia/rozliczenia.zapisz.js');
+
 // Plan Tygodnia
 const DostepneGrupy = require('./api/Grupy/grupy.dostepnegrupy');
 const DrukujGrupe = require('./api/PlanTygodnia/plantygodnia.plan.drukujGrupe');
@@ -536,6 +540,15 @@ app.delete('/api/czas/materialy/:id/:materialId', authorizeRole('Administrator')
     UsunMaterial(req, res, pool);
 });
 /////////////////////////////////////////
+
+//Rozliczenia Szwecja
+app.route('/api/rozliczenia')
+    .get((req, res) => {
+        PobierzRozliczenia(req, res, pool);
+    })
+    .post((req, res) => { 
+        ZapiszRozliczenia(req, res, pool);
+    });
 
 // CZAS > URLOPY //
 app.get('/api/urlopy', (req, res) => {

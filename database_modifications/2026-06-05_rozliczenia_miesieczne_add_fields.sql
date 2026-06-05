@@ -1,0 +1,8 @@
+ALTER TABLE rozliczenia_miesieczne
+    ADD COLUMN Mozliwe_godziny DECIMAL(7,2) NULL,
+    ADD COLUMN Urlop TEXT NULL,
+    ADD COLUMN Urlop_zalegly TEXT NULL,
+    ADD COLUMN L4 TEXT NULL,
+    ADD COLUMN L4cd TEXT NULL,
+    ADD COLUMN VAB TEXT NULL,
+    ADD COLUMN Pappaledi TEXT NULL;

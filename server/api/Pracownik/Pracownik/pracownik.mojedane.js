@@ -19,6 +19,10 @@ function MojeDane(req, res) {
 
         const query = `
             SELECT 
+                pracownik.idPracownik AS idPracownik,
+                pracownik.Typ_konta AS Typ_konta,
+                dane_osobowe.Imie AS Imie,
+                dane_osobowe.Nazwisko AS Nazwisko,
                 dane_osobowe.Imie AS name, 
                 dane_osobowe.Nazwisko AS surename, 
                 DATE_FORMAT(dane_osobowe.Data_urodzenia, '%d.%m.%Y') AS brithday, 
@@ -67,6 +71,10 @@ function MojeDane(req, res) {
 
             const userData = results[0];
             const responseData = {
+                idPracownik: userData.idPracownik,
+                Typ_konta: userData.Typ_konta,
+                Imie: userData.Imie,
+                Nazwisko: userData.Nazwisko,
                 surename: userData.surename,
                 name: userData.name,
                 brithday: userData.brithday,
