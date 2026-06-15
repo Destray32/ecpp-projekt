@@ -9,6 +9,7 @@ const cookieParser = require('cookie-parser');
 const path = require('path');
 const https = require('https');
 const fs = require('fs');
+const rateLimit = require('express-rate-limit');
 
 
 require('dotenv').config();
@@ -128,6 +129,26 @@ const authorizeRole = (...roles) => {
         }
     };
 };
+
+// Middleware to verify the global Access PIN
+const verifyAccessPin = (req, res, next) => {
+    const pin = req.headers['x-access-pin'];
+    const expectedPin = process.env.ACCESS_PIN || '1234';
+    if (pin === expectedPin) {
+        next();
+    } else {
+        res.status(403).json({ error: 'Access PIN required or invalid' });
+    }
+};
+
+// Rate limiter for authentication-related endpoints
+const authLimiter = rateLimit({
+    windowMs: 5 * 60 * 1000, // 5 minutes
+    max: 10, // Limit each IP to 10 requests per windowMs
+    message: { error: 'Too many authentication attempts. Please try again after 5 minutes.' },
+    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
 
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -284,7 +305,17 @@ app.get('/api/home/pobierz', (req, res) => {
 
 // Logowanie
 
-app.post('/api/logowanie', (req, res) => {
+app.post('/api/verify-pin', authLimiter, (req, res) => {
+    const { pin } = req.body;
+    const expectedPin = process.env.ACCESS_PIN || '1234';
+    if (pin === expectedPin) {
+        res.json({ valid: true });
+    } else {
+        res.status(400).json({ valid: false, error: 'Incorrect PIN' });
+    }
+});
+
+app.post('/api/logowanie', authLimiter, verifyAccessPin, (req, res) => {
     Logowanie(req, res);
 });
 
@@ -292,11 +323,11 @@ app.post('/api/zamkniecieStrony', (req, res) => {
     ZamkniecieStrony(req, res);
 });
 
-app.get('/api/companies', (req, res) => {
+app.get('/api/companies', verifyAccessPin, (req, res) => {
     Companies(req, res);
 });
 
-app.get('/api/logins', (req, res) => {
+app.get('/api/logins', verifyAccessPin, (req, res) => {
     Logins(req, res);
 });
 
