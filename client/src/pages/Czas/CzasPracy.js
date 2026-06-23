@@ -453,12 +453,14 @@ export default function CzasPracyPage() {
                     });
 
                     const projectInfo = dostepneProjekty.find(p => p.value === project.projekt);
-                    const zleceniodawcaId = projectInfo ? projectInfo.Grupa_urlopowa_idGrupa_urlopowa : null;
+                    const zleceniodawcaId = project.zleceniodawca || (projectInfo ? projectInfo.Grupa_urlopowa_idGrupa_urlopowa : null);
+                    const firmaId = project.firma || (projectInfo ? projectInfo.Firma_idFirma : null);
 
                     return {
                         ...project,
                         id: uuidv4(),
                         zleceniodawca: zleceniodawcaId,
+                        firma: firmaId,
                         hours: updatedHours
                     };
                 });

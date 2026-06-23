@@ -1,7 +1,7 @@
 const { format, startOfWeek, addDays, setWeek, setYear } = require('date-fns');
 
 function getCzasProjekt(req, res, db) {
-    const { pracownikName, projektyName, weekData, year } = req.body;
+    const { pracownikName, projektyName, zleceniodawca, firma, weekData, year } = req.body;
 
     // zapytanie do bazy danych, aby znaleźć ID pracownika na podstawie jego imienia i nazwiska
     // łączymy tabele 'Pracownik' i 'Dane_osobowe', żeby uzyskać odpowiedni rekord
@@ -37,10 +37,12 @@ function getCzasProjekt(req, res, db) {
             WHERE Tydzien.tydzienRoku = ?
             AND Tydzien.Rok = ?
             AND Tydzien.Pracownik_idPracownik = ?
-            AND Projekty.NazwaKod_Projektu = ?`;
+            AND Projekty.NazwaKod_Projektu = ?
+            AND Projekty.Grupa_urlopowa_idGrupa_urlopowa = ?
+            AND Projekty.Firma_idFirma = ?`;
 
         // wykonujemy zapytanie do bazy z danymi tygodnia, roku, id pracownika i nazwą projektu
-        db.query(projectQuery, [weekData, year, pracownikId, projektyName], (err, projectResults) => {
+        db.query(projectQuery, [weekData, year, pracownikId, projektyName, zleceniodawca, firma], (err, projectResults) => {
             // jeśli wystąpił błąd podczas pobierania danych, zwracamy komunikat o błędzie
             if (err) {
                 return res.status(500).json({ message: 'Błąd podczas pobierania godzin projektu' });

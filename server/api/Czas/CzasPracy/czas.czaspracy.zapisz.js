@@ -106,14 +106,14 @@ function ZapiszCzasPracy(req, res, db) {
                                                 const projectDay = project.days.find(pDay => pDay.dayOfWeek === day.dayOfWeek);
                                                 if (projectDay) {
                                                     projectInsertionPromises.push(new Promise((resolve, reject) => {
-                                                        // znajdź ID projektu na podstawie nazwy projektu
+                                                                                        // znajdź ID projektu na podstawie nazwy projektu, zleceniodawcy i firmy
                                                         db.query(
-                                                            `SELECT idProjekty FROM Projekty WHERE NazwaKod_Projektu = ?`,
-                                                            [project.projekt],
+                                                            `SELECT idProjekty FROM Projekty WHERE NazwaKod_Projektu = ? AND Grupa_urlopowa_idGrupa_urlopowa = ? AND Firma_idFirma = ?`,
+                                                            [project.projekt, project.zleceniodawca, project.firma],
                                                             function (err, projektyResults) {
                                                                 if (err || projektyResults.length === 0) {
-                                                                    console.error('Project lookup error:', err, 'Project name:', project.projekt);
-                                                                    return reject(new Error(`Project not found: ${project.projekt}`));
+                                                                    console.error('Project lookup error:', err, 'Project name:', project.projekt, 'Zleceniodawca:', project.zleceniodawca, 'Firma:', project.firma);
+                                                                    return reject(new Error(`Project not found: ${project.projekt} for client: ${project.zleceniodawca}`));
                                                                 }
 
                                                                 const projektyId = projektyResults[0].idProjekty;

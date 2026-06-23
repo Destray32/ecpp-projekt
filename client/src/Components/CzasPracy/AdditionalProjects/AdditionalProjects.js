@@ -237,11 +237,15 @@ useEffect(() => {
 
         try {
             // przeszukujemy dodatkowe projekty i sprawdzamy czy projekt już istnieje
-            const existingProject = additionalProjects.find(project => project.projekt === Projekty);
+            const existingProject = additionalProjects.find(project => 
+                project.projekt === Projekty && 
+                project.zleceniodawca === Zleceniodawca && 
+                project.firma === Firma
+            );
             if (existingProject) { // warunek sprawdzający czy projekt już istnieje
                 notification.error({
                     message: "Błąd",
-                    description: "Projekt już istnieje",
+                    description: "Projekt już istnieje u tego zleceniodawcy",
                 });
                 return;
             }
@@ -249,6 +253,8 @@ useEffect(() => {
             const response = await Axios.post(`${baseUrl}/api/czas/projekt`, {
                 pracownikName: loggedUserName,
                 projektyName: Projekty,
+                zleceniodawca: Zleceniodawca,
+                firma: Firma,
                 weekData: weekData,
                 year: year,
             }, { withCredentials: true });

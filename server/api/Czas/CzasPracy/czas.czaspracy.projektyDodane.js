@@ -37,6 +37,8 @@ async function PobierzDodaneProjekty(req, res, db) {
                 dp.idDzien_Projekty AS id, 
                 dp.Godziny_przepracowane AS hoursWorked,
                 p.NazwaKod_Projektu AS projectName,
+                p.Grupa_urlopowa_idGrupa_urlopowa AS zleceniodawca,
+                p.Firma_idFirma AS firma,
                 po.Nr_rejestracyjny AS car,
                 d.Dzien_tygodnia AS dayOfWeek,
                 dp.Komentarz AS comment,
@@ -67,8 +69,9 @@ async function PobierzDodaneProjekty(req, res, db) {
         const projectsMap = {};
 
         projectsResult.forEach((project) => {
-            if (!projectsMap[project.projectName]) {
-                projectsMap[project.projectName] = {
+            const groupKey = `${project.projectName}_${project.zleceniodawca}_${project.firma}`;
+            if (!projectsMap[groupKey]) {
+                projectsMap[groupKey] = {
                     firma: project.firma,
                     zleceniodawca: project.zleceniodawca,
                     projekt: project.projectName,
@@ -77,7 +80,7 @@ async function PobierzDodaneProjekty(req, res, db) {
             }
 
             // dodajemy godziny pracy i informacje o samochodzie dla każdego dnia w tygodniu
-            projectsMap[project.projectName].hours[project.dayOfWeek] = {
+            projectsMap[groupKey].hours[project.dayOfWeek] = {
                 id: project.id,
                 hoursWorked: project.hoursWorked,
                 car: project.car || null,
