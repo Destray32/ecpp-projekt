@@ -43,11 +43,40 @@ export default function NieaktywniPage() {
             dataIndex: 'accountStatus',
             key: 'accountStatus',
         },
+        {
+            title: 'Akcja',
+            key: 'action',
+            render: (_, record) => (
+                <Button onClick={() => restoreUser(record.id)} className="bg-green-600 text-white p-1 mx-1">Przywróć</Button>
+            ),
+        },
     ];
 
     useEffect(() => {
         fetchInactiveUsers();
     }, []);
+
+    const restoreUser = async (id) => {
+        try {
+            const response = await Axios.put(`${baseUrl}/api/pracownik/aktywuj/${id}`, {}, {
+                withCredentials: true
+            });
+
+            if (response.status === 200) {
+                notification.success({
+                    message: 'Użytkownik przywrócony',
+                    description: 'Pracownik został przywrócony do aktywnych.'
+                });
+                fetchInactiveUsers(); // odświeżenie tabeli
+            }
+        } catch (error) {
+            console.error(error);
+            notification.error({
+                message: 'Błąd',
+                description: 'Nie udało się przywrócić pracownika.'
+            });
+        }
+    };
 
     const fetchInactiveUsers = async () => {
         try {

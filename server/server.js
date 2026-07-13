@@ -196,6 +196,7 @@ const PobierzPracownicyPojazd = require('./api/Pracownik/Pracownik/pracownik.pob
 const KomorkaPracownika = require('./api/Pracownik/Pracownik/pracownik.komorka');
 const GetBlockedUsers = require('./api/Pracownik/Pracownik/pracownik.getBlockedUsers');
 const OdblokujPracownika = require('./api/Pracownik/Pracownik/pracownik.unblock');
+const AktywujPracownika = require('./api/Pracownik/Pracownik/pracownik.aktywuj');
 
 // Pracownik > Cennik
 const PobierzCennik = require('./api/Pracownik/Cennik/cennik.pobierz.js');
@@ -399,6 +400,10 @@ app.get('/api/pracownik/blocked', authorizeRole('Administrator'), (req, res) => 
 
 app.put('/api/pracownik/unblock/:id', authorizeRole('Administrator'), (req, res) => {
     OdblokujPracownika(req, res, pool);
+});
+
+app.put('/api/pracownik/aktywuj/:id', authorizeRole('Administrator'), (req, res) => {
+    AktywujPracownika(req, res, pool);
 });
 
 app.get('/api/pracownik/firmy', (req, res) => {

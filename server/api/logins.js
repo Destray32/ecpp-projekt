@@ -1,7 +1,7 @@
 const db = require('../../server');
 
 function Logins(req, res) {
-    const query = `SELECT Nazwa_uzytkownika from pracownik WHERE Archiwum = 0`;
+    const query = `SELECT Nazwa_uzytkownika from pracownik WHERE Archiwum = 0 AND Status_konta = 'Aktywne'`;
 
     db.query(query, (err, result) => {
         if (err) {

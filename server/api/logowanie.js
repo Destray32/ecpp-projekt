@@ -10,7 +10,7 @@ async function Logowanie(req, res) {
         FROM pracownik p
         JOIN informacje_o_firmie i ON p.FK_Informacje_o_firmie = i.idInformacje_o_firmie
         JOIN firma f ON i.FK_idFirma = f.idFirma
-        WHERE p.Nazwa_uzytkownika = ?
+        WHERE p.Nazwa_uzytkownika = ? AND p.Status_konta = 'Aktywne' AND p.Archiwum = 0
     `;
     const values = [login];
 
