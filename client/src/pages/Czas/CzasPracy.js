@@ -331,11 +331,13 @@ export default function CzasPracyPage() {
     const fetchPracownicy = () => {
         Axios.get(`${baseUrl}/api/pracownicy`, { withCredentials: true })
             .then((response) => {
-                const allPracownicy = response.data.map(pracownik => ({ 
-                    label: `${pracownik.name} ${pracownik.surname}`, 
-                    value: `${pracownik.name} ${pracownik.surname}` 
-                }));
-                console.log('Fetched all pracownicy:', allPracownicy.length);
+                const allPracownicy = response.data
+                    .filter(pracownik => pracownik.accountStatus === 'Aktywne')
+                    .map(pracownik => ({ 
+                        label: `${pracownik.name} ${pracownik.surname}`, 
+                        value: `${pracownik.name} ${pracownik.surname}` 
+                    }));
+                console.log('Fetched active pracownicy:', allPracownicy.length);
                 setPracownicy(allPracownicy);
             })
             .catch((error) => {

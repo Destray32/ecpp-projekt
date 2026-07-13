@@ -21,7 +21,7 @@ function GetPlany(req, res, db) {
     LEFT JOIN Dane_osobowe dane ON prac.FK_Dane_osobowe = dane.idDane_osobowe
     LEFT JOIN Grupa_urlopowa grupa ON p.Grupa_urlopowa_idGrupa_urlopowa = grupa.idGrupa_urlopowa
     LEFT JOIN Pojazdy pojazd ON p.Pojazdy_idPojazdy = pojazd.idPojazdy
-    WHERE 1=1`;
+    WHERE 1=1 AND (p.Pracownik_idPracownik IS NULL OR (prac.Status_konta = 'Aktywne' AND prac.Archiwum = 0))`;
 
     const values = [];
 

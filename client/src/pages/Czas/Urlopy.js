@@ -356,8 +356,8 @@ export default function UrlopyPage() {
     const handleGetPracownicy = () => {
         Axios.get(`${baseUrl}/api/pracownicy`, { withCredentials: true })
             .then((response) => {
-                setPracownicy(response.data); // skróciłem do response.data, 
-                // bo mi nie wypełniało dropdowna
+                const activePracownicy = response.data.filter(pracownik => pracownik.accountStatus === 'Aktywne');
+                setPracownicy(activePracownicy);
             })
             .catch((error) => {
                 console.error("There was an error fetching the data:", error);

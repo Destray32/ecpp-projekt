@@ -21,6 +21,7 @@ function GetUrlopy(req, res, db) {
         LEFT JOIN Pracownik p ON u.FK_idPracownik = p.idPracownik
         LEFT JOIN Informacje_o_firmie i ON p.FK_Informacje_o_firmie = i.idInformacje_o_firmie
         LEFT JOIN Grupa_urlopowa g ON i.FK_idGrupa_urlopowa = g.idGrupa_urlopowa
+        WHERE p.idPracownik IS NOT NULL AND p.Status_konta = 'Aktywne' AND p.Archiwum = 0
         ORDER BY u.idUrlopy DESC
     `;
 

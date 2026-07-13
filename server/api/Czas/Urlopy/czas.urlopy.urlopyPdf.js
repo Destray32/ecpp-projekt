@@ -30,6 +30,7 @@ function urlopyPdf(req, res, db) {
             Urlopy u ON p.idPracownik = u.FK_idPracownik
         WHERE
             gu.Zleceniodawca IN (${placeholders}) AND io.Drukowac_Urlop = 1
+            AND p.Status_konta = 'Aktywne' AND p.Archiwum = 0
         ORDER BY 
             do.Nazwisko, do.Imie;
     `;

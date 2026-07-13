@@ -36,6 +36,7 @@ const EmployeeDropdown = ({ onEmployeeSelect, scheduledEmployees }) => {
   
       const filteredEmployees = EmployeesArray
         .filter((employee) => employee.weeklyPlan) 
+        .filter((employee) => employee.accountStatus === 'Aktywne')
         .filter((employee) => !scheduledEmployeeIds.has(employee.id))
         .map((employee) => ({
           label: `${employee.name} ${employee.surname}`,
