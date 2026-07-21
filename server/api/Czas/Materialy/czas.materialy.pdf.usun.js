@@ -3,6 +3,7 @@ const {
     loadOAuthClient,
     loadOAuthToken,
     saveToken,
+    handleOAuthError,
 } = require('../../Drive/drive.oauth');
 
 const buildDriveClient = () => {
@@ -71,6 +72,12 @@ module.exports = (db) => async (req, res) => {
             });
         } catch (error) {
             console.error('Blad usuwania PDF z Drive:', error);
+            if (handleOAuthError(error)) {
+                return res.status(401).json({
+                    error: 'Autoryzacja Google Drive wygasła lub jest niepoprawna. Zaloguj się ponownie przechodząc na /api/drive/oauth/start',
+                    details: error.message,
+                });
+            }
             return res.status(500).json({
                 error: 'Nie udalo sie usunac PDF z Google Drive',
                 details: error.message,

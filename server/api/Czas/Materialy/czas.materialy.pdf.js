@@ -6,6 +6,7 @@ const {
     loadOAuthClient,
     loadOAuthToken,
     saveToken,
+    handleOAuthError,
 } = require('../../Drive/drive.oauth');
 
 const upload = multer({
@@ -128,6 +129,12 @@ module.exports = (db) => [
             );
         } catch (error) {
             console.error('Blad uploadu PDF:', error);
+            if (handleOAuthError(error)) {
+                return res.status(401).json({
+                    error: 'Autoryzacja Google Drive wygasła lub jest niepoprawna. Zaloguj się ponownie przechodząc na /api/drive/oauth/start',
+                    details: error.message,
+                });
+            }
             return res.status(500).json({
                 error: 'Nie udalo sie przeslac PDF do Google Drive',
                 details: error.message,

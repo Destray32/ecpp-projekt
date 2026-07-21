@@ -80,6 +80,25 @@ const loadOAuthToken = () => {
     return JSON.parse(fs.readFileSync(TOKEN_PATH, 'utf8'));
 };
 
+const handleOAuthError = (error) => {
+    if (error && error.message && (
+        error.message.includes('invalid_grant') || 
+        error.message.includes('invalid_token') || 
+        error.message.includes('No refresh token')
+    )) {
+        try {
+            if (fs.existsSync(TOKEN_PATH)) {
+                fs.unlinkSync(TOKEN_PATH);
+                console.log('Deleted invalid OAuth token file due to authentication error');
+            }
+        } catch (err) {
+            console.error('Failed to delete invalid token file:', err);
+        }
+        return true;
+    }
+    return false;
+};
+
 module.exports = {
     startOAuth,
     handleOAuthCallback,
@@ -87,5 +106,6 @@ module.exports = {
     loadOAuthToken,
     saveToken,
     buildRedirectUri,
+    handleOAuthError,
     TOKEN_PATH,
 };
