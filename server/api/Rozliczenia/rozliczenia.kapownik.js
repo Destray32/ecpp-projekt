@@ -96,7 +96,7 @@ function PobierzKapownik(req, res, db) {
                 Atf_wykorzystane: row.Atf_wykorzystane !== null ? Number(row.Atf_wykorzystane) : 0,
                 Czerwone_dni: row.Czerwone_dni !== null ? Number(row.Czerwone_dni) : 0,
                 Status: row.Status || 'szkic',
-                Mozliwe_godziny: row.Mozliwe_godziny !== null ? Number(row.Mozliwe_godziny) : 0,
+                Mozliwe_godziny: (row.Mozliwe_godziny !== null && row.Mozliwe_godziny !== undefined) ? Number(row.Mozliwe_godziny) : '',
                 Urlop: parseJsonValue(row.Urlop, []),
                 Urlop_zalegly: parseJsonValue(row.Urlop_zalegly, []),
                 L4: parseJsonValue(row.L4, { from: '', to: '' }),

@@ -86,6 +86,7 @@ export default function CzasPracyPage() {
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const [pendingDateChange, setPendingDateChange] = useState(null);
     const [loadingCounter, setLoadingCounter] = useState(0);
+    const [isDataLoaded, setIsDataLoaded] = useState(false);
     const [initialHours, setInitialHours] = useState({});
     const [initialAdditionalProjects, setInitialAdditionalProjects] = useState([]);
 
@@ -129,9 +130,13 @@ export default function CzasPracyPage() {
 
     useEffect(() => {
         if (Pracownik && dostepneProjekty.length > 0 && (userType === "Administrator")) {
+            setIsDataLoaded(false);
+            setHasUnsavedChanges(false);
             fetchWorkHours(Pracownik, currentDate);
             fetchAdditionalProjects(Pracownik, currentDate);
         } else if (Pracownik && dostepneProjekty.length > 0 && (userType === "Pracownik" || userType === "Kierownik" || userType === "Biuro")) {
+            setIsDataLoaded(false);
+            setHasUnsavedChanges(false);
             fetchWorkHours(Pracownik, currentDate);
             fetchAdditionalProjects(Pracownik, currentDate);
             
@@ -194,7 +199,7 @@ export default function CzasPracyPage() {
 
     // Track changes to hours and additional projects
     useEffect(() => {
-        if (Pracownik && statusTygodnia !== "Zamknięty" && loadingCounter === 0) {
+        if (Pracownik && statusTygodnia !== "Zamknięty" && loadingCounter === 0 && isDataLoaded) {
             const hasHoursChanged = !deepEqual(hours, initialHours);
             const hasProjectsChanged = !deepEqual(additionalProjects, initialAdditionalProjects);
             
@@ -204,7 +209,7 @@ export default function CzasPracyPage() {
                 setHasUnsavedChanges(false);
             }
         }
-    }, [hours, additionalProjects, Pracownik, statusTygodnia, loadingCounter, initialHours, initialAdditionalProjects]);
+    }, [hours, additionalProjects, Pracownik, statusTygodnia, loadingCounter, isDataLoaded, initialHours, initialAdditionalProjects]);
 
     useEffect(() => {
         if (czyZapisano) {
@@ -213,6 +218,7 @@ export default function CzasPracyPage() {
     }, [czyZapisano]);
 
     useEffect(() => {
+        setIsDataLoaded(false);
         setHasUnsavedChanges(false);
     }, [Pracownik, currentDate]);
 
@@ -410,7 +416,11 @@ export default function CzasPracyPage() {
             setHours({});
             setInitialHours({});
         } finally {
-            setLoadingCounter(prev => prev - 1);
+            setLoadingCounter(prev => {
+                const next = prev - 1;
+                if (next <= 0) setIsDataLoaded(true);
+                return Math.max(next, 0);
+            });
         }
     };
 
@@ -483,7 +493,11 @@ export default function CzasPracyPage() {
                 console.error("Błąd podczas pobierania dodatkowych projektów", error);
             }
         } finally {
-            setLoadingCounter(prev => prev - 1);
+            setLoadingCounter(prev => {
+                const next = prev - 1;
+                if (next <= 0) setIsDataLoaded(true);
+                return Math.max(next, 0);
+            });
         }
     };
 

@@ -31,6 +31,8 @@ export default function GorneMenu({ setMenu, activeMenu, onUrlopyClick }) {
         localStorage.setItem('selectedMenu', menu);
     };
 
+    const canAddProject = ['Administrator', 'Kierownik', 'Biuro'].includes(accountType);
+
     return (
         <div className='bg-szary flex justify-center items-center border-b'>
             <Link to="/home/pracownik" className={`cursor-pointer w-full h-12 flex justify-center items-center hover:bg-hover-szary transition-colors duration-300 border-r border-black 
@@ -41,6 +43,11 @@ export default function GorneMenu({ setMenu, activeMenu, onUrlopyClick }) {
                     ${activeMenu === 'Czas' ? 'bg-hover-szary text-black' : 'text-gray-700 hover:text-black'}`} onClick={() => handleMenuClick('Czas')}>
                 Czas Pracy
             </Link>
+            {canAddProject && (
+                <Link to="/home/nowy-projekt" className={`cursor-pointer w-full h-12 flex justify-center items-center hover:bg-hover-szary transition-colors duration-300 border-r border-black text-blue-900 bg-blue-50/40 font-semibold px-2 text-center text-sm`} onClick={() => handleMenuClick('Czas')}>
+                    + Dodaj nowy projekt
+                </Link>
+            )}
             <Link to="/home/urlopy" className={`cursor-pointer w-full h-12 flex justify-center items-center hover:bg-hover-szary transition-colors duration-300 border-r border-black
                     ${activeMenu === 'Urlopy' ? 'bg-hover-szary text-black' : 'text-gray-700 hover:text-black'}`} onClick={onUrlopyClick ? onUrlopyClick : () => handleMenuClick('Urlopy')}>
                 Urlopy

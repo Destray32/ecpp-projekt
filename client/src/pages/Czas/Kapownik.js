@@ -83,6 +83,59 @@ const Kapownik = () => {
         return Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1;
     };
 
+    const [domyslneMozliwe, setDomyslneMozliwe] = useState('');
+
+    const handleDomyslneChange = (val) => {
+        setDomyslneMozliwe(val);
+        setDane(prev => prev.map(item => ({
+            ...item,
+            Mozliwe_godziny: val === '' ? '' : Number(val)
+        })));
+    };
+
+    const handleRowMozliweChange = (idPracownik, val) => {
+        setDane(prev => prev.map(item => {
+            if (item.idPracownik === idPracownik) {
+                return { ...item, Mozliwe_godziny: val === '' ? '' : Number(val) };
+            }
+            return item;
+        }));
+    };
+
+    const handleZapiszWszystkieMozliwe = async () => {
+        setIsLoading(true);
+        setMessage('');
+        try {
+            const promises = dane.map(item => {
+                const payload = {
+                    Pracownik_idPracownik: item.idPracownik,
+                    Miesiac_rok: miesiacRok,
+                    Godziny_przepracowane: item.Godziny_przepracowane || 0,
+                    Mozliwe_godziny: item.Mozliwe_godziny === '' ? null : item.Mozliwe_godziny,
+                    Nadgodziny_wyplata: item.Nadgodziny_wyplata || 0,
+                    Nadgodziny_z_poprzedniego: item.Nadgodziny_z_poprzedniego || 0,
+                    Nadgodziny_na_kolejny: item.Nadgodziny_na_kolejny || 0,
+                    Atf_wykorzystane: item.Atf_wykorzystane || 0,
+                    Czerwone_dni: item.Czerwone_dni || 0,
+                    Urlop: JSON.stringify(item.Urlop || []),
+                    Urlop_zalegly: JSON.stringify(item.Urlop_zalegly || []),
+                    L4: JSON.stringify(item.L4 || { from: '', to: '' }),
+                    L4cd: JSON.stringify(item.L4cd || { from: '', to: '' }),
+                    VAB: JSON.stringify(item.VAB || { from: '', to: '' }),
+                    Pappaledi: JSON.stringify(item.Pappaledi || { from: '', to: '' })
+                };
+                return Axios.post(`${baseUrl}/api/rozliczenia`, payload, { withCredentials: true });
+            });
+            await Promise.all(promises);
+            setMessage('Zapisano możliwe godziny dla wszystkich pracowników.');
+        } catch (err) {
+            console.error(err);
+            setMessage('Błąd podczas zapisywania możliwych godzin.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     // Filtrowanie pracowników na podstawie wpisanego wyszukiwania
     const filteredDane = dane.filter(item => {
         const fullName = `${item.Imie} ${item.Nazwisko}`.toLowerCase();
@@ -93,8 +146,8 @@ const Kapownik = () => {
         <div className="p-6 max-w-[1400px] mx-auto">
             <h2 className="text-2xl font-bold text-gray-800 mb-6">Miesięczne Rozliczenia Pracowników (Administrator)</h2>
 
-            {/* Panel kontrolny (Miesiąc / Wyszukiwarka) */}
-            <div className="bg-white p-4 rounded-lg shadow mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            {/* Panel kontrolny (Miesiąc / Wyszukiwarka / Domyślne możliwe godziny) */}
+            <div className="bg-white p-4 rounded-lg shadow mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex items-center gap-2 max-w-sm">
                     <button
                         type="button"
@@ -118,7 +171,27 @@ const Kapownik = () => {
                     </button>
                 </div>
 
-                <div className="flex-1 max-w-xs sm:ml-auto">
+                <div className="flex items-center gap-2 border-l border-r px-4 py-1 border-gray-200">
+                    <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
+                        Domyślne możliwe godziny dla wszystkich:
+                    </label>
+                    <input
+                        type="number"
+                        placeholder="np. 160"
+                        value={domyslneMozliwe}
+                        onChange={(e) => handleDomyslneChange(e.target.value)}
+                        className="w-24 border border-gray-300 rounded p-1.5 text-sm focus:ring-blue-500 focus:border-blue-500 font-semibold"
+                    />
+                    <button
+                        type="button"
+                        onClick={handleZapiszWszystkieMozliwe}
+                        className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-2 rounded transition shadow-sm"
+                    >
+                        Zapisz dla wszystkich
+                    </button>
+                </div>
+
+                <div className="w-full lg:max-w-xs">
                     <input
                         type="text"
                         placeholder="Szukaj pracownika..."
@@ -206,7 +279,13 @@ const Kapownik = () => {
 
                                             {/* Możliwe */}
                                             <td className="p-3 text-center text-gray-600">
-                                                {item.Mozliwe_godziny ? `${item.Mozliwe_godziny}h` : '—'}
+                                                <input
+                                                    type="number"
+                                                    value={item.Mozliwe_godziny ?? ''}
+                                                    placeholder="—"
+                                                    onChange={(e) => handleRowMozliweChange(item.idPracownik, e.target.value)}
+                                                    className="w-16 border border-gray-300 rounded p-1 text-center text-xs focus:ring-1 focus:ring-blue-500 font-semibold"
+                                                />
                                             </td>
 
                                             {/* Nadgodziny */}

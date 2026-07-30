@@ -94,21 +94,81 @@ function PobierzRozliczenia(req, res, db) {
                     if (err) return res.status(500).json({ error: err.message });
 
                     const year = miesiacRok.slice(0, 4);
-                    const atfOtherQuery = `
-                        SELECT SUM(Atf_wykorzystane) as other_atf
+                    const yearQuery = `
+                        SELECT Miesiac_rok, Atf_wykorzystane, Urlop, Urlop_zalegly, IFNULL(Urlop_zalegly_pula, 0) as Urlop_zalegly_pula
                         FROM rozliczenia_miesieczne
                         WHERE Pracownik_idPracownik = ?
                           AND Miesiac_rok LIKE ?
-                          AND Miesiac_rok != ?
                     `;
 
-                    db.query(atfOtherQuery, [pracownikId, `${year}-%`, miesiacRok], (atfErr, atfResult) => {
-                        if (atfErr) {
-                            console.error("Błąd SQL przy liczeniu ATF z innych miesięcy:", atfErr);
-                            return res.status(500).json({ error: atfErr.message });
-                        }
+                    const fetchYearData = () => {
+                        db.query(yearQuery, [pracownikId, `${year}-%`], (yearErr, yearRows) => {
+                            if (yearErr) {
+                                if (yearErr.code === 'ER_BAD_FIELD_ERROR' || yearErr.errno === 1054) {
+                                    // Missing column in DB, auto-add columns and retry query
+                                    const alters = [
+                                        "ALTER TABLE rozliczenia_miesieczne ADD COLUMN Urlop_zalegly_pula DECIMAL(7,2) DEFAULT 0",
+                                        "ALTER TABLE rozliczenia_miesieczne ADD COLUMN Nadgodziny_stawka VARCHAR(255) NULL",
+                                        "ALTER TABLE rozliczenia_miesieczne ADD COLUMN Nadgodziny_unlocked TINYINT(1) DEFAULT 0"
+                                    ];
+                                    let completed = 0;
+                                    alters.forEach(alt => {
+                                        db.query(alt, () => {
+                                            completed++;
+                                            if (completed === alters.length) {
+                                                db.query(yearQuery, [pracownikId, `${year}-%`], (retryErr, retryRows) => {
+                                                    processYearRows(retryRows || []);
+                                                });
+                                            }
+                                        });
+                                    });
+                                    return;
+                                }
+                                console.error("Błąd SQL przy pobieraniu danych rocznych:", yearErr);
+                                return processYearRows([]);
+                            }
+                            processYearRows(yearRows || []);
+                        });
+                    };
 
-                        const otherAtf = Number(atfResult[0]?.other_atf) || 0;
+                    const processYearRows = (yearRows) => {
+                        let otherAtf = 0;
+                        let urlopOtherMonthsTotal = 0;
+                        let urlopZaleglyOtherMonthsTotal = 0;
+                        let urlopYearTotal = 0;
+                        let urlopZaleglyYearTotal = 0;
+                        let foundZaleglyPula = 0;
+
+                        (yearRows || []).forEach(row => {
+                            const isOtherMonth = row.Miesiac_rok !== miesiacRok;
+
+                            if (isOtherMonth) {
+                                otherAtf += Number(row.Atf_wykorzystane) || 0;
+                            }
+
+                            if (Number(row.Urlop_zalegly_pula) > 0) {
+                                foundZaleglyPula = Number(row.Urlop_zalegly_pula);
+                            }
+
+                            const parseLeave = (val) => {
+                                if (!val) return [];
+                                try { return typeof val === 'string' ? JSON.parse(val) : val; } catch (e) { return []; }
+                            };
+
+                            const urlopArr = parseLeave(row.Urlop);
+                            urlopArr.forEach(entry => {
+                                const days = Number(entry.days) || 0;
+                                urlopYearTotal += days;
+                                if (isOtherMonth) urlopOtherMonthsTotal += days;
+                            });
+
+                            const zaleglyArr = parseLeave(row.Urlop_zalegly);
+                            zaleglyArr.forEach(entry => {
+                                const days = Number(entry.days) || 0;
+                                urlopZaleglyYearTotal += days;
+                                if (isOtherMonth) urlopZaleglyOtherMonthsTotal += days;
+                            });
+                        });
 
                         if (result.length > 0) {
                             let savedData = result[0];
@@ -121,7 +181,12 @@ function PobierzRozliczenia(req, res, db) {
                                 status: 'success',
                                 data: savedData,
                                 isDraft: false,
-                                atfOtherMonthsTotal: otherAtf
+                                atfOtherMonthsTotal: otherAtf,
+                                urlopOtherMonthsTotal: urlopOtherMonthsTotal,
+                                urlopZaleglyOtherMonthsTotal: urlopZaleglyOtherMonthsTotal,
+                                urlopYearTotal: urlopYearTotal,
+                                urlopZaleglyYearTotal: urlopZaleglyYearTotal,
+                                yearlyZaleglyPula: foundZaleglyPula || Number(savedData.Urlop_zalegly_pula || 0)
                             });
                         } else {
                             // Brak wiersza - całkowicie czysty szkic
@@ -129,12 +194,15 @@ function PobierzRozliczenia(req, res, db) {
                                 Pracownik_idPracownik: parseInt(pracownikId),
                                 Miesiac_rok: miesiacRok,
                                 Godziny_przepracowane: obliczoneGodziny,
-                                Mozliwe_godziny: 0.00,
+                                Mozliwe_godziny: '',
                                 Nadgodziny_wyplata: 0.00,
                                 Nadgodziny_z_poprzedniego: 0.00,
                                 Nadgodziny_na_kolejny: 0.00,
                                 Atf_wykorzystane: 0.00,
                                 Czerwone_dni: 0,
+                                Urlop_zalegly_pula: foundZaleglyPula || 0,
+                                Nadgodziny_stawka: '',
+                                Nadgodziny_unlocked: 0,
                                 Urlop: [],
                                 Urlop_zalegly: [],
                                 L4: { from: '', to: '' },
@@ -147,10 +215,17 @@ function PobierzRozliczenia(req, res, db) {
                                 status: 'success',
                                 data: draftData,
                                 isDraft: true,
-                                atfOtherMonthsTotal: otherAtf
+                                atfOtherMonthsTotal: otherAtf,
+                                urlopOtherMonthsTotal: urlopOtherMonthsTotal,
+                                urlopZaleglyOtherMonthsTotal: urlopZaleglyOtherMonthsTotal,
+                                urlopYearTotal: urlopYearTotal,
+                                urlopZaleglyYearTotal: urlopZaleglyYearTotal,
+                                yearlyZaleglyPula: foundZaleglyPula
                             });
                         }
-                    });
+                    };
+
+                    fetchYearData();
                 });
             };
 
