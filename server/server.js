@@ -133,7 +133,7 @@ const authorizeRole = (...roles) => {
 // Middleware to verify the global Access PIN
 const verifyAccessPin = (req, res, next) => {
     const pin = req.headers['x-access-pin'];
-    const expectedPin = process.env.ACCESS_PIN || '1234';
+    const expectedPin = process.env.ACCESS_PIN || '1206';
     if (pin === expectedPin) {
         next();
     } else {
@@ -308,7 +308,7 @@ app.get('/api/home/pobierz', (req, res) => {
 
 app.post('/api/verify-pin', authLimiter, (req, res) => {
     const { pin } = req.body;
-    const expectedPin = process.env.ACCESS_PIN || '1234';
+    const expectedPin = process.env.ACCESS_PIN || '1206';
     if (pin === expectedPin) {
         res.json({ valid: true });
     } else {

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Axios from 'axios';
 import { countWorkingDays, addWorkingDays, snapToNextWorkingDay, snapToPreviousWorkingDay } from '../../utils/leaveUtils';
+import { downloadRozliczeniePDF } from '../../Components/RozliczeniaPDF';
 
 const RozliczeniaMiesieczne = () => {
     const baseUrl = process.env.REACT_APP_BASE_URL;
@@ -336,6 +337,84 @@ const RozliczeniaMiesieczne = () => {
             })
             .catch(err => setMessage({ text: 'Błąd zapisu.', type: 'error' }))
             .finally(() => setIsLoading(false));
+    };
+
+    const handlePrintSinglePDF = async () => {
+        const selectedEmpObj = pracownicy.find(p => String(p.idPracownik) === String(selectedPracownik));
+        const name = selectedEmpObj ? `${selectedEmpObj.Imie} ${selectedEmpObj.Nazwisko}` : 'Pracownik';
+
+        const sheetData = {
+            pracownikName: name,
+            miesiacRok: miesiacRok,
+            godzinyPrzepracowane: rozliczenie.Godziny_przepracowane,
+            mozliweGodziny: rozliczenie.Mozliwe_godziny,
+            nadgodzinyWyplata: rozliczenie.Nadgodziny_wyplata,
+            nadgodzinyStawka: rozliczenie.Nadgodziny_stawka,
+            czerwoneDni: rozliczenie.Czerwone_dni,
+            nadgodzinyZPoprzedniego: rozliczenie.Nadgodziny_z_poprzedniego,
+            atfWykorzystane: rozliczenie.Atf_wykorzystane,
+            atfOtherMonthsTotal: atfOtherMonthsTotal,
+            urlopOtherMonthsTotal: urlopOtherMonthsTotal,
+            urlopZaleglyOtherMonthsTotal: urlopZaleglyOtherMonthsTotal,
+            yearlyZaleglyPula: yearlyZaleglyPula,
+            urlopPulaInput: rozliczenie.Urlop_zalegly_pula,
+            urlop: rozliczenie.Urlop,
+            urlopZalegly: rozliczenie.Urlop_zalegly,
+            l4: rozliczenie.L4,
+            l4cd: rozliczenie.L4cd,
+            vab: rozliczenie.VAB,
+            pappaledi: rozliczenie.Pappaledi,
+            nadgodzinyNaKolejny: rozliczenie.Nadgodziny_na_kolejny,
+            email: ''
+        };
+
+        const filename = `Rozliczenie_${name.replace(/\s+/g, '_')}_${miesiacRok}.pdf`;
+        await downloadRozliczeniePDF([sheetData], filename);
+    };
+
+    const handlePrintAllPDF = async () => {
+        setIsLoading(true);
+        try {
+            const sheets = [];
+            for (const p of pracownicy) {
+                const res = await Axios.get(`${baseUrl}/api/rozliczenia`, {
+                    withCredentials: true,
+                    params: { pracownikId: p.idPracownik, miesiacRok: miesiacRok }
+                });
+                if (res.data?.status === 'success') {
+                    const d = res.data.data;
+                    sheets.push({
+                        pracownikName: `${p.Imie} ${p.Nazwisko}`,
+                        miesiacRok: miesiacRok,
+                        godzinyPrzepracowane: d.Godziny_przepracowane || 0,
+                        mozliweGodziny: d.Mozliwe_godziny || '',
+                        nadgodzinyWyplata: d.Nadgodziny_wyplata || 0,
+                        nadgodzinyStawka: d.Nadgodziny_stawka || '',
+                        czerwoneDni: d.Czerwone_dni || 0,
+                        nadgodzinyZPoprzedniego: d.Nadgodziny_z_poprzedniego || 0,
+                        atfWykorzystane: d.Atf_wykorzystane || 0,
+                        atfOtherMonthsTotal: res.data.atfOtherMonthsTotal || 0,
+                        urlopOtherMonthsTotal: res.data.urlopOtherMonthsTotal || 0,
+                        urlopZaleglyOtherMonthsTotal: res.data.urlopZaleglyOtherMonthsTotal || 0,
+                        yearlyZaleglyPula: res.data.yearlyZaleglyPula || 0,
+                        urlopPulaInput: d.Urlop_zalegly_pula || 0,
+                        urlop: parseJsonValue(d.Urlop, []),
+                        urlopZalegly: parseJsonValue(d.Urlop_zalegly, []),
+                        l4: parseJsonValue(d.L4, {}),
+                        l4cd: parseJsonValue(d.L4cd, {}),
+                        vab: parseJsonValue(d.VAB, {}),
+                        pappaledi: parseJsonValue(d.Pappaledi, {}),
+                        nadgodzinyNaKolejny: d.Nadgodziny_na_kolejny || 0,
+                        email: ''
+                    });
+                }
+            }
+            await downloadRozliczeniePDF(sheets, `Rozliczenia_Wszyscy_${miesiacRok}.pdf`);
+        } catch (err) {
+            console.error('Błąd drukowania zbiorczego PDF:', err);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -814,7 +893,25 @@ const RozliczeniaMiesieczne = () => {
                     </div>
                 </div>
 
-                <div className="mt-8 flex justify-end">
+                <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t pt-6">
+                    <div className="flex flex-wrap items-center gap-3">
+                        <button
+                            type="button"
+                            onClick={handlePrintSinglePDF}
+                            className="bg-emerald-600 text-white px-5 py-2.5 rounded font-bold hover:bg-emerald-700 transition shadow flex items-center gap-2"
+                        >
+                            📄 Drukuj / Pobierz PDF (Pojedynczy)
+                        </button>
+                        {['Administrator', 'Kierownik', 'Biuro'].includes(userAccountType) && (
+                            <button
+                                type="button"
+                                onClick={handlePrintAllPDF}
+                                className="bg-purple-700 text-white px-5 py-2.5 rounded font-bold hover:bg-purple-800 transition shadow flex items-center gap-2"
+                            >
+                                📚 Drukuj PDF (Dla wszystkich)
+                            </button>
+                        )}
+                    </div>
                     <button type="submit" className="bg-blue-600 text-white px-8 py-3 rounded font-bold hover:bg-blue-700 transition shadow-lg text-lg">
                         Zapisz rozliczenie
                     </button>

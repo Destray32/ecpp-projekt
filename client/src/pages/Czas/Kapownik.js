@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Axios from 'axios';
+import { downloadRozliczeniePDF } from '../../Components/RozliczeniaPDF';
 
 const Kapownik = () => {
     const baseUrl = process.env.REACT_APP_BASE_URL;
@@ -9,6 +10,7 @@ const Kapownik = () => {
     const [miesiacRok, setMiesiacRok] = useState(new Date().toISOString().slice(0, 7));
     const [dane, setDane] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedIds, setSelectedIds] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState('');
 
@@ -136,6 +138,176 @@ const Kapownik = () => {
         }
     };
 
+    const parseJsonValue = (value, fallback) => {
+        if (value === null || value === undefined || value === '') return fallback;
+        if (typeof value === 'string') {
+            try { return JSON.parse(value); } catch (e) { return fallback; }
+        }
+        return value;
+    };
+
+    const handleDrukujPDFPojedynczy = async (item) => {
+        setIsLoading(true);
+        try {
+            const res = await Axios.get(`${baseUrl}/api/rozliczenia`, {
+                withCredentials: true,
+                params: { pracownikId: item.idPracownik, miesiacRok: miesiacRok }
+            });
+
+            const d = res.data?.status === 'success' ? res.data.data : item;
+            const extra = res.data || {};
+
+            const sheetData = {
+                pracownikName: `${item.Imie} ${item.Nazwisko}`,
+                miesiacRok: miesiacRok,
+                godzinyPrzepracowane: d.Godziny_przepracowane || item.Godziny_przepracowane || 0,
+                mozliweGodziny: d.Mozliwe_godziny || item.Mozliwe_godziny || '',
+                nadgodzinyWyplata: d.Nadgodziny_wyplata || item.Nadgodziny_wyplata || 0,
+                nadgodzinyStawka: d.Nadgodziny_stawka || item.Nadgodziny_stawka || '',
+                czerwoneDni: d.Czerwone_dni || item.Czerwone_dni || 0,
+                nadgodzinyZPoprzedniego: d.Nadgodziny_z_poprzedniego || item.Nadgodziny_z_poprzedniego || 0,
+                atfWykorzystane: d.Atf_wykorzystane || item.Atf_wykorzystane || 0,
+                atfOtherMonthsTotal: extra.atfOtherMonthsTotal || 0,
+                urlopOtherMonthsTotal: extra.urlopOtherMonthsTotal || 0,
+                urlopZaleglyOtherMonthsTotal: extra.urlopZaleglyOtherMonthsTotal || 0,
+                yearlyZaleglyPula: extra.yearlyZaleglyPula || 0,
+                urlopPulaInput: d.Urlop_zalegly_pula || item.Urlop_zalegly_pula || 0,
+                urlop: parseJsonValue(d.Urlop, item.Urlop || []),
+                urlopZalegly: parseJsonValue(d.Urlop_zalegly, item.Urlop_zalegly || []),
+                l4: parseJsonValue(d.L4, item.L4 || {}),
+                l4cd: parseJsonValue(d.L4cd, item.L4cd || {}),
+                vab: parseJsonValue(d.VAB, item.VAB || {}),
+                pappaledi: parseJsonValue(d.Pappaledi, item.Pappaledi || {}),
+                nadgodzinyNaKolejny: d.Nadgodziny_na_kolejny || item.Nadgodziny_na_kolejny || 0,
+                email: item.Email || item.email || ''
+            };
+
+            const filename = `Rozliczenie_${item.Imie}_${item.Nazwisko}_${miesiacRok}.pdf`;
+            await downloadRozliczeniePDF([sheetData], filename);
+        } catch (err) {
+            console.error('Błąd drukowania pojedynczego PDF z kapownika:', err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const toggleSelectAll = (filteredItems) => {
+        if (selectedIds.length === filteredItems.length && filteredItems.length > 0) {
+            setSelectedIds([]);
+        } else {
+            setSelectedIds(filteredItems.map(item => item.idPracownik));
+        }
+    };
+
+    const toggleSelectEmployee = (idPracownik) => {
+        setSelectedIds(prev =>
+            prev.includes(idPracownik)
+                ? prev.filter(id => id !== idPracownik)
+                : [...prev, idPracownik]
+        );
+    };
+
+    const handleDrukujPDFZaznaczeni = async () => {
+        if (selectedIds.length === 0) {
+            setMessage('Zaznacz przynajmniej jednego pracownika w tabeli (checkbox), aby wygenerować PDF.');
+            return;
+        }
+        setIsLoading(true);
+        setMessage('');
+        try {
+            const sheets = [];
+            const targetItems = dane.filter(item => selectedIds.includes(item.idPracownik));
+            for (const item of targetItems) {
+                const res = await Axios.get(`${baseUrl}/api/rozliczenia`, {
+                    withCredentials: true,
+                    params: { pracownikId: item.idPracownik, miesiacRok: miesiacRok }
+                });
+
+                const d = res.data?.status === 'success' ? res.data.data : item;
+                const extra = res.data || {};
+
+                sheets.push({
+                    pracownikName: `${item.Imie} ${item.Nazwisko}`,
+                    miesiacRok: miesiacRok,
+                    godzinyPrzepracowane: d.Godziny_przepracowane || item.Godziny_przepracowane || 0,
+                    mozliweGodziny: d.Mozliwe_godziny || item.Mozliwe_godziny || '',
+                    nadgodzinyWyplata: d.Nadgodziny_wyplata || item.Nadgodziny_wyplata || 0,
+                    nadgodzinyStawka: d.Nadgodziny_stawka || item.Nadgodziny_stawka || '',
+                    czerwoneDni: d.Czerwone_dni || item.Czerwone_dni || 0,
+                    nadgodzinyZPoprzedniego: d.Nadgodziny_z_poprzedniego || item.Nadgodziny_z_poprzedniego || 0,
+                    atfWykorzystane: d.Atf_wykorzystane || item.Atf_wykorzystane || 0,
+                    atfOtherMonthsTotal: extra.atfOtherMonthsTotal || 0,
+                    urlopOtherMonthsTotal: extra.urlopOtherMonthsTotal || 0,
+                    urlopZaleglyOtherMonthsTotal: extra.urlopZaleglyOtherMonthsTotal || 0,
+                    yearlyZaleglyPula: extra.yearlyZaleglyPula || 0,
+                    urlopPulaInput: d.Urlop_zalegly_pula || item.Urlop_zalegly_pula || 0,
+                    urlop: parseJsonValue(d.Urlop, item.Urlop || []),
+                    urlopZalegly: parseJsonValue(d.Urlop_zalegly, item.Urlop_zalegly || []),
+                    l4: parseJsonValue(d.L4, item.L4 || {}),
+                    l4cd: parseJsonValue(d.L4cd, item.L4cd || {}),
+                    vab: parseJsonValue(d.VAB, item.VAB || {}),
+                    pappaledi: parseJsonValue(d.Pappaledi, item.Pappaledi || {}),
+                    nadgodzinyNaKolejny: d.Nadgodziny_na_kolejny || item.Nadgodziny_na_kolejny || 0,
+                    email: item.Email || item.email || ''
+                });
+            }
+            await downloadRozliczeniePDF(sheets, `Rozliczenia_Zaznaczeni_${miesiacRok}.pdf`);
+        } catch (err) {
+            console.error('Błąd drukowania wybranych z kapownika:', err);
+            setMessage('Wystąpił błąd podczas generowania pliku PDF.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleDrukujPDFWszyscy = async () => {
+        setIsLoading(true);
+        setMessage('');
+        try {
+            const sheets = [];
+            for (const item of dane) {
+                const res = await Axios.get(`${baseUrl}/api/rozliczenia`, {
+                    withCredentials: true,
+                    params: { pracownikId: item.idPracownik, miesiacRok: miesiacRok }
+                });
+
+                const d = res.data?.status === 'success' ? res.data.data : item;
+                const extra = res.data || {};
+
+                sheets.push({
+                    pracownikName: `${item.Imie} ${item.Nazwisko}`,
+                    miesiacRok: miesiacRok,
+                    godzinyPrzepracowane: d.Godziny_przepracowane || item.Godziny_przepracowane || 0,
+                    mozliweGodziny: d.Mozliwe_godziny || item.Mozliwe_godziny || '',
+                    nadgodzinyWyplata: d.Nadgodziny_wyplata || item.Nadgodziny_wyplata || 0,
+                    nadgodzinyStawka: d.Nadgodziny_stawka || item.Nadgodziny_stawka || '',
+                    czerwoneDni: d.Czerwone_dni || item.Czerwone_dni || 0,
+                    nadgodzinyZPoprzedniego: d.Nadgodziny_z_poprzedniego || item.Nadgodziny_z_poprzedniego || 0,
+                    atfWykorzystane: d.Atf_wykorzystane || item.Atf_wykorzystane || 0,
+                    atfOtherMonthsTotal: extra.atfOtherMonthsTotal || 0,
+                    urlopOtherMonthsTotal: extra.urlopOtherMonthsTotal || 0,
+                    urlopZaleglyOtherMonthsTotal: extra.urlopZaleglyOtherMonthsTotal || 0,
+                    yearlyZaleglyPula: extra.yearlyZaleglyPula || 0,
+                    urlopPulaInput: d.Urlop_zalegly_pula || item.Urlop_zalegly_pula || 0,
+                    urlop: parseJsonValue(d.Urlop, item.Urlop || []),
+                    urlopZalegly: parseJsonValue(d.Urlop_zalegly, item.Urlop_zalegly || []),
+                    l4: parseJsonValue(d.L4, item.L4 || {}),
+                    l4cd: parseJsonValue(d.L4cd, item.L4cd || {}),
+                    vab: parseJsonValue(d.VAB, item.VAB || {}),
+                    pappaledi: parseJsonValue(d.Pappaledi, item.Pappaledi || {}),
+                    nadgodzinyNaKolejny: d.Nadgodziny_na_kolejny || item.Nadgodziny_na_kolejny || 0,
+                    email: item.Email || item.email || ''
+                });
+            }
+            await downloadRozliczeniePDF(sheets, `Rozliczenia_Wszyscy_${miesiacRok}.pdf`);
+        } catch (err) {
+            console.error('Błąd drukowania zbiorczego PDF:', err);
+            setMessage('Wystąpił błąd podczas generowania pliku PDF.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     // Filtrowanie pracowników na podstawie wpisanego wyszukiwania
     const filteredDane = dane.filter(item => {
         const fullName = `${item.Imie} ${item.Nazwisko}`.toLowerCase();
@@ -189,6 +361,23 @@ const Kapownik = () => {
                     >
                         Zapisz dla wszystkich
                     </button>
+                    <button
+                        type="button"
+                        onClick={handleDrukujPDFZaznaczeni}
+                        className={`text-xs font-bold px-3 py-2 rounded transition shadow-sm flex items-center gap-1 text-white ${
+                            selectedIds.length > 0 ? 'bg-purple-700 hover:bg-purple-800 ring-2 ring-purple-400' : 'bg-purple-400 cursor-not-allowed'
+                        }`}
+                        disabled={selectedIds.length === 0}
+                    >
+                        🖨️ Drukuj PDF (Zaznaczeni: {selectedIds.length})
+                    </button>
+                    <button
+                        type="button"
+                        onClick={handleDrukujPDFWszyscy}
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-2 rounded transition shadow-sm flex items-center gap-1"
+                    >
+                        📚 Drukuj PDF (Wszyscy)
+                    </button>
                 </div>
 
                 <div className="w-full lg:max-w-xs">
@@ -203,8 +392,9 @@ const Kapownik = () => {
             </div>
 
             {message && (
-                <div className="p-4 mb-6 rounded bg-red-100 text-red-700 text-sm">
-                    {message}
+                <div className="p-4 mb-6 rounded bg-red-100 text-red-700 text-sm flex items-center justify-between">
+                    <span>{message}</span>
+                    <button type="button" onClick={() => setMessage('')} className="font-bold text-red-800 text-xs">✕ Zamknij</button>
                 </div>
             )}
 
@@ -212,7 +402,7 @@ const Kapownik = () => {
             <div className="bg-white rounded-lg shadow overflow-hidden relative">
                 {isLoading && (
                     <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-10">
-                        <span className="font-bold text-gray-600">Ładowanie danych...</span>
+                        <span className="font-bold text-gray-600">Ładowanie i generowanie PDF...</span>
                     </div>
                 )}
 
@@ -220,7 +410,16 @@ const Kapownik = () => {
                     <table className="w-full text-left border-collapse text-xs">
                         <thead>
                             <tr className="bg-gray-100 text-gray-700 uppercase tracking-wider border-b text-[10px] font-bold">
-                                <th className="p-3 sticky left-0 bg-gray-100 z-10">Pracownik</th>
+                                <th className="p-3 w-10 text-center sticky left-0 bg-gray-100 z-20">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedIds.length === filteredDane.length && filteredDane.length > 0}
+                                        onChange={() => toggleSelectAll(filteredDane)}
+                                        className="w-4 h-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500 cursor-pointer"
+                                        title="Zaznacz/odznacz wszystkich"
+                                    />
+                                </th>
+                                <th className="p-3 sticky left-10 bg-gray-100 z-10">Pracownik</th>
                                 <th className="p-3">Status</th>
                                 <th className="p-3 text-center">Godziny (B)</th>
                                 <th className="p-3 text-center">Możliwe</th>
@@ -238,12 +437,13 @@ const Kapownik = () => {
                         <tbody className="divide-y divide-gray-200">
                             {filteredDane.length === 0 ? (
                                 <tr>
-                                    <td colSpan="13" className="p-8 text-center text-gray-500 text-sm">
+                                    <td colSpan="14" className="p-8 text-center text-gray-500 text-sm">
                                         {isLoading ? 'Ładowanie...' : 'Brak danych do wyświetlenia.'}
                                     </td>
                                 </tr>
                             ) : (
                                 filteredDane.map((item) => {
+                                    const isSelected = selectedIds.includes(item.idPracownik);
                                     const l4Days = countRangeDays(item.L4);
                                     const l4cdDays = countRangeDays(item.L4cd);
                                     const vabDays = countRangeDays(item.VAB);
@@ -253,9 +453,19 @@ const Kapownik = () => {
                                     const urlopZaleglyDays = sumDays(item.Urlop_zalegly);
 
                                     return (
-                                        <tr key={item.idPracownik} className="hover:bg-gray-50 transition-colors">
+                                        <tr key={item.idPracownik} className={`transition-colors ${isSelected ? 'bg-purple-50/70' : 'hover:bg-gray-50'}`}>
+                                            {/* Checkbox zaznaczenia */}
+                                            <td className="p-3 text-center sticky left-0 bg-white z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isSelected}
+                                                    onChange={() => toggleSelectEmployee(item.idPracownik)}
+                                                    className="w-4 h-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500 cursor-pointer"
+                                                />
+                                            </td>
+
                                             {/* Pracownik */}
-                                            <td className="p-3 font-semibold text-gray-900 sticky left-0 bg-white shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] hover:bg-gray-50">
+                                            <td className="p-3 font-semibold text-gray-900 sticky left-10 bg-white shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
                                                 {item.Nazwisko} {item.Imie}
                                             </td>
 
@@ -365,14 +575,24 @@ const Kapownik = () => {
                                             </td>
 
                                             {/* Akcja */}
-                                            <td className="p-3 text-center">
-                                                <button
-                                                    type="button"
-                                                    className="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] font-bold shadow-sm transition"
-                                                    onClick={() => handleGoToDetails(item.idPracownik)}
-                                                >
-                                                    Karta
-                                                </button>
+                                            <td className="p-3 text-center whitespace-nowrap">
+                                                <div className="flex items-center justify-center gap-1">
+                                                    <button
+                                                        type="button"
+                                                        className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] font-bold shadow-sm transition"
+                                                        onClick={() => handleGoToDetails(item.idPracownik)}
+                                                    >
+                                                        Karta
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[10px] font-bold shadow-sm transition flex items-center gap-1"
+                                                        onClick={() => handleDrukujPDFPojedynczy(item)}
+                                                        title="Pobierz rozliczenie w PDF dla księgowej"
+                                                    >
+                                                        📄 PDF
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     );
