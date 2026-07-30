@@ -151,6 +151,23 @@ const RozliczeniaMiesieczne = () => {
                 }
             }
 
+            // Dynamic validation for regular vacation pool limit (max 25 days/year)
+            if (field === 'Urlop') {
+                const totalRegularPool = 25;
+                const otherEntriesSum = nextEntries.reduce((acc, ent, i) => i === index ? acc : acc + (Number(ent.days) || 0), 0);
+                const maxAllowed = Math.max(totalRegularPool - urlopOtherMonthsTotal - otherEntriesSum, 0);
+
+                if (Number(nextEntry.days) > maxAllowed) {
+                    nextEntry.days = maxAllowed > 0 ? String(maxAllowed) : '';
+                    if (nextEntry.from && maxAllowed > 0) {
+                        nextEntry.from = snapToNextWorkingDay(nextEntry.from);
+                        nextEntry.to = addWorkingDays(nextEntry.from, maxAllowed);
+                    } else if (maxAllowed === 0 && nextEntry.from) {
+                        nextEntry.to = nextEntry.from;
+                    }
+                }
+            }
+
             // Specific validation for overdue leave pool limit
             if (field === 'Urlop_zalegly') {
                 const totalPula = Number(prev.Urlop_zalegly_pula || yearlyZaleglyPula || 0);
@@ -162,7 +179,7 @@ const RozliczeniaMiesieczne = () => {
                     if (nextEntry.from && maxAllowed > 0) {
                         nextEntry.from = snapToNextWorkingDay(nextEntry.from);
                         nextEntry.to = addWorkingDays(nextEntry.from, maxAllowed);
-                    } else if (maxAllowed === 0) {
+                    } else if (maxAllowed === 0 && nextEntry.from) {
                         nextEntry.to = nextEntry.from;
                     }
                 }
@@ -311,6 +328,23 @@ const RozliczeniaMiesieczne = () => {
         const l4Days = getRangeDays(rozliczenie.L4);
         if (l4Days > 14) {
             setMessage({ text: 'L4 moze miec maksymalnie 14 dni.', type: 'error' });
+            setIsLoading(false);
+            return;
+        }
+
+        const currentRegularSum = sumDays(rozliczenie.Urlop);
+        const totalRegularUsed = urlopOtherMonthsTotal + currentRegularSum;
+        if (totalRegularUsed > 25) {
+            setMessage({ text: `Nie można zapisać: Przekroczono roczny limit urlopu zwykłego. Maksymalnie można wykorzystać 25 dni w roku (wykorzystano ${totalRegularUsed} d).`, type: 'error' });
+            setIsLoading(false);
+            return;
+        }
+
+        const currentZaleglySum = sumDays(rozliczenie.Urlop_zalegly);
+        const totalZaleglyUsed = urlopZaleglyOtherMonthsTotal + currentZaleglySum;
+        const totalPula = Number(rozliczenie.Urlop_zalegly_pula || yearlyZaleglyPula || 0);
+        if (totalZaleglyUsed > totalPula) {
+            setMessage({ text: `Nie można zapisać: Przekroczono dostępną pulę zaległego urlopu (wykorzystano ${totalZaleglyUsed} d z puli ${totalPula} d).`, type: 'error' });
             setIsLoading(false);
             return;
         }

@@ -12,6 +12,8 @@ import PDF_SprawozdaniePodsumowanie from "../../Components/Raporty/PDF_Sprawozda
 import { notification } from "antd";
 import checkUserType, { hasSpecialAccess } from "../../utils/accTypeUtils";
 import CalendarIsoInput from "../../Components/CalendarIsoInput";
+import { getPdfQueue, addToPdfQueue } from "../../utils/pdfQueueManager";
+import PdfMergeQueueModal from "../../Components/Raporty/PdfMergeQueueModal";
 
 export default function RaportyPage() {
     const [startDate, setStartDate] = useState('');
@@ -41,7 +43,18 @@ export default function RaportyPage() {
     const [selectedWysylkaZleceniodawca, setSelectedWysylkaZleceniodawca] = useState(null);
     const [wysylkaSummary, setWysylkaSummary] = useState(null);
     const [wysylkaInvoiceNames, setWysylkaInvoiceNames] = useState({});
+    const [isQueueModalOpen, setIsQueueModalOpen] = useState(false);
+    const [pdfQueueCount, setPdfQueueCount] = useState(0);
     const baseUrl = process.env.REACT_APP_BASE_URL;
+
+    useEffect(() => {
+        const updateCount = () => {
+            setPdfQueueCount(getPdfQueue().length);
+        };
+        updateCount();
+        window.addEventListener('pdfQueueUpdated', updateCount);
+        return () => window.removeEventListener('pdfQueueUpdated', updateCount);
+    }, []);
 
     const WYSYLKA_REPORT_NAME = "Podsumowanie(wysyłka)";
     const isWysylkaReport = wybranyRaport === WYSYLKA_REPORT_NAME;
@@ -993,7 +1006,123 @@ export default function RaportyPage() {
             PDF_PracownikAnalizaCzasu(filtered, startDate, endDate, null);
             break;
         }
-        };
+    };
+
+    const handleAddToPdfQueue = async (isWszystkie = false) => {
+        if (!wybranyRaport) {
+            notification.info({
+                message: 'Informacja',
+                description: 'Wybierz typ raportu z tabeli obok',
+                placement: 'topRight',
+            });
+            return;
+        }
+
+        if (!isWszystkie && ['Sprawozdanie z działalności - szczegółowe', 'Sprawozdanie z działalności - podsumowanie'].includes(wybranyRaport) && !Projekt) {
+            notification.info({
+                message: 'Informacja',
+                description: 'Wybierz projekt',
+                placement: 'topRight',
+            });
+            return;
+        }
+
+        if (!isWszystkie && ['Analiza świadczeń pracowniczych', 'Pracownik Analiza czasu - działalność'].includes(wybranyRaport) && !pracownik) {
+            notification.info({
+                message: 'Informacja',
+                description: 'Wybierz pracownika',
+                placement: 'topRight',
+            });
+            return;
+        }
+
+        if (!ignorujDatyFirma && (!startDate || !endDate)) {
+            notification.info({
+                message: 'Informacja',
+                description: 'Wypełnij daty od i do',
+                placement: 'topRight',
+            });
+            return;
+        }
+
+        let filteredRaport = raport;
+
+        if (!isWszystkie && Projekt && ['Sprawozdanie z działalności - szczegółowe', 'Sprawozdanie z działalności - podsumowanie'].includes(wybranyRaport)) {
+            filteredRaport = filteredRaport.filter(entry => entry.ProjektID === Projekt);
+        }
+
+        if (!isWszystkie && pracownik && ['Analiza świadczeń pracowniczych', 'Pracownik Analiza czasu - działalność'].includes(wybranyRaport)) {
+            filteredRaport = filteredRaport.filter(entry => entry.PracownikID === pracownik);
+        }
+
+        if (!ignorujDatyFirma && startDate && endDate) {
+            filteredRaport = filteredRaport.filter(entry => {
+                if (!entry.Data) return false;
+                const datePart = entry.Data.split(' ')[0];
+                const [day, month, year] = datePart.split('.');
+                const entryDate = new Date(`${year}-${month}-${day}`);
+                return entryDate >= new Date(startDate) && entryDate <= new Date(endDate);
+            });
+        }
+
+        if (isWszystkie && selectedZleceniodawcy.length > 0) {
+            filteredRaport = filteredRaport.filter(entry => {
+                const entryZleceniodawca = entry.Zleceniodawca || 'Bez zleceniodawcy';
+                return selectedZleceniodawcy.includes(entryZleceniodawca);
+            });
+        }
+
+        if (filteredRaport.length === 0) {
+            notification.info({
+                message: 'Brak danych',
+                description: 'Brak danych do wygenerowania raportu dla wybranych kryteriów.',
+                placement: 'topRight',
+            });
+            return;
+        }
+
+        const passedStartDate = ignorujDatyFirma ? null : startDate;
+        const passedEndDate = ignorujDatyFirma ? null : endDate;
+
+        const projectZleceniodawcaMapping = {};
+        projektyOptions.forEach(group => {
+            if (group.items) {
+                group.items.forEach(p => {
+                    projectZleceniodawcaMapping[p.value] = p.zleceniodawca;
+                });
+            }
+        });
+
+        let pdfBytes = null;
+        let titleName = wybranyRaport;
+
+        if (wybranyRaport === "Sprawozdanie z działalności - szczegółowe") {
+            const selectedProjObj = (projektyOptions.flatMap(g => g.items || [])).find(p => p.value === Projekt);
+            const projName = isWszystkie ? 'Wszystkie projekty' : (selectedProjObj?.label || 'Projekt');
+            titleName = `Szczegółowy: ${projName}`;
+            pdfBytes = await PDF_SprawozdanieSzczegolowe(filteredRaport, passedStartDate, passedEndDate, isWszystkie ? null : Projekt, projectZleceniodawcaMapping, true);
+        } else if (wybranyRaport === "Sprawozdanie z działalności - podsumowanie") {
+            const selectedProjObj = (projektyOptions.flatMap(g => g.items || [])).find(p => p.value === Projekt);
+            const projName = isWszystkie ? 'Wszystkie projekty' : (selectedProjObj?.label || 'Projekt');
+            titleName = `Podsumowanie: ${projName}`;
+            pdfBytes = await PDF_SprawozdaniePodsumowanie(filteredRaport, passedStartDate, passedEndDate, isWszystkie ? null : Projekt, projectZleceniodawcaMapping, projectOrderMap, true);
+        } else if (wybranyRaport === "Analiza świadczeń pracowniczych") {
+            const selectedUser = availablePracownicy.find(p => p.value === pracownik);
+            const userName = isWszystkie ? 'Wszyscy pracownicy' : (selectedUser?.label || 'Pracownik');
+            titleName = `Analiza świadczeń: ${userName}`;
+            pdfBytes = await PDF_AnalizaSwiadczenPracowniczych(filteredRaport, passedStartDate, passedEndDate, isWszystkie ? null : pracownik, true);
+        } else if (wybranyRaport === "Pracownik Analiza czasu - działalność") {
+            const selectedUser = availablePracownicy.find(p => p.value === pracownik);
+            const userName = isWszystkie ? 'Wszyscy pracownicy' : (selectedUser?.label || 'Pracownik');
+            titleName = `Analiza czasu: ${userName}`;
+            pdfBytes = await PDF_PracownikAnalizaCzasu(filteredRaport, passedStartDate, passedEndDate, isWszystkie ? null : pracownik, true);
+        }
+
+        if (pdfBytes) {
+            const datesLabel = ignorujDatyFirma ? 'Bez zakresu dat' : `${startDate || ''} - ${endDate || ''}`;
+            addToPdfQueue(titleName, datesLabel, pdfBytes);
+        }
+    };
 
 
     const przejscieDoInterfejsuFirma = () => {
@@ -1120,8 +1249,18 @@ export default function RaportyPage() {
 
     return (
         <div>
-            <div className="w-auto h-auto bg-blue-700 outline outline-1 outline-black flex flex-row items-center space-x-4 m-2 p-3 text-white">
-                <p>Opcje</p>
+            <div className="w-auto h-auto bg-blue-700 outline outline-1 outline-black flex flex-row items-center justify-between m-2 px-3 py-2 text-white">
+                <p className="font-bold text-sm">Opcje Raportowania</p>
+                <button
+                    type="button"
+                    onClick={() => setIsQueueModalOpen(true)}
+                    className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded shadow-sm transition text-xs flex items-center gap-1.5 cursor-pointer"
+                >
+                    <span>📑 Połączone PDF-y</span>
+                    <span className="bg-white text-emerald-900 rounded-full px-1.5 py-0.2 text-[10px] font-extrabold">
+                        {pdfQueueCount}
+                    </span>
+                </button>
             </div>
             <AmberBox>
               <div className="flex flex-col items-center justify-center space-y-4 w-full">
@@ -1239,18 +1378,37 @@ export default function RaportyPage() {
                                           </div>
                                       )}
                                   />
-                                  <div className="flex flex-row items-center space-x-4 mt-4 justify-center">
-                                      <Button
-                                          onClick={handleGenerateReport}
-                                          label="Generuj raport"
-                                          className="p-button-outlined border-2 p-2.5 bg-white text-black stable-button"
-                                      />
-                                      <Button
-                                          onClick={handleGenerateWszystkie}
-                                          label="Generuj wszystkie"
-                                          className="p-button-outlined border-2 p-2.5 bg-white text-black stable-button"
-                                      />
-                                  </div>
+                                   <div className="flex flex-col items-center gap-3 mt-3 w-full">
+                                       {/* Grupa 1: Pobieranie bezpośrednie */}
+                                       <div className="flex items-center gap-3 flex-wrap justify-center">
+                                           <span className="text-xs text-gray-500 font-bold uppercase tracking-wider mr-1">Pobierz:</span>
+                                           <Button
+                                               onClick={handleGenerateReport}
+                                               label="Generuj"
+                                               className="p-button-outlined border-2 p-2.5 bg-white text-black stable-button text-sm font-semibold"
+                                           />
+                                           <Button
+                                               onClick={handleGenerateWszystkie}
+                                               label="Generuj wszystkie"
+                                               className="p-button-outlined border-2 p-2.5 bg-white text-black stable-button text-sm font-semibold"
+                                           />
+                                       </div>
+
+                                       {/* Grupa 2: Kolejkowanie i łączenie */}
+                                       <div className="flex items-center gap-3 flex-wrap justify-center">
+                                           <span className="text-xs text-blue-600 font-bold uppercase tracking-wider mr-1">Do łączenia:</span>
+                                           <Button
+                                               onClick={() => handleAddToPdfQueue(false)}
+                                               label="+ Połącz"
+                                               className="p-button-outlined border-2 p-2.5 bg-blue-50 text-blue-800 border-blue-600 hover:bg-blue-100 text-sm font-semibold rounded"
+                                           />
+                                           <Button
+                                               onClick={() => handleAddToPdfQueue(true)}
+                                               label="+ Połącz wszystkie"
+                                               className="p-button-outlined border-2 p-2.5 bg-blue-50 text-blue-800 border-blue-600 hover:bg-blue-100 text-sm font-semibold rounded"
+                                           />
+                                       </div>
+                                   </div>
                               </div>
                           </div>
                       </div>
@@ -1368,17 +1526,36 @@ export default function RaportyPage() {
                   
                   {/* Only show this for non-firma interface */}
                   {interfacePracownik && (
-                      <div className="flex flex-row items-center space-x-4">
-                          <Button
-                              onClick={handleGenerateReport}
-                              label="Generuj raport"
-                              className="p-button-outlined border-2 p-2.5 bg-white text-black stable-button"
-                          />
-                          <Button
-                              onClick={handleGenerateAllEmployees}
-                              label="Generuj wszystkie"
-                              className="p-button-outlined border-2 p-2.5 bg-white text-black stable-button"
-                          />
+                      <div className="flex flex-col items-center gap-3 w-full">
+                          {/* Grupa 1: Pobieranie bezpośrednie */}
+                          <div className="flex items-center gap-3 flex-wrap justify-center">
+                              <span className="text-xs text-gray-500 font-bold uppercase tracking-wider mr-1">Pobierz:</span>
+                              <Button
+                                  onClick={handleGenerateReport}
+                                  label="Generuj"
+                                  className="p-button-outlined border-2 p-2.5 bg-white text-black stable-button text-sm font-semibold"
+                              />
+                              <Button
+                                  onClick={handleGenerateAllEmployees}
+                                  label="Generuj wszystkie"
+                                  className="p-button-outlined border-2 p-2.5 bg-white text-black stable-button text-sm font-semibold"
+                              />
+                          </div>
+
+                          {/* Grupa 2: Kolejkowanie i łączenie */}
+                          <div className="flex items-center gap-3 flex-wrap justify-center">
+                              <span className="text-xs text-blue-600 font-bold uppercase tracking-wider mr-1">Do łączenia:</span>
+                              <Button
+                                  onClick={() => handleAddToPdfQueue(false)}
+                                  label="+ Połącz"
+                                  className="p-button-outlined border-2 p-2.5 bg-blue-50 text-blue-800 border-blue-600 hover:bg-blue-100 text-sm font-semibold rounded"
+                              />
+                              <Button
+                                  onClick={() => handleAddToPdfQueue(true)}
+                                  label="+ Połącz wszystkie"
+                                  className="p-button-outlined border-2 p-2.5 bg-blue-50 text-blue-800 border-blue-600 hover:bg-blue-100 text-sm font-semibold rounded"
+                              />
+                          </div>
                       </div>
                   )}
               </div>
@@ -1454,6 +1631,12 @@ export default function RaportyPage() {
                 </tbody>
             </table>
         </div>
+
+        {/* Modal Kolejki Łączenia PDF-ów */}
+        <PdfMergeQueueModal
+            isOpen={isQueueModalOpen}
+            onClose={() => setIsQueueModalOpen(false)}
+        />
     </div>
 );
 }

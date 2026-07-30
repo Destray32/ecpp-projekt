@@ -4,7 +4,7 @@ import { notification } from 'antd';
 import axios from 'axios';
 const baseUrl = process.env.REACT_APP_BASE_URL;
 
-const PDF_SprawozdaniePodsumowanie = async (raport, startDate, endDate, Projekt, projectZleceniodawcaMapping) => {
+const PDF_SprawozdaniePodsumowanie = async (raport, startDate, endDate, Projekt, projectZleceniodawcaMapping, returnBytes = false) => {
     // --- Pobierz cennik z backendu ---
     let cennikData = [];
     try {
@@ -344,6 +344,9 @@ const PDF_SprawozdaniePodsumowanie = async (raport, startDate, endDate, Projekt,
         doc.text(`Strona ${i} z ${pageNumber}`, doc.internal.pageSize.getWidth() - 14, bottomYPosition + 15, { align: 'right' });
     }
 
+    if (returnBytes) {
+        return doc.output('arraybuffer');
+    }
     // Zapis pliku PDF
     doc.save("Sprawozdanie_z_dzialalnosci.pdf");
 };

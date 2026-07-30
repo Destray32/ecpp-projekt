@@ -9,7 +9,7 @@ const convertDateFormat = (dateString) => {
   return new Date(`${y}-${m}-${d}`);
 };
 
-const PDF_PracownikAnalizaCzasu = (raport, startDate, endDate, pracownik) => {
+const PDF_PracownikAnalizaCzasu = (raport, startDate, endDate, pracownik, returnBytes = false) => {
   // lista unikalnych ID
   const allIds = Array.from(new Set(raport.map(r => r.PracownikID)));
   const targetIds = pracownik ? [pracownik] : allIds;
@@ -135,6 +135,10 @@ const PDF_PracownikAnalizaCzasu = (raport, startDate, endDate, pracownik) => {
   for (let p = 1; p <= pages; p++) {
     doc.setPage(p);
     doc.text(`Strona ${p} z ${pages}`, pageWidth - 14, bottom + 15, { align: 'right' });
+  }
+
+  if (returnBytes) {
+    return doc.output('arraybuffer');
   }
 
   const fileName = pracownik

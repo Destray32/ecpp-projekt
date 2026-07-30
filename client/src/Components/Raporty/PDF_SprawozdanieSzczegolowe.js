@@ -1,7 +1,7 @@
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
-const PDF_SzczegoloweDzialalnosciPracownikow = (data, startDate, endDate, Projekt, zleceniodawcaMapping) => {
+const PDF_SzczegoloweDzialalnosciPracownikow = async (data, startDate, endDate, Projekt, zleceniodawcaMapping, returnBytes = false) => {
     const doc = new jsPDF('p', 'pt', 'a4');
     
     doc.setFont('OpenSans-Regular');
@@ -171,6 +171,9 @@ const PDF_SzczegoloweDzialalnosciPracownikow = (data, startDate, endDate, Projek
         yPosition += 40;
     }
 
+    if (returnBytes) {
+        return doc.output('arraybuffer');
+    }
     doc.save(`Sprawozdanie_z_dzialalnosci_szczegolowe_${Projekt || 'wszystkie'}.pdf`);
 };
 

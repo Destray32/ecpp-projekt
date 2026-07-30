@@ -7,7 +7,7 @@ import axios from 'axios';
 const baseUrl = process.env.REACT_APP_BASE_URL;
 
 
-const PDF_AnalizaSwiadczenPracowniczych = async (raport, startDate, endDate, pracownik) => {
+const PDF_AnalizaSwiadczenPracowniczych = async (raport, startDate, endDate, pracownik, returnBytes = false) => {
   let cennikData = [];
   try {
     const response = await axios.get(`${baseUrl}/api/cennik`, { withCredentials: true });
@@ -211,6 +211,10 @@ const PDF_AnalizaSwiadczenPracowniczych = async (raport, startDate, endDate, pra
     doc.setFontSize(10);
     doc.setTextColor(50, 50, 50);
     doc.text(`Strona ${p} z ${totalPages}`, pageWidth - 14, bottom + 15, { align: 'right' });
+  }
+
+  if (returnBytes) {
+    return doc.output('arraybuffer');
   }
 
   const fileName = pracownik
