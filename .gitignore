@@ -138,3 +138,4 @@ privkey.pem.*
 server/google-service-account.json
 server/drive-oauth-client.json
 server/drive-oauth-token.json
+mysql_backups/
