@@ -566,7 +566,7 @@ app.put('/api/czas/edytujGrupe/:id', authorizeRole('Administrator', 'Kierownik',
 app.get('/api/czas/materialy/lista', authorizeRole('Administrator'), (req, res) => {
     PobierzMaterialyLista(req, res, pool);
 });
-app.get('/api/czas/materialy/:id', authorizeRole('Administrator'), (req, res) => {
+app.get('/api/czas/materialy/:id', authorizeRole('Administrator', 'Kierownik', 'Biuro'), (req, res) => {
     PobierzMaterialy(req, res, pool);
 });
 app.post('/api/czas/materialy/:id', authorizeRole('Administrator'), (req, res) => {
@@ -574,7 +574,7 @@ app.post('/api/czas/materialy/:id', authorizeRole('Administrator'), (req, res) =
 });
 app.post('/api/czas/materialy/:id/:materialId/pdf', authorizeRole('Administrator'), UploadMaterialPdf(pool));
 app.delete('/api/czas/materialy/:id/:materialId/pdf', authorizeRole('Administrator'), UsunMaterialPdf(pool));
-app.get('/api/czas/materialy/pdf/content/:driveId', authorizeRole('Administrator'), PobierzMaterialPdfContent(pool));
+app.get('/api/czas/materialy/pdf/content/:driveId', authorizeRole('Administrator', 'Kierownik', 'Biuro'), PobierzMaterialPdfContent(pool));
 app.delete('/api/czas/materialy/:id/:materialId', authorizeRole('Administrator'), (req, res) => {
     UsunMaterial(req, res, pool);
 });

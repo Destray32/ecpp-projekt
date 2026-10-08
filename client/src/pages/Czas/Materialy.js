@@ -298,7 +298,8 @@ export default function MateriialyPage() {
             }
         } catch (error) {
             console.error('Blad uploadu PDF:', error);
-            message.error('Nie udalo sie przeslac PDF');
+            const backendError = error.response?.data?.error || error.response?.data?.details;
+            message.error(backendError || 'Nie udało się przesłać pliku PDF', 7);
         } finally {
             setUploadingMaterialId(null);
         }

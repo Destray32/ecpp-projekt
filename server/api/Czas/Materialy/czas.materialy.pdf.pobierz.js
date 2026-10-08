@@ -24,6 +24,29 @@ const buildDriveClient = () => {
     return google.drive({ version: 'v3', auth: oauth2Client });
 };
 
+const fetchPublicDriveFile = async (driveId) => {
+    const urls = [
+        `https://drive.usercontent.google.com/download?id=${driveId}&export=download`,
+        `https://drive.google.com/uc?export=download&id=${driveId}`,
+        `https://docs.google.com/uc?export=download&id=${driveId}`,
+    ];
+
+    for (const url of urls) {
+        try {
+            const resp = await fetch(url, { redirect: 'follow' });
+            if (resp.ok) {
+                const arrayBuffer = await resp.arrayBuffer();
+                if (arrayBuffer.byteLength > 100) {
+                    return Buffer.from(arrayBuffer);
+                }
+            }
+        } catch (e) {
+            // try next URL
+        }
+    }
+    return null;
+};
+
 module.exports = (db) => async (req, res) => {
     const driveId = req.params.driveId;
 
@@ -31,6 +54,7 @@ module.exports = (db) => async (req, res) => {
         return res.status(400).json({ error: 'Brak ID pliku z Google Drive' });
     }
 
+    // 1. Try OAuth Google Drive API
     try {
         const drive = buildDriveClient();
         const response = await drive.files.get(
@@ -42,16 +66,22 @@ module.exports = (db) => async (req, res) => {
         res.setHeader('Cache-Control', 'public, max-age=3600');
         return res.send(Buffer.from(response.data));
     } catch (error) {
-        console.error('Błąd pobierania treści PDF z Google Drive:', error);
-        if (handleOAuthError(error)) {
-            return res.status(401).json({
-                error: 'Autoryzacja Google Drive wygasła lub jest niepoprawna.',
-                details: error.message,
-            });
-        }
-        return res.status(500).json({
-            error: 'Nie udało się pobrać pliku PDF z Google Drive',
-            details: error.message,
-        });
+        console.warn('OAuth Google Drive pobieranie nie powiodło się, próba pobrania bezpośredniego:', error.message);
     }
+
+    // 2. Fallback to direct public Google Drive stream
+    try {
+        const publicBuffer = await fetchPublicDriveFile(driveId);
+        if (publicBuffer) {
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Cache-Control', 'public, max-age=3600');
+            return res.send(publicBuffer);
+        }
+    } catch (fallbackErr) {
+        console.error('Błąd pobierania publicznego PDF z Google Drive:', fallbackErr);
+    }
+
+    return res.status(500).json({
+        error: 'Nie udało się pobrać pliku PDF z Google Drive',
+    });
 };

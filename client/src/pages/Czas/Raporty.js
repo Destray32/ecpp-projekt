@@ -806,6 +806,61 @@ export default function RaportyPage() {
         }
     };
 
+    const autoQueueMaterialsForProjects = async (targetProjectIds, datesLabel) => {
+        if (!Array.isArray(targetProjectIds) || targetProjectIds.length === 0) return;
+
+        const allItems = projektyOptions.flatMap(g => g.items || []);
+        let autoAddedCount = 0;
+
+        for (const projId of targetProjectIds) {
+            const projObj = allItems.find(p => String(p.value) === String(projId));
+            const projName = projObj?.label || `Projekt ${projId}`;
+
+            try {
+                const matRes = await axios.get(`${baseUrl}/api/czas/materialy/${projId}`, { withCredentials: true });
+                const mats = matRes.data?.materialy || [];
+
+                for (const mat of mats) {
+                    let driveId = mat.PdfDriveId || mat.pdf_drive_id || mat.pdfDriveId;
+                    if (!driveId && (mat.PdfDriveLink || mat.pdf_drive_link)) {
+                        const link = mat.PdfDriveLink || mat.pdf_drive_link;
+                        const match = link.match(/\/d\/([a-zA-Z0-9_-]+)/) || link.match(/id=([a-zA-Z0-9_-]+)/);
+                        if (match) driveId = match[1];
+                    }
+
+                    if (!driveId) continue;
+
+                    const matTitle = `[Materiały] Projekt: ${projName} - ${mat.NazwaFaktury || 'Faktura'}`;
+
+                    const alreadyInQueue = getPdfQueue().some(item => item.title === matTitle);
+                    if (alreadyInQueue) continue;
+
+                    try {
+                        const pdfRes = await axios.get(`${baseUrl}/api/czas/materialy/pdf/content/${driveId}`, {
+                            withCredentials: true,
+                            responseType: 'arraybuffer'
+                        });
+                        const matPdfBytes = new Uint8Array(pdfRes.data);
+                        addToPdfQueue(matTitle, datesLabel, matPdfBytes, true);
+                        autoAddedCount++;
+                    } catch (err) {
+                        console.warn(`Nie udało się pobrać treści PDF dla materiału ${mat.id}:`, err);
+                    }
+                }
+            } catch (err) {
+                console.warn(`Nie udało się pobrać materiałów dla projektu ${projId}:`, err);
+            }
+        }
+
+        if (autoAddedCount > 0) {
+            notification.success({
+                message: 'Automatycznie dodano materiały PDF',
+                description: `Do połączonych PDF-ów dodano ${autoAddedCount} ${autoAddedCount === 1 ? 'plik PDF materiału' : 'pliki PDF materiałów'} przypisane do projektu.`,
+                placement: 'topRight',
+            });
+        }
+    };
+
     const handleGenerateReport = () => {
     if (isWysylkaReport) {
         handleGenerateWysylkaReport();
@@ -890,8 +945,13 @@ export default function RaportyPage() {
                 passedEndDate,
                 Projekt,
                 projectZleceniodawcaMapping,
-                projectOrderMap
+                projectOrderMap,
+                false
             );
+            if (Projekt) {
+                const datesLabel = ignorujDatyFirma ? 'Bez zakresu dat' : `${startDate || ''} - ${endDate || ''}`;
+                autoQueueMaterialsForProjects([Projekt], datesLabel);
+            }
             break;
         case "Analiza świadczeń pracowniczych":
             PDF_AnalizaSwiadczenPracowniczych(filteredRaport, passedStartDate, passedEndDate, pracownik);
@@ -969,6 +1029,11 @@ export default function RaportyPage() {
                     projectOrderMap,
                     false
                 );
+                {
+                    const allUniqueProjectIds = [...new Set(filteredRaport.map(entry => entry.ProjektID).filter(Boolean))];
+                    const datesLabelWszystkie = ignorujDatyFirma ? 'Bez zakresu dat' : `${startDate || ''} - ${endDate || ''}`;
+                    autoQueueMaterialsForProjects(allUniqueProjectIds, datesLabelWszystkie);
+                }
                 break;
             default:
                 break;
@@ -1134,44 +1199,7 @@ export default function RaportyPage() {
                     targetProjectIds = [...new Set(filteredRaport.map(entry => entry.ProjektID).filter(Boolean))];
                 }
 
-                const allItems = projektyOptions.flatMap(g => g.items || []);
-                let autoAddedCount = 0;
-
-                for (const projId of targetProjectIds) {
-                    const projObj = allItems.find(p => p.value === projId);
-                    const projName = projObj?.label || `Projekt ${projId}`;
-
-                    try {
-                        const matRes = await axios.get(`${baseUrl}/api/czas/materialy/${projId}`, { withCredentials: true });
-                        const mats = matRes.data?.materialy || [];
-                        const matsWithPdf = mats.filter(m => m.PdfDriveId);
-
-                        for (const mat of matsWithPdf) {
-                            try {
-                                const pdfRes = await axios.get(`${baseUrl}/api/czas/materialy/pdf/content/${mat.PdfDriveId}`, {
-                                    withCredentials: true,
-                                    responseType: 'arraybuffer'
-                                });
-                                const matPdfBytes = new Uint8Array(pdfRes.data);
-                                const matTitle = `[Materiały] Projekt: ${projName} - ${mat.NazwaFaktury || 'Faktura'}`;
-                                addToPdfQueue(matTitle, datesLabel, matPdfBytes);
-                                autoAddedCount++;
-                            } catch (err) {
-                                console.warn(`Nie udało się pobrać treści PDF dla materiału ${mat.id}:`, err);
-                            }
-                        }
-                    } catch (err) {
-                        console.warn(`Nie udało się pobrać materiałów dla projektu ${projId}:`, err);
-                    }
-                }
-
-                if (autoAddedCount > 0) {
-                    notification.success({
-                        message: 'Automatycznie dodano materiały PDF',
-                        description: `Do kolejki łączenia dodano ${autoAddedCount} ${autoAddedCount === 1 ? 'plik PDF materiału' : 'pliki PDF materiałów'} przypisane do projektów.`,
-                        placement: 'topRight',
-                    });
-                }
+                await autoQueueMaterialsForProjects(targetProjectIds, datesLabel);
             }
         }
     };

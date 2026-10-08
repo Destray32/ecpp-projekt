@@ -64,7 +64,7 @@ const savePdfQueue = (queue) => {
 /**
  * Add PDF arrayBuffer to queue
  */
-export const addToPdfQueue = (title, subtitle, arrayBuffer) => {
+export const addToPdfQueue = (title, subtitle, arrayBuffer, silent = false) => {
     try {
         const queue = getPdfQueue();
         const base64 = arrayBufferToBase64(arrayBuffer);
@@ -77,11 +77,13 @@ export const addToPdfQueue = (title, subtitle, arrayBuffer) => {
         };
         queue.push(newItem);
         savePdfQueue(queue);
-        notification.success({
-            message: 'Dodano do kolejki PDF',
-            description: `Raport "${title}" został dodany do zbiorczego PDF (Pozycji w kolejce: ${queue.length}).`,
-            placement: 'topRight',
-        });
+        if (!silent) {
+            notification.success({
+                message: 'Dodano do kolejki PDF',
+                description: `Raport "${title}" został dodany do zbiorczego PDF (Pozycji w kolejce: ${queue.length}).`,
+                placement: 'topRight',
+            });
+        }
         return queue;
     } catch (err) {
         console.error('Błąd dodawania do kolejki PDF:', err);

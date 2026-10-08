@@ -129,14 +129,14 @@ module.exports = (db) => [
             );
         } catch (error) {
             console.error('Blad uploadu PDF:', error);
-            if (handleOAuthError(error)) {
+            if (handleOAuthError(error) || error.message?.includes('Brak tokenu OAuth')) {
                 return res.status(401).json({
-                    error: 'Autoryzacja Google Drive wygasła lub jest niepoprawna. Zaloguj się ponownie przechodząc na /api/drive/oauth/start',
+                    error: 'Wymagana autoryzacja Google Drive. Wejdź w nowej karcie na /api/drive/oauth/start aby zalogować dysk Google.',
                     details: error.message,
                 });
             }
             return res.status(500).json({
-                error: 'Nie udalo sie przeslac PDF do Google Drive',
+                error: 'Nie udalo sie przeslac PDF do Google Drive: ' + (error.message || ''),
                 details: error.message,
             });
         }
