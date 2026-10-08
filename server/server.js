@@ -15,13 +15,13 @@ const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const CERT = '/etc/letsencrypt/live/qubis.pl-0001/fullchain.pem';
-const KEY  = '/etc/letsencrypt/live/qubis.pl-0001/privkey.pem';
+const KEY = '/etc/letsencrypt/live/qubis.pl-0001/privkey.pem';
 
 function loadTLS() {
-  return {
-    cert: fs.readFileSync(CERT),
-    key: fs.readFileSync(KEY),
-  };
+    return {
+        cert: fs.readFileSync(CERT),
+        key: fs.readFileSync(KEY),
+    };
 }
 
 // CZAS > PROJEKTY //no-index headers for all responses
@@ -97,7 +97,7 @@ const specialUsers = ['Jarosław Pajor', 'Paweł Wójtowicz', 'Małgorzata Tylic
 
 const hasSpecialAccess = (user, feature) => {
     const userFullName = `${user.name} ${user.surname}`;
-    switch(feature) {
+    switch (feature) {
         case 'urlopy':
             return ['Jarosław Pajor', 'Paweł Wójtowicz'].includes(userFullName);
         case 'projekty':
@@ -114,7 +114,7 @@ const hasSpecialAccess = (user, feature) => {
 const authorizeRole = (...roles) => {
     return (req, res, next) => {
         if (req.user && (
-            roles.includes(req.user.role) || 
+            roles.includes(req.user.role) ||
             roles.some(role => {
                 if (role === 'urlopy') return hasSpecialAccess(req.user, 'urlopy');
                 if (role === 'projekty') return hasSpecialAccess(req.user, 'projekty');
@@ -497,7 +497,7 @@ app.get('/api/planTygodnia/drukuj', (req, res) => {
     DrukujGrupe(req, res, pool);
 });
 
-app.put('/api/planTygodnia/:employeeId', authorizeRole('Administrator'), (req, res ) => {
+app.put('/api/planTygodnia/:employeeId', authorizeRole('Administrator'), (req, res) => {
     AktualizujM1_5(req, res, pool);
 });
 /////////////////////////////////////////
@@ -566,7 +566,7 @@ app.put('/api/czas/edytujGrupe/:id', authorizeRole('Administrator', 'Kierownik',
 app.get('/api/czas/materialy/lista', authorizeRole('Administrator'), (req, res) => {
     PobierzMaterialyLista(req, res, pool);
 });
-app.get('/api/czas/materialy/:id', authorizeRole('Administrator', 'Kierownik', 'Biuro'), (req, res) => {
+app.get('/api/czas/materialy/:id', authorizeRole('Administrator'), (req, res) => {
     PobierzMaterialy(req, res, pool);
 });
 app.post('/api/czas/materialy/:id', authorizeRole('Administrator'), (req, res) => {
@@ -574,7 +574,7 @@ app.post('/api/czas/materialy/:id', authorizeRole('Administrator'), (req, res) =
 });
 app.post('/api/czas/materialy/:id/:materialId/pdf', authorizeRole('Administrator'), UploadMaterialPdf(pool));
 app.delete('/api/czas/materialy/:id/:materialId/pdf', authorizeRole('Administrator'), UsunMaterialPdf(pool));
-app.get('/api/czas/materialy/pdf/content/:driveId', authorizeRole('Administrator', 'Kierownik', 'Biuro'), PobierzMaterialPdfContent(pool));
+app.get('/api/czas/materialy/pdf/content/:driveId', authorizeRole('Administrator'), PobierzMaterialPdfContent(pool));
 app.delete('/api/czas/materialy/:id/:materialId', authorizeRole('Administrator'), (req, res) => {
     UsunMaterial(req, res, pool);
 });
@@ -585,7 +585,7 @@ app.route('/api/rozliczenia')
     .get((req, res) => {
         PobierzRozliczenia(req, res, pool);
     })
-    .post((req, res) => { 
+    .post((req, res) => {
         ZapiszRozliczenia(req, res, pool);
     });
 
@@ -640,12 +640,12 @@ app.delete('/api/tydzien', (req, res) => {
     ZamknijTydzienCzas(req, res, pool);
 });
 
-    // app.post((req, res) => {
-    //     OtworzTydzienCzas(req, res);
-    // })
-    // .delete((req, res) => {
-    //     ZamknijTydzienCzas(req, res);
-    // });
+// app.post((req, res) => {
+//     OtworzTydzienCzas(req, res);
+// })
+// .delete((req, res) => {
+//     ZamknijTydzienCzas(req, res);
+// });
 /////////////////////////////////////////
 
 // CZAS > POJAZDY //
@@ -690,7 +690,7 @@ app.get('/api/generujRaport', (req, res) => {
 app.route('/api/ogloszenia')
     .get((req, res) => {
         PobierzOgloszenia(req, res);
-        
+
     })
     .post((req, res) => {
         DodajOgloszenie(req, res);

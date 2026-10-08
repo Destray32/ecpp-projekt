@@ -172,6 +172,7 @@ const Kapownik = () => {
                 urlopZaleglyOtherMonthsTotal: extra.urlopZaleglyOtherMonthsTotal || 0,
                 yearlyZaleglyPula: extra.yearlyZaleglyPula || 0,
                 urlopPulaInput: d.Urlop_zalegly_pula || item.Urlop_zalegly_pula || 0,
+                mieszkanie: d.Mieszkanie || item.Mieszkanie || 0,
                 urlop: parseJsonValue(d.Urlop, item.Urlop || []),
                 urlopZalegly: parseJsonValue(d.Urlop_zalegly, item.Urlop_zalegly || []),
                 l4: parseJsonValue(d.L4, item.L4 || {}),
@@ -179,7 +180,9 @@ const Kapownik = () => {
                 vab: parseJsonValue(d.VAB, item.VAB || {}),
                 pappaledi: parseJsonValue(d.Pappaledi, item.Pappaledi || {}),
                 nadgodzinyNaKolejny: d.Nadgodziny_na_kolejny || item.Nadgodziny_na_kolejny || 0,
-                email: item.Email || item.email || ''
+                email: d.Email || item.Email || item.email || '',
+                nrKonta: d.Nr_konta || item.Nr_konta || '',
+                kontoTyp: d.Konto_typ || item.Konto_typ || 'PL'
             };
 
             const filename = `Rozliczenie_${item.Imie}_${item.Nazwisko}_${miesiacRok}.pdf`;
@@ -241,6 +244,7 @@ const Kapownik = () => {
                     urlopZaleglyOtherMonthsTotal: extra.urlopZaleglyOtherMonthsTotal || 0,
                     yearlyZaleglyPula: extra.yearlyZaleglyPula || 0,
                     urlopPulaInput: d.Urlop_zalegly_pula || item.Urlop_zalegly_pula || 0,
+                    mieszkanie: d.Mieszkanie || item.Mieszkanie || 0,
                     urlop: parseJsonValue(d.Urlop, item.Urlop || []),
                     urlopZalegly: parseJsonValue(d.Urlop_zalegly, item.Urlop_zalegly || []),
                     l4: parseJsonValue(d.L4, item.L4 || {}),
@@ -248,7 +252,9 @@ const Kapownik = () => {
                     vab: parseJsonValue(d.VAB, item.VAB || {}),
                     pappaledi: parseJsonValue(d.Pappaledi, item.Pappaledi || {}),
                     nadgodzinyNaKolejny: d.Nadgodziny_na_kolejny || item.Nadgodziny_na_kolejny || 0,
-                    email: item.Email || item.email || ''
+                    email: d.Email || item.Email || item.email || '',
+                    nrKonta: d.Nr_konta || item.Nr_konta || '',
+                    kontoTyp: d.Konto_typ || item.Konto_typ || 'PL'
                 });
             }
             await downloadRozliczeniePDF(sheets, `Rozliczenia_Zaznaczeni_${miesiacRok}.pdf`);
@@ -288,7 +294,7 @@ const Kapownik = () => {
                     urlopOtherMonthsTotal: extra.urlopOtherMonthsTotal || 0,
                     urlopZaleglyOtherMonthsTotal: extra.urlopZaleglyOtherMonthsTotal || 0,
                     yearlyZaleglyPula: extra.yearlyZaleglyPula || 0,
-                    urlopPulaInput: d.Urlop_zalegly_pula || item.Urlop_zalegly_pula || 0,
+                    mieszkanie: d.Mieszkanie || item.Mieszkanie || 0,
                     urlop: parseJsonValue(d.Urlop, item.Urlop || []),
                     urlopZalegly: parseJsonValue(d.Urlop_zalegly, item.Urlop_zalegly || []),
                     l4: parseJsonValue(d.L4, item.L4 || {}),
@@ -296,7 +302,9 @@ const Kapownik = () => {
                     vab: parseJsonValue(d.VAB, item.VAB || {}),
                     pappaledi: parseJsonValue(d.Pappaledi, item.Pappaledi || {}),
                     nadgodzinyNaKolejny: d.Nadgodziny_na_kolejny || item.Nadgodziny_na_kolejny || 0,
-                    email: item.Email || item.email || ''
+                    email: d.Email || item.Email || item.email || '',
+                    nrKonta: d.Nr_konta || item.Nr_konta || '',
+                    kontoTyp: d.Konto_typ || item.Konto_typ || 'PL'
                 });
             }
             await downloadRozliczeniePDF(sheets, `Rozliczenia_Wszyscy_${miesiacRok}.pdf`);
@@ -472,9 +480,16 @@ const Kapownik = () => {
                                             {/* Status */}
                                             <td className="p-3">
                                                 {item.idRozliczenia ? (
-                                                    <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-green-100 text-green-800">
-                                                        ZAPISANE
-                                                    </span>
+                                                    <div className="flex flex-col gap-1 items-start">
+                                                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-green-100 text-green-800">
+                                                            ZAPISANE
+                                                        </span>
+                                                        {Boolean(item.Zapisal_admin) && (
+                                                            <span className="px-1.5 py-0.2 rounded text-[8px] font-extrabold bg-blue-100 text-blue-800" title="Zapisane i zablokowane przez Administratora">
+                                                                🔒 ADMIN
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 ) : (
                                                     <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-yellow-100 text-yellow-800">
                                                         SZKIC

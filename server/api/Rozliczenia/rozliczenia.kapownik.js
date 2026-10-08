@@ -56,7 +56,12 @@ function PobierzKapownik(req, res, db) {
             rm.L4 AS L4,
             rm.L4cd AS L4cd,
             rm.VAB AS VAB,
-            rm.Pappaledi AS Pappaledi
+            rm.Pappaledi AS Pappaledi,
+            rm.Mieszkanie AS Mieszkanie,
+            rm.Zapisal_admin AS Zapisal_admin,
+            rm.Email AS Email,
+            rm.Nr_konta AS Nr_konta,
+            rm.Konto_typ AS Konto_typ
         FROM pracownik p
         JOIN dane_osobowe do ON p.FK_Dane_osobowe = do.idDane_osobowe
         LEFT JOIN rozliczenia_miesieczne rm ON p.idPracownik = rm.Pracownik_idPracownik AND rm.Miesiac_rok = ?
@@ -97,6 +102,11 @@ function PobierzKapownik(req, res, db) {
                 Czerwone_dni: row.Czerwone_dni !== null ? Number(row.Czerwone_dni) : 0,
                 Status: row.Status || 'szkic',
                 Mozliwe_godziny: (row.Mozliwe_godziny !== null && row.Mozliwe_godziny !== undefined) ? Number(row.Mozliwe_godziny) : '',
+                Mieszkanie: row.Mieszkanie !== null ? Number(row.Mieszkanie) : 0,
+                Zapisal_admin: Number(row.Zapisal_admin) || 0,
+                Email: row.Email || '',
+                Nr_konta: row.Nr_konta || '',
+                Konto_typ: row.Konto_typ || 'PL',
                 Urlop: parseJsonValue(row.Urlop, []),
                 Urlop_zalegly: parseJsonValue(row.Urlop_zalegly, []),
                 L4: parseJsonValue(row.L4, { from: '', to: '' }),

@@ -18,10 +18,16 @@ const RozliczeniaMiesieczne = () => {
         Nadgodziny_z_poprzedniego: 0,
         Nadgodziny_na_kolejny: 0,
         Atf_wykorzystane: 0,
+        Atf_zielone: 0,
         Czerwone_dni: 0,
         Urlop_zalegly_pula: 0,
         Nadgodziny_stawka: '',
         Nadgodziny_unlocked: 0,
+        Mieszkanie: 0,
+        Email: '',
+        Nr_konta: '',
+        Konto_typ: 'PL',
+        Zapisal_admin: 0,
         Urlop: [],
         Urlop_zalegly: [],
         L4: { from: '', to: '' },
@@ -32,6 +38,7 @@ const RozliczeniaMiesieczne = () => {
 
     const [isDraft, setIsDraft] = useState(true);
     const [isLoading, setIsLoading] = useState(false);
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const [message, setMessage] = useState({ text: '', type: '' });
     const [carryoverHours, setCarryoverHours] = useState(0);
     const [atfOtherMonthsTotal, setAtfOtherMonthsTotal] = useState(0);
@@ -42,6 +49,18 @@ const RozliczeniaMiesieczne = () => {
     const [yearlyZaleglyPula, setYearlyZaleglyPula] = useState(0);
 
     const location = useLocation();
+
+    // Ostrzeżenie przed zamknięciem lub odświeżeniem karty przy niezapisanych zmianach
+    useEffect(() => {
+        const handleBeforeUnload = (e) => {
+            if (hasUnsavedChanges) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [hasUnsavedChanges]);
 
     // 1. Weryfikacja użytkownika i pobranie listy pracowników
     useEffect(() => {
@@ -186,11 +205,14 @@ const RozliczeniaMiesieczne = () => {
             }
 
             nextEntries[index] = nextEntry;
+            setHasUnsavedChanges(true);
             return { ...prev, [field]: nextEntries };
         });
     };
 
     const addLeaveEntry = (field) => {
+        if (isLockedForUser) return;
+        setHasUnsavedChanges(true);
         setRozliczenie((prev) => ({
             ...prev,
             [field]: [...prev[field], { from: '', to: '', days: '' }]
@@ -198,6 +220,8 @@ const RozliczeniaMiesieczne = () => {
     };
 
     const removeLeaveEntry = (field, index) => {
+        if (isLockedForUser) return;
+        setHasUnsavedChanges(true);
         setRozliczenie((prev) => ({
             ...prev,
             [field]: prev[field].filter((_, i) => i !== index)
@@ -205,6 +229,8 @@ const RozliczeniaMiesieczne = () => {
     };
 
     const updateRangeField = (field, key, value) => {
+        if (isLockedForUser) return;
+        setHasUnsavedChanges(true);
         setRozliczenie((prev) => ({
             ...prev,
             [field]: { ...prev[field], [key]: value }
@@ -224,6 +250,10 @@ const RozliczeniaMiesieczne = () => {
 
     const shiftMonth = (offset) => {
         if (!miesiacRok) return;
+        if (hasUnsavedChanges) {
+            const confirmLeave = window.confirm('Masz niezapisane zmiany w tym miesiącu. Czy na pewno chcesz opuścić formularz bez zapisywania?');
+            if (!confirmLeave) return;
+        }
         const [yearPart, monthPart] = miesiacRok.split('-').map(Number);
         if (!yearPart || !monthPart) return;
         const date = new Date(yearPart, monthPart - 1, 1);
@@ -257,10 +287,16 @@ const RozliczeniaMiesieczne = () => {
                         Nadgodziny_z_poprzedniego: result.data.Nadgodziny_z_poprzedniego || 0,
                         Nadgodziny_na_kolejny: result.data.Nadgodziny_na_kolejny || 0,
                         Atf_wykorzystane: result.data.Atf_wykorzystane || 0,
+                        Atf_zielone: result.data.Atf_zielone || 0,
                         Czerwone_dni: result.data.Czerwone_dni || 0,
                         Urlop_zalegly_pula: result.data.Urlop_zalegly_pula || result.yearlyZaleglyPula || 0,
                         Nadgodziny_stawka: result.data.Nadgodziny_stawka || '',
                         Nadgodziny_unlocked: result.data.Nadgodziny_unlocked || 0,
+                        Mieszkanie: result.data.Mieszkanie || 0,
+                        Email: result.data.Email || '',
+                        Nr_konta: result.data.Nr_konta || '',
+                        Konto_typ: result.data.Konto_typ || 'PL',
+                        Zapisal_admin: Number(result.data.Zapisal_admin) || 0,
                         Urlop: normalizeLeaveEntries(parseJsonValue(result.data.Urlop, [])),
                         Urlop_zalegly: normalizeLeaveEntries(parseJsonValue(result.data.Urlop_zalegly, [])),
                         L4: normalizeRange(parseJsonValue(result.data.L4, {})),
@@ -269,6 +305,7 @@ const RozliczeniaMiesieczne = () => {
                         Pappaledi: normalizeRange(parseJsonValue(result.data.Pappaledi, {}))
                     });
                     setIsDraft(result.isDraft);
+                    setHasUnsavedChanges(false);
                     setAtfOtherMonthsTotal(result.atfOtherMonthsTotal || 0);
                     setUrlopOtherMonthsTotal(result.urlopOtherMonthsTotal || 0);
                     setUrlopZaleglyOtherMonthsTotal(result.urlopZaleglyOtherMonthsTotal || 0);
@@ -315,14 +352,22 @@ const RozliczeniaMiesieczne = () => {
             .catch(() => setCarryoverHours(0));
     }, [selectedPracownik, miesiacRok]);
 
+    const isLockedForUser = Boolean(rozliczenie.Zapisal_admin) && !['Administrator', 'Kierownik', 'Biuro'].includes(userAccountType);
+
     const handleInputChange = (e) => {
+        if (isLockedForUser) return;
         const { name, value, type, checked } = e.target;
         const val = type === 'checkbox' ? (checked ? 1 : 0) : value;
         setRozliczenie(prev => ({ ...prev, [name]: val }));
+        setHasUnsavedChanges(true);
     };
 
     const handleSave = (e) => {
         e.preventDefault();
+        if (isLockedForUser) {
+            setMessage({ text: 'Rozliczenie zostało zablokowane przez administratora i nie może być modyfikowane.', type: 'error' });
+            return;
+        }
         setIsLoading(true);
 
         const l4Days = getRangeDays(rozliczenie.L4);
@@ -353,6 +398,7 @@ const RozliczeniaMiesieczne = () => {
             Pracownik_idPracownik: selectedPracownik,
             Miesiac_rok: miesiacRok,
             ...rozliczenie,
+            userAccountType: userAccountType,
             Urlop: JSON.stringify(rozliczenie.Urlop || []),
             Urlop_zalegly: JSON.stringify(rozliczenie.Urlop_zalegly || []),
             L4: JSON.stringify(rozliczenie.L4 || { from: '', to: '' }),
@@ -367,9 +413,13 @@ const RozliczeniaMiesieczne = () => {
                 if (data.message) {
                     setMessage({ text: 'Zapisano pomyślnie!', type: 'success' });
                     setIsDraft(false);
+                    setHasUnsavedChanges(false);
                 }
             })
-            .catch(err => setMessage({ text: 'Błąd zapisu.', type: 'error' }))
+            .catch(err => {
+                const errMsg = err.response?.data?.error || 'Błąd zapisu.';
+                setMessage({ text: errMsg, type: 'error' });
+            })
             .finally(() => setIsLoading(false));
     };
 
@@ -392,6 +442,7 @@ const RozliczeniaMiesieczne = () => {
             urlopZaleglyOtherMonthsTotal: urlopZaleglyOtherMonthsTotal,
             yearlyZaleglyPula: yearlyZaleglyPula,
             urlopPulaInput: rozliczenie.Urlop_zalegly_pula,
+            mieszkanie: rozliczenie.Mieszkanie || 0,
             urlop: rozliczenie.Urlop,
             urlopZalegly: rozliczenie.Urlop_zalegly,
             l4: rozliczenie.L4,
@@ -399,7 +450,9 @@ const RozliczeniaMiesieczne = () => {
             vab: rozliczenie.VAB,
             pappaledi: rozliczenie.Pappaledi,
             nadgodzinyNaKolejny: rozliczenie.Nadgodziny_na_kolejny,
-            email: ''
+            email: rozliczenie.Email || '',
+            nrKonta: rozliczenie.Nr_konta || '',
+            kontoTyp: rozliczenie.Konto_typ || 'PL'
         };
 
         const filename = `Rozliczenie_${name.replace(/\s+/g, '_')}_${miesiacRok}.pdf`;
@@ -432,6 +485,7 @@ const RozliczeniaMiesieczne = () => {
                         urlopZaleglyOtherMonthsTotal: res.data.urlopZaleglyOtherMonthsTotal || 0,
                         yearlyZaleglyPula: res.data.yearlyZaleglyPula || 0,
                         urlopPulaInput: d.Urlop_zalegly_pula || 0,
+                        mieszkanie: d.Mieszkanie || 0,
                         urlop: parseJsonValue(d.Urlop, []),
                         urlopZalegly: parseJsonValue(d.Urlop_zalegly, []),
                         l4: parseJsonValue(d.L4, {}),
@@ -439,7 +493,9 @@ const RozliczeniaMiesieczne = () => {
                         vab: parseJsonValue(d.VAB, {}),
                         pappaledi: parseJsonValue(d.Pappaledi, {}),
                         nadgodzinyNaKolejny: d.Nadgodziny_na_kolejny || 0,
-                        email: ''
+                        email: d.Email || '',
+                        nrKonta: d.Nr_konta || '',
+                        kontoTyp: d.Konto_typ || 'PL'
                     });
                 }
             }
@@ -460,7 +516,13 @@ const RozliczeniaMiesieczne = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-1">Pracownik</label>
                     <select
                         value={selectedPracownik}
-                        onChange={(e) => setSelectedPracownik(e.target.value)}
+                        onChange={(e) => {
+                            if (hasUnsavedChanges) {
+                                const confirmLeave = window.confirm('Masz niezapisane zmiany dla obecnego pracownika. Czy na pewno chcesz zmienić pracownika bez zapisywania?');
+                                if (!confirmLeave) return;
+                            }
+                            setSelectedPracownik(e.target.value);
+                        }}
                         disabled={pracownicy.length <= 1}
                         className={`w-full border border-gray-300 rounded p-2 ${pracownicy.length <= 1 ? 'bg-gray-100 cursor-not-allowed font-semibold' : 'bg-white'}`}
                     >
@@ -483,7 +545,13 @@ const RozliczeniaMiesieczne = () => {
                         <input
                             type="month"
                             value={miesiacRok}
-                            onChange={(e) => setMiesiacRok(e.target.value)}
+                            onChange={(e) => {
+                                if (hasUnsavedChanges) {
+                                    const confirmLeave = window.confirm('Masz niezapisane zmiany w tym miesiącu. Czy na pewno chcesz zmienić miesiąc bez zapisywania?');
+                                    if (!confirmLeave) return;
+                                }
+                                setMiesiacRok(e.target.value);
+                            }}
                             className="w-full border border-gray-300 rounded p-2"
                         />
                         <button
@@ -511,12 +579,75 @@ const RozliczeniaMiesieczne = () => {
                     </div>
                 )}
 
-                <div className="flex justify-between items-center mb-6 pb-4 border-b">
+                {/* Ostrzeżenie o blokadzie przez administratora */}
+                {isLockedForUser && (
+                    <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-900 rounded shadow-sm flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <span className="text-2xl">🔒</span>
+                            <div>
+                                <h4 className="font-bold text-sm">Rozliczenie zablokowane przez Administratora</h4>
+                                <p className="text-xs text-red-700 mt-0.5">
+                                    Dane za ten miesiąc zostały uzupełnione i zatwierdzone przez administratora. Formularz jest w trybie tylko do odczytu.
+                                </p>
+                            </div>
+                        </div>
+                        <span className="text-xs font-bold bg-red-200 text-red-800 px-3 py-1 rounded-full uppercase tracking-wider">
+                            Tylko podgląd
+                        </span>
+                    </div>
+                )}
+
+                <div className="flex flex-wrap justify-between items-center mb-6 pb-4 border-b gap-3">
                     <h3 className="text-lg font-semibold text-gray-700">Szczegóły: {miesiacRok}</h3>
-                    <span className={`px-3 py-1 rounded-full text-sm font-semibold ${isDraft ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'}`}>
-                        {isDraft ? 'Szkic (niezapisany)' : 'Zapisane w bazie'}
-                    </span>
+                    <div className="flex flex-wrap items-center gap-2">
+                        {Boolean(rozliczenie.Zapisal_admin) && (
+                            <span className="px-3 py-1 rounded-full text-xs font-bold bg-indigo-100 text-indigo-800 flex items-center gap-1 shadow-sm">
+                                🔒 Zapisane przez Administratora
+                            </span>
+                        )}
+                        {['Administrator', 'Kierownik', 'Biuro'].includes(userAccountType) && (
+                            <label className="flex items-center gap-2 text-xs font-bold text-indigo-900 bg-indigo-50 border border-indigo-200 px-3 py-1 rounded cursor-pointer hover:bg-indigo-100 transition shadow-sm">
+                                <input
+                                    type="checkbox"
+                                    name="Zapisal_admin"
+                                    checked={Boolean(rozliczenie.Zapisal_admin)}
+                                    onChange={(e) => {
+                                        setRozliczenie(prev => ({ ...prev, Zapisal_admin: e.target.checked ? 1 : 0 }));
+                                        setHasUnsavedChanges(true);
+                                    }}
+                                    className="w-3.5 h-3.5 text-indigo-600 rounded"
+                                />
+                                <span>Zablokuj dla pracownika</span>
+                            </label>
+                        )}
+                        {hasUnsavedChanges && (
+                            <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-500 text-white animate-pulse flex items-center gap-1 shadow-sm">
+                                ⚠️ Niezapisane zmiany
+                            </span>
+                        )}
+                        <span className={`px-3 py-1 rounded-full text-sm font-semibold ${isDraft ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'}`}>
+                            {isDraft ? 'Szkic (niezapisany)' : 'Zapisane w bazie'}
+                        </span>
+                    </div>
                 </div>
+
+                {hasUnsavedChanges && (
+                    <div className="mb-6 p-3 bg-amber-50 border-l-4 border-amber-500 text-amber-900 rounded flex items-center justify-between text-sm shadow-sm">
+                        <div className="flex items-center gap-2">
+                            <span className="text-lg">⚠️</span>
+                            <div>
+                                <span className="font-bold">Masz niezapisane zmiany!</span>
+                                <span className="text-amber-700 ml-1 text-xs">Pamiętaj, aby zapisać rozliczenie przed opuszczeniem formularza.</span>
+                            </div>
+                        </div>
+                        <button
+                            type="submit"
+                            className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-3 py-1.5 rounded transition shadow"
+                        >
+                            Zapisz teraz
+                        </button>
+                    </div>
+                )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-4">
@@ -536,68 +667,134 @@ const RozliczeniaMiesieczne = () => {
                                 name="Mozliwe_godziny"
                                 value={rozliczenie.Mozliwe_godziny}
                                 onChange={handleInputChange}
+                                disabled={isLockedForUser}
                                 placeholder="puste"
-                                className="mt-1 w-full border border-gray-300 rounded p-2 focus:ring-blue-500 focus:border-blue-500 font-semibold"
+                                className={`mt-1 w-full border rounded p-2 font-semibold ${isLockedForUser ? 'bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200' : 'border-gray-300 focus:ring-blue-500'}`}
                             />
                             <p className="text-xs text-gray-500 mt-1">Wpisywane recznie lub przez administratora w widoku zbiorczym.</p>
                         </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Nadgodziny (do wypłaty)</label>
-                            <input type="number" step="0.5" name="Nadgodziny_wyplata" value={rozliczenie.Nadgodziny_wyplata} onChange={handleInputChange} className="mt-1 w-full border border-gray-300 rounded p-2 focus:ring-blue-500 focus:border-blue-500 font-semibold" />
-                        </div>
-
-                        {/* Stawki / dodatki nadgodzin pod pracownikiem */}
-                        <div className="bg-gray-50 p-3 rounded border border-gray-200 space-y-1">
+                        {/* Stawki / dodatki nadgodzin pod pracownikiem z gotowymi przyciskami */}
+                        <div className="bg-gray-50 p-3 rounded border border-gray-200 space-y-2">
                             <label className="block text-xs font-bold text-gray-700 uppercase">Stawka / dodatki</label>
+                            <div className="flex flex-wrap items-center gap-2">
+                                {['100%', '100% + 10kr', '88%'].map((stawka) => (
+                                    <button
+                                        key={stawka}
+                                        type="button"
+                                        disabled={isLockedForUser}
+                                        onClick={() => {
+                                            if (isLockedForUser) return;
+                                            setRozliczenie(prev => ({ ...prev, Nadgodziny_stawka: stawka }));
+                                            setHasUnsavedChanges(true);
+                                        }}
+                                        className={`px-3 py-1 text-xs font-bold rounded border transition ${
+                                            rozliczenie.Nadgodziny_stawka === stawka
+                                                ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                                                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+                                        } ${isLockedForUser ? 'cursor-not-allowed opacity-70' : ''}`}
+                                    >
+                                        {stawka}
+                                    </button>
+                                ))}
+                            </div>
                             <input
                                 type="text"
                                 name="Nadgodziny_stawka"
                                 value={rozliczenie.Nadgodziny_stawka || ''}
                                 onChange={handleInputChange}
-                                placeholder="np. 100% + 10kr"
-                                className="w-full border border-gray-300 rounded p-2 text-sm bg-white font-semibold focus:ring-blue-500 focus:border-blue-500"
+                                disabled={isLockedForUser}
+                                placeholder="Wybierz gotową powyżej lub wpisz ręcznie (np. 100% + 10kr)"
+                                className={`w-full border rounded p-2 text-sm font-semibold ${isLockedForUser ? 'bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200' : 'bg-white border-gray-300 focus:ring-blue-500'}`}
                             />
                         </div>
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700">Z banku godzin z poprzedniego miesiąca</label>
-                            <input type="number" step="0.5" name="Nadgodziny_z_poprzedniego" value={rozliczenie.Nadgodziny_z_poprzedniego} onChange={handleInputChange} className="mt-1 w-full border border-gray-300 rounded p-2 focus:ring-blue-500" />
+                            <input
+                                type="number"
+                                step="0.5"
+                                name="Nadgodziny_z_poprzedniego"
+                                value={rozliczenie.Nadgodziny_z_poprzedniego}
+                                onChange={handleInputChange}
+                                disabled={isLockedForUser}
+                                className={`mt-1 w-full border rounded p-2 ${isLockedForUser ? 'bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200' : 'border-gray-300 focus:ring-blue-500'}`}
+                            />
                             <p className="text-xs text-gray-500 mt-1">Automatycznie trafiły z banku godzin z poprzedniego miesiąca: {carryoverHours} h</p>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Odjąć za mieszkanie</label>
+                            <input
+                                type="number"
+                                step="100"
+                                name="Mieszkanie"
+                                value={rozliczenie.Mieszkanie !== undefined && rozliczenie.Mieszkanie !== null && rozliczenie.Mieszkanie !== 0 ? rozliczenie.Mieszkanie : ''}
+                                onChange={handleInputChange}
+                                disabled={isLockedForUser}
+                                placeholder="np. 3000"
+                                className={`mt-1 w-full border rounded p-2 font-semibold ${isLockedForUser ? 'bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200' : 'border-gray-300 focus:ring-blue-500'}`}
+                            />
                         </div>
                     </div>
 
                     <div className="space-y-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 text-red-600">Czerwone dni (ilość)</label>
-                            <input type="number" name="Czerwone_dni" value={rozliczenie.Czerwone_dni} onChange={handleInputChange} className="mt-1 w-full border border-red-300 rounded p-2 focus:ring-red-500" />
+                            <input
+                                type="number"
+                                name="Czerwone_dni"
+                                value={rozliczenie.Czerwone_dni}
+                                onChange={handleInputChange}
+                                disabled={isLockedForUser}
+                                className={`mt-1 w-full border rounded p-2 ${isLockedForUser ? 'bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200' : 'border-red-300 focus:ring-red-500'}`}
+                            />
                         </div>
 
+                        {/* ATF */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">ATF (wybrane w tym miesiącu)</label>
-                            <input type="number" step="0.5" name="Atf_wykorzystane" value={rozliczenie.Atf_wykorzystane} onChange={handleInputChange} className="mt-1 w-full border border-gray-300 rounded p-2 focus:ring-blue-500 focus:border-blue-500" />
-                            <p className="text-xs text-gray-500 mt-1">Ilość wykorzystanych godzin w wybranym miesiącu</p>
-
-                            {/* Wskaźnik rocznego limitu ATF */}
-                            {miesiacRok && (
-                                <div className={`mt-2 p-2 rounded border text-xs flex justify-between items-center transition-colors ${(atfOtherMonthsTotal + (Number(rozliczenie.Atf_wykorzystane) || 0)) > 40
-                                        ? 'bg-red-50 border-red-200 text-red-800'
-                                        : 'bg-blue-50 border-blue-200 text-blue-800'
-                                    }`}>
-                                    <span>Pozostało w roku ({miesiacRok.slice(0, 4)}):</span>
-                                    <span className="font-bold">
-                                        {Math.max(40 - (atfOtherMonthsTotal + (Number(rozliczenie.Atf_wykorzystane) || 0)), 0)} h
-                                        ({(Math.max(40 - (atfOtherMonthsTotal + (Number(rozliczenie.Atf_wykorzystane) || 0)), 0) / 8).toFixed(1)} dni) ATF
-                                        {(atfOtherMonthsTotal + (Number(rozliczenie.Atf_wykorzystane) || 0)) > 40 && ' (Przekroczono limit!)'}
-                                    </span>
+                            <div className="grid grid-cols-2 gap-3 items-end">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">ATF</label>
+                                    <input
+                                        type="number"
+                                        step="0.5"
+                                        name="Atf_wykorzystane"
+                                        value={rozliczenie.Atf_wykorzystane !== undefined && rozliczenie.Atf_wykorzystane !== null && rozliczenie.Atf_wykorzystane !== 0 ? rozliczenie.Atf_wykorzystane : ''}
+                                        onChange={handleInputChange}
+                                        disabled={isLockedForUser}
+                                        placeholder="0"
+                                        className={`w-full border rounded p-2 font-semibold text-sm ${isLockedForUser ? 'bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200' : 'border-gray-300 focus:ring-blue-500'}`}
+                                    />
                                 </div>
-                            )}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Pozostało:</label>
+                                    <div className="w-full border border-yellow-300 bg-yellow-50 rounded p-2 font-bold text-gray-800 flex items-center justify-between text-sm">
+                                        <span>{Math.max(40 - atfOtherMonthsTotal - (Number(rozliczenie.Atf_wykorzystane) || 0), 0)} h</span>
+                                        <span className="text-xs font-normal text-gray-500">(z 40 h)</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Nadgodziny (do wypłaty) przeniesione nad nadgodziny przeniesione na kolejny miesiąc */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Nadgodziny (do wypłaty)</label>
+                            <input
+                                type="number"
+                                step="0.5"
+                                name="Nadgodziny_wyplata"
+                                value={rozliczenie.Nadgodziny_wyplata}
+                                onChange={handleInputChange}
+                                disabled={isLockedForUser}
+                                className={`mt-1 w-full border rounded p-2 font-semibold ${isLockedForUser ? 'bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200' : 'border-gray-300 focus:ring-blue-500'}`}
+                            />
                         </div>
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700">Nadgodziny przeniesione na kolejny miesiąc</label>
                             {(() => {
-                                const isCarryoverLocked = carryoverHours > 0 && !Boolean(rozliczenie.Nadgodziny_unlocked);
+                                const isCarryoverLocked = isLockedForUser || (carryoverHours > 0 && !Boolean(rozliczenie.Nadgodziny_unlocked));
                                 return (
                                     <>
                                         <input
@@ -612,7 +809,7 @@ const RozliczeniaMiesieczne = () => {
                                         />
                                         {isCarryoverLocked && (
                                             <p className="text-xs text-red-600 mt-1 font-semibold">
-                                                🚫 Nadgodziny nie mogą zostać przeniesione 2 miesiące z rzędu.
+                                                {isLockedForUser ? '🔒 Rozliczenie zablokowane' : '🚫 Nadgodziny nie mogą zostać przeniesione 2 miesiące z rzędu.'}
                                             </p>
                                         )}
                                         {['Administrator', 'Kierownik'].includes(userAccountType) && (
@@ -622,6 +819,7 @@ const RozliczeniaMiesieczne = () => {
                                                     name="Nadgodziny_unlocked"
                                                     checked={Boolean(rozliczenie.Nadgodziny_unlocked)}
                                                     onChange={handleInputChange}
+                                                    disabled={isLockedForUser}
                                                     className="w-3.5 h-3.5 text-blue-600 rounded"
                                                 />
                                                 Odblokuj przeniesienie nadgodzin (opcja administratora)
@@ -643,12 +841,11 @@ const RozliczeniaMiesieczne = () => {
                                     name="Urlop_zalegly_pula"
                                     value={rozliczenie.Urlop_zalegly_pula}
                                     onChange={handleInputChange}
-                                    disabled={Number(rozliczenie.Urlop_zalegly_pula || yearlyZaleglyPula || 0) > 0 && userAccountType !== 'Administrator'}
-                                    className={`w-24 border rounded p-1.5 text-sm font-bold focus:ring-amber-500 ${
-                                        Number(rozliczenie.Urlop_zalegly_pula || yearlyZaleglyPula || 0) > 0 && userAccountType !== 'Administrator'
+                                    disabled={isLockedForUser || (Number(rozliczenie.Urlop_zalegly_pula || yearlyZaleglyPula || 0) > 0 && userAccountType !== 'Administrator')}
+                                    className={`w-24 border rounded p-1.5 text-sm font-bold focus:ring-amber-500 ${(isLockedForUser || (Number(rozliczenie.Urlop_zalegly_pula || yearlyZaleglyPula || 0) > 0 && userAccountType !== 'Administrator'))
                                         ? 'bg-amber-100/70 text-amber-700 cursor-not-allowed border-amber-300'
                                         : 'bg-white text-amber-900 border-amber-300'
-                                    }`}
+                                        }`}
                                     placeholder="dni"
                                 />
                                 <span className="text-xs text-amber-800 font-semibold">dni (wpisywane raz w roku)</span>
@@ -663,6 +860,98 @@ const RozliczeniaMiesieczne = () => {
                                     ✏️ Edycja puli odblokowana dla Administratora.
                                 </p>
                             )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Sekcja: Dane do wypłaty i e-mail */}
+                <div className="mt-8 border-t pt-6 bg-slate-50/80 p-5 rounded-xl border border-slate-200">
+                    <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-base font-bold text-gray-800 flex items-center gap-2">
+                            <span>💳</span> Dane do wypłaty i kontakt
+                        </h4>
+                        <span className="text-xs bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded-full font-semibold">
+                            Zapamiętywane na kolejne miesiące
+                        </span>
+                    </div>
+                    <p className="text-xs text-gray-500 mb-4">
+                        Wprowadzony e-mail oraz konto bankowe zostaną automatycznie przeniesione i uzupełnione na przyszłe miesiące.
+                    </p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        {/* E-mail */}
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                Aktualny e-mail pracownika
+                            </label>
+                            <input
+                                type="email"
+                                name="Email"
+                                value={rozliczenie.Email || ''}
+                                onChange={handleInputChange}
+                                disabled={isLockedForUser}
+                                placeholder="np. jan.kowalski@gmail.com"
+                                className={`w-full border rounded-lg p-2.5 text-sm transition ${
+                                    isLockedForUser
+                                        ? 'bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200'
+                                        : 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white'
+                                }`}
+                            />
+                            <p className="text-[11px] text-gray-400 mt-1">Adres, na który trafiają rozliczenia i powiadomienia</p>
+                        </div>
+
+                        {/* Konto do wypłaty */}
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                Konto do wypłaty
+                            </label>
+                            <div className="flex gap-2">
+                                {/* Przełącznik PL / SE */}
+                                <div className="flex rounded-lg border border-gray-300 overflow-hidden bg-white shrink-0">
+                                    <button
+                                        type="button"
+                                        disabled={isLockedForUser}
+                                        onClick={() => !isLockedForUser && setRozliczenie(prev => ({ ...prev, Konto_typ: 'PL' }))}
+                                        className={`px-3 py-2 text-xs font-bold transition flex items-center gap-1.5 ${
+                                            (rozliczenie.Konto_typ || 'PL') === 'PL'
+                                                ? 'bg-blue-600 text-white shadow-inner'
+                                                : 'text-gray-700 hover:bg-gray-100'
+                                        } ${isLockedForUser ? 'cursor-not-allowed opacity-75' : ''}`}
+                                    >
+                                        <span>🇵🇱</span> PL
+                                    </button>
+                                    <button
+                                        type="button"
+                                        disabled={isLockedForUser}
+                                        onClick={() => !isLockedForUser && setRozliczenie(prev => ({ ...prev, Konto_typ: 'SE' }))}
+                                        className={`px-3 py-2 text-xs font-bold transition border-l border-gray-200 flex items-center gap-1.5 ${
+                                            rozliczenie.Konto_typ === 'SE'
+                                                ? 'bg-blue-600 text-white shadow-inner'
+                                                : 'text-gray-700 hover:bg-gray-100'
+                                        } ${isLockedForUser ? 'cursor-not-allowed opacity-75' : ''}`}
+                                    >
+                                        <span>🇸🇪</span> SE
+                                    </button>
+                                </div>
+
+                                {/* Numer konta */}
+                                <input
+                                    type="text"
+                                    name="Nr_konta"
+                                    value={rozliczenie.Nr_konta || ''}
+                                    onChange={handleInputChange}
+                                    disabled={isLockedForUser}
+                                    placeholder={(rozliczenie.Konto_typ || 'PL') === 'PL' ? '00 0000 0000 0000 0000 0000 0000' : 'Numer konta / IBAN (SE)'}
+                                    className={`flex-1 min-w-0 border rounded-lg p-2.5 text-sm font-mono transition ${
+                                        isLockedForUser
+                                            ? 'bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200'
+                                            : 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white'
+                                    }`}
+                                />
+                            </div>
+                            <p className="text-[11px] text-gray-400 mt-1">
+                                Typ konta: <strong className="text-gray-600">{rozliczenie.Konto_typ || 'PL'}</strong>. Wybierz kraj i wprowadź numer rachunku.
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -695,8 +984,8 @@ const RozliczeniaMiesieczne = () => {
                                         </div>
                                         <button
                                             type="button"
-                                            disabled={hasRemainingZalegly}
-                                            className={`text-sm font-semibold transition ${hasRemainingZalegly ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:text-blue-800'
+                                            disabled={isLockedForUser || hasRemainingZalegly}
+                                            className={`text-sm font-semibold transition ${(isLockedForUser || hasRemainingZalegly) ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:text-blue-800'
                                                 }`}
                                             onClick={() => addLeaveEntry('Urlop')}
                                         >
@@ -725,9 +1014,9 @@ const RozliczeniaMiesieczne = () => {
                                                         <input
                                                             type="date"
                                                             value={entry.from}
-                                                            disabled={hasRemainingZalegly}
+                                                            disabled={isLockedForUser || hasRemainingZalegly}
                                                             onChange={(e) => updateLeaveEntry('Urlop', index, 'from', e.target.value)}
-                                                            className="w-full border border-gray-300 rounded p-2 text-sm bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                                            className={`w-full border rounded p-2 text-sm ${(isLockedForUser || hasRemainingZalegly) ? 'bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200' : 'bg-white border-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-blue-500'}`}
                                                         />
                                                     </div>
                                                     <div className="flex-1 min-w-0">
@@ -735,9 +1024,9 @@ const RozliczeniaMiesieczne = () => {
                                                         <input
                                                             type="date"
                                                             value={entry.to}
-                                                            disabled={hasRemainingZalegly}
+                                                            disabled={isLockedForUser || hasRemainingZalegly}
                                                             onChange={(e) => updateLeaveEntry('Urlop', index, 'to', e.target.value)}
-                                                            className="w-full border border-gray-300 rounded p-2 text-sm bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                                            className={`w-full border rounded p-2 text-sm ${(isLockedForUser || hasRemainingZalegly) ? 'bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200' : 'bg-white border-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-blue-500'}`}
                                                         />
                                                     </div>
                                                 </div>
@@ -749,18 +1038,16 @@ const RozliczeniaMiesieczne = () => {
                                                             min="0"
                                                             step="1"
                                                             value={entry.days}
-                                                            disabled={hasRemainingZalegly}
+                                                            disabled={isLockedForUser || hasRemainingZalegly}
                                                             onChange={(e) => updateLeaveEntry('Urlop', index, 'days', e.target.value)}
-                                                            className="w-16 border border-gray-300 rounded p-1 text-center text-sm bg-white font-bold focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                                            className={`w-16 border rounded p-1 text-center text-sm font-bold ${(isLockedForUser || hasRemainingZalegly) ? 'bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200' : 'bg-white border-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-blue-500'}`}
                                                             placeholder="dni"
                                                         />
-                                                        <span className="text-xs font-bold text-blue-700">
-                                                            {entry.days ? `${Number(entry.days) * 8} h` : ''}
-                                                        </span>
                                                     </div>
                                                     <button
                                                         type="button"
-                                                        className="text-xs font-bold text-red-600 hover:text-red-800 transition"
+                                                        disabled={isLockedForUser}
+                                                        className={`text-xs font-bold transition ${isLockedForUser ? 'text-gray-400 cursor-not-allowed' : 'text-red-600 hover:text-red-800'}`}
                                                         onClick={() => removeLeaveEntry('Urlop', index)}
                                                     >
                                                         Usuń
@@ -782,9 +1069,9 @@ const RozliczeniaMiesieczne = () => {
                                         </div>
                                         <button
                                             type="button"
-                                            className="text-sm font-semibold text-blue-600 hover:text-blue-800 transition"
+                                            className={`text-sm font-semibold transition ${(isLockedForUser || (remainingZalegly <= 0 && rozliczenie.Urlop_zalegly.length > 0)) ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:text-blue-800'}`}
                                             onClick={() => addLeaveEntry('Urlop_zalegly')}
-                                            disabled={remainingZalegly <= 0 && rozliczenie.Urlop_zalegly.length > 0}
+                                            disabled={isLockedForUser || (remainingZalegly <= 0 && rozliczenie.Urlop_zalegly.length > 0)}
                                         >
                                             + Dodaj datę
                                         </button>
@@ -803,8 +1090,9 @@ const RozliczeniaMiesieczne = () => {
                                                         <input
                                                             type="date"
                                                             value={entry.from}
+                                                            disabled={isLockedForUser}
                                                             onChange={(e) => updateLeaveEntry('Urlop_zalegly', index, 'from', e.target.value)}
-                                                            className="w-full border border-gray-300 rounded p-2 text-sm bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                                            className={`w-full border rounded p-2 text-sm ${isLockedForUser ? 'bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200' : 'bg-white border-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-blue-500'}`}
                                                         />
                                                     </div>
                                                     <div className="flex-1 min-w-0">
@@ -812,8 +1100,9 @@ const RozliczeniaMiesieczne = () => {
                                                         <input
                                                             type="date"
                                                             value={entry.to}
+                                                            disabled={isLockedForUser}
                                                             onChange={(e) => updateLeaveEntry('Urlop_zalegly', index, 'to', e.target.value)}
-                                                            className="w-full border border-gray-300 rounded p-2 text-sm bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                                            className={`w-full border rounded p-2 text-sm ${isLockedForUser ? 'bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200' : 'bg-white border-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-blue-500'}`}
                                                         />
                                                     </div>
                                                 </div>
@@ -825,17 +1114,17 @@ const RozliczeniaMiesieczne = () => {
                                                             min="0"
                                                             step="1"
                                                             value={entry.days}
+                                                            disabled={isLockedForUser}
                                                             onChange={(e) => updateLeaveEntry('Urlop_zalegly', index, 'days', e.target.value)}
-                                                            className="w-16 border border-gray-300 rounded p-1 text-center text-sm bg-white font-bold focus:ring-1 focus:ring-blue-500"
+                                                            className={`w-16 border rounded p-1 text-center text-sm font-bold ${isLockedForUser ? 'bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200' : 'bg-white border-gray-300 focus:ring-1 focus:ring-blue-500'}`}
                                                             placeholder="dni"
                                                         />
-                                                        <span className="text-xs font-bold text-amber-800">
-                                                            {entry.days ? `${Number(entry.days) * 8} h` : ''}
-                                                        </span>
+
                                                     </div>
                                                     <button
                                                         type="button"
-                                                        className="text-xs font-bold text-red-600 hover:text-red-800 transition"
+                                                        disabled={isLockedForUser}
+                                                        className={`text-xs font-bold transition ${isLockedForUser ? 'text-gray-400 cursor-not-allowed' : 'text-red-600 hover:text-red-800'}`}
                                                         onClick={() => removeLeaveEntry('Urlop_zalegly', index)}
                                                     >
                                                         Usuń
@@ -856,14 +1145,16 @@ const RozliczeniaMiesieczne = () => {
                                 <input
                                     type="date"
                                     value={rozliczenie.L4.from}
+                                    disabled={isLockedForUser}
                                     onChange={(e) => updateRangeField('L4', 'from', e.target.value)}
-                                    className="flex-1 min-w-0 border border-gray-300 rounded p-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                    className={`flex-1 min-w-0 border rounded p-2 ${isLockedForUser ? 'bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200' : 'border-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-blue-500'}`}
                                 />
                                 <input
                                     type="date"
                                     value={rozliczenie.L4.to}
+                                    disabled={isLockedForUser}
                                     onChange={(e) => updateRangeField('L4', 'to', e.target.value)}
-                                    className="flex-1 min-w-0 border border-gray-300 rounded p-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                    className={`flex-1 min-w-0 border rounded p-2 ${isLockedForUser ? 'bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200' : 'border-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-blue-500'}`}
                                 />
                             </div>
                             {getRangeDays(rozliczenie.L4) > 0 && (
@@ -877,14 +1168,16 @@ const RozliczeniaMiesieczne = () => {
                                 <input
                                     type="date"
                                     value={rozliczenie.L4cd.from}
+                                    disabled={isLockedForUser}
                                     onChange={(e) => updateRangeField('L4cd', 'from', e.target.value)}
-                                    className="flex-1 min-w-0 border border-gray-300 rounded p-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                    className={`flex-1 min-w-0 border rounded p-2 ${isLockedForUser ? 'bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200' : 'border-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-blue-500'}`}
                                 />
                                 <input
                                     type="date"
                                     value={rozliczenie.L4cd.to}
+                                    disabled={isLockedForUser}
                                     onChange={(e) => updateRangeField('L4cd', 'to', e.target.value)}
-                                    className="flex-1 min-w-0 border border-gray-300 rounded p-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                    className={`flex-1 min-w-0 border rounded p-2 ${isLockedForUser ? 'bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200' : 'border-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-blue-500'}`}
                                 />
                             </div>
                         </div>
@@ -895,14 +1188,16 @@ const RozliczeniaMiesieczne = () => {
                                 <input
                                     type="date"
                                     value={rozliczenie.VAB.from}
+                                    disabled={isLockedForUser}
                                     onChange={(e) => updateRangeField('VAB', 'from', e.target.value)}
-                                    className="flex-1 min-w-0 border border-gray-300 rounded p-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                    className={`flex-1 min-w-0 border rounded p-2 ${isLockedForUser ? 'bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200' : 'border-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-blue-500'}`}
                                 />
                                 <input
                                     type="date"
                                     value={rozliczenie.VAB.to}
+                                    disabled={isLockedForUser}
                                     onChange={(e) => updateRangeField('VAB', 'to', e.target.value)}
-                                    className="flex-1 min-w-0 border border-gray-300 rounded p-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                    className={`flex-1 min-w-0 border rounded p-2 ${isLockedForUser ? 'bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200' : 'border-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-blue-500'}`}
                                 />
                             </div>
                         </div>
@@ -913,14 +1208,16 @@ const RozliczeniaMiesieczne = () => {
                                 <input
                                     type="date"
                                     value={rozliczenie.Pappaledi.from}
+                                    disabled={isLockedForUser}
                                     onChange={(e) => updateRangeField('Pappaledi', 'from', e.target.value)}
-                                    className="flex-1 min-w-0 border border-gray-300 rounded p-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                    className={`flex-1 min-w-0 border rounded p-2 ${isLockedForUser ? 'bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200' : 'border-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-blue-500'}`}
                                 />
                                 <input
                                     type="date"
                                     value={rozliczenie.Pappaledi.to}
+                                    disabled={isLockedForUser}
                                     onChange={(e) => updateRangeField('Pappaledi', 'to', e.target.value)}
-                                    className="flex-1 min-w-0 border border-gray-300 rounded p-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                    className={`flex-1 min-w-0 border rounded p-2 ${isLockedForUser ? 'bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200' : 'border-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-blue-500'}`}
                                 />
                             </div>
                         </div>
@@ -946,9 +1243,15 @@ const RozliczeniaMiesieczne = () => {
                             </button>
                         )}
                     </div>
-                    <button type="submit" className="bg-blue-600 text-white px-8 py-3 rounded font-bold hover:bg-blue-700 transition shadow-lg text-lg">
-                        Zapisz rozliczenie
-                    </button>
+                    {isLockedForUser ? (
+                        <div className="bg-red-50 border border-red-300 text-red-700 px-6 py-3 rounded-lg font-bold flex items-center gap-2 shadow-sm text-sm">
+                            🔒 Rozliczenie zablokowane przez Administratora (Tylko do odczytu)
+                        </div>
+                    ) : (
+                        <button type="submit" className="bg-blue-600 text-white px-8 py-3 rounded font-bold hover:bg-blue-700 transition shadow-lg text-lg">
+                            Zapisz rozliczenie
+                        </button>
+                    )}
                 </div>
             </form>
         </div>

@@ -170,59 +170,93 @@ function PobierzRozliczenia(req, res, db) {
                             });
                         });
 
-                        if (result.length > 0) {
-                            let savedData = result[0];
+                        const contactQuery = `
+                            SELECT do.Email
+                            FROM pracownik p
+                            JOIN dane_osobowe do ON p.FK_Dane_osobowe = do.idDane_osobowe
+                            WHERE p.idPracownik = ?
+                        `;
 
-                            // Zmiana: Zawsze używamy godzin wyliczonych na żywo z zablokowanych tygodni
-                            // Nie ufamy zapisowi w rozliczeniach, ufamy głównemu systemowi czasu pracy
-                            savedData.Godziny_przepracowane = obliczoneGodziny;
+                        db.query(contactQuery, [pracownikId], (contactErr, contactRows) => {
+                            const profileEmail = (!contactErr && contactRows && contactRows[0]?.Email) ? contactRows[0].Email : '';
 
-                            return res.status(200).json({
-                                status: 'success',
-                                data: savedData,
-                                isDraft: false,
-                                atfOtherMonthsTotal: otherAtf,
-                                urlopOtherMonthsTotal: urlopOtherMonthsTotal,
-                                urlopZaleglyOtherMonthsTotal: urlopZaleglyOtherMonthsTotal,
-                                urlopYearTotal: urlopYearTotal,
-                                urlopZaleglyYearTotal: urlopZaleglyYearTotal,
-                                yearlyZaleglyPula: foundZaleglyPula || Number(savedData.Urlop_zalegly_pula || 0)
+                            const checkColumnsQuery = `
+                                SELECT Email, Nr_konta, Konto_typ
+                                FROM rozliczenia_miesieczne
+                                WHERE Pracownik_idPracownik = ?
+                                  AND ((Email IS NOT NULL AND Email != '') OR (Nr_konta IS NOT NULL AND Nr_konta != ''))
+                                ORDER BY Miesiac_rok DESC
+                                LIMIT 1
+                            `;
+
+                            db.query(checkColumnsQuery, [pracownikId], (recentErr, recentRows) => {
+                                const recent = (!recentErr && recentRows && recentRows[0]) ? recentRows[0] : {};
+                                const fallbackEmail = recent.Email || profileEmail || '';
+                                const fallbackNrKonta = recent.Nr_konta || '';
+                                const fallbackKontoTyp = recent.Konto_typ || 'PL';
+
+                                if (result.length > 0) {
+                                    let savedData = result[0];
+
+                                    savedData.Godziny_przepracowane = obliczoneGodziny;
+                                    savedData.Email = savedData.Email || fallbackEmail;
+                                    savedData.Nr_konta = savedData.Nr_konta || fallbackNrKonta;
+                                    savedData.Konto_typ = savedData.Konto_typ || fallbackKontoTyp;
+                                    savedData.Zapisal_admin = Number(savedData.Zapisal_admin) || 0;
+
+                                    return res.status(200).json({
+                                        status: 'success',
+                                        data: savedData,
+                                        isDraft: false,
+                                        atfOtherMonthsTotal: otherAtf,
+                                        urlopOtherMonthsTotal: urlopOtherMonthsTotal,
+                                        urlopZaleglyOtherMonthsTotal: urlopZaleglyOtherMonthsTotal,
+                                        urlopYearTotal: urlopYearTotal,
+                                        urlopZaleglyYearTotal: urlopZaleglyYearTotal,
+                                        yearlyZaleglyPula: foundZaleglyPula || Number(savedData.Urlop_zalegly_pula || 0)
+                                    });
+                                } else {
+                                    const draftData = {
+                                        Pracownik_idPracownik: parseInt(pracownikId),
+                                        Miesiac_rok: miesiacRok,
+                                        Godziny_przepracowane: obliczoneGodziny,
+                                        Mozliwe_godziny: '',
+                                        Nadgodziny_wyplata: 0.00,
+                                        Nadgodziny_z_poprzedniego: 0.00,
+                                        Nadgodziny_na_kolejny: 0.00,
+                                        Atf_wykorzystane: 0.00,
+                                        Atf_zielone: 0.00,
+                                        Czerwone_dni: 0,
+                                        Urlop_zalegly_pula: foundZaleglyPula || 0,
+                                        Nadgodziny_stawka: '',
+                                        Nadgodziny_unlocked: 0,
+                                        Mieszkanie: 0.00,
+                                        Email: fallbackEmail,
+                                        Nr_konta: fallbackNrKonta,
+                                        Konto_typ: fallbackKontoTyp,
+                                        Zapisal_admin: 0,
+                                        Urlop: [],
+                                        Urlop_zalegly: [],
+                                        L4: { from: '', to: '' },
+                                        L4cd: { from: '', to: '' },
+                                        VAB: { from: '', to: '' },
+                                        Pappaledi: { from: '', to: '' }
+                                    };
+
+                                    return res.status(200).json({
+                                        status: 'success',
+                                        data: draftData,
+                                        isDraft: true,
+                                        atfOtherMonthsTotal: otherAtf,
+                                        urlopOtherMonthsTotal: urlopOtherMonthsTotal,
+                                        urlopZaleglyOtherMonthsTotal: urlopZaleglyOtherMonthsTotal,
+                                        urlopYearTotal: urlopYearTotal,
+                                        urlopZaleglyYearTotal: urlopZaleglyYearTotal,
+                                        yearlyZaleglyPula: foundZaleglyPula
+                                    });
+                                }
                             });
-                        } else {
-                            // Brak wiersza - całkowicie czysty szkic
-                            const draftData = {
-                                Pracownik_idPracownik: parseInt(pracownikId),
-                                Miesiac_rok: miesiacRok,
-                                Godziny_przepracowane: obliczoneGodziny,
-                                Mozliwe_godziny: '',
-                                Nadgodziny_wyplata: 0.00,
-                                Nadgodziny_z_poprzedniego: 0.00,
-                                Nadgodziny_na_kolejny: 0.00,
-                                Atf_wykorzystane: 0.00,
-                                Czerwone_dni: 0,
-                                Urlop_zalegly_pula: foundZaleglyPula || 0,
-                                Nadgodziny_stawka: '',
-                                Nadgodziny_unlocked: 0,
-                                Urlop: [],
-                                Urlop_zalegly: [],
-                                L4: { from: '', to: '' },
-                                L4cd: { from: '', to: '' },
-                                VAB: { from: '', to: '' },
-                                Pappaledi: { from: '', to: '' }
-                            };
-
-                            return res.status(200).json({
-                                status: 'success',
-                                data: draftData,
-                                isDraft: true,
-                                atfOtherMonthsTotal: otherAtf,
-                                urlopOtherMonthsTotal: urlopOtherMonthsTotal,
-                                urlopZaleglyOtherMonthsTotal: urlopZaleglyOtherMonthsTotal,
-                                urlopYearTotal: urlopYearTotal,
-                                urlopZaleglyYearTotal: urlopZaleglyYearTotal,
-                                yearlyZaleglyPula: foundZaleglyPula
-                            });
-                        }
+                        });
                     };
 
                     fetchYearData();

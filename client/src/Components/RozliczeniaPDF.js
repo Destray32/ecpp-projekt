@@ -17,7 +17,9 @@ export const getMonthNameMianownik = (miesiacRokStr) => {
     const parts = miesiacRokStr.split('-');
     const monthIdx = parseInt(parts[1], 10) - 1;
     const year = parts[0];
-    return `${monthMianownik[monthIdx] || ''} ${year}`;
+    const m = monthMianownik[monthIdx] || '';
+    const capitalized = m ? m.charAt(0).toUpperCase() + m.slice(1) : '';
+    return `${capitalized}  ${year}`;
 };
 
 export const getPrevMonthDopelniacz = (miesiacRokStr) => {
@@ -37,7 +39,7 @@ const formatDateShort = (dateStr) => {
     return dateStr;
 };
 
-const formatLeaveText = (leaveArray, labelPrefix) => {
+const formatLeaveText = (leaveArray) => {
     if (!Array.isArray(leaveArray) || leaveArray.length === 0) return '';
     return leaveArray.map(entry => {
         const daysStr = entry.days ? `${entry.days}dni` : '';
@@ -49,6 +51,21 @@ const formatLeaveText = (leaveArray, labelPrefix) => {
 const formatRangeText = (rangeObj) => {
     if (!rangeObj || !rangeObj.from || !rangeObj.to) return '';
     return `od ${formatDateShort(rangeObj.from)} do ${formatDateShort(rangeObj.to)}`;
+};
+
+const formatNum = (val) => {
+    if (val === undefined || val === null || val === '') return '';
+    const num = Number(val);
+    if (isNaN(num)) return String(val);
+    if (Number.isInteger(num)) return String(num);
+    return num.toFixed(2).replace(/\.?0+$/, '').replace('.', ',');
+};
+
+const formatCurrency = (val) => {
+    if (val === undefined || val === null || val === '') return '';
+    const num = Number(String(val).replace(/\s/g, '').replace(',', '.'));
+    if (isNaN(num)) return String(val);
+    return num.toLocaleString('pl-PL').replace(/\u00a0/g, ' ');
 };
 
 /**
@@ -74,6 +91,7 @@ export const RozliczenieSheet = React.forwardRef(({ data }, ref) => {
         urlopZaleglyOtherMonthsTotal = 0,
         yearlyZaleglyPula = 0,
         urlopPulaInput = 0,
+        mieszkanie = 0,
         urlop = [],
         urlopZalegly = [],
         l4 = {},
@@ -81,11 +99,12 @@ export const RozliczenieSheet = React.forwardRef(({ data }, ref) => {
         vab = {},
         pappaledi = {},
         nadgodzinyNaKolejny = 0,
-        email = ''
+        email = '',
+        nrKonta = '',
+        kontoTyp = 'PL'
     } = data;
 
     const formattedMonth = getMonthNameMianownik(miesiacRok);
-    const prevMonthDopelniacz = getPrevMonthDopelniacz(miesiacRok);
 
     const sumDays = (arr) => Array.isArray(arr) ? arr.reduce((acc, e) => acc + (Number(e.days) || 0), 0) : 0;
 
@@ -99,186 +118,292 @@ export const RozliczenieSheet = React.forwardRef(({ data }, ref) => {
     const totalRegularUsed = (urlopOtherMonthsTotal || 0) + currentUrlopDays;
     const remainingRegularUrlop = Math.max(25 - totalRegularUsed, 0);
 
-    const totalAtfUsed = (atfOtherMonthsTotal || 0) + (Number(atfWykorzystane) || 0);
-    const remainingAtf = Math.max(40 - totalAtfUsed, 0);
-
-    const urlopText = formatLeaveText(urlop);
     const zaleglyText = formatLeaveText(urlopZalegly);
     const l4Text = formatRangeText(l4);
     const l4cdText = formatRangeText(l4cd);
     const vabText = formatRangeText(vab);
     const pappalediText = formatRangeText(pappaledi);
 
-    const isHoursGreen = Number(godzinyPrzepracowane) > 0;
+    // Green state for Column A
+    const isHoursGreen = Boolean(mozliweGodziny || (Number(godzinyPrzepracowane) > 0));
     const isOvertimeGreen = Number(nadgodzinyWyplata) > 0;
     const isRedDaysGreen = Number(czerwoneDni) > 0;
     const isAtfGreen = Number(atfWykorzystane) > 0;
-    const isUrlopGreen = currentUrlopDays > 0;
-    const isZaleglyGreen = currentZaleglyDays > 0;
     const isL4Green = Boolean(l4Text);
     const isL4cdGreen = Boolean(l4cdText);
     const isVabGreen = Boolean(vabText);
     const isPappalediGreen = Boolean(pappalediText);
+    const isMieszkanieGreen = Number(mieszkanie) > 0;
+
+    const remainingAtf = Math.max(40 - (Number(atfOtherMonthsTotal) || 0) - (Number(atfWykorzystane) || 0), 0);
+
+    const greenBg = '#92d050';
+    const yellowBg = '#ffff00';
+    const redColor = '#ff0000';
+
+    let overtimeRateLabel = '+10kr/1h';
+    if (nadgodzinyStawka) {
+        const cleaned = String(nadgodzinyStawka).replace(/100%/gi, '').trim().replace(/^[,\s+]+/, '').trim();
+        if (cleaned) {
+            overtimeRateLabel = cleaned.includes('/1h') || cleaned.includes('/h') ? `+${cleaned.replace(/^\+/, '')}` : `+${cleaned.replace(/^\+/, '')}/1h`;
+        }
+    }
+
+    const displayHours = (mozliweGodziny !== '' && mozliweGodziny !== undefined && mozliweGodziny !== null)
+        ? formatNum(mozliweGodziny)
+        : (godzinyPrzepracowane !== '' ? formatNum(godzinyPrzepracowane) : '0');
 
     return (
         <div
             ref={ref}
-            className="bg-white text-black font-sans p-6 text-sm leading-snug max-w-[650px] mx-auto border border-gray-400 drop-shadow-md"
-            style={{ width: '650px', boxSizing: 'border-box' }}
+            className="bg-white text-black font-sans p-6 text-[15px] leading-snug max-w-[680px] mx-auto border border-gray-400 drop-shadow-md"
+            style={{ width: '680px', boxSizing: 'border-box', fontFamily: 'Calibri, "Segoe UI", Arial, sans-serif' }}
         >
-            {/* Header Month */}
-            <div className="text-center font-bold text-base mb-2">
-                &lt; {formattedMonth} &gt;
-            </div>
-
-            {/* Employee Name */}
-            <div className="font-bold italic text-lg text-blue-700 mb-3 border-b pb-1">
-                {pracownikName}
-            </div>
-
-            {/* Excel Table Layout */}
-            <table className="w-full border-collapse border border-black text-sm">
+            <table className="w-full border-collapse text-[15px]">
                 <tbody>
-                    {/* Row 3: Przepracowane godziny */}
-                    <tr className="border-b border-black">
-                        <td className={`border-r border-black p-2 font-bold text-center w-24 text-base ${isHoursGreen ? 'bg-[#92d050]' : ''}`}>
-                            {godzinyPrzepracowane !== '' ? String(godzinyPrzepracowane).replace('.', ',') : '0'}
-                        </td>
-                        <td colSpan={2} className="p-2 font-bold text-red-600">
-                            {nadgodzinyStawka || ''}
+                    {/* Row 1: Header Month */}
+                    <tr>
+                        <td className="w-24 border-0"></td>
+                        <td colSpan={2} className="border-0 px-2 pt-1 pb-0 font-bold text-lg text-black">
+                            &lt;{formattedMonth} &gt;
                         </td>
                     </tr>
 
-                    {/* Row 4: Nadgodziny do wypłaty */}
+                    {/* Row 2: Employee Name */}
+                    <tr>
+                        <td className="w-24 border-0"></td>
+                        <td colSpan={2} className="border-0 px-2 pt-0 pb-2.5 font-bold text-lg text-black">
+                            {pracownikName}
+                        </td>
+                    </tr>
+
+                    {/* Row 3: Mozliwe / Robocze godziny (168) + 100% */}
                     <tr className="border-b border-black">
-                        <td className={`border-r border-black p-2 font-bold text-center ${isOvertimeGreen ? 'bg-[#92d050]' : ''}`}>
-                            {Number(nadgodzinyWyplata) > 0 ? String(nadgodzinyWyplata).replace('.', ',') : ''}
+                        <td
+                            className="border border-black p-2.5 font-bold text-center w-24 text-lg"
+                            style={{ backgroundColor: isHoursGreen ? greenBg : 'transparent' }}
+                        >
+                            {displayHours}
                         </td>
-                        <td colSpan={2} className="p-2 font-bold">
-                            nadgodziny ( do wypłaty )
+                        <td
+                            className="border border-black p-2.5 font-bold text-lg"
+                            style={{ color: isHoursGreen ? redColor : '#000000' }}
+                        >
+                            100%
                         </td>
+                        <td className="border border-black p-2.5 w-20"></td>
+                    </tr>
+
+                    {/* Row 4: Nadgodziny */}
+                    <tr className="border-b border-black">
+                        <td
+                            className="border border-black p-2.5 font-bold text-center w-24"
+                            style={{ backgroundColor: isOvertimeGreen ? greenBg : 'transparent' }}
+                        >
+                            {Number(nadgodzinyWyplata) > 0 ? formatNum(nadgodzinyWyplata) : ''}
+                        </td>
+                        <td
+                            className="border border-black p-2.5"
+                            style={{ color: isOvertimeGreen ? redColor : '#000000' }}
+                        >
+                            nadgodziny ( kod, 1174 <strong>{overtimeRateLabel}</strong> )
+                        </td>
+                        <td className="border border-black p-2.5 w-20"></td>
                     </tr>
 
                     {/* Row 5: Czerwone dni */}
                     <tr className="border-b border-black">
-                        <td className={`border-r border-black p-2 font-bold text-center ${isRedDaysGreen ? 'bg-[#92d050]' : ''}`}>
-                            {Number(czerwoneDni) > 0 ? `${czerwoneDni}dni` : ''}
+                        <td
+                            className="border border-black p-2.5 font-bold text-center w-24"
+                            style={{ backgroundColor: isRedDaysGreen ? greenBg : 'transparent' }}
+                        >
+                            {Number(czerwoneDni) > 0 ? `${formatNum(czerwoneDni)}dni` : ''}
                         </td>
-                        <td colSpan={2} className="p-2">
+                        <td
+                            className="border border-black p-2.5"
+                            style={{ color: isRedDaysGreen ? redColor : '#000000' }}
+                        >
                             czerwone dni
                         </td>
+                        <td className="border border-black p-2.5 w-20"></td>
                     </tr>
 
-                    {/* Row 6: Bank godzin z poprzedniego miesiąca */}
+                    {/* Row 6: Bank godzin */}
                     <tr className="border-b border-black">
-                        <td className="border-r border-black p-2 bg-[#00b0f0] w-24"></td>
-                        <td className="border-r border-black p-2">
-                            z bank godzin <span className="text-red-600 font-bold">z {prevMonthDopelniacz || 'poprzedniego miesiąca'}</span>
+                        <td className="border border-black p-2.5 w-24"></td>
+                        <td className="border border-black p-2.5">
+                            z bank godzin
                         </td>
-                        <td className="p-2 font-bold text-center bg-[#ffff00] w-20">
-                            {nadgodzinyZPoprzedniego || 0}
+                        <td
+                            className="border border-black p-2.5 font-bold text-center w-20"
+                            style={{ backgroundColor: yellowBg }}
+                        >
+                            {Number(nadgodzinyZPoprzedniego) > 0 ? formatNum(nadgodzinyZPoprzedniego) : ''}
                         </td>
                     </tr>
 
                     {/* Row 7: ATF */}
                     <tr className="border-b border-black">
-                        <td className={`border-r border-black p-2 font-bold text-center ${isAtfGreen ? 'bg-[#92d050]' : ''}`}>
-                            {Number(atfWykorzystane) > 0 ? atfWykorzystane : ''}
+                        <td
+                            className="border border-black p-2.5 font-bold text-center w-24"
+                            style={{ backgroundColor: isAtfGreen ? greenBg : 'transparent' }}
+                        >
+                            {isAtfGreen ? formatNum(atfWykorzystane) : ''}
                         </td>
-                        <td className="border-r border-black p-2">
-                            ATF 40h
+                        <td
+                            className="border border-black p-2.5"
+                            style={{ color: isAtfGreen ? redColor : '#000000' }}
+                        >
+                            ATF
                         </td>
-                        <td className="p-2 font-bold text-center bg-[#ffff00]">
-                            {remainingAtf}/40
-                        </td>
-                    </tr>
-
-                    {/* Row 8: Urlop zwykły */}
-                    <tr className="border-b border-black">
-                        <td className={`border-r border-black p-2 font-bold text-center ${isUrlopGreen ? 'bg-[#92d050]' : ''}`}>
-                            {currentUrlopDays > 0 ? `${currentUrlopDays}dni` : ''}
-                        </td>
-                        <td className="border-r border-black p-2">
-                            urlop {urlopText ? `( ${urlopText} )` : '( wpisz ilość dni + data )'}
-                        </td>
-                        <td className="p-2 font-bold text-center bg-[#ffff00]">
-                            {remainingRegularUrlop}
+                        <td
+                            className="border border-black p-2.5 font-bold text-center w-20"
+                            style={{ backgroundColor: yellowBg }}
+                        >
+                            {(isAtfGreen || Number(atfOtherMonthsTotal) > 0) ? formatNum(remainingAtf) : ''}
                         </td>
                     </tr>
 
-                    {/* Row 9: Urlop zaległy */}
+                    {/* Row 8: Urlop */}
                     <tr className="border-b border-black">
-                        <td className={`border-r border-black p-2 font-bold text-center ${isZaleglyGreen ? 'bg-[#92d050]' : ''}`}>
-                            {currentZaleglyDays > 0 ? `${currentZaleglyDays}dni` : ''}
+                        <td className="border border-black p-2.5 w-24"></td>
+                        <td className="border border-black p-2.5">
+                            urlop
                         </td>
-                        <td className="border-r border-black p-2 font-bold italic text-blue-800">
-                            Urlop zaległy {zaleglyText ? `( ${zaleglyText} )` : ''}
+                        <td
+                            className="border border-black p-2.5 font-bold text-center w-20"
+                            style={{ backgroundColor: yellowBg }}
+                        >
+                            {currentUrlopDays > 0 ? formatNum(currentUrlopDays) : (currentZaleglyDays > 0 ? formatNum(currentZaleglyDays) : '')}
                         </td>
-                        <td className="p-2 font-bold text-center bg-[#ffff00]">
-                            {remainingZaleglyPula}
+                    </tr>
+
+                    {/* Row 9: Urlop zalegly */}
+                    <tr className="border-b border-black">
+                        <td className="border border-black p-2.5 w-24"></td>
+                        <td className="border border-black p-2.5">
+                            Urlop zaległy ({' '}
+                            <span style={{ color: '#0070c0', fontStyle: 'italic' }}>
+                                {zaleglyText ? zaleglyText : 'wpisz ilość dni + data'}
+                            </span>{' '}
+                            )
                         </td>
+                        <td
+                            className="border border-black p-2.5 font-bold text-center w-20"
+                            style={{ backgroundColor: yellowBg }}
+                        ></td>
                     </tr>
 
                     {/* Row 10: L4 */}
                     <tr className="border-b border-black">
-                        <td className={`border-r border-black p-2 font-bold text-center ${isL4Green ? 'bg-[#92d050]' : ''}`}></td>
-                        <td colSpan={2} className="p-2">
-                            L4/PC Husbyggen 14dni płaci PC {l4Text ? `( ${l4Text} )` : '( data )'}
+                        <td
+                            className="border border-black p-2.5 font-bold text-center w-24"
+                            style={{ backgroundColor: isL4Green ? greenBg : 'transparent' }}
+                        ></td>
+                        <td
+                            className="border border-black p-2.5"
+                            style={{ color: isL4Green ? redColor : '#000000' }}
+                        >
+                            L4/PC Husbyggen 14dni płaci PC{l4Text ? (
+                                <> ( <span style={{ color: isL4Green ? redColor : '#0070c0', fontStyle: 'italic' }}>{l4Text}</span> )</>
+                            ) : null}
                         </td>
+                        <td className="border border-black p-2.5 w-20"></td>
                     </tr>
 
                     {/* Row 11: L4cd */}
                     <tr className="border-b border-black">
-                        <td className={`border-r border-black p-2 font-bold text-center ${isL4cdGreen ? 'bg-[#92d050]' : ''}`}></td>
-                        <td colSpan={2} className="p-2">
-                            L4c.d. {l4cdText ? `( ${l4cdText} )` : '( data )'}
+                        <td
+                            className="border border-black p-2.5 font-bold text-center w-24"
+                            style={{ backgroundColor: isL4cdGreen ? greenBg : 'transparent' }}
+                        ></td>
+                        <td
+                            className="border border-black p-2.5"
+                            style={{ color: isL4cdGreen ? redColor : '#000000' }}
+                        >
+                            L4c.d.{l4cdText ? (
+                                <> ( <span style={{ color: isL4cdGreen ? redColor : '#0070c0', fontStyle: 'italic' }}>{l4cdText}</span> )</>
+                            ) : null}
                         </td>
+                        <td className="border border-black p-2.5 w-20"></td>
                     </tr>
 
                     {/* Row 12: VAB */}
                     <tr className="border-b border-black">
-                        <td className={`border-r border-black p-2 font-bold text-center ${isVabGreen ? 'bg-[#92d050]' : ''}`}></td>
-                        <td colSpan={2} className="p-2">
-                            VAB- {vabText ? `( ${vabText} )` : '( data )'}
+                        <td
+                            className="border border-black p-2.5 font-bold text-center w-24"
+                            style={{ backgroundColor: isVabGreen ? greenBg : 'transparent' }}
+                        ></td>
+                        <td
+                            className="border border-black p-2.5"
+                            style={{ color: isVabGreen ? redColor : '#000000' }}
+                        >
+                            VAB-{vabText ? (
+                                <> ( <span style={{ color: isVabGreen ? redColor : '#0070c0', fontStyle: 'italic' }}>{vabText}</span> )</>
+                            ) : null}
                         </td>
+                        <td className="border border-black p-2.5 w-20"></td>
                     </tr>
 
                     {/* Row 13: Pappaledi */}
                     <tr className="border-b border-black">
-                        <td className={`border-r border-black p-2 font-bold text-center ${isPappalediGreen ? 'bg-[#92d050]' : ''}`}></td>
-                        <td colSpan={2} className="p-2">
-                            Pappaledi/ Tacierzyńskie - {pappalediText ? `( ${pappalediText} )` : '( data )'}
+                        <td
+                            className="border border-black p-2.5 font-bold text-center w-24"
+                            style={{ backgroundColor: isPappalediGreen ? greenBg : 'transparent' }}
+                        ></td>
+                        <td
+                            className="border border-black p-2.5"
+                            style={{ color: isPappalediGreen ? redColor : '#000000' }}
+                        >
+                            Pappaledi/ Tacierzynskie -{pappalediText ? (
+                                <> ( <span style={{ color: isPappalediGreen ? redColor : '#0070c0', fontStyle: 'italic' }}>{pappalediText}</span> )</>
+                            ) : null}
+                        </td>
+                        <td className="border border-black p-2.5 w-20"></td>
+                    </tr>
+
+                    {/* Row 14: Nadgodziny na kolejny miesiac */}
+                    <tr className="border-b border-black">
+                        <td className="border border-black p-2.5 w-24"></td>
+                        <td className="border border-black p-2.5">
+                            Nadgodziny przeniesione na kolejny miesiąc.
+                        </td>
+                        <td
+                            className="border border-black p-2.5 font-bold text-center w-20"
+                            style={{ backgroundColor: yellowBg }}
+                        >
+                            {Number(nadgodzinyNaKolejny) > 0 ? formatNum(nadgodzinyNaKolejny) : ''}
                         </td>
                     </tr>
 
-                    {/* Row 14: Nadgodziny przeniesione na kolejny miesiąc */}
+                    {/* Row 15: Odjąć za mieszkanie */}
                     <tr className="border-b border-black">
-                        <td colSpan={2} className="p-2 font-semibold">
-                            Nadgodziny przeniesione na kolejny miesiąc.
+                        <td
+                            className="border border-black p-2.5 font-bold text-center w-24"
+                            style={{ backgroundColor: isMieszkanieGreen ? greenBg : 'transparent' }}
+                        >
+                            {Number(mieszkanie) > 0 ? formatCurrency(mieszkanie) : ''}
                         </td>
-                        <td className="p-2 font-bold text-center bg-[#ffff00]">
-                            {nadgodzinyNaKolejny || 0}
+                        <td
+                            className="border border-black p-2.5 font-normal"
+                            style={{ color: isMieszkanieGreen ? redColor : '#000000' }}
+                        >
+                            odjąć za mieszkanie
+                        </td>
+                        <td className="border border-black p-2.5 w-20"></td>
+                    </tr>
+
+                    {/* Row 17: Suma godzin */}
+                    <tr className="border-b border-black">
+                        <td className="border border-black p-2.5 font-bold text-center w-24 text-lg">
+                            {godzinyPrzepracowane !== '' ? formatNum(godzinyPrzepracowane) : '0'}
+                        </td>
+                        <td colSpan={2} className="border border-black p-2.5 font-bold text-base">
+                            Suma godzin przepracowanych w danym miesiącu.
                         </td>
                     </tr>
                 </tbody>
             </table>
-
-            {/* Row 15: Separator */}
-            <div className="text-center font-mono my-2 text-xs text-gray-600 tracking-widest">
-                ***************************************************
-            </div>
-
-            {/* Row 16: Summary Total */}
-            <div className="font-bold text-sm text-center mb-2">
-                {String(godzinyPrzepracowane).replace('.', ',')} Suma godzin przepracowanych w danym miesiącu.
-            </div>
-
-            {/* Row 17: Email */}
-            {email && (
-                <div className="text-center text-xs text-red-600 font-semibold">
-                    {email}
-                </div>
-            )}
         </div>
     );
 });
@@ -329,10 +454,10 @@ export const downloadRozliczeniePDF = async (sheetsData, filename = 'Rozliczenie
                 windowWidth: 1000
             });
 
-            // Use JPEG encoding at 0.82 quality (reduces size per page from ~3MB PNG to ~80KB JPEG)
+            // Use JPEG encoding at 0.82 quality
             const imgData = canvas.toDataURL('image/jpeg', 0.82);
 
-            const imgWidth = 180; // mm
+            const imgWidth = 185; // mm (dopasowanie szerokości do A4)
             const imgHeight = (canvas.height * imgWidth) / canvas.width;
             const xPos = (pdfWidth - imgWidth) / 2;
             const yPos = 12;
@@ -376,6 +501,7 @@ const createSheetHTML = (data) => {
         urlopZaleglyOtherMonthsTotal = 0,
         yearlyZaleglyPula = 0,
         urlopPulaInput = 0,
+        mieszkanie = 0,
         urlop = [],
         urlopZalegly = [],
         l4 = {},
@@ -383,182 +509,220 @@ const createSheetHTML = (data) => {
         vab = {},
         pappaledi = {},
         nadgodzinyNaKolejny = 0,
-        email = ''
+        email = '',
+        nrKonta = '',
+        kontoTyp = 'PL'
     } = data || {};
 
     const formattedMonth = getMonthNameMianownik(miesiacRok);
-    const prevMonthDopelniacz = getPrevMonthDopelniacz(miesiacRok);
 
     const sumDays = (arr) => Array.isArray(arr) ? arr.reduce((acc, e) => acc + (Number(e.days) || 0), 0) : 0;
 
     const currentUrlopDays = sumDays(urlop);
     const currentZaleglyDays = sumDays(urlopZalegly);
 
-    const totalZaleglyPula = Number(urlopPulaInput || yearlyZaleglyPula || 0);
-    const totalZaleglyUsed = (urlopZaleglyOtherMonthsTotal || 0) + currentZaleglyDays;
-    const remainingZaleglyPula = Math.max(totalZaleglyPula - totalZaleglyUsed, 0);
-
-    const totalRegularUsed = (urlopOtherMonthsTotal || 0) + currentUrlopDays;
-    const remainingRegularUrlop = Math.max(25 - totalRegularUsed, 0);
-
-    const totalAtfUsed = (atfOtherMonthsTotal || 0) + (Number(atfWykorzystane) || 0);
-    const remainingAtf = Math.max(40 - totalAtfUsed, 0);
-
-    const urlopText = formatLeaveText(urlop);
     const zaleglyText = formatLeaveText(urlopZalegly);
     const l4Text = formatRangeText(l4);
     const l4cdText = formatRangeText(l4cd);
     const vabText = formatRangeText(vab);
     const pappalediText = formatRangeText(pappaledi);
 
-    const isHoursGreen = Number(godzinyPrzepracowane) > 0;
+    // Green state for Column A
+    const isHoursGreen = Boolean(mozliweGodziny || (Number(godzinyPrzepracowane) > 0));
     const isOvertimeGreen = Number(nadgodzinyWyplata) > 0;
     const isRedDaysGreen = Number(czerwoneDni) > 0;
     const isAtfGreen = Number(atfWykorzystane) > 0;
-    const isUrlopGreen = currentUrlopDays > 0;
-    const isZaleglyGreen = currentZaleglyDays > 0;
     const isL4Green = Boolean(l4Text);
     const isL4cdGreen = Boolean(l4cdText);
     const isVabGreen = Boolean(vabText);
     const isPappalediGreen = Boolean(pappalediText);
+    const isMieszkanieGreen = Number(mieszkanie) > 0;
+
+    const remainingAtf = Math.max(40 - (Number(atfOtherMonthsTotal) || 0) - (Number(atfWykorzystane) || 0), 0);
 
     const greenBg = '#92d050';
-    const blueBg = '#00b0f0';
     const yellowBg = '#ffff00';
+    const redColor = '#ff0000';
+
+    let overtimeRateLabel = '+10kr/1h';
+    if (nadgodzinyStawka) {
+        const cleaned = String(nadgodzinyStawka).replace(/100%/gi, '').trim().replace(/^[,\s+]+/, '').trim();
+        if (cleaned) {
+            overtimeRateLabel = cleaned.includes('/1h') || cleaned.includes('/h') ? `+${cleaned.replace(/^\+/, '')}` : `+${cleaned.replace(/^\+/, '')}/1h`;
+        }
+    }
+
+    const displayHours = (mozliweGodziny !== '' && mozliweGodziny !== undefined && mozliweGodziny !== null)
+        ? formatNum(mozliweGodziny)
+        : (godzinyPrzepracowane !== '' ? formatNum(godzinyPrzepracowane) : '0');
 
     return `
-        <div style="background:#ffffff; color:#000000; font-family: Arial, sans-serif; padding: 24px; width: 620px; box-sizing: border-box; border: 1px solid #999999;">
-            <div style="text-align: center; font-weight: bold; font-size: 16px; margin-bottom: 8px;">
-                &lt; ${formattedMonth} &gt;
-            </div>
-
-            <div style="font-weight: bold; font-style: italic; font-size: 18px; color: #1e88e5; margin-bottom: 12px; border-bottom: 1px solid #cccccc; padding-bottom: 4px;">
-                ${pracownikName}
-            </div>
-
-            <table style="width: 100%; border-collapse: collapse; border: 1px solid #000000; font-size: 13px;">
+        <div style="background:#ffffff; color:#000000; font-family: 'Calibri', 'Segoe UI', Arial, sans-serif; padding: 24px; width: 660px; box-sizing: border-box;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 14.5px;">
                 <tbody>
-                    <tr style="border-bottom: 1px solid #000000;">
-                        <td style="border-right: 1px solid #000000; padding: 8px; font-weight: bold; text-align: center; width: 90px; font-size: 15px; background: ${isHoursGreen ? greenBg : 'transparent'};">
-                            ${godzinyPrzepracowane !== '' ? String(godzinyPrzepracowane).replace('.', ',') : '0'}
-                        </td>
-                        <td colspan="2" style="padding: 8px; font-weight: bold; color: #d32f2f; font-size: 14px;">
-                            ${nadgodzinyStawka || ''}
-                        </td>
-                    </tr>
-
-                    <tr style="border-bottom: 1px solid #000000;">
-                        <td style="border-right: 1px solid #000000; padding: 8px; font-weight: bold; text-align: center; background: ${isOvertimeGreen ? greenBg : 'transparent'};">
-                            ${Number(nadgodzinyWyplata) > 0 ? String(nadgodzinyWyplata).replace('.', ',') : ''}
-                        </td>
-                        <td colspan="2" style="padding: 8px; font-weight: bold;">
-                            nadgodziny ( do wypłaty )
+                    <!-- Row 1: Header Month -->
+                    <tr>
+                        <td style="width: 100px; border: none;"></td>
+                        <td colspan="2" style="border: none; padding: 2px 8px; font-weight: bold; font-size: 18px; color: #000000;">
+                            &lt;${formattedMonth} &gt;
                         </td>
                     </tr>
 
-                    <tr style="border-bottom: 1px solid #000000;">
-                        <td style="border-right: 1px solid #000000; padding: 8px; font-weight: bold; text-align: center; background: ${isRedDaysGreen ? greenBg : 'transparent'};">
-                            ${Number(czerwoneDni) > 0 ? `${czerwoneDni}dni` : ''}
+                    <!-- Row 2: Employee Name -->
+                    <tr>
+                        <td style="width: 100px; border: none;"></td>
+                        <td colspan="2" style="border: none; padding: 2px 8px 10px 8px; font-weight: bold; font-size: 18px; color: #000000;">
+                            ${pracownikName}
                         </td>
-                        <td colspan="2" style="padding: 8px;">
+                    </tr>
+
+                    <!-- Row 3: Mozliwe / Robocze godziny (168) + 100% -->
+                    <tr style="border-bottom: 1px solid #000000;">
+                        <td style="border: 1px solid #000000; padding: 7px 9px; font-weight: bold; text-align: center; width: 100px; font-size: 17px; background: ${isHoursGreen ? greenBg : 'transparent'};">
+                            ${displayHours}
+                        </td>
+                        <td style="border: 1px solid #000000; padding: 7px 9px; font-weight: bold; color: ${isHoursGreen ? redColor : '#000000'}; font-size: 17px;">
+                            100%
+                        </td>
+                        <td style="border: 1px solid #000000; padding: 7px 9px; width: 85px;"></td>
+                    </tr>
+
+                    <!-- Row 4: Nadgodziny -->
+                    <tr style="border-bottom: 1px solid #000000;">
+                        <td style="border: 1px solid #000000; padding: 7px 9px; font-weight: bold; text-align: center; width: 100px; background: ${isOvertimeGreen ? greenBg : 'transparent'};">
+                            ${Number(nadgodzinyWyplata) > 0 ? formatNum(nadgodzinyWyplata) : ''}
+                        </td>
+                        <td style="border: 1px solid #000000; padding: 7px 9px; color: ${isOvertimeGreen ? redColor : '#000000'};">
+                            nadgodziny ( kod, 1174 <strong>${overtimeRateLabel}</strong> )
+                        </td>
+                        <td style="border: 1px solid #000000; padding: 7px 9px; width: 85px;"></td>
+                    </tr>
+
+                    <!-- Row 5: Czerwone dni -->
+                    <tr style="border-bottom: 1px solid #000000;">
+                        <td style="border: 1px solid #000000; padding: 7px 9px; font-weight: bold; text-align: center; width: 100px; background: ${isRedDaysGreen ? greenBg : 'transparent'};">
+                            ${Number(czerwoneDni) > 0 ? `${formatNum(czerwoneDni)}dni` : ''}
+                        </td>
+                        <td style="border: 1px solid #000000; padding: 7px 9px; color: ${isRedDaysGreen ? redColor : '#000000'};">
                             czerwone dni
                         </td>
+                        <td style="border: 1px solid #000000; padding: 7px 9px; width: 85px;"></td>
                     </tr>
 
+                    <!-- Row 6: Bank godzin -->
                     <tr style="border-bottom: 1px solid #000000;">
-                        <td style="border-right: 1px solid #000000; padding: 8px; background: ${blueBg}; width: 90px;"></td>
-                        <td style="border-right: 1px solid #000000; padding: 8px;">
-                            z bank godzin <span style="color: #d32f2f; font-weight: bold;">z ${prevMonthDopelniacz || 'poprzedniego miesiąca'}</span>
+                        <td style="border: 1px solid #000000; padding: 7px 9px; width: 100px;"></td>
+                        <td style="border: 1px solid #000000; padding: 7px 9px;">
+                            z bank godzin
                         </td>
-                        <td style="padding: 8px; font-weight: bold; text-align: center; background: ${yellowBg}; width: 70px;">
-                            ${nadgodzinyZPoprzedniego || 0}
-                        </td>
-                    </tr>
-
-                    <tr style="border-bottom: 1px solid #000000;">
-                        <td style="border-right: 1px solid #000000; padding: 8px; font-weight: bold; text-align: center; background: ${isAtfGreen ? greenBg : 'transparent'};">
-                            ${Number(atfWykorzystane) > 0 ? atfWykorzystane : ''}
-                        </td>
-                        <td style="border-right: 1px solid #000000; padding: 8px;">
-                            ATF 40h
-                        </td>
-                        <td style="padding: 8px; font-weight: bold; text-align: center; background: ${yellowBg};">
-                            ${remainingAtf}/40
+                        <td style="border: 1px solid #000000; padding: 7px 9px; font-weight: bold; text-align: center; width: 85px; background: ${yellowBg};">
+                            ${Number(nadgodzinyZPoprzedniego) > 0 ? formatNum(nadgodzinyZPoprzedniego) : ''}
                         </td>
                     </tr>
 
+                    <!-- Row 7: ATF -->
                     <tr style="border-bottom: 1px solid #000000;">
-                        <td style="border-right: 1px solid #000000; padding: 8px; font-weight: bold; text-align: center; background: ${isUrlopGreen ? greenBg : 'transparent'};">
-                            ${currentUrlopDays > 0 ? `${currentUrlopDays}dni` : ''}
+                        <td style="border: 1px solid #000000; padding: 7px 9px; font-weight: bold; text-align: center; width: 100px; background: ${isAtfGreen ? greenBg : 'transparent'};">
+                            ${isAtfGreen ? formatNum(atfWykorzystane) : ''}
                         </td>
-                        <td style="border-right: 1px solid #000000; padding: 8px;">
-                            urlop ${urlopText ? `( ${urlopText} )` : '( wpisz ilość dni + data )'}
+                        <td style="border: 1px solid #000000; padding: 7px 9px; color: ${isAtfGreen ? redColor : '#000000'};">
+                            ATF
                         </td>
-                        <td style="padding: 8px; font-weight: bold; text-align: center; background: ${yellowBg};">
-                            ${remainingRegularUrlop}
+                        <td style="border: 1px solid #000000; padding: 7px 9px; font-weight: bold; text-align: center; width: 85px; background: ${yellowBg};">
+                            ${(isAtfGreen || Number(atfOtherMonthsTotal) > 0) ? formatNum(remainingAtf) : ''}
                         </td>
                     </tr>
 
+                    <!-- Row 8: Urlop -->
                     <tr style="border-bottom: 1px solid #000000;">
-                        <td style="border-right: 1px solid #000000; padding: 8px; font-weight: bold; text-align: center; background: ${isZaleglyGreen ? greenBg : 'transparent'};">
-                            ${currentZaleglyDays > 0 ? `${currentZaleglyDays}dni` : ''}
+                        <td style="border: 1px solid #000000; padding: 7px 9px; width: 100px;"></td>
+                        <td style="border: 1px solid #000000; padding: 7px 9px;">
+                            urlop
                         </td>
-                        <td style="border-right: 1px solid #000000; padding: 8px; font-weight: bold; font-style: italic; color: #1565c0;">
-                            Urlop zaległy ${zaleglyText ? `( ${zaleglyText} )` : ''}
-                        </td>
-                        <td style="padding: 8px; font-weight: bold; text-align: center; background: ${yellowBg};">
-                            ${remainingZaleglyPula}
+                        <td style="border: 1px solid #000000; padding: 7px 9px; font-weight: bold; text-align: center; width: 85px; background: ${yellowBg};">
+                            ${currentUrlopDays > 0 ? formatNum(currentUrlopDays) : (currentZaleglyDays > 0 ? formatNum(currentZaleglyDays) : '')}
                         </td>
                     </tr>
 
+                    <!-- Row 9: Urlop zaległy -->
                     <tr style="border-bottom: 1px solid #000000;">
-                        <td style="border-right: 1px solid #000000; padding: 8px; font-weight: bold; text-align: center; background: ${isL4Green ? greenBg : 'transparent'};"></td>
-                        <td colspan="2" style="padding: 8px;">
-                            L4/PC Husbyggen 14dni płaci PC ${l4Text ? `( ${l4Text} )` : '( data )'}
+                        <td style="border: 1px solid #000000; padding: 7px 9px; width: 100px;"></td>
+                        <td style="border: 1px solid #000000; padding: 7px 9px;">
+                            Urlop zaległy ( <span style="color: #0070c0; font-style: italic;">${zaleglyText ? zaleglyText : 'wpisz ilość dni + data'}</span> )
                         </td>
+                        <td style="border: 1px solid #000000; padding: 7px 9px; font-weight: bold; text-align: center; width: 85px; background: ${yellowBg};"></td>
                     </tr>
 
+                    <!-- Row 10: L4 -->
                     <tr style="border-bottom: 1px solid #000000;">
-                        <td style="border-right: 1px solid #000000; padding: 8px; font-weight: bold; text-align: center; background: ${isL4cdGreen ? greenBg : 'transparent'};"></td>
-                        <td colspan="2" style="padding: 8px;">
-                            L4c.d. ${l4cdText ? `( ${l4cdText} )` : '( data )'}
+                        <td style="border: 1px solid #000000; padding: 7px 9px; width: 100px; background: ${isL4Green ? greenBg : 'transparent'};"></td>
+                        <td style="border: 1px solid #000000; padding: 7px 9px; color: ${isL4Green ? redColor : '#000000'};">
+                            L4/PC Husbyggen 14dni płaci PC${l4Text ? ` ( <span style="color: ${isL4Green ? redColor : '#0070c0'}; font-style: italic;">${l4Text}</span> )` : ''}
                         </td>
+                        <td style="border: 1px solid #000000; padding: 7px 9px; width: 85px;"></td>
                     </tr>
 
+                    <!-- Row 11: L4cd -->
                     <tr style="border-bottom: 1px solid #000000;">
-                        <td style="border-right: 1px solid #000000; padding: 8px; font-weight: bold; text-align: center; background: ${isVabGreen ? greenBg : 'transparent'};"></td>
-                        <td colspan="2" style="padding: 8px;">
-                            VAB- ${vabText ? `( ${vabText} )` : '( data )'}
+                        <td style="border: 1px solid #000000; padding: 7px 9px; width: 100px; background: ${isL4cdGreen ? greenBg : 'transparent'};"></td>
+                        <td style="border: 1px solid #000000; padding: 7px 9px; color: ${isL4cdGreen ? redColor : '#000000'};">
+                            L4c.d.${l4cdText ? ` ( <span style="color: ${isL4cdGreen ? redColor : '#0070c0'}; font-style: italic;">${l4cdText}</span> )` : ''}
                         </td>
+                        <td style="border: 1px solid #000000; padding: 7px 9px; width: 85px;"></td>
                     </tr>
 
+                    <!-- Row 12: VAB -->
                     <tr style="border-bottom: 1px solid #000000;">
-                        <td style="border-right: 1px solid #000000; padding: 8px; font-weight: bold; text-align: center; background: ${isPappalediGreen ? greenBg : 'transparent'};"></td>
-                        <td colspan="2" style="padding: 8px;">
-                            Pappaledi/ Tacierzyńskie - ${pappalediText ? `( ${pappalediText} )` : '( data )'}
+                        <td style="border: 1px solid #000000; padding: 7px 9px; width: 100px; background: ${isVabGreen ? greenBg : 'transparent'};"></td>
+                        <td style="border: 1px solid #000000; padding: 7px 9px; color: ${isVabGreen ? redColor : '#000000'};">
+                            VAB-${vabText ? ` ( <span style="color: ${isVabGreen ? redColor : '#0070c0'}; font-style: italic;">${vabText}</span> )` : ''}
                         </td>
+                        <td style="border: 1px solid #000000; padding: 7px 9px; width: 85px;"></td>
                     </tr>
 
+                    <!-- Row 13: Pappaledi -->
                     <tr style="border-bottom: 1px solid #000000;">
-                        <td colspan="2" style="padding: 8px; font-weight: bold;">
+                        <td style="border: 1px solid #000000; padding: 7px 9px; width: 100px; background: ${isPappalediGreen ? greenBg : 'transparent'};"></td>
+                        <td style="border: 1px solid #000000; padding: 7px 9px; color: ${isPappalediGreen ? redColor : '#000000'};">
+                            Pappaledi/ Tacierzynskie -${pappalediText ? ` ( <span style="color: ${isPappalediGreen ? redColor : '#0070c0'}; font-style: italic;">${pappalediText}</span> )` : ''}
+                        </td>
+                        <td style="border: 1px solid #000000; padding: 7px 9px; width: 85px;"></td>
+                    </tr>
+
+                    <!-- Row 14: Nadgodziny na kolejny miesiac -->
+                    <tr style="border-bottom: 1px solid #000000;">
+                        <td style="border: 1px solid #000000; padding: 7px 9px; width: 100px;"></td>
+                        <td style="border: 1px solid #000000; padding: 7px 9px;">
                             Nadgodziny przeniesione na kolejny miesiąc.
                         </td>
-                        <td style="padding: 8px; font-weight: bold; text-align: center; background: ${yellowBg};">
-                            ${nadgodzinyNaKolejny || 0}
+                        <td style="border: 1px solid #000000; padding: 7px 9px; font-weight: bold; text-align: center; width: 85px; background: ${yellowBg};">
+                            ${Number(nadgodzinyNaKolejny) > 0 ? formatNum(nadgodzinyNaKolejny) : ''}
+                        </td>
+                    </tr>
+
+                    <!-- Row 15: Odjąć za mieszkanie -->
+                    <tr style="border-bottom: 1px solid #000000;">
+                        <td style="border: 1px solid #000000; padding: 7px 9px; font-weight: bold; text-align: center; width: 100px; background: ${isMieszkanieGreen ? greenBg : 'transparent'};">
+                            ${Number(mieszkanie) > 0 ? formatCurrency(mieszkanie) : ''}
+                        </td>
+                        <td style="border: 1px solid #000000; padding: 7px 9px; font-weight: normal; color: ${isMieszkanieGreen ? redColor : '#000000'};">
+                            odjąć za mieszkanie
+                        </td>
+                        <td style="border: 1px solid #000000; padding: 7px 9px; width: 85px;"></td>
+                    </tr>
+
+                    <!-- Row 17: Suma godzin -->
+                    <tr style="border-bottom: 1px solid #000000;">
+                        <td style="border: 1px solid #000000; padding: 7px 9px; font-weight: bold; text-align: center; width: 100px; font-size: 17px;">
+                            ${godzinyPrzepracowane !== '' ? formatNum(godzinyPrzepracowane) : '0'}
+                        </td>
+                        <td colspan="2" style="border: 1px solid #000000; padding: 7px 9px; font-weight: bold; font-size: 15px;">
+                            Suma godzin przepracowanych w danym miesiącu.
                         </td>
                     </tr>
                 </tbody>
             </table>
-
-            <div style="text-align: center; font-family: monospace; margin: 8px 0; font-size: 11px; color: #555555;">
-                ***************************************************
-            </div>
-
-            <div style="font-weight: bold; font-size: 14px; text-align: center; margin-bottom: 6px;">
-                ${String(godzinyPrzepracowane).replace('.', ',')} Suma godzin przepracowanych w danym miesiącu.
-            </div>
-
-            ${email ? `<div style="text-align: center; font-size: 12px; color: #d32f2f; font-weight: bold;">${email}</div>` : ''}
         </div>
     `;
 };
+
