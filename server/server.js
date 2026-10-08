@@ -265,6 +265,7 @@ const DodajMaterial = require('./api/Czas/Materialy/czas.materialy.dodaj');
 const UsunMaterial = require('./api/Czas/Materialy/czas.materialy.usun');
 const UploadMaterialPdf = require('./api/Czas/Materialy/czas.materialy.pdf');
 const UsunMaterialPdf = require('./api/Czas/Materialy/czas.materialy.pdf.usun');
+const PobierzMaterialPdfContent = require('./api/Czas/Materialy/czas.materialy.pdf.pobierz');
 const DriveOAuth = require('./api/Drive/drive.oauth');
 
 // Czas > Tydzien
@@ -573,6 +574,7 @@ app.post('/api/czas/materialy/:id', authorizeRole('Administrator'), (req, res) =
 });
 app.post('/api/czas/materialy/:id/:materialId/pdf', authorizeRole('Administrator'), UploadMaterialPdf(pool));
 app.delete('/api/czas/materialy/:id/:materialId/pdf', authorizeRole('Administrator'), UsunMaterialPdf(pool));
+app.get('/api/czas/materialy/pdf/content/:driveId', authorizeRole('Administrator'), PobierzMaterialPdfContent(pool));
 app.delete('/api/czas/materialy/:id/:materialId', authorizeRole('Administrator'), (req, res) => {
     UsunMaterial(req, res, pool);
 });

@@ -4,7 +4,7 @@ import { notification } from 'antd';
 import axios from 'axios';
 const baseUrl = process.env.REACT_APP_BASE_URL;
 
-const PDF_SprawozdaniePodsumowanie = async (raport, startDate, endDate, Projekt, projectZleceniodawcaMapping, returnBytes = false) => {
+const PDF_SprawozdaniePodsumowanie = async (raport, startDate, endDate, Projekt, projectZleceniodawcaMapping, projectOrderMap = {}, returnBytes = false) => {
     // --- Pobierz cennik z backendu ---
     let cennikData = [];
     try {
@@ -305,7 +305,7 @@ const PDF_SprawozdaniePodsumowanie = async (raport, startDate, endDate, Projekt,
 
         doc.autoTable({
             startY: tableStartY,
-            head: [['Pracownik', 'Czas', '1h=kr', 'Kilometry', 'Parking', 'Diety', 'Materiał', 'Suma']],
+            head: [['Pracownik', 'Czas', '1h=kr', 'Kilometry', 'Parking', 'Diety / inne koszty', 'Materiał', 'Suma']],
             body: tableData,
             theme: 'grid',
             headStyles: { fillColor: [238, 238, 223], textColor: [0, 0, 0], font: 'Roboto' },

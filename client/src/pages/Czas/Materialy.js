@@ -7,6 +7,7 @@ import { message } from 'antd';
 import Axios from 'axios';
 import { PDFDocument } from 'pdf-lib';
 import checkUserType from '../../utils/accTypeUtils';
+import { addToPdfQueue } from '../../utils/pdfQueueManager';
 
 
 addLocale('pl-materialy-v2', {
@@ -71,6 +72,31 @@ export default function MateriialyPage() {
         } catch (error) {
             console.error('Błąd usuwania pliku PDF:', error);
             message.error('Nie udało się usunąć pliku PDF');
+        }
+    };
+
+    const handleAddMaterialPdfToQueue = async (item) => {
+        if (!item.PdfDriveId) {
+            message.warning('Brak pliku PDF dla tej faktury');
+            return;
+        }
+
+        try {
+            message.loading({ content: 'Pobieranie PDF materiału...', key: 'matPdfQueue' });
+            const response = await Axios.get(`${baseUrl}/api/czas/materialy/pdf/content/${item.PdfDriveId}`, {
+                withCredentials: true,
+                responseType: 'arraybuffer'
+            });
+
+            const uint8Array = new Uint8Array(response.data);
+            const titleName = `[Materiały] Projekt: ${projektName || 'Projekt'} - ${item.NazwaFaktury || 'Faktura'}`;
+            const dateLabel = item.Data ? normalizeDateOnly(item.Data) : 'Plik PDF';
+
+            addToPdfQueue(titleName, dateLabel, uint8Array);
+            message.success({ content: 'Dodano materiał PDF do kolejki połączonych plików', key: 'matPdfQueue' });
+        } catch (error) {
+            console.error('Błąd pobierania PDF materiału do kolejki:', error);
+            message.error({ content: 'Nie udało się pobrać pliku PDF materiału do kolejki', key: 'matPdfQueue' });
         }
     };
 
@@ -368,12 +394,12 @@ export default function MateriialyPage() {
                             </div>
 
                             <div>
-                                <label className="mb-2 block text-sm font-semibold text-gray-700">Opis</label>
+                                <label className="mb-2 block text-sm font-semibold text-gray-700">Opis <span className="text-xs font-normal text-gray-500">(opcjonalnie)</span></label>
                                 <textarea
                                     name="opis"
                                     value={formData.opis}
                                     onChange={handleInputChange}
-                                    placeholder="Krótki opis faktury"
+                                    placeholder="Krótki opis faktury (opcjonalnie)"
                                     rows={5}
                                     className="w-full rounded-md border border-gray-300 bg-white px-3 py-2.5 text-gray-900 outline-none transition focus:border-blue-500"
                                 />
@@ -426,17 +452,26 @@ export default function MateriialyPage() {
                                                         <td className="px-3 py-2 text-right">{Number(item.Koszty || 0).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                                         <td className="px-3 py-2">{item.Opis || '-'}</td>
                                                         <td className="px-3 py-2">
-                                                            <div className="flex items-center gap-2">
-                                                                {item.PdfDriveLink ? (
+                                                            <div className="flex items-center gap-2 flex-wrap">
+                                                                {item.PdfDriveLink || item.PdfDriveId ? (
                                                                     <>
-                                                                        <a
-                                                                            href={item.PdfDriveLink}
-                                                                            target="_blank"
-                                                                            rel="noreferrer"
-                                                                            className="text-xs font-semibold text-blue-700 hover:underline"
+                                                                        {item.PdfDriveLink && (
+                                                                            <a
+                                                                                href={item.PdfDriveLink}
+                                                                                target="_blank"
+                                                                                rel="noreferrer"
+                                                                                className="text-xs font-semibold text-blue-700 hover:underline"
+                                                                            >
+                                                                                Podgląd
+                                                                            </a>
+                                                                        )}
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => handleAddMaterialPdfToQueue(item)}
+                                                                            className="rounded border border-blue-300 bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition"
                                                                         >
-                                                                            Podgląd
-                                                                        </a>
+                                                                            + Połącz PDF
+                                                                        </button>
                                                                         <button
                                                                             type="button"
                                                                             onClick={() => handleDeletePdf(item.id)}

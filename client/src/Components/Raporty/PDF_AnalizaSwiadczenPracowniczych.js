@@ -171,7 +171,7 @@ const PDF_AnalizaSwiadczenPracowniczych = async (raport, startDate, endDate, pra
 
     doc.autoTable({
       startY: 80,
-      head: [['Pracownik', 'Godziny', '1h=kr', 'Kilometry', 'Parking', 'Diety', 'Inne koszty', 'Suma']],
+      head: [['Pracownik', 'Godziny', '1h=kr', 'Kilometry', 'Parking', 'Diety / inne koszty', 'Inne koszty', 'Suma']],
       body: tableData,
       theme: 'grid',
       headStyles: { fillColor: [238, 238, 223], textColor: [0, 0, 0], font: 'Roboto' },
