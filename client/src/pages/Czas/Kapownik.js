@@ -138,6 +138,33 @@ const Kapownik = () => {
         }
     };
 
+    const isMonthLockedForAll = dane.length > 0 && dane.every(item => Boolean(item.Zapisal_admin));
+
+    const handleToggleBlokadaWszyscy = async () => {
+        const confirmMsg = isMonthLockedForAll
+            ? `Czy na pewno chcesz ODBLOKOWAĆ miesiąc ${miesiacRok} dla wszystkich pracowników?`
+            : `Czy na pewno chcesz ZABLOKOWAĆ miesiąc ${miesiacRok} dla wszystkich pracowników?\n\nUWAGA: Spowoduje to również, że pracownicy nie będą mogli cofać się wstecz do wcześniejszych miesięcy (np. przed ${miesiacRok}).`;
+
+        if (!window.confirm(confirmMsg)) return;
+
+        setIsLoading(true);
+        setMessage('');
+        try {
+            await Axios.post(`${baseUrl}/api/rozliczenia/blokada-wszyscy`, {
+                miesiacRok,
+                zablokuj: !isMonthLockedForAll
+            }, { withCredentials: true });
+
+            setMessage(isMonthLockedForAll ? `Odblokowano miesiąc ${miesiacRok} dla wszystkich pracowników.` : `Zablokowano miesiąc ${miesiacRok} dla wszystkich pracowników.`);
+            pobierzDaneKapownika();
+        } catch (err) {
+            console.error('Błąd blokady miesiąca:', err);
+            setMessage(err.response?.data?.error || 'Błąd podczas zmiany blokady miesiąca.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const parseJsonValue = (value, fallback) => {
         if (value === null || value === undefined || value === '') return fallback;
         if (typeof value === 'string') {
@@ -385,6 +412,16 @@ const Kapownik = () => {
                         className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-2 rounded transition shadow-sm flex items-center gap-1"
                     >
                         📚 Drukuj PDF (Wszyscy)
+                    </button>
+                    <button
+                        type="button"
+                        onClick={handleToggleBlokadaWszyscy}
+                        className={`text-xs font-bold px-3 py-2 rounded transition shadow-sm flex items-center gap-1 text-white ${
+                            isMonthLockedForAll ? 'bg-amber-600 hover:bg-amber-700 ring-2 ring-amber-400' : 'bg-rose-700 hover:bg-rose-800'
+                        }`}
+                        title={isMonthLockedForAll ? 'Odblokuj ten miesiąc dla wszystkich pracowników' : 'Zablokuj ten miesiąc dla wszystkich pracowników (pracownicy nie będą mogli cofać się wstecz)'}
+                    >
+                        {isMonthLockedForAll ? '🔓 Odblokuj (Wszyscy)' : '🔒 Zablokuj (Wszyscy)'}
                     </button>
                 </div>
 

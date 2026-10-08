@@ -593,6 +593,31 @@ app.get('/api/rozliczenia/kapownik', authorizeRole('Administrator'), (req, res) 
     PobierzKapownik(req, res, pool);
 });
 
+app.post('/api/rozliczenia/blokada-wszyscy', authorizeRole('Administrator', 'Kierownik', 'Biuro'), (req, res) => {
+    const { miesiacRok, zablokuj } = req.body;
+    if (!miesiacRok) {
+        return res.status(400).json({ error: 'Brak parametru miesiacRok' });
+    }
+    const flag = zablokuj ? 1 : 0;
+    const query = `
+        INSERT INTO rozliczenia_miesieczne (Pracownik_idPracownik, Miesiac_rok, Godziny_przepracowane, Zapisal_admin, Status)
+        SELECT p.idPracownik, ?, 0, ?, 'szkic'
+        FROM pracownik p
+        WHERE p.Archiwum = 0 AND p.Status_konta = 'Aktywne'
+        ON DUPLICATE KEY UPDATE Zapisal_admin = VALUES(Zapisal_admin)
+    `;
+    pool.query(query, [miesiacRok, flag], (err) => {
+        if (err) {
+            console.error('Błąd blokady miesiąca dla wszystkich:', err);
+            return res.status(500).json({ error: err.message });
+        }
+        res.status(200).json({ 
+            message: flag ? `Zablokowano miesiąc ${miesiacRok} dla wszystkich pracowników.` : `Odblokowano miesiąc ${miesiacRok} dla wszystkich pracowników.`,
+            zablokowano: flag
+        });
+    });
+});
+
 // CZAS > URLOPY //
 app.get('/api/urlopy', (req, res) => {
     GetUrlopy(req, res, pool);

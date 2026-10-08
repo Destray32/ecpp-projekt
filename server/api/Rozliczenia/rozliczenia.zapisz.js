@@ -32,13 +32,30 @@ function ZapiszRozliczenia(req, res, db) {
     }
 
     // 1. Sprawdzenie czy rozliczenie nie zostało już zablokowane przez administratora
-    const lockCheckQuery = `SELECT Zapisal_admin FROM rozliczenia_miesieczne WHERE Pracownik_idPracownik = ? AND Miesiac_rok = ?`;
-    db.query(lockCheckQuery, [Pracownik_idPracownik, Miesiac_rok], (checkErr, checkRows) => {
-        // Jeśli zapisał admin, a obecny użytkownik NIE jest adminem -> blokada
-        if (!isUserAdmin && checkRows && checkRows.length > 0 && Number(checkRows[0].Zapisal_admin) === 1) {
-            return res.status(403).json({ 
-                error: 'Rozliczenie za ten miesiąc zostało zatwierdzone przez administratora i jest zablokowane przed edycją.' 
-            });
+    // oraz czy nie istnieje późniejszy miesiąc zatwierdzony przez administratora (blokada modyfikacji wstecz)
+    const lockCheckQuery = `
+        SELECT 
+            (SELECT Zapisal_admin FROM rozliczenia_miesieczne WHERE Pracownik_idPracownik = ? AND Miesiac_rok = ?) AS currentLocked,
+            (SELECT MAX(Miesiac_rok) FROM rozliczenia_miesieczne WHERE Zapisal_admin = 1) AS latestGlobalLocked,
+            (SELECT MAX(Miesiac_rok) FROM rozliczenia_miesieczne WHERE Pracownik_idPracownik = ? AND Zapisal_admin = 1) AS latestUserLocked
+    `;
+    db.query(lockCheckQuery, [Pracownik_idPracownik, Miesiac_rok, Pracownik_idPracownik], (checkErr, checkRows) => {
+        const row = checkRows && checkRows[0] ? checkRows[0] : {};
+        const currentLocked = Number(row.currentLocked) === 1;
+        const latestLockedMonth = row.latestGlobalLocked || row.latestUserLocked;
+
+        // Jeśli obecny użytkownik NIE jest adminem:
+        if (!isUserAdmin) {
+            if (currentLocked) {
+                return res.status(403).json({ 
+                    error: 'Rozliczenie za ten miesiąc zostało zatwierdzone przez administratora i jest zablokowane przed edycją.' 
+                });
+            }
+            if (latestLockedMonth && Miesiac_rok < latestLockedMonth) {
+                return res.status(403).json({ 
+                    error: `Modyfikacja wsteczna jest zablokowana. Administrator zatwierdził rozliczenia do miesiąca ${latestLockedMonth}. Nie można modyfikować rozliczenia za ${Miesiac_rok}.` 
+                });
+            }
         }
 
         // Ustalenie flagi Zapisal_admin:
@@ -47,8 +64,8 @@ function ZapiszRozliczenia(req, res, db) {
         let finalZapisalAdmin = 0;
         if (isUserAdmin) {
             finalZapisalAdmin = (Zapisal_admin !== undefined && Zapisal_admin !== null) ? Number(Zapisal_admin) : 1;
-        } else if (checkRows && checkRows.length > 0) {
-            finalZapisalAdmin = Number(checkRows[0].Zapisal_admin) || 0;
+        } else {
+            finalZapisalAdmin = currentLocked ? 1 : 0;
         }
 
         const query = `

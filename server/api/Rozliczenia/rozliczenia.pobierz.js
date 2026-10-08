@@ -195,66 +195,82 @@ function PobierzRozliczenia(req, res, db) {
                                 const fallbackNrKonta = recent.Nr_konta || '';
                                 const fallbackKontoTyp = recent.Konto_typ || 'PL';
 
-                                if (result.length > 0) {
-                                    let savedData = result[0];
+                                const latestLockQuery = `
+                                    SELECT 
+                                        (SELECT MAX(Miesiac_rok) FROM rozliczenia_miesieczne WHERE Zapisal_admin = 1) AS latestGlobalLocked,
+                                        (SELECT MAX(Miesiac_rok) FROM rozliczenia_miesieczne WHERE Pracownik_idPracownik = ? AND Zapisal_admin = 1) AS latestUserLocked
+                                `;
 
-                                    savedData.Godziny_przepracowane = obliczoneGodziny;
-                                    savedData.Email = savedData.Email || fallbackEmail;
-                                    savedData.Nr_konta = savedData.Nr_konta || fallbackNrKonta;
-                                    savedData.Konto_typ = savedData.Konto_typ || fallbackKontoTyp;
-                                    savedData.Zapisal_admin = Number(savedData.Zapisal_admin) || 0;
+                                db.query(latestLockQuery, [pracownikId], (lockErr, lockRows) => {
+                                    const lockRow = (!lockErr && lockRows && lockRows[0]) ? lockRows[0] : {};
+                                    const latestLockedMonth = lockRow.latestGlobalLocked || lockRow.latestUserLocked || null;
+                                    const isLockedByLaterMonth = Boolean(latestLockedMonth && miesiacRok < latestLockedMonth);
 
-                                    return res.status(200).json({
-                                        status: 'success',
-                                        data: savedData,
-                                        isDraft: false,
-                                        atfOtherMonthsTotal: otherAtf,
-                                        urlopOtherMonthsTotal: urlopOtherMonthsTotal,
-                                        urlopZaleglyOtherMonthsTotal: urlopZaleglyOtherMonthsTotal,
-                                        urlopYearTotal: urlopYearTotal,
-                                        urlopZaleglyYearTotal: urlopZaleglyYearTotal,
-                                        yearlyZaleglyPula: foundZaleglyPula || Number(savedData.Urlop_zalegly_pula || 0)
-                                    });
-                                } else {
-                                    const draftData = {
-                                        Pracownik_idPracownik: parseInt(pracownikId),
-                                        Miesiac_rok: miesiacRok,
-                                        Godziny_przepracowane: obliczoneGodziny,
-                                        Mozliwe_godziny: '',
-                                        Nadgodziny_wyplata: 0.00,
-                                        Nadgodziny_z_poprzedniego: 0.00,
-                                        Nadgodziny_na_kolejny: 0.00,
-                                        Atf_wykorzystane: 0.00,
-                                        Atf_zielone: 0.00,
-                                        Czerwone_dni: 0,
-                                        Urlop_zalegly_pula: foundZaleglyPula || 0,
-                                        Nadgodziny_stawka: '',
-                                        Nadgodziny_unlocked: 0,
-                                        Mieszkanie: 0.00,
-                                        Email: fallbackEmail,
-                                        Nr_konta: fallbackNrKonta,
-                                        Konto_typ: fallbackKontoTyp,
-                                        Zapisal_admin: 0,
-                                        Urlop: [],
-                                        Urlop_zalegly: [],
-                                        L4: { from: '', to: '' },
-                                        L4cd: { from: '', to: '' },
-                                        VAB: { from: '', to: '' },
-                                        Pappaledi: { from: '', to: '' }
-                                    };
+                                    if (result.length > 0) {
+                                        let savedData = result[0];
 
-                                    return res.status(200).json({
-                                        status: 'success',
-                                        data: draftData,
-                                        isDraft: true,
-                                        atfOtherMonthsTotal: otherAtf,
-                                        urlopOtherMonthsTotal: urlopOtherMonthsTotal,
-                                        urlopZaleglyOtherMonthsTotal: urlopZaleglyOtherMonthsTotal,
-                                        urlopYearTotal: urlopYearTotal,
-                                        urlopZaleglyYearTotal: urlopZaleglyYearTotal,
-                                        yearlyZaleglyPula: foundZaleglyPula
-                                    });
-                                }
+                                        savedData.Godziny_przepracowane = obliczoneGodziny;
+                                        savedData.Email = savedData.Email || fallbackEmail;
+                                        savedData.Nr_konta = savedData.Nr_konta || fallbackNrKonta;
+                                        savedData.Konto_typ = savedData.Konto_typ || fallbackKontoTyp;
+                                        savedData.Zapisal_admin = (Number(savedData.Zapisal_admin) === 1 || isLockedByLaterMonth) ? 1 : 0;
+
+                                        return res.status(200).json({
+                                            status: 'success',
+                                            data: savedData,
+                                            isDraft: false,
+                                            latestLockedMonth: latestLockedMonth,
+                                            isLockedByLaterMonth: isLockedByLaterMonth,
+                                            atfOtherMonthsTotal: otherAtf,
+                                            urlopOtherMonthsTotal: urlopOtherMonthsTotal,
+                                            urlopZaleglyOtherMonthsTotal: urlopZaleglyOtherMonthsTotal,
+                                            urlopYearTotal: urlopYearTotal,
+                                            urlopZaleglyYearTotal: urlopZaleglyYearTotal,
+                                            yearlyZaleglyPula: foundZaleglyPula || Number(savedData.Urlop_zalegly_pula || 0)
+                                        });
+                                    } else {
+                                        const draftData = {
+                                            Pracownik_idPracownik: parseInt(pracownikId),
+                                            Miesiac_rok: miesiacRok,
+                                            Godziny_przepracowane: obliczoneGodziny,
+                                            Mozliwe_godziny: '',
+                                            Nadgodziny_wyplata: 0.00,
+                                            Nadgodziny_z_poprzedniego: 0.00,
+                                            Nadgodziny_na_kolejny: 0.00,
+                                            Atf_wykorzystane: 0.00,
+                                            Atf_zielone: 0.00,
+                                            Czerwone_dni: 0,
+                                            Urlop_zalegly_pula: foundZaleglyPula || 0,
+                                            Nadgodziny_stawka: '',
+                                            Nadgodziny_unlocked: 0,
+                                            Mieszkanie: 0.00,
+                                            Email: fallbackEmail,
+                                            Nr_konta: fallbackNrKonta,
+                                            Konto_typ: fallbackKontoTyp,
+                                            Zapisal_admin: isLockedByLaterMonth ? 1 : 0,
+                                            Urlop: [],
+                                            Urlop_zalegly: [],
+                                            L4: { from: '', to: '' },
+                                            L4cd: { from: '', to: '' },
+                                            VAB: { from: '', to: '' },
+                                            Pappaledi: { from: '', to: '' }
+                                        };
+
+                                        return res.status(200).json({
+                                            status: 'success',
+                                            data: draftData,
+                                            isDraft: true,
+                                            latestLockedMonth: latestLockedMonth,
+                                            isLockedByLaterMonth: isLockedByLaterMonth,
+                                            atfOtherMonthsTotal: otherAtf,
+                                            urlopOtherMonthsTotal: urlopOtherMonthsTotal,
+                                            urlopZaleglyOtherMonthsTotal: urlopZaleglyOtherMonthsTotal,
+                                            urlopYearTotal: urlopYearTotal,
+                                            urlopZaleglyYearTotal: urlopZaleglyYearTotal,
+                                            yearlyZaleglyPula: foundZaleglyPula
+                                        });
+                                    }
+                                });
                             });
                         });
                     };

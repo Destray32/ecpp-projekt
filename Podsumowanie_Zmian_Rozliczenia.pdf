@@ -10,7 +10,7 @@
 endobj
 4 0 obj
 <<
-/Length 9783
+/Length 9852
 >>
 stream
 0.5670000000000001 w
@@ -63,35 +63,35 @@ BT
 12.6499999999999986 TL
 0.102 0.337 0.859 rg
 51.0236220472441033 725.6695275590550409 Td
-(1. Blokada edycji rozliczen przez pracownikow) Tj
+(1. Blokada edycji oraz blokada cofania sie wstecz) Tj
 ET
 BT
 /F1 9 Tf
 10.3499999999999996 TL
 0.122 0.161 0.216 rg
 56.6929133858267775 708.6616535433070112 Td
-(- Zabezpieczenie przed edycja: jezeli miesiac zostanie zapisany przez Administratora,) Tj
+(- Zabezpieczenie przed edycja: po zatwierdzeniu miesiaca przez Administratora formularz jest tylko do odczytu.) Tj
 ET
 BT
 /F1 9 Tf
 10.3499999999999996 TL
 0.122 0.161 0.216 rg
 56.6929133858267775 690.2364566929134071 Td
-(- pracownik nie ma mozliwosci zmiany danych \(formularz przechodzi w tryb tylko do odczytu\).) Tj
+(- Blokada cofania sie wstecz: gdy Administrator zablokuje np. sierpien, pracownicy nie moga przejsc) Tj
 ET
 BT
 /F1 9 Tf
 10.3499999999999996 TL
 0.122 0.161 0.216 rg
 56.6929133858267775 671.8112598425196893 Td
-(- Blokada dziala zarowno w interfejsie uzytkownika, jak i bezposrednio na serwerze \(HTTP 403\).) Tj
+(- ani edytowac zadnego wczesniejszego miesiaca \(np. lipca\). Blokada dziala w UI oraz na serwerze \(403\).) Tj
 ET
 BT
 /F1 9 Tf
 10.3499999999999996 TL
 0.122 0.161 0.216 rg
 56.6929133858267775 653.3860629921259715 Td
-(- Administrator zachowuje pelna kontrole oraz mozliwosc odblokowania edycji w razie potrzeby.) Tj
+(- Nowa funkcja w Kapowniku: Administrator jednym kliknieciem moze zablokowac/odblokowac caly miesiac dla wszystkich.) Tj
 ET
 0.97 0.98 0.99 rg
 45.354330708661422 629.291574803149615 m
@@ -428,7 +428,7 @@ endobj
 19 0 obj
 <<
 /Producer (jsPDF 2.5.2)
-/CreationDate (D:20261008222437+02'00')
+/CreationDate (D:20261008223545+02'00')
 >>
 endobj
 20 0 obj
@@ -442,33 +442,33 @@ endobj
 xref
 0 21
 0000000000 65535 f 
-0000009987 00000 n 
-0000011804 00000 n 
+0000010056 00000 n 
+0000011873 00000 n 
 0000000015 00000 n 
 0000000152 00000 n 
-0000010044 00000 n 
-0000010169 00000 n 
-0000010299 00000 n 
-0000010432 00000 n 
-0000010569 00000 n 
-0000010692 00000 n 
-0000010821 00000 n 
-0000010953 00000 n 
-0000011089 00000 n 
-0000011217 00000 n 
-0000011344 00000 n 
-0000011473 00000 n 
-0000011606 00000 n 
-0000011708 00000 n 
-0000012052 00000 n 
-0000012138 00000 n 
+0000010113 00000 n 
+0000010238 00000 n 
+0000010368 00000 n 
+0000010501 00000 n 
+0000010638 00000 n 
+0000010761 00000 n 
+0000010890 00000 n 
+0000011022 00000 n 
+0000011158 00000 n 
+0000011286 00000 n 
+0000011413 00000 n 
+0000011542 00000 n 
+0000011675 00000 n 
+0000011777 00000 n 
+0000012121 00000 n 
+0000012207 00000 n 
 trailer
 <<
 /Size 21
 /Root 20 0 R
 /Info 19 0 R
-/ID [ <2A7940C061C9184C33BAC21DECE41591> <2A7940C061C9184C33BAC21DECE41591> ]
+/ID [ <0ADAFBF5D79E1ADF86686DD7AE15013C> <0ADAFBF5D79E1ADF86686DD7AE15013C> ]
 >>
 startxref
-12242
+12311
 %%EOF

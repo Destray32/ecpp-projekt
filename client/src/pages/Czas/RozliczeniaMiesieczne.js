@@ -47,6 +47,7 @@ const RozliczeniaMiesieczne = () => {
     const [urlopYearTotal, setUrlopYearTotal] = useState(0);
     const [urlopZaleglyYearTotal, setUrlopZaleglyYearTotal] = useState(0);
     const [yearlyZaleglyPula, setYearlyZaleglyPula] = useState(0);
+    const [latestLockedMonth, setLatestLockedMonth] = useState(null);
 
     const location = useLocation();
 
@@ -260,7 +261,13 @@ const RozliczeniaMiesieczne = () => {
         date.setMonth(date.getMonth() + offset);
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
-        setMiesiacRok(`${year}-${month}`);
+        const targetMonth = `${year}-${month}`;
+
+        if (!['Administrator', 'Kierownik', 'Biuro'].includes(userAccountType) && latestLockedMonth && targetMonth < latestLockedMonth) {
+            alert(`Miesiąc ${targetMonth} jest zablokowany. Administrator zatwierdził rozliczenia do miesiąca ${latestLockedMonth}. Nie można przejść do wcześniejszych miesięcy.`);
+            return;
+        }
+        setMiesiacRok(targetMonth);
     };
 
     // 2. Proste pobieranie godzin i rozliczenia dla całego miesiąca
@@ -306,6 +313,7 @@ const RozliczeniaMiesieczne = () => {
                     });
                     setIsDraft(result.isDraft);
                     setHasUnsavedChanges(false);
+                    setLatestLockedMonth(result.latestLockedMonth || null);
                     setAtfOtherMonthsTotal(result.atfOtherMonthsTotal || 0);
                     setUrlopOtherMonthsTotal(result.urlopOtherMonthsTotal || 0);
                     setUrlopZaleglyOtherMonthsTotal(result.urlopZaleglyOtherMonthsTotal || 0);
@@ -352,7 +360,9 @@ const RozliczeniaMiesieczne = () => {
             .catch(() => setCarryoverHours(0));
     }, [selectedPracownik, miesiacRok]);
 
-    const isLockedForUser = Boolean(rozliczenie.Zapisal_admin) && !['Administrator', 'Kierownik', 'Biuro'].includes(userAccountType);
+    const isLockedByLaterMonth = Boolean(latestLockedMonth && miesiacRok < latestLockedMonth && !['Administrator', 'Kierownik', 'Biuro'].includes(userAccountType));
+    const isLockedForUser = (Boolean(rozliczenie.Zapisal_admin) || isLockedByLaterMonth) && !['Administrator', 'Kierownik', 'Biuro'].includes(userAccountType);
+    const isPrevDisabled = !['Administrator', 'Kierownik', 'Biuro'].includes(userAccountType) && Boolean(latestLockedMonth) && miesiacRok <= latestLockedMonth;
 
     const handleInputChange = (e) => {
         if (isLockedForUser) return;
@@ -536,8 +546,14 @@ const RozliczeniaMiesieczne = () => {
                     <div className="flex items-center gap-2">
                         <button
                             type="button"
-                            className="border border-gray-300 rounded px-2 py-2 text-gray-600 hover:bg-gray-50"
+                            disabled={isPrevDisabled}
+                            className={`border rounded px-2 py-2 transition ${
+                                isPrevDisabled 
+                                    ? 'border-gray-200 text-gray-300 cursor-not-allowed bg-gray-50' 
+                                    : 'border-gray-300 text-gray-600 hover:bg-gray-50'
+                            }`}
                             onClick={() => shiftMonth(-1)}
+                            title={isPrevDisabled ? `Zablokowane: administrator zatwierdził rozliczenia do miesiąca ${latestLockedMonth}` : 'Poprzedni miesiąc'}
                             aria-label="Poprzedni miesiąc"
                         >
                             &larr;
@@ -545,12 +561,18 @@ const RozliczeniaMiesieczne = () => {
                         <input
                             type="month"
                             value={miesiacRok}
+                            min={!['Administrator', 'Kierownik', 'Biuro'].includes(userAccountType) && latestLockedMonth ? latestLockedMonth : undefined}
                             onChange={(e) => {
+                                const val = e.target.value;
+                                if (!['Administrator', 'Kierownik', 'Biuro'].includes(userAccountType) && latestLockedMonth && val < latestLockedMonth) {
+                                    alert(`Nie można wybrać miesiąca wcześniejszego niż ${latestLockedMonth}. Administrator zatwierdził rozliczenia do tego miesiąca.`);
+                                    return;
+                                }
                                 if (hasUnsavedChanges) {
                                     const confirmLeave = window.confirm('Masz niezapisane zmiany w tym miesiącu. Czy na pewno chcesz zmienić miesiąc bez zapisywania?');
                                     if (!confirmLeave) return;
                                 }
-                                setMiesiacRok(e.target.value);
+                                setMiesiacRok(val);
                             }}
                             className="w-full border border-gray-300 rounded p-2"
                         />
@@ -580,7 +602,22 @@ const RozliczeniaMiesieczne = () => {
                 )}
 
                 {/* Ostrzeżenie o blokadzie przez administratora */}
-                {isLockedForUser && (
+                {isLockedByLaterMonth ? (
+                    <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-900 rounded shadow-sm flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <span className="text-2xl">🔒</span>
+                            <div>
+                                <h4 className="font-bold text-sm">Miesiąc zablokowany (Modyfikacja wsteczna niedozwolona)</h4>
+                                <p className="text-xs text-red-700 mt-0.5">
+                                    Administrator zatwierdził rozliczenia do miesiąca <strong>{latestLockedMonth}</strong>. Nie można edytować wcześniejszych miesięcy ({miesiacRok}).
+                                </p>
+                            </div>
+                        </div>
+                        <span className="text-xs font-bold bg-red-200 text-red-800 px-3 py-1 rounded-full uppercase tracking-wider">
+                            Zablokowane wstecz
+                        </span>
+                    </div>
+                ) : isLockedForUser ? (
                     <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-900 rounded shadow-sm flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <span className="text-2xl">🔒</span>
@@ -595,7 +632,7 @@ const RozliczeniaMiesieczne = () => {
                             Tylko podgląd
                         </span>
                     </div>
-                )}
+                ) : null}
 
                 <div className="flex flex-wrap justify-between items-center mb-6 pb-4 border-b gap-3">
                     <h3 className="text-lg font-semibold text-gray-700">Szczegóły: {miesiacRok}</h3>
